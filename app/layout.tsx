@@ -4,6 +4,7 @@ import PrelineScript from "./components/PrelineScript";
 import './globals.css'
 import ConfigureAmplifyClientSide from './components/ConfigureAmplify';
 import '@aws-amplify/ui-react/styles.css';
+import { ThemeProvider } from '@aws-amplify/ui-react';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,9 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ConfigureAmplifyClientSide />
-        {children}
-        <PrelineScript/>  
+          <ConfigureAmplifyClientSide />
+          {children}
+          <PrelineScript/>
       </body>
     </html>
   )

@@ -1,8 +1,6 @@
-## AWS Amplify + Next.js starter
+## Surveyor
 
-This is a starter application for building fullstack apps with AWS Amplify. 
-
-Learn more: https://docs.amplify.aws/gen2/start/quickstart/ 
+- Generate Building Surveyor Reports Instantly
 
 ### Getting Started
 
@@ -20,10 +18,15 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Security
+## Roadmap
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+### Now
 
-## License
+- Auth ✅
+- Deployment ✅
+- Actually kick out a report ⚒️
+  - Tiny Mce
+  - Form
+  - TOC
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
+
