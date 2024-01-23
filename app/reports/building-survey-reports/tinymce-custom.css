@@ -1,0 +1,96 @@
+.flex {
+    display: flex;
+}
+
+.text-top {
+    vertical-align: top;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.w-10-perc {
+    width: 10%;
+}
+
+.w-20-perc {
+    width: 20%;
+}
+
+.w-30-perc {
+    width: 30%;
+}
+
+.w-40-perc {
+    width: 40%;
+}
+
+.w-50-perc {
+    width: 50%;
+}
+
+.w-60-perc {
+    width: 60%;
+}
+
+.w-70-perc {
+    width: 70%;
+}
+
+.w-80-perc {
+    width: 80%;
+}
+
+.w-90-perc {
+    width: 90%;
+}
+
+.w-100-perc {
+    width: 100%;
+}
+
+.h-100-perc {
+    height: 100%;
+}
+
+.line-height-1 {
+    line-height: 1;
+}
+
+.m-0 {
+    margin: 0;
+}
+
+.mt-8 {
+    margin-top: 8rem;
+}
+
+.mb-8 {
+    margin-bottom: 8rem;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.bg-color-green {
+    background-color: green;
+}
+
+.bg-color-amber {
+    background-color: orange;
+}
+
+.bg-color-red {
+    background-color: red;
+}
