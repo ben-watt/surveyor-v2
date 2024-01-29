@@ -8,7 +8,14 @@ import BuildingSurveyReport from "./BuildingSurveyReportTiny";
 import Introduction from "./Introduction";
 import ConditionSection from "./Defects";
 
+
+
+
 export default function Report(props: any) {
+
+  const TINY_API_KEY = process.env.NEXT_PUBLIC_TINY_MCE_API_KEY;
+  console.log("apikey", TINY_API_KEY);
+
   const [dirty, setDirty] = useState(false);
   const editorRef = useRef(null);
   const [initialValue, setInitialValue] = useState("");
@@ -71,7 +78,7 @@ export default function Report(props: any) {
           </div>
         </form>
       </FormProvider>
-      <Editor
+      <Editor apiKey={TINY_API_KEY}
         onInit={(evt, editor) => {
           editorRef.current = editor;
         }}
@@ -91,7 +98,7 @@ export default function Report(props: any) {
             "alignright alignjustify | bullist numlist outdent indent | " +
             "removeformat | help",
           content_css: ["document"],
-          content_style: customCss          
+          content_style: customCss   
         }}
       />
       <button className="btn btn-primary mt-5" onClick={save} disabled={!dirty}>

@@ -87,7 +87,7 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
         fetch("https://api.openai.com/v1/audio/transcriptions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${import.meta.env.OPEN_API_KEY}`
+                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPEN_AI_API_KEY}`
             },
             body: data
         })
