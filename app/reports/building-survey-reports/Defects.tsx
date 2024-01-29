@@ -192,7 +192,7 @@ export default function ConditionSection({ formKey, label }: { formKey: string, 
     const partOfSurveyReg = register(formKey + ".isPartOfSurvey")
 
     return (
-        <section className="m-3">
+        <section className="mt-2">
             <ToggleSection label={label} register={() => partOfSurveyReg}>
                 <ConditionInput formKey={formKey} label={label}></ConditionInput>
             </ToggleSection>

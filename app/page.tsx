@@ -12,8 +12,8 @@ function Home() {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-5 xl:px-40">
-        <h1 className="text-4xl dark:text-white">Building Survey Report</h1>
+      <div className="container mx-auto px-5 ">
+        <h1 className="text-4xl dark:text-white mb-4">Building Survey Report</h1>
         <Doc />
       </div>
     </>

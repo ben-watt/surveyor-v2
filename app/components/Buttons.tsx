@@ -2,8 +2,9 @@ import { MouseEvent } from 'react'
 
 type ButtonProps = {
     children: string;
-    onClick: (ev:  MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => void;
+    onClick?: (ev:  MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => void;
     disabled?: boolean;
+    type?: "button" | "submit" | "reset";
 }
 
 

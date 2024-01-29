@@ -7,6 +7,7 @@ import { Editor } from "@tinymce/tinymce-react";
 import BuildingSurveyReport from "./BuildingSurveyReportTiny";
 import Introduction from "./Introduction";
 import ConditionSection from "./Defects";
+import { PrimaryBtn } from "@/app/components/Buttons";
 
 
 
@@ -42,10 +43,10 @@ export default function Report(props: any) {
     );
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     const getCustomCss = async () => {
       const customCss = await import("./tinymce-custom.css");
-      setCustomCss(customCss.default);  
+      setCustomCss(customCss.default);
     }
 
     getCustomCss();
@@ -61,50 +62,51 @@ export default function Report(props: any) {
   };
 
   return (
-    <>
-      <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)}>
-          <div>
-            <Introduction></Introduction>
-            {defaultValues.conditionSections.map((k, i) => (
-              <ConditionSection
-                formKey={`conditionSections.${i}`}
-                label={k.name}
-              ></ConditionSection>
-            ))}
-          </div>
-          <div className="flex justify-end m-10">
-            <input className="btn btn-primary" type="submit"></input>
-          </div>
-        </form>
-      </FormProvider>
-      <Editor apiKey={TINY_API_KEY}
-        onInit={(evt, editor) => {
-          editorRef.current = editor;
-        }}
-        initialValue={initialValue}
-        onDirty={() => setDirty(true)}
-        init={{
-          height: 1000,
-          menubar: false,
-          plugins: [
-            "advlist autolink lists link image charmap print preview anchor",
-            "searchreplace visualblocks code fullscreen",
-            "insertdatetime media table paste code help wordcount importcss",
-          ],
-          toolbar:
-            "undo redo | formatselect | " +
-            "bold italic backcolor | alignleft aligncenter " +
-            "alignright alignjustify | bullist numlist outdent indent | " +
-            "removeformat | help",
-          content_css: ["document"],
-          content_style: customCss   
-        }}
-      />
-      <button className="btn btn-primary mt-5" onClick={save} disabled={!dirty}>
-        Save
-      </button>
-      {dirty && <p>You have unsaved content!</p>}
-    </>
+    <div className="grid grid-cols-4 gap-2" >
+      <div className="col-span-1">
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(onSubmit)}>
+            <div>
+              <Introduction></Introduction>
+              {defaultValues.conditionSections.map((k, i) => (
+                <ConditionSection
+                  formKey={`conditionSections.${i}`}
+                  label={k.name}
+                ></ConditionSection>
+              ))}
+            </div>
+            <div className="flex justify-end m-10">
+              <PrimaryBtn type="submit">Generate Report</PrimaryBtn>
+            </div>
+          </form>
+        </FormProvider>
+      </div>
+      <div className="col-span-3">
+        <Editor apiKey={TINY_API_KEY}
+          onInit={(evt, editor) => {
+            editorRef.current = editor;
+          }}
+          initialValue={initialValue}
+          onDirty={() => setDirty(true)}
+          init={{
+            height: 1000,
+            menubar: false,
+            plugins: [
+              'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+              'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+              'insertdatetime', 'media', 'table', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | ' +
+              'bold italic backcolor | alignleft aligncenter ' +
+              'alignright alignjustify | bullist numlist outdent indent | ' +
+              'removeformat | help',
+            content_css: ["document"],
+            content_style: customCss
+          }}
+        />
+        <PrimaryBtn className="btn btn-primary mt-5" onClick={save} disabled={!dirty}>Save</PrimaryBtn>
+        {dirty && <p>You have unsaved content!</p>}
+      </div>
+    </div>
   );
 }

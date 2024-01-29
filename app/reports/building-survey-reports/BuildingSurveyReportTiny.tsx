@@ -111,7 +111,7 @@ export default ({ form }: { form: BuildingSurveyData }) => {
 
   return (
     <TocContext.Provider value={DefaultTocProvider()}>
-      <img src="/public/CWBC-Black.webp" alt="cwbc logo" />
+      <img src="/public/cwbc_logo.webp" alt="cwbc logo" />
       <Page className="text-right">
         <h1>Building Survey Report</h1>
         <p></p>
