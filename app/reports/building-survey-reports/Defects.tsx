@@ -1,4 +1,4 @@
-import { Key, useEffect, useState } from "react";
+import { Key, MouseEvent, ReactEventHandler, useEffect, useState } from "react";
 import TextAreaInput from "../Input/TextAreaInput";
 import ToogleInput from "../Input/ToggleInput";
 import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
@@ -6,6 +6,7 @@ import SelectBox from "../Input/SelectBox";
 import CurrencyInput from 'react-currency-input-field';
 import { useFormContext } from 'react-hook-form';
 import { XCircleIcon } from '@heroicons/react/24/solid'
+import { OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
     const { register, unregister, getValues, setValue } = useFormContext()
@@ -22,7 +23,9 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
         unregister(formKey + `.defects.${index}.cost`);
     }
 
-    const addDefect = () => {
+    const addDefect = (ev: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => {
+        ev.preventDefault()
+
         if (currentDefects.length === options.length) {
             // TODO: Model to add new defect
             return;
@@ -34,7 +37,7 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
     if (currentDefects.length === 0) {
         return (
             <div className="pt-3 pb-3">
-                <button onClick={() => addDefect()} className="btn btn-primary">Add Defect</button>
+                <PrimaryBtn onClick={(ev) => addDefect(ev)}>Add Defect</PrimaryBtn>
             </div>
         )
     }
@@ -54,12 +57,12 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
                             decimalsLimit={2} {...register(formKey + `.defects.${index}.cost`)} />
                     </div>
                     <div>
-                        <button className="btn btn-error" onClick={() => removeDefect(index)}>Remove</button>
+                        <OutlineBtn onClick={(ev) => removeDefect(index)}>Remove</OutlineBtn>
                     </div>
                 </div>
             ))}
             <div className="pt-3 pb-3">
-                <button onClick={addDefect} className="btn btn-primary">Add Defect</button>
+                <OutlineBtn onClick={addDefect}>Add Defect</OutlineBtn>
             </div>
         </>
     )
@@ -115,7 +118,7 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
             </div>
 
             {audio !== null && <audio hidden src={audio.url ?? ""} controls></audio>}
-            <div className={`form-control w-full flex`}>
+            <div>
                 <div>
                     <DefectInput formKey={formKey}></DefectInput>
                 </div>
@@ -142,17 +145,22 @@ const ImageInput = ({ formKey }: { formKey: string }) => {
         setValue(formKey + ".images", newImages);
     }
 
+    var formRegistration = register(formKey + `.images`);
     return (
         <div>
-            <label className="label">
-                <span className={"label-text text-base-content"}>Upload Images</span>
+            <label htmlFor={formRegistration.name} className="sr-only">
+                <span>Upload Images</span>
             </label>
             <input
                 type="file"
                 accept="image/*"
-                multiple
-                {...register(formKey + `.images`)}
-                className="file-input file-input-bordered max-w-xs" />
+                multiple id="file-input"
+                className="block w-full border border-gray-200 shadow-sm rounded-lg text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600
+                        file:bg-gray-50 file:border-0
+                        file:bg-gray-100 file:me-4
+                        file:py-3 file:px-4
+                        dark:file:bg-gray-700 dark:file:text-gray-400"
+                {...formRegistration} />
             <div className="flex justify-start gap-x-5 mt-5">
                 {previewImageUrls.map((src, i) => (
                     <div key={i} className="relative">

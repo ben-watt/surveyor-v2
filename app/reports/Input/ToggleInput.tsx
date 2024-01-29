@@ -5,7 +5,7 @@ export default function ToogleInput({ labelTitle, labelStyle, containerStyle, de
     }
 
     return (
-        <>
+        <div className="flex justify-between p-2">
             <label htmlFor="hs-basic-usage">{labelTitle}</label>
             <input
                 type="checkbox"
@@ -14,6 +14,6 @@ export default function ToogleInput({ labelTitle, labelStyle, containerStyle, de
                             before:inline-block before:w-6 before:h-6 before:bg-white checked:before:bg-blue-200 before:translate-x-0 checked:before:translate-x-full before:rounded-full before:shadow before:transform before:ring-0 before:transition before:ease-in-out before:duration-200 dark:before:bg-gray-400 dark:checked:before:bg-blue-200"
                 defaultValue={defaultValue} onClick={onClick} {...inputProps}
             />
-        </>
+        </div>
     )
 }
