@@ -1,15 +1,17 @@
-import { Key, MouseEvent, ReactEventHandler, useEffect, useState } from "react";
+import { Key, MouseEvent, ReactEventHandler, ReactNode, useEffect, useState } from "react";
 import TextAreaInput from "../Input/TextAreaInput";
 import ToogleInput from "../Input/ToggleInput";
 import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
 import SelectBox from "../Input/SelectBox";
 import CurrencyInput from 'react-currency-input-field';
-import { useFormContext } from 'react-hook-form';
-import { XCircleIcon } from '@heroicons/react/24/solid'
+import { useFormContext, useWatch } from 'react-hook-form';
+import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
-    const { register, unregister, getValues, setValue } = useFormContext()
+    const { register, unregister, getValues, setValue, watch } = useFormContext()
+
+    watch(formKey + ".defects")
 
     const options = [
         { name: "Cracked or broken slates", value: "Cracked or broken slates" },
@@ -27,10 +29,11 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
         ev.preventDefault()
 
         if (currentDefects.length === options.length) {
-            // TODO: Model to add new defect
+            console.info("Max defects reached")
             return;
         }
 
+        console.info("Adding defect")
         setValue(formKey + ".defects", currentDefects.concat({ name: options[currentDefects.length].value, cost: "£0" }));
     }
 
@@ -75,7 +78,8 @@ type ConditionInputProp = {
 
 const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
     const { register, watch, unregister, setValue } = useFormContext();
-    const [audio, setAudio] = useState({ url: null, blob: null });
+    const defaultAudioState = { url: null, blob: null };
+    const [audio, setAudio] = useState(defaultAudioState);
     const [audioText, setAudioText] = useState("");
 
     const getTranscription = async (blob: Blob) => {
@@ -111,13 +115,26 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
     return (
         <>
             <div className="relative">
-                <TextAreaInput defaultValue={audioText} placeholder={`Description of the ${label.toLowerCase()}...`} register={() => register(formKey + ".description")} />
+                <TextAreaInput defaultValue={audioText} placeholder={`Description of the ${label.toLowerCase()}...`} register={() => register(formKey + ".description")} />             
                 <div className="absolute bottom-2 right-2">
-                    <AudioRecorder onRecordingComplete={(blob) => addAudioElement(blob)} recorderControls={recorderControls} />
+                    <AudioRecorder showVisualizer onRecordingComplete={(blob) => addAudioElement(blob)} audioTrackConstraints={{
+                        noiseSuppression: true,
+                        echoCancellation: true,
+                    }} recorderControls={recorderControls} />
+                    
                 </div>
             </div>
-
-            {audio !== null && <audio hidden src={audio.url ?? ""} controls></audio>}
+            <div className="w-full">
+                {audio.url !== null && (
+                <>
+                    <div className="flex">
+                        <audio src={audio.url ?? ""} controls></audio>
+                        <div className="bg-zinc-800 w-9 h-10 flex p-1">
+                            <XMarkIcon className="w-fill text-white hover:text-blue-400 cursor-pointer" onClick={() => setAudio(defaultAudioState)} />
+                        </div>
+                    </div>
+                </>)}
+            </div>
             <div>
                 <div>
                     <DefectInput formKey={formKey}></DefectInput>
@@ -126,6 +143,11 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
             </div>
         </>
     )
+}
+
+/// A component that shows one of if children based on a condition
+const ConditionallyShow = ({ when, children }: { when: boolean, children: Array<ReactNode> }) => {
+    return when ? children[0] : children[1];
 }
 
 const ImageInput = ({ formKey }: { formKey: string }) => {

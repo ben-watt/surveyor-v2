@@ -111,7 +111,7 @@ export default ({ form }: { form: BuildingSurveyData }) => {
 
   return (
     <TocContext.Provider value={DefaultTocProvider()}>
-      <img src="/public/cwbc_logo.webp" alt="cwbc logo" />
+      <img src="/cwbc-logo.webp" alt="cwbc logo" />
       <Page className="text-right">
         <h1>Building Survey Report</h1>
         <p></p>
@@ -172,11 +172,11 @@ export default ({ form }: { form: BuildingSurveyData }) => {
           <p>Signed:</p>
           <TableBlock widths={[50,50]}>
             <div>
-              <img src="/public/sw-sig.png" alt="signature"></img>
+              <img src="/sw-sig.png" alt="signature"></img>
               <p>Samuel Watt BSc (Hons) </p>
             </div>
             <div>
-              <img src="/public/jc-sig.png" alt="signature"></img>
+              <img src="/jc-sig.png" alt="signature"></img>
               <p>Jordan Clarke BSc (Hons) MRICS</p>
             </div>
           </TableBlock>
@@ -194,7 +194,7 @@ export default ({ form }: { form: BuildingSurveyData }) => {
         <P>
           We understand that the purpose of the inspection is in connection with
           the proposed sale of {address}, to satisfy concerns raised by the
-          prospective buyer’s lender in relation to their ‘nil’ valuation of the
+          prospective buyer's lender in relation to their 'nil' valuation of the
           property
         </P>
         <H2>Limitations</H2>
@@ -310,7 +310,7 @@ export default ({ form }: { form: BuildingSurveyData }) => {
           <p className="m-0">We inspect the roof structure from inside the roof space if there is safe access. We examine floor surfaces and under-floor spaces so far as there is safe access 
   and permission from the owner.</p>
           <p className="m-0">We are not able to assess the condition of the inside of any chimney, boiler or other flues.</p>
-          <p className="m-0">We do not lift fitted carpets or coverings without the owner’s consent. Intermittent faults of services may not be apparent on the day of inspection. If we are 
+          <p className="m-0">We do not lift fitted carpets or coverings without the owner's consent. Intermittent faults of services may not be apparent on the day of inspection. If we are 
   concerned about parts of the property that the inspection cannot cover, the report will tell you about any further investigations that are needed.</p>
           <p className="m-0">Where practicable and agreed we report on the cost of any work for identified repairs and make recommendations on how these repairs should be carried out. </p>
           <p className="m-0">Some maintenance and repairs we suggest may be expensive. Purely cosmetic and minor maintenance defects that do not affect performance might not be 

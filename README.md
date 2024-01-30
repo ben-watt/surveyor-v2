@@ -24,7 +24,11 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - Deployment ✅
 - Actually kick out a report ⚒️
   - Input components need work
-  - Tiny Mce + API Key
-  - Open API Key / Audio Feature (Save locally)
+  - Tiny Mce + API Key ✅
+  - Open API Key / Audio Feature ✅
+  - Report formatting
+  - Mobile
+  - Publish with correct api keys for environments
+- Offline mode
 
 

@@ -15,8 +15,6 @@ import { PrimaryBtn } from "@/app/components/Buttons";
 export default function Report(props: any) {
 
   const TINY_API_KEY = process.env.NEXT_PUBLIC_TINY_MCE_API_KEY;
-  console.log("apikey", TINY_API_KEY);
-
   const [dirty, setDirty] = useState(false);
   const editorRef = useRef(null);
   const [initialValue, setInitialValue] = useState("");
@@ -62,7 +60,7 @@ export default function Report(props: any) {
   };
 
   return (
-    <div className="grid grid-cols-4 gap-2" >
+    <div className="" >
       <div className="col-span-1">
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)}>
