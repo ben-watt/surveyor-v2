@@ -92,17 +92,17 @@ export default function Report(props: any) {
             plugins: [
               'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
               'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-              'insertdatetime', 'media', 'table', 'help', 'wordcount'
+              'insertdatetime', 'media', 'table', 'help', 'wordcount', 'export', 'pagebreak'
             ],
-            toolbar: 'undo redo | blocks | ' +
+            toolbar: 'export | undo redo | blocks pagebreak | ' +
               'bold italic backcolor | alignleft aligncenter ' +
               'alignright alignjustify | bullist numlist outdent indent | ' +
               'removeformat | help',
             content_css: ["document"],
-            content_style: customCss
+            pagebreak_separator: "<p>---------</p>",
           }}
         />
-        <PrimaryBtn className="btn btn-primary mt-5" onClick={save} disabled={!dirty}>Save</PrimaryBtn>
+        <PrimaryBtn onClick={save} disabled={!dirty}>Save</PrimaryBtn>
         {dirty && <p>You have unsaved content!</p>}
       </div>
     </div>

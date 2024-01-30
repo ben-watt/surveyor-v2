@@ -39,8 +39,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 Can we do something where we're less structured???. Rock up at a property take a load of pictures take a load of audio / video then interpret that data to understand what is useful in order to generate a survey. What would we need? An understanding of what is required for a survey 
 
-- [AI: Review this image and identify any possible defects]
-- [AI: Link relevant bits of video, audio and text together]
-- [AI: Generate specific bits about each section]
+- [AI: Review this image and identify any possible defects] (Easy)
+- [AI: Link relevant bits of video, audio and text together] (Hard)
+- [AI: Generate specific bits about each section] (Medium)
+- [AI: Create a report with encapsulates all the information above] (Very hard)
 
 

@@ -4,7 +4,7 @@ import ToogleInput from "../Input/ToggleInput";
 import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
 import SelectBox from "../Input/SelectBox";
 import CurrencyInput from 'react-currency-input-field';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
 
