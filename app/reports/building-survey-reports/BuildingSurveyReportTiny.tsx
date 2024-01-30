@@ -168,7 +168,7 @@ export default ({ form }: { form: BuildingSurveyData }) => {
           <p>{form.reportDate.toDateString()}</p>
         </TableBlock>
         <div>
-          <p>This document has been prepared and checked in accordance with the CWBC’s Quality Assurance procedures and authorised for release.</p>
+          <p>This document has been prepared and checked in accordance with the CWBC's Quality Assurance procedures and authorised for release.</p>
           <p>Signed:</p>
           <TableBlock widths={[50,50]}>
             <div>
