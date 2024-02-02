@@ -49,7 +49,7 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
         <>
             {currentDefects.map((defect: any, index: Key) => (
                 <div key={index} className="flex gap-x-10 items-end w-full">
-                    <SelectBox key={index} options={options} labelTitle={index === 0 && "Defect"} defaultValue={getValues(formKey + `.defects.${index}.name`)} register={() => register(formKey + `.defects.${index}.name`)} />
+                    <SelectBox options={options} labelTitle={index === 0 && "Defect"} defaultValue={getValues(formKey + `.defects.${index}.name`)} register={() => register(formKey + `.defects.${index}.name`)} />
                     <div>
                         <label className="label"><div className="label-text">{index === 0 && "Cost"}</div></label>
                         <CurrencyInput

@@ -6,8 +6,6 @@ import Navbar from './components/Navbar';
 import Doc from './reports/building-survey-reports/Doc';
 
 
-
-
 function Home() {
   return (
     <>

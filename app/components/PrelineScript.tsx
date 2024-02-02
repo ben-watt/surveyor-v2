@@ -14,16 +14,19 @@ export default function PrelineScript() {
   const path = usePathname();
 
   useEffect(() => {
-    import("preline/preline");
+    const preline = import("preline/preline");
+    preline.then((preline) => {
+      window.HSStaticMethods.autoInit();
+      console.info("Preline loaded", preline)
+    });
   }, []);
 
   useEffect(() => {
     setTimeout(() => {
-      console.log(window.HSStaticMethods)
-      if (typeof window !== "undefined") {
+      console.info("Check method exists", window.HSStaticMethods)
+      if(window.HSStaticMethods !== undefined) {
         window.HSStaticMethods.autoInit();
       }
-      
     }, 100);
   }, [path]);
 
