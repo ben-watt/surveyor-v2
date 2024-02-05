@@ -1,9 +1,19 @@
+"use client"
+
 import { useAuthenticator } from "@aws-amplify/ui-react";
 import Link from "next/link";
-
+import { redirect } from "next/navigation";
+import { useRouter } from 'next/navigation'
 
 export default function Navbar() {
     const { user, signOut } = useAuthenticator((context) => [context.user]);
+    const router = useRouter();    
+
+    function logout(): void {
+        console.log("Attempted to sign out")
+        signOut();
+        router.push("/");
+    }
   
     return (
       <header className="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white text-sm py-4 dark:bg-gray-800">
@@ -20,9 +30,8 @@ export default function Navbar() {
           <div id="navbar-collapse-with-animation" className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:block">
             <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:justify-end sm:mt-0 sm:ps-5">
             <Link className="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/reports">Reports</Link>
-              <a className="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#">About</a>
-              <Link className="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/defects">Defects</Link>
-              <a className="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#" onClick={signOut}>Sign Out</a>
+              <Link className="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="/reports/defects">Defects</Link>
+              <a  className="font-medium text-gray-600 hover:text-gray-400 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600" href="#" onClick={logout}>Sign Out</a>
             </div>
           </div>
         </nav>

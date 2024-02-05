@@ -60,8 +60,8 @@ export default function Report(props: any) {
   };
 
   return (
-    <div className="" >
-      <div className="col-span-1">
+    <div className="grid grid-cols-4">
+      <div className="col-start-2 col-span-2">
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)}>
             <div>
@@ -79,7 +79,7 @@ export default function Report(props: any) {
           </form>
         </FormProvider>
       </div>
-      <div className="col-span-3">
+      <div className="col-span-4">
         <Editor apiKey={TINY_API_KEY}
           onInit={(evt, editor) => {
             editorRef.current = editor;

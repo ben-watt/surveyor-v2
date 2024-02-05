@@ -14,7 +14,7 @@ export const Search = () => {
       searchClient={searchClient}
       indexName="defects"
     >
-      <Configure hitsPerPage={5} filters="category:roof"/>
+      <Configure  hitsPerPage={10} filters="category:roof"/>
       <div className="ais-InstantSearch">
         <SearchBox />
         <Hits hitComponent={Hit} />

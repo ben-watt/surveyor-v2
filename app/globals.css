@@ -19,8 +19,13 @@
     width: 100%;
 }
 
+.ais-Hits-item.ais-Hits-item:hover {
+    cursor: pointer;
+    background-color: rgb(232, 232, 232);
+}
+
 .ais-Hits-item img {
-    margin-right: 1em
+    margin-right: 1em;
 }
 
 .ais-InstantSearch .ais-Hits-list {
