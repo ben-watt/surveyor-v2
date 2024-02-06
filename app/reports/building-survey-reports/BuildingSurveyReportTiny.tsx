@@ -88,11 +88,11 @@ const H2 = (props: PProps) => {
 }
 
 
-const getImagesFromFileList = (fileList: FileList) => {
+const getImagesFromFileList = (fileList: FileList) : string[] => {
   const images = [];
 
   if(fileList === null || fileList === undefined)
-    return new Image(100, 100);
+    return [];
 
   for(let i = 0; i < fileList.length; i++) {
     images.push(URL.createObjectURL(new Blob([fileList[i]], { type: "image/*" })));

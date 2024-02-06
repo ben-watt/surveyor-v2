@@ -76,10 +76,14 @@ type ConditionInputProp = {
     label: string;
 }
 
+type AudioState = {
+    url?: string;
+    blob?: Blob;
+}
+
 const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
     const { register, watch, unregister, setValue } = useFormContext();
-    const defaultAudioState = { url: null, blob: null };
-    const [audio, setAudio] = useState(defaultAudioState);
+    const [audio, setAudio] = useState<AudioState>({});
     const [audioText, setAudioText] = useState("");
 
     const getTranscription = async (blob: Blob) => {
@@ -101,7 +105,7 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
     }
 
     useEffect(() => {
-        if (audio.blob !== null) {
+        if (audio.blob !== undefined) {
             getTranscription(audio.blob);
         }
     }, [audio])
@@ -130,7 +134,7 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
                     <div className="flex">
                         <audio src={audio.url ?? ""} controls></audio>
                         <div className="bg-zinc-800 w-9 h-10 flex p-1">
-                            <XMarkIcon className="w-fill text-white hover:text-blue-400 cursor-pointer" onClick={() => setAudio(defaultAudioState)} />
+                            <XMarkIcon className="w-fill text-white hover:text-blue-400 cursor-pointer" onClick={() => setAudio({})} />
                         </div>
                     </div>
                 </>)}
@@ -143,11 +147,6 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
             </div>
         </>
     )
-}
-
-/// A component that shows one of if children based on a condition
-const ConditionallyShow = ({ when, children }: { when: boolean, children: Array<ReactNode> }) => {
-    return when ? children[0] : children[1];
 }
 
 const ImageInput = ({ formKey }: { formKey: string }) => {

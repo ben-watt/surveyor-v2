@@ -19,7 +19,7 @@ const Attribute = ({ label, value, tw }: AttributeProps) => {
 
 export const Hit = ({ hit }: any) => {
  
-  const categoryNameProperCase = getPropertyByPath(hit, 'category').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const categoryNameProperCase = getPropertyByPath(hit, 'category').replace(/_/g, ' ').replace(/\b\w/g, (l : any) => l.toUpperCase());
   const severity = getPropertyByPath(hit, 'severity');
 
   function getSeverityColour() : string {

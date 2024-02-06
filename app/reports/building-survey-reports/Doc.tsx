@@ -4,6 +4,7 @@ import { BuildingSurveyData } from "./BuildingSurveyReportData";
 
 import { useForm, FormProvider } from "react-hook-form";
 import { Editor } from "@tinymce/tinymce-react";
+import type { Editor as TinyMCEEditor } from "tinymce";
 import BuildingSurveyReport from "./BuildingSurveyReportTiny";
 import Introduction from "./Introduction";
 import ConditionSection from "./Defects";
@@ -16,7 +17,7 @@ export default function Report(props: any) {
 
   const TINY_API_KEY = process.env.NEXT_PUBLIC_TINY_MCE_API_KEY;
   const [dirty, setDirty] = useState(false);
-  const editorRef = useRef(null);
+  const editorRef = useRef<TinyMCEEditor>();
   const [initialValue, setInitialValue] = useState("");
   const [customCss, setCustomCss] = useState("");
 
@@ -43,8 +44,8 @@ export default function Report(props: any) {
 
   useEffect(() => {
     const getCustomCss = async () => {
-      const customCss = await import("./tinymce-custom.css");
-      setCustomCss(customCss.default);
+      const customCss = await import("./tinymce-custom.module.css");
+      setCustomCss(customCss.default.toString());
     }
 
     getCustomCss();
