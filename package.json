@@ -9,14 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-amplify/adapter-nextjs": "^1.0.13",
+    "@aws-amplify/adapter-nextjs": "^1.0.15",
     "@aws-amplify/ui-react": "^6.1.1",
     "@heroicons/react": "^2.1.1",
     "@preline/tooltip": "^2.0.2",
     "@react-pdf/renderer": "^3.3.4",
     "@tinymce/tinymce-react": "^4.3.2",
     "algoliasearch": "^4.22.1",
-    "aws-amplify": "^6.0.13",
+    "aws-amplify": "^6.0.15",
     "instantsearch.css": "^8.1.0",
     "next": "13.5.4",
     "preline": "^2.0.3",
