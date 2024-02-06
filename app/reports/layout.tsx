@@ -1,7 +1,7 @@
 "use client"
 
 import { Authenticator } from "@aws-amplify/ui-react"
-import Navbar from "../components/Navbar"
+import SecureNav from "../components/Navbar"
 
 export default function ReportLayout({
     children, // will be a page or nested layout
@@ -10,7 +10,7 @@ export default function ReportLayout({
   }) {
     return (
         <Authenticator.Provider>
-            <Navbar />
+            <SecureNav />
             {children}
         </Authenticator.Provider>
     )

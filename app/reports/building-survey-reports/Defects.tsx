@@ -82,7 +82,7 @@ type AudioState = {
 }
 
 const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
-    const { register, watch, unregister, setValue } = useFormContext();
+    const { register } = useFormContext();
     const [audio, setAudio] = useState<AudioState>({});
     const [audioText, setAudioText] = useState("");
 
@@ -129,7 +129,7 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
                 </div>
             </div>
             <div className="w-full">
-                {audio.url !== null && (
+                {audio.url !== undefined && (
                 <>
                     <div className="flex">
                         <audio src={audio.url ?? ""} controls></audio>

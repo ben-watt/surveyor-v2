@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import Navbar from '../components/Navbar';
+import SecureNav from '../components/Navbar';
 import Doc from '../reports/building-survey-reports/Doc';
 
 

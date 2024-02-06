@@ -10,7 +10,7 @@ type ButtonProps = {
 
 export function PrimaryBtn (props: ButtonProps) {
   return (
-    <button type="button" {...props}  className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">{props.children}</button>
+    <button type="button" {...props}  className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-zinc-900 text-white hover:bg-zinc-900 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">{props.children}</button>
   )
 }
 
