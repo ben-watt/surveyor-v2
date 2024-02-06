@@ -12,7 +12,7 @@ const schema = a.schema({
     .model({
       content: a.string(),
     })
-    .authorization([a.allow.owner(), a.allow.public().to(['read'])]),
+    .authorization([a.allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
