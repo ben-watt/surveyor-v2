@@ -61,7 +61,7 @@ export default function Report(props: any) {
   };
 
   return (
-    <div className="grid md:grid-cols-4 sm:grid-cols-2">
+    <div className="md:grid md:grid-cols-4 ">
       <div className="col-start-2 col-span-2">
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)}>
