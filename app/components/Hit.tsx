@@ -17,7 +17,7 @@ const Attribute = ({ label, value, tw }: AttributeProps) => {
 }
 
 
-export const Hit = ({ hit }: any) => {
+export const Hit = ({ hit, setSelectedHit }: any) => {
 
 	const categoryNameProperCase = getPropertyByPath(hit, 'category').replace(/_/g, ' ').replace(/\b\w/g, (l: any) => l.toUpperCase());
 	const severity = getPropertyByPath(hit, 'severity');
@@ -37,8 +37,8 @@ export const Hit = ({ hit }: any) => {
 	}
 
 	return (
-		<article>
-			<div className="hit-name font-bold">
+		<article onClick={() => setSelectedHit(hit)}>
+			<div className="hit-name font-bold hover:bg-slate-500 cursor-pointer">
 				<Highlight attribute="name" hit={hit} />
 			</div>
 			<div className="hit-category">

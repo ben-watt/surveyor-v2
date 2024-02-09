@@ -8,7 +8,7 @@ export default function Page() {
       <div className="flex justify-center">
         <h1 className="text-4xl dark:text-white m-4">Defect Database</h1>
       </div>
-      <Search />
+      <Search indexName={"defects"} />
     </div>
   );
 }

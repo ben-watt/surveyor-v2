@@ -6,7 +6,8 @@ import SelectBox from "../Input/SelectBox";
 import CurrencyInput from 'react-currency-input-field';
 import { useFormContext } from 'react-hook-form';
 import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
-import { CopyMarkupBtn, OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
+import { CopyMarkupBtn, OutlineBtn } from "@/app/components/Buttons";
+import { Search } from "@/app/components/Search";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
     const { register, unregister, getValues, setValue, watch } = useFormContext()
@@ -48,8 +49,9 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
     return (
         <>
             {currentDefects.map((defect: any, index: Key) => (
-                <div key={index} className="flex gap-x-10 items-end w-full">
-                    <SelectBox options={options} labelTitle={index === 0 && "Defect"} defaultValue={getValues(formKey + `.defects.${index}.name`)} register={() => register(formKey + `.defects.${index}.name`)} />
+                <div key={index}>
+                    <Search indexName={"defects"} />    
+                    {/* <SelectBox options={options} labelTitle={index === 0 && "Defect"} defaultValue={getValues(formKey + `.defects.${index}.name`)} register={() => register(formKey + `.defects.${index}.name`)} /> */}
                     <div>
                         <label className="label"><div className="label-text">{index === 0 && "Cost"}</div></label>
                         <CurrencyInput
@@ -60,7 +62,7 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
                             decimalsLimit={2} {...register(formKey + `.defects.${index}.cost`)} />
                     </div>
                     <div>
-                        <OutlineBtn onClick={(ev) => removeDefect(index)}>Remove</OutlineBtn>
+                        <CopyMarkupBtn className="text-red-500" onClick={(_) => removeDefect(index)}>Remove</CopyMarkupBtn>
                     </div>
                 </div>
             ))}
@@ -120,7 +122,7 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
         <>
             <div className="relative">
                 <div className="h-36">
-                    <TextAreaInput defaultValue={audioText} placeholder={`Description of the ${label.toLowerCase()}...`} register={() => register(formKey + ".description")} />
+                    <TextAreaInput defaultValue={audioText} placeholder={`Description of the ${label.toLowerCase()}...`} {...register(formKey + ".description")} />
                     <div className="absolute bottom-2 right-2">
                         <AudioRecorder showVisualizer onRecordingComplete={(blob) => addAudioElement(blob)} audioTrackConstraints={{
                             noiseSuppression: true,
