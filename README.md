@@ -26,12 +26,19 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
   - Input components need work ✅
   - Tiny Mce + API Key ✅
   - Open API Key / Audio Feature ✅
-  - Read this to understand how to do auth properly.... https://docs.amplify.aws/gen2/build-a-backend/server-side-rendering/
-  - Read this to get the defect search working properly... https://www.algolia.com/doc/api-reference/widgets/search-box/react/
+  - Read this to understand how to do auth properly.... https://docs.amplify.aws/gen2/build-a-backend/server-side-rendering/ ✅
+  - Read this to get the defect search working properly... https://www.algolia.com/doc/api-reference/widgets/search-box/react/ ✅
+
+  - Refactor some of the components to tidy up the form 
+    - Text box
+    - Defect Input
 
   - More dynamic defect sections (ignore for now...)
 
-  - Actually saving the form data
+  - Actually saving the form data and the individual reports!
+  - Getting the export just right
+
+
   - Guidance on each section and what you'd want
   - Listing out and re-opening that form data
   - Report formatting

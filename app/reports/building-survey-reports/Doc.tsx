@@ -74,7 +74,7 @@ export default function Report(props: any) {
                 ></ConditionSection>
               ))}
             </div>
-            <div className="flex justify-end m-10">
+            <div className="flex justify-center mt-8 mb-8">
               <PrimaryBtn type="submit">Generate Report</PrimaryBtn>
             </div>
           </form>
@@ -103,8 +103,11 @@ export default function Report(props: any) {
             pagebreak_separator: "<p>---------</p>",
           }}
         />
-        <PrimaryBtn onClick={save} disabled={!dirty}>Save</PrimaryBtn>
+        
         {dirty && <p>You have unsaved content!</p>}
+        <div className="flex justify-end mt-8 mb-8">      
+          <PrimaryBtn onClick={save} disabled={!dirty}>Save</PrimaryBtn>
+        </div> 
       </div>
     </div>
   );

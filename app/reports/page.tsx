@@ -10,7 +10,7 @@ function Home() {
     <>
       <div className="container mx-auto px-5 ">
         <div className="flex justify-center">
-          <h1 className="text-4xl dark:text-white m-10">Building Survey Report</h1>
+          <h1 className="text-3xl dark:text-white mb-8 mt-8">Building Survey Report</h1>
         </div>
         <Doc />
       </div>

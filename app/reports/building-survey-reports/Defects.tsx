@@ -6,7 +6,7 @@ import SelectBox from "../Input/SelectBox";
 import CurrencyInput from 'react-currency-input-field';
 import { useFormContext } from 'react-hook-form';
 import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
-import { OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
+import { CopyMarkupBtn, OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
     const { register, unregister, getValues, setValue, watch } = useFormContext()
@@ -39,8 +39,8 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
 
     if (currentDefects.length === 0) {
         return (
-            <div className="pt-3 pb-3">
-                <PrimaryBtn onClick={(ev) => addDefect(ev)}>Add Defect</PrimaryBtn>
+            <div className="flex justify-end pt-3 pb-3">
+                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Defect</CopyMarkupBtn>
             </div>
         )
     }
@@ -64,8 +64,8 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
                     </div>
                 </div>
             ))}
-            <div className="pt-3 pb-3">
-                <OutlineBtn onClick={addDefect}>Add Defect</OutlineBtn>
+            <div className="flex justify-end pt-3 pb-3">
+                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Defect</CopyMarkupBtn>
             </div>
         </>
     )
@@ -119,25 +119,28 @@ const ConditionInput = ({ formKey, label }: ConditionInputProp) => {
     return (
         <>
             <div className="relative">
-                <TextAreaInput defaultValue={audioText} placeholder={`Description of the ${label.toLowerCase()}...`} register={() => register(formKey + ".description")} />             
-                <div className="absolute bottom-2 right-2">
-                    <AudioRecorder showVisualizer onRecordingComplete={(blob) => addAudioElement(blob)} audioTrackConstraints={{
-                        noiseSuppression: true,
-                        echoCancellation: true,
-                    }} recorderControls={recorderControls} />
-                    
+                <div className="h-36">
+                    <TextAreaInput defaultValue={audioText} placeholder={`Description of the ${label.toLowerCase()}...`} register={() => register(formKey + ".description")} />
+                    <div className="absolute bottom-2 right-2">
+                        <AudioRecorder showVisualizer onRecordingComplete={(blob) => addAudioElement(blob)} audioTrackConstraints={{
+                            noiseSuppression: true,
+                            echoCancellation: true,
+                        }} recorderControls={recorderControls} />
+
+                    </div>
                 </div>
+
             </div>
             <div className="w-full">
                 {audio.url !== undefined && (
-                <>
-                    <div className="flex">
-                        <audio src={audio.url ?? ""} controls></audio>
-                        <div className="bg-zinc-800 w-9 h-10 flex p-1">
-                            <XMarkIcon className="w-fill text-white hover:text-blue-400 cursor-pointer" onClick={() => setAudio({})} />
+                    <>
+                        <div className="flex">
+                            <audio src={audio.url ?? ""} controls></audio>
+                            <div className="bg-zinc-800 w-9 h-10 flex p-1">
+                                <XMarkIcon className="w-fill text-white hover:text-purple-400 cursor-pointer" onClick={() => setAudio({})} />
+                            </div>
                         </div>
-                    </div>
-                </>)}
+                    </>)}
             </div>
             <div>
                 <div>
@@ -166,22 +169,26 @@ const ImageInput = ({ formKey }: { formKey: string }) => {
         setValue(formKey + ".images", newImages);
     }
 
-    var formRegistration = register(formKey + `.images`);
+    var {onChange, onBlur, name } = register(formKey + `.images`);
+
+    
     return (
         <div>
-            <label htmlFor={formRegistration.name} className="sr-only">
+            <label htmlFor={name} className="sr-only">
                 <span>Upload Images</span>
             </label>
             <input
                 type="file"
                 accept="image/*"
-                multiple id="file-input"
-                className="block w-full border border-gray-200 shadow-sm rounded-lg text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600
+                multiple 
+                id="file-input"
+                className="block w-full border border-gray-200 shadow-sm rounded-lg text-sm focus:z-10 focus:border-purple-600 focus:ring-purple-600 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600
                         file:bg-gray-50 file:border-0
                         file:bg-gray-100 file:me-4
                         file:py-3 file:px-4
                         dark:file:bg-gray-700 dark:file:text-gray-400"
-                {...formRegistration} />
+                onChange={onChange} 
+                onBlur={onBlur} />
             <div className="flex justify-start gap-x-5 mt-5">
                 {previewImageUrls.map((src, i) => (
                     <div key={i} className="relative">
