@@ -8,16 +8,13 @@ import { useFormContext } from 'react-hook-form';
 import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { CopyMarkupBtn, OutlineBtn } from "@/app/components/Buttons";
 import { Search } from "@/app/components/Search";
+import SelectedDefectHit from "@/app/components/SelectedDefectHit";
+import { DefectHit } from "@/app/components/DefectHit";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
     const { register, unregister, getValues, setValue, watch } = useFormContext()
 
-    watch(formKey + ".defects")
-
-    const options = [
-        { name: "Cracked or broken slates", value: "Cracked or broken slates" },
-        { name: "Missing slates", value: "Missing slates" },
-    ]
+    watch(formKey + ".defects");
 
     const currentDefects = (getValues(formKey + ".defects") || []).filter((x: any) => x);
 
@@ -28,14 +25,7 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
 
     const addDefect = (ev: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => {
         ev.preventDefault()
-
-        if (currentDefects.length === options.length) {
-            console.info("Max defects reached")
-            return;
-        }
-
-        console.info("Adding defect")
-        setValue(formKey + ".defects", currentDefects.concat({ name: options[currentDefects.length].value, cost: "£0" }));
+        setValue(formKey + ".defects", currentDefects.concat({ name: "", cost: "£0" }));
     }
 
     if (currentDefects.length === 0) {
@@ -49,21 +39,8 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
     return (
         <>
             {currentDefects.map((defect: any, index: Key) => (
-                <div key={index}>
-                    <Search indexName={"defects"} />    
-                    {/* <SelectBox options={options} labelTitle={index === 0 && "Defect"} defaultValue={getValues(formKey + `.defects.${index}.name`)} register={() => register(formKey + `.defects.${index}.name`)} /> */}
-                    <div>
-                        <label className="label"><div className="label-text">{index === 0 && "Cost"}</div></label>
-                        <CurrencyInput
-                            className="input input-bordered"
-                            placeholder="Please enter a number"
-                            prefix="£"
-                            defaultValue={0}
-                            decimalsLimit={2} {...register(formKey + `.defects.${index}.cost`)} />
-                    </div>
-                    <div>
-                        <CopyMarkupBtn className="text-red-500" onClick={(_) => removeDefect(index)}>Remove</CopyMarkupBtn>
-                    </div>
+                <div key={index} className="mt-5">
+                    <Search indexName={"defects"} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} />
                 </div>
             ))}
             <div className="flex justify-end pt-3 pb-3">

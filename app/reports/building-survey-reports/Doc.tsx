@@ -69,6 +69,7 @@ export default function Report(props: any) {
               <Introduction></Introduction>
               {defaultValues.conditionSections.map((k, i) => (
                 <ConditionSection
+                  key={k.name}
                   formKey={`conditionSections.${i}`}
                   label={k.name}
                 ></ConditionSection>
