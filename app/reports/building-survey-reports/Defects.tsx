@@ -12,7 +12,9 @@ import SelectedDefectHit from "@/app/components/SelectedDefectHit";
 import { DefectHit } from "@/app/components/DefectHit";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
-    const { register, unregister, getValues, setValue } = useFormContext()
+    const { register, unregister, getValues, setValue, watch } = useFormContext()
+
+    watch(formKey + ".defects")
 
     const currentDefects = getValues(formKey + ".defects") || [];
 

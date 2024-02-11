@@ -39,7 +39,7 @@ export const DefectHit = ({ hit, onClick }: HitProps<DefectHitRecord>) => {
 
 	return (
 		<article onClick={onClick}>
-			<div className="hit-name font-bold hover:bg-slate-500 cursor-pointer">
+			<div className="hit-name font-bold cursor-pointer">
 				<Highlight attribute="name" hit={hit} />
 			</div>
 			<div className="hit-category">
