@@ -2,6 +2,7 @@
 
 import { withAuthenticator, ThemeProvider } from '@aws-amplify/ui-react'
 import { redirect } from 'next/navigation';
+import "./amplify.module.css"
 
 const amplifyTheme = {
     name: 'custom-theme',
