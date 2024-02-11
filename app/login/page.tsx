@@ -1,7 +1,6 @@
 "use client"
 
 import { withAuthenticator, ThemeProvider } from '@aws-amplify/ui-react'
-import "./amplify.module.css"
 import { redirect } from 'next/navigation';
 
 const amplifyTheme = {
