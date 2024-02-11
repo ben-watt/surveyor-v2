@@ -1,4 +1,3 @@
-// components/Login.tsx
 "use client";
 
 import { ThemeProvider, withAuthenticator } from "@aws-amplify/ui-react";

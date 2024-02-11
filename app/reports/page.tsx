@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyMarkupBtn, PrimaryBtn } from "@/app/components/Buttons";
+import { CopyMarkupBtn } from "@/app/components/Buttons";
 import Link from "next/link";
 
 function HomePage() {

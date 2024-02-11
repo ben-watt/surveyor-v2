@@ -1,18 +1,16 @@
-import { Key, MouseEvent, ReactEventHandler, ReactNode, useEffect, useState } from "react";
+import { Key, MouseEvent, useEffect, useState } from "react";
 import TextAreaInput from "../Input/TextAreaInput";
 import ToogleInput from "../Input/ToggleInput";
 import { AudioRecorder, useAudioRecorder } from 'react-audio-voice-recorder';
-import SelectBox from "../Input/SelectBox";
-import CurrencyInput from 'react-currency-input-field';
 import { useFormContext } from 'react-hook-form';
 import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
-import { CopyMarkupBtn, OutlineBtn } from "@/app/components/Buttons";
+import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { SearchToSelect } from "@/app/components/Search";
 import SelectedDefectHit from "@/app/components/SelectedDefectHit";
 import { DefectHit } from "@/app/components/DefectHit";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
-    const { register, unregister, getValues, setValue, watch } = useFormContext()
+    const { unregister, getValues, setValue, watch } = useFormContext()
 
     watch(formKey + ".defects")
 
@@ -149,9 +147,9 @@ const ImageInput = ({ formKey }: { formKey: string }) => {
         setValue(formKey + ".images", newImages);
     }
 
-    var {onChange, onBlur, name } = register(formKey + `.images`);
+    var { onChange, onBlur, name } = register(formKey + `.images`);
 
-    
+
     return (
         <div>
             <label htmlFor={name} className="sr-only">
@@ -160,14 +158,14 @@ const ImageInput = ({ formKey }: { formKey: string }) => {
             <input
                 type="file"
                 accept="image/*"
-                multiple 
+                multiple
                 id="file-input"
                 className="block w-full border border-gray-200 shadow-sm rounded-lg text-sm focus:z-10 focus:border-purple-600 focus:ring-purple-600 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600
                         file:bg-gray-50 file:border-0
                         file:bg-gray-100 file:me-4
                         file:py-3 file:px-4
                         dark:file:bg-gray-700 dark:file:text-gray-400"
-                onChange={onChange} 
+                onChange={onChange}
                 onBlur={onBlur} />
             <div className="flex justify-start gap-x-5 mt-5">
                 {previewImageUrls.map((src, i) => (

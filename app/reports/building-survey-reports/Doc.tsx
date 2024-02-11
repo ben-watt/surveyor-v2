@@ -10,9 +10,6 @@ import Introduction from "./Introduction";
 import ConditionSection from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 
-
-
-
 export default function Report(props: any) {
 
   const TINY_API_KEY = process.env.NEXT_PUBLIC_TINY_MCE_API_KEY;
