@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tailwind keeps cocking up the styling this is a hack to fix it */
+.amplify-button--primary.amplify-button--primary {
+    background-color: black;
+}
+
 .ais-SearchBox {
     margin-bottom: 1em;
 }
