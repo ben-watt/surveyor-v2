@@ -17,6 +17,7 @@ const amplifyTheme = {
           70: 'black',
           80: 'black',
           90: 'black',
+          100: 'black'
         },
       },
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { DefectHit } from "@/app/components/DefectHit";
-import { Search } from "../../components/Search";
+import { SearchToSelect } from "../../components/Search";
 import SelectedDefectHit from "@/app/components/SelectedDefectHit";
 
 export default function Page() {
@@ -10,7 +10,7 @@ export default function Page() {
       <div className="flex justify-center">
         <h1 className="text-4xl dark:text-white m-4">Defect Database</h1>
       </div>
-      <Search indexName={"defects"} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} onRemoveInput={() => {}}  />
+      <SearchToSelect indexName={"defects"} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} onRemoveInput={() => {}}  />
     </div>
   );
 }

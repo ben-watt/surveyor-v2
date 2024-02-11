@@ -2,12 +2,10 @@
 
 import algoliasearch from "algoliasearch/lite";
 import "instantsearch.css/themes/satellite.css";
-import { Hits, InstantSearch, SearchBox, Configure, DynamicWidgets, RefinementList, HierarchicalMenu } from "react-instantsearch";
+import { Hits, InstantSearch, SearchBox, Configure } from "react-instantsearch";
 
-import { DefectHit } from "./DefectHit";
-import { ReactComponentElement, useRef, useState } from "react";
+import { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import SelectedDefectHit, { DefectHitRecord, SelectedDefectHitProps } from "./SelectedDefectHit";
 
 const searchClient = algoliasearch("ZJ2NDPRTUZ", "4e8f03e6c31600da8e3218d30547bb1f");
 
@@ -24,7 +22,7 @@ export interface HitProps<T> {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export const Search = (props: SearchProps<any>) => {
+export const SearchToSelect = (props: SearchProps<any>) => {
   const { indexName, filters, onRemoveInput, hitComponent: Hit, selectedHitComponent: Selected } = props;
 
   const [query, setQueryState] = useState("");

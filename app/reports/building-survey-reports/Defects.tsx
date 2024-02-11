@@ -7,7 +7,7 @@ import CurrencyInput from 'react-currency-input-field';
 import { useFormContext } from 'react-hook-form';
 import { XCircleIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { CopyMarkupBtn, OutlineBtn } from "@/app/components/Buttons";
-import { Search } from "@/app/components/Search";
+import { SearchToSelect } from "@/app/components/Search";
 import SelectedDefectHit from "@/app/components/SelectedDefectHit";
 import { DefectHit } from "@/app/components/DefectHit";
 
@@ -41,7 +41,7 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
         <>
             {currentDefects.map((defect: any, index: Key) => (
                 <div key={index} className="mt-2">
-                    <Search indexName={"defects"} onRemoveInput={() => removeDefect(index)} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} />
+                    <SearchToSelect indexName={"defects"} onRemoveInput={() => removeDefect(index)} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} />
                 </div>
             ))}
             <div className="flex justify-end pt-3 pb-3">
