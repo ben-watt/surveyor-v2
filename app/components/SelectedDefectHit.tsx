@@ -23,7 +23,7 @@ export default function SelectedDefectHit({ hit, onClick }: SelectedDefectHitPro
           </button>
         </div>
         <div>
-          <img src="https://via.placeholder.com/100" />
+          <img src="https://via.placeholder.com/100" height={100} width={100} />
         </div>
         <div className="p-2">
           <h2>{hit.name} &middot; £100</h2>

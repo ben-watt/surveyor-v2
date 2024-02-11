@@ -20,6 +20,12 @@ export default function Report(props: any) {
   const editorRef = useRef<TinyMCEEditor>();
   const [initialValue, setInitialValue] = useState("");
   const [customCss, setCustomCss] = useState("");
+  const [contentCss, setContentCss] = useState("writer")
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    if(!isMobile) 
+      setContentCss("document")
+  })
 
   const defaultValues = {
     reportDate: new Date(),
@@ -33,6 +39,8 @@ export default function Report(props: any) {
       { name: "Stairs" },
     ],
   };
+
+
 
   const methods = useForm<BuildingSurveyData>({ defaultValues });
 
@@ -90,7 +98,8 @@ export default function Report(props: any) {
           onDirty={() => setDirty(true)}
           init={{
             height: 1000,
-            menubar: false,
+            menubar: true,
+            skin: 'oxide-dark',
             plugins: [
               'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
               'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
@@ -100,7 +109,7 @@ export default function Report(props: any) {
               'bold italic backcolor | alignleft aligncenter ' +
               'alignright alignjustify | bullist numlist outdent indent | ' +
               'removeformat | help',
-            content_css: ["document"],
+            content_css: contentCss,
             pagebreak_separator: "<p>---------</p>",
           }}
         />

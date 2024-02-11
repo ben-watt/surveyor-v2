@@ -12,13 +12,12 @@ import SelectedDefectHit from "@/app/components/SelectedDefectHit";
 import { DefectHit } from "@/app/components/DefectHit";
 
 const DefectInput = ({ formKey }: { formKey: string }) => {
-    const { register, unregister, getValues, setValue, watch } = useFormContext()
+    const { register, unregister, getValues, setValue } = useFormContext()
 
-    watch(formKey + ".defects");
-
-    const currentDefects = (getValues(formKey + ".defects") || []).filter((x: any) => x);
+    const currentDefects = getValues(formKey + ".defects") || [];
 
     const removeDefect = (index: Key) => {
+        console.log("removing", index, currentDefects);
         unregister(formKey + `.defects.${index}.name`);
         unregister(formKey + `.defects.${index}.cost`);
     }
@@ -39,8 +38,8 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
     return (
         <>
             {currentDefects.map((defect: any, index: Key) => (
-                <div key={index} className="mt-5">
-                    <Search indexName={"defects"} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} />
+                <div key={index} className="mt-2">
+                    <Search indexName={"defects"} onRemoveInput={() => removeDefect(index)} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} />
                 </div>
             ))}
             <div className="flex justify-end pt-3 pb-3">
