@@ -19,7 +19,7 @@
     "algoliasearch": "^4.22.1",
     "aws-amplify": "^6.0.15",
     "instantsearch.css": "^8.1.0",
-    "next": "13.5.4",
+    "next": "^14.1.0",
     "preline": "^2.0.3",
     "react": "^18",
     "react-audio-voice-recorder": "^2.2.0",

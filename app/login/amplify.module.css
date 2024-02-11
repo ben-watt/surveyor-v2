@@ -1,0 +1,8 @@
+/* .amplify-button--primary.amplify-button--primary {
+    background: var(--amplify-colors-primary-80)
+} */
+
+
+.amplify-button--primary.amplify-button--primary {
+    background: yellow;
+}
