@@ -24,21 +24,32 @@ export default function Report(props: any) {
       setContentCss("document")
   })
 
-  const defaultValues = {
+  const defaultValues : BuildingSurveyData = {
+    id: 0,
     reportDate: new Date(),
+    address: "",
+    clientName: "",
+    frontElevationImage: [],
     conditionSections: [
-      { name: "Roof" },
-      { name: "Walls" },
-      { name: "Floors" },
-      { name: "Windows" },
-      { name: "Doors" },
-      { name: "Ceilings" },
-      { name: "Stairs" },
+      { name: "Foundations and Substructure", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Roof Coverings", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Rainwater Disposal System", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Soffits and Fascias", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Main Walls", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Damp Proof Courses", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Windows and Doors", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Roof Void", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Ceilings", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Walls and Partitions", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Floors", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Sanitaryware & Kitchen", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Electrical Installation", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Gas/Oil Installations", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Cold Water Supply", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Boundaries, Fencing, Drives, Lawn, etc", isPartOfSurvey: false, description: "", components: [], images: [] }
     ],
   };
-
-
-
+  
   const methods = useForm<BuildingSurveyData>({ defaultValues });
 
   const onSubmit = () => {

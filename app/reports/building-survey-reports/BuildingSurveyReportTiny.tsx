@@ -391,11 +391,11 @@ const ConditionSection = ({ conditionSection }: ConditionSectionProps) => {
         <p><strong className="text-red-500">Description:</strong></p>
         <p>{cs.description}</p>
         <p><strong>Defects:</strong></p>
-          {cs.defects?.map((d, i) => {
+          {/* {cs.components?.map((d, i) => {
             return (
               <p>{d.name}&nbsp;<strong>{d.cost}</strong></p>
             )
-          })}
+          })} */}
       </div>
         <table style={{width: "100%"}}>
           <tbody>

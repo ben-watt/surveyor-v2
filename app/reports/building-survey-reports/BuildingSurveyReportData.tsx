@@ -1,9 +1,11 @@
+import ConditionSection from "./Defects"
+
 export type BuildingSurveyData = {
     id: number,
     address: string,
     clientName: string,
-    reportDate: Date,
-    frontElevationImage: FileList,
+    reportDate: Date,   
+    frontElevationImage: File[],
     conditionSections: ConditionSection[],
 }
 
@@ -11,13 +13,26 @@ export type ConditionSection = {
     name: string,
     isPartOfSurvey: boolean,
     description: string,
+    components : Component[],
+    images: File[],
+}
+
+export type Component = {
+    name: string,
     defects: Defect[],
-    images: FileList,
+    conditions: Condition[]
+}
+
+export type Condition = {
+    description : string
 }
 
 export type Defect = {
     name: string,
     description: string,
+    cause: string,
+    implications: string,
+    treatment: string,
     cost: number,
 }
 
