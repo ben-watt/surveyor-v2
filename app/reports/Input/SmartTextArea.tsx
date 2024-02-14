@@ -9,12 +9,13 @@ type AudioState = {
     blob?: Blob;
 }
 
-interface SmartTextAreaProps extends UseFormRegisterReturn<string> {
+interface SmartTextAreaProps {
     label: string;
     placeholder: string;
+    register: () => UseFormRegisterReturn<string>;
 }
 
-const SmartTextArea = ({ label, onBlur, onChange, ref, name, placeholder } : SmartTextAreaProps) => {
+const SmartTextArea = ({ label, placeholder, register } : SmartTextAreaProps) => {
     const [audio, setAudio] = useState<AudioState>({});
     const [audioText, setAudioText] = useState("");
 
@@ -52,7 +53,7 @@ const SmartTextArea = ({ label, onBlur, onChange, ref, name, placeholder } : Sma
         <div>
             <div className="relative">
                 <div className="h-36">
-                    <TextAreaInput defaultValue={audioText} placeholder={placeholder} onBlur={onBlur} onChange={onChange} ref={ref} name={name} />
+                    <TextAreaInput defaultValue={audioText} placeholder={placeholder} register={register} />
                     <div className="absolute bottom-2 right-2">
                         <AudioRecorder showVisualizer onRecordingComplete={(blob) => addAudioElement(blob)} audioTrackConstraints={{
                             noiseSuppression: true,

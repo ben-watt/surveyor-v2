@@ -1,11 +1,16 @@
 import { XCircleIcon } from "@heroicons/react/16/solid";
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
 
-const ImageInput = (props: UseFormRegisterReturn<string>) => {
-    const { watch, setValue, formState } = useFormContext();
+interface InputImageProps {
+    label?: string;
+    register: () => UseFormRegisterReturn<string>;
+}
 
-    const images = watch(props.name, []);
-    console.log(formState)
+const InputImage = (props: InputImageProps) => {
+    const { watch, setValue } = useFormContext();
+
+    const reg = props.register();
+    const images = watch(reg.name, []);
 
     const previewImageUrls = [];
     if (images.length !== 0) {
@@ -17,14 +22,11 @@ const ImageInput = (props: UseFormRegisterReturn<string>) => {
     const removeImage = (index: number) => {
         const newImages = [...images];
         newImages.splice(index, 1);
-        setValue(props.name, newImages);
+        setValue(reg.name, newImages);
     }
 
     return (
         <div>
-            <label htmlFor={props.name } className="sr-only">
-                <span>Upload Images</span>
-            </label>
             <input
                 type="file"
                 accept="image/*"
@@ -35,9 +37,7 @@ const ImageInput = (props: UseFormRegisterReturn<string>) => {
                         file:bg-gray-100 file:me-4
                         file:py-3 file:px-4
                         dark:file:bg-gray-700 dark:file:text-gray-400"
-                onChange={props.onChange}
-                onBlur={props.onBlur}
-                ref={props.ref} />
+                {...reg} />
             <div className="flex justify-start gap-x-5 mt-5">
                 {previewImageUrls.map((src, i) => (
                     <div key={i} className="relative">
@@ -50,4 +50,4 @@ const ImageInput = (props: UseFormRegisterReturn<string>) => {
     )
 }
 
-export default ImageInput;
+export default InputImage;

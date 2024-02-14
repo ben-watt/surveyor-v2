@@ -1,30 +1,32 @@
 import { Key, MouseEvent, useState } from "react";
 import ToogleInput from "../Input/ToggleInput";
-import { useFormContext } from 'react-hook-form';
-import { XCircleIcon } from '@heroicons/react/24/solid'
+import { UseFormRegisterReturn, useFormContext } from 'react-hook-form';
 import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { SearchToSelect } from "@/app/components/Search";
 import SelectedDefectHit from "@/app/components/SelectedDefectHit";
 import { DefectHit } from "@/app/components/DefectHit";
-import SmartTextArea from "../Input/SmartTextArea";
-import ImageInput from "../Input/ImageInput";
 
-const DefectInput = ({ formKey }: { formKey: string }) => {
+
+interface DefectInputProps {
+    register: () => UseFormRegisterReturn<string>;
+}
+
+export const DefectInput = ({ register } : DefectInputProps) => {
     const { unregister, getValues, setValue, watch } = useFormContext()
+    const props = register();
 
-    watch(formKey + ".defects")
+    watch(props.name)
 
-    const currentDefects = getValues(formKey + ".defects") || [];
+    const currentDefects = getValues(props.name) || [];
 
     const removeDefect = (index: Key) => {
-        console.log("removing", index, currentDefects);
-        unregister(formKey + `.defects.${index}.name`);
-        unregister(formKey + `.defects.${index}.cost`);
+        unregister(props.name + `.${index}.name`);
+        unregister(props.name + `.${index}.cost`);
     }
 
     const addDefect = (ev: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => {
         ev.preventDefault()
-        setValue(formKey + ".defects", currentDefects.concat({ name: "", cost: "£0" }));
+        setValue(props.name, currentDefects.concat({ name: "", cost: "£0" }));
     }
 
     if (currentDefects.length === 0) {
@@ -50,7 +52,13 @@ const DefectInput = ({ formKey }: { formKey: string }) => {
 }
 
 
-const ToggleSection = ({ label, children, register }: any) => {
+interface ToggleSectionProps {
+    label: string;
+    children: any;
+    register: () => UseFormRegisterReturn<string>;
+}
+
+export const ToggleSection = ({ label, children, register }: ToggleSectionProps) => {
     const [enabled, setEnabled] = useState(false);
 
     return (
@@ -62,21 +70,4 @@ const ToggleSection = ({ label, children, register }: any) => {
             {enabled && children}
         </>
     )
-}
-
-export default function ConditionSection({ formKey, label }: { formKey: string, label: string }) {
-    const { register, watch } = useFormContext();
-    const partOfSurveyReg = register(formKey + ".isPartOfSurvey")
-
-    return (
-        <section className="mt-2">
-            <ToggleSection label={label} register={() => partOfSurveyReg}>
-                <div>
-                    <SmartTextArea label={label} placeholder={`Description of the ${label.toLowerCase()}...`} {...register(formKey + ".description")} />
-                    <DefectInput formKey={formKey}></DefectInput>
-                    <ImageInput {...register(formKey + ".images")}  />
-                </div>
-            </ToggleSection>
-        </section>
-    );
 }

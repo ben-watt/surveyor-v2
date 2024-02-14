@@ -31,7 +31,6 @@ export const SearchToSelect = (props: SearchProps<any>) => {
   const [selectedHit, setSelectedHit] = useState<any>(null)
 
   function reset(ev: any) {
-    console.log("reset", ev)
     setQueryState("")
     setSelectedHit(null)
   }

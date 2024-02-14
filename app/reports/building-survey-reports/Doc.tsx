@@ -6,9 +6,11 @@ import { useForm, FormProvider } from "react-hook-form";
 import { Editor } from "@tinymce/tinymce-react";
 import type { Editor as TinyMCEEditor } from "tinymce";
 import BuildingSurveyReport from "./BuildingSurveyReportTiny";
-import Introduction from "./Introduction";
-import ConditionSection from "./Defects";
+import { DefectInput, ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
+import InputText from "../Input/InputText";
+import InputImage from "../Input/ImageInput";
+import SmartTextArea from "../Input/SmartTextArea";
 
 export default function Report(props: any) {
 
@@ -20,11 +22,11 @@ export default function Report(props: any) {
   const [contentCss, setContentCss] = useState("writer")
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
-    if(!isMobile) 
+    if (!isMobile)
       setContentCss("document")
   })
 
-  const defaultValues : BuildingSurveyData = {
+  const defaultValues: BuildingSurveyData = {
     id: 0,
     reportDate: new Date(),
     address: "",
@@ -49,12 +51,13 @@ export default function Report(props: any) {
       { name: "Boundaries, Fencing, Drives, Lawn, etc", isPartOfSurvey: false, description: "", components: [], images: [] }
     ],
   };
-  
+
   const methods = useForm<BuildingSurveyData>({ defaultValues });
+  const { register, handleSubmit, watch } = methods;
 
   const onSubmit = () => {
     setInitialValue(
-      renderToString(<BuildingSurveyReport form={methods.watch()} />)
+      renderToString(<BuildingSurveyReport form={watch()} />)
     );
   };
 
@@ -80,15 +83,27 @@ export default function Report(props: any) {
     <div className="md:grid md:grid-cols-4 ">
       <div className="col-start-2 col-span-2">
         <FormProvider {...methods}>
-          <form onSubmit={methods.handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <Introduction></Introduction>
+              <InputText labelTitle="Address" register={() => register("address", { required: true })} />
+              <InputText labelTitle="Client" register={() => register("clientName", { required: true })} />
+              <div>
+                <label className="mt-2" htmlFor="file-input">Front Elevation Image</label>
+                <InputImage register={() => register("frontElevationImage")} />
+              </div>
               {defaultValues.conditionSections.map((k, i) => (
-                <ConditionSection
-                  key={k.name}
-                  formKey={`conditionSections.${i}`}
-                  label={k.name}
-                ></ConditionSection>
+                <section className="mt-2">
+                  <ToggleSection label={k.name} register={() => register(`conditionSections.${i}.isPartOfForm`)}>
+                    <div>
+                      <SmartTextArea 
+                        label={k.name} 
+                        placeholder={`Description of the ${k.name.toLowerCase()}...`}
+                        register={() => register(`conditionSections.${i}.description`)} />
+                      <DefectInput register={() => register(`conditionSections.${i}.defects`)}></DefectInput>
+                      <InputImage register={() => register(`conditionSections.${i}.images`)} />
+                    </div>
+                  </ToggleSection>
+                </section>
               ))}
             </div>
             <div className="flex justify-center mt-8 mb-8">
@@ -121,11 +136,11 @@ export default function Report(props: any) {
             pagebreak_separator: "<p>---------</p>",
           }}
         />
-        
+
         {dirty && <p>You have unsaved content!</p>}
-        <div className="flex justify-end mt-8 mb-8">      
+        <div className="flex justify-end mt-8 mb-8">
           <PrimaryBtn onClick={save} disabled={!dirty}>Save</PrimaryBtn>
-        </div> 
+        </div>
       </div>
     </div>
   );
