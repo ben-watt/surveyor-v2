@@ -126,9 +126,9 @@ export default function Report(props: any) {
             plugins: [
               'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
               'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-              'insertdatetime', 'media', 'table', 'help', 'wordcount', 'export', 'pagebreak'
+              'insertdatetime', 'media', 'table', 'help', 'wordcount', 'pagebreak'
             ],
-            toolbar: 'export | undo redo | blocks pagebreak | ' +
+            toolbar: 'undo redo | blocks pagebreak | ' +
               'bold italic backcolor | alignleft aligncenter ' +
               'alignright alignjustify | bullist numlist outdent indent | ' +
               'removeformat | help',
