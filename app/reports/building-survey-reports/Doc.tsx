@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { v4 as uuidv4 } from 'uuid';
+
 import { renderToString } from "react-dom/server";
-import { BuildingSurveyData } from "./BuildingSurveyReportData";
+import { BuildingSurveyFormData } from "./BuildingSurveyReportData";
 
 import { useForm, FormProvider } from "react-hook-form";
 import { Editor } from "@tinymce/tinymce-react";
@@ -11,6 +13,8 @@ import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "../Input/InputText";
 import InputImage from "../Input/ImageInput";
 import SmartTextArea from "../Input/SmartTextArea";
+import InputError from "@/app/components/InputError";
+import reportClient from "@/app/clients/ReportsClient";
 
 export default function Report(props: any) {
 
@@ -20,14 +24,16 @@ export default function Report(props: any) {
   const [initialValue, setInitialValue] = useState("");
   const [customCss, setCustomCss] = useState("");
   const [contentCss, setContentCss] = useState("writer")
+
+
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
     if (!isMobile)
       setContentCss("document")
   })
 
-  const defaultValues: BuildingSurveyData = {
-    id: 0,
+  const defaultValues: BuildingSurveyFormData = {
+    id: uuidv4(),
     reportDate: new Date(),
     address: "",
     clientName: "",
@@ -52,10 +58,19 @@ export default function Report(props: any) {
     ],
   };
 
-  const methods = useForm<BuildingSurveyData>({ defaultValues });
-  const { register, handleSubmit, watch } = methods;
+  const methods = useForm<BuildingSurveyFormData>({ defaultValues });
+  const { register, handleSubmit, watch, formState } = methods;
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    try {
+      let form = watch();
+      let response = await reportClient.models.Reports.create({ id: form.id, content: JSON.stringify(form) });
+      console.log(response);
+    }
+    catch(error) {
+      console.error(error);
+    }
+
     setInitialValue(
       renderToString(<BuildingSurveyReport form={watch()} />)
     );
@@ -85,21 +100,29 @@ export default function Report(props: any) {
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <InputText labelTitle="Address" register={() => register("address", { required: true })} />
-              <InputText labelTitle="Client" register={() => register("clientName", { required: true })} />
-              <div>
-                <label className="mt-2" htmlFor="file-input">Front Elevation Image</label>
-                <InputImage register={() => register("frontElevationImage")} />
+              <div className="space-y-4">
+                <div>
+                  <InputText labelTitle="Address" register={() => register("address", { required: "Address is required" })} />
+                  <InputError message={formState.errors.address?.message} />
+                </div>
+                <div>
+                  <InputText labelTitle="Client" register={() => register("clientName", { required: true })} />
+                  <InputError message={formState.errors.clientName?.message} />
+                </div>
+                <div>
+                  <label className="mt-2" htmlFor="file-input">Front Elevation Image</label>
+                  <InputImage register={() => register("frontElevationImage")} />
+                </div>
               </div>
               {defaultValues.conditionSections.map((k, i) => (
                 <section className="mt-2">
-                  <ToggleSection label={k.name} register={() => register(`conditionSections.${i}.isPartOfForm`)}>
+                  <ToggleSection label={k.name} register={() => register(`conditionSections.${i}.isPartOfSurvey`)}>
                     <div>
-                      <SmartTextArea 
-                        label={k.name} 
+                      <SmartTextArea
+                        label={k.name}
                         placeholder={`Description of the ${k.name.toLowerCase()}...`}
                         register={() => register(`conditionSections.${i}.description`)} />
-                      <DefectInput register={() => register(`conditionSections.${i}.defects`)}></DefectInput>
+                      <DefectInput register={() => register(`conditionSections.${i}.components`)}></DefectInput>
                       <InputImage register={() => register(`conditionSections.${i}.images`)} />
                     </div>
                   </ToggleSection>

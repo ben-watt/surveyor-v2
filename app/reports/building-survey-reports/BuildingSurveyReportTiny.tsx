@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import type { BuildingSurveyData, ConditionSection } from "./BuildingSurveyReportData";
+import type { BuildingSurveyFormData, ConditionSection } from "./BuildingSurveyReportData";
 import { DefaultTocProvider, TocContext, TocProvider } from "../../components/Toc";
 
 
@@ -104,7 +104,7 @@ const getImagesFromFileList = (fileList: FileList) : string[] => {
 const Page = (props: React.PropsWithChildren<any>) => 
     (<><section className={"mt-8 mb-8 " + props.className}>{props.children}</section><p>---------</p></>);
 
-export default ({ form }: { form: BuildingSurveyData }) => {
+export default ({ form }: { form: BuildingSurveyFormData }) => {
   console.log(form);
   const clientName = form.clientName;
   const address = form.address;

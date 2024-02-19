@@ -17,13 +17,11 @@ export default function PrelineScript() {
     const preline = import("preline/preline");
     preline.then((preline) => {
       window.HSStaticMethods.autoInit();
-      console.info("Preline loaded", preline)
     });
   }, []);
 
   useEffect(() => {
     setTimeout(() => {
-      console.info("Check method exists", window.HSStaticMethods)
       if(window.HSStaticMethods !== undefined) {
         window.HSStaticMethods.autoInit();
       }

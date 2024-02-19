@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import InputText from '../Input/InputText'
 import { useFormContext } from 'react-hook-form';
-import { BuildingSurveyData, nameof } from './BuildingSurveyReportData';
+import { BuildingSurveyFormData, nameof } from './BuildingSurveyReportData';
 import InputImage from '../Input/ImageInput';
 
 

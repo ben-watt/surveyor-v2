@@ -29,9 +29,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
   - Read this to understand how to do auth properly.... https://docs.amplify.aws/gen2/build-a-backend/server-side-rendering/ ✅
   - Read this to get the defect search working properly... https://www.algolia.com/doc/api-reference/widgets/search-box/react/ ✅
 
-  - Refactor some of the components to tidy up the form 
-    - Text box
-    - Defect Input
+  - Refactor some of the components to tidy up the form ✅
+    - Text box ✅
+    - Defect Input ✅
 
   - More dynamic defect sections (ignore for now...)
 

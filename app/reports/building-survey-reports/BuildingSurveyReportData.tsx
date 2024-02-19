@@ -1,7 +1,5 @@
-import ConditionSection from "./Defects"
-
-export type BuildingSurveyData = {
-    id: number,
+export type BuildingSurveyFormData = {
+    id: string,
     address: string,
     clientName: string,
     reportDate: Date,   
