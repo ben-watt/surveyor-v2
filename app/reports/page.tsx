@@ -5,6 +5,7 @@ import client from "@/app/clients/ReportsClient";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportData";
+import { basicToast } from "../components/Toasts";
 
 function HomePage() {
 
@@ -28,9 +29,10 @@ function HomePage() {
 
   const deleteReport = async (id: string) => { 
     try {
-      console.log("Deleting report...", id);
       const response = await client.models.Reports.delete({ id });
-      console.log(response);
+      if(response.data.id) {
+        setReports(reports.filter(r => r.id !== id));
+      }
     } catch (error) {
       console.error(error);
     }
@@ -40,11 +42,11 @@ function HomePage() {
     <div className="m-10">
       <div className="flex justify-between mb-8 mt-8 items-baseline">
         <div>
-          <h1 className="text-3xl dark:text-white">Building Survey Reports</h1>
+          <h1 className="text-3xl dark:text-white">Reports</h1>
         </div>
         <div>
           <Link href="/reports/create-report">
-            <CopyMarkupBtn>Create Report</CopyMarkupBtn>
+            <CopyMarkupBtn>Create</CopyMarkupBtn>
           </Link>
         </div>
       </div>
@@ -58,15 +60,17 @@ function HomePage() {
                   <tr>
                     <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Client</th>
                     <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Address</th>
+                    <th scope="col" className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Date</th>
                     <th scope="col" className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {reports.map((report) => { 
                     return (
-                      <tr>
+                      <tr key={report.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">{report.clientName}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">{report.address}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">{new Date(report.reportDate).toDateString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
                           <button type="button" onClick={() => deleteReport(report.id)}  className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">Delete</button>
                         </td>

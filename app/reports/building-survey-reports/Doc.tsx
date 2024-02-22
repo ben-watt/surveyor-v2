@@ -15,6 +15,8 @@ import InputImage from "../Input/ImageInput";
 import SmartTextArea from "../Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
+import { successToast } from "@/app/components/Toasts";
+import { useRouter } from "next/navigation";
 
 export default function Report(props: any) {
 
@@ -24,12 +26,14 @@ export default function Report(props: any) {
   const [initialValue, setInitialValue] = useState("");
   const [customCss, setCustomCss] = useState("");
   const [contentCss, setContentCss] = useState("writer")
+  const router = useRouter();
 
 
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
-    if (!isMobile)
+    if (!isMobile) {
       setContentCss("document")
+    }
   })
 
   const defaultValues: BuildingSurveyFormData = {
@@ -64,8 +68,9 @@ export default function Report(props: any) {
   const onSubmit = async () => {
     try {
       let form = watch();
-      let response = await reportClient.models.Reports.create({ id: form.id, content: JSON.stringify(form) });
-      console.log(response);
+      let _ = await reportClient.models.Reports.create({ id: form.id, content: JSON.stringify(form) });
+      successToast("Report created")
+      router.push(`/reports`)
     }
     catch(error) {
       console.error(error);

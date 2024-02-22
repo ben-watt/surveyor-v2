@@ -35,16 +35,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
   - More dynamic defect sections (ignore for now...)
 
-  - Actually saving the form data and the individual reports!
+  - Actually saving the form data and the individual reports! ✅
   - Getting the export just right
+  - Address lookup
 
+  - List out the form
+  - Toasts (Deleted a form)
 
-  - Guidance on each section and what you'd want
-  - Listing out and re-opening that form data
-  - Report formatting
-  - Mobile
-  - Publish with correct api keys for environments
-- Offline mode
+  - Don't use algolia for search?s
 
 ### Next
 
