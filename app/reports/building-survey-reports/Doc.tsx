@@ -70,7 +70,7 @@ export default function Report(props: any) {
       let form = watch();
       let _ = await reportClient.models.Reports.create({ id: form.id, content: JSON.stringify(form) });
       successToast("Report created")
-      router.push(`/reports`)
+      /*router.push(`/reports`)*/
     }
     catch(error) {
       console.error(error);
