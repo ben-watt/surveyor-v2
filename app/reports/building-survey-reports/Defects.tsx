@@ -32,7 +32,7 @@ export const DefectInput = ({ register } : DefectInputProps) => {
     if (currentDefects.length === 0) {
         return (
             <div className="flex justify-end pt-3 pb-3">
-                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Defect</CopyMarkupBtn>
+                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Condition</CopyMarkupBtn>
             </div>
         )
     }
