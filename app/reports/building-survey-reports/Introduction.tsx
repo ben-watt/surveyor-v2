@@ -1,7 +1,6 @@
 import React, { useContext } from 'react'
 import InputText from '../Input/InputText'
 import { useFormContext } from 'react-hook-form';
-import { BuildingSurveyFormData, nameof } from './BuildingSurveyReportData';
 import InputImage from '../Input/ImageInput';
 
 
@@ -10,13 +9,13 @@ export default function Introduction() {
 
     return (
         <>
-            <InputText labelTitle="Address" placeholder="Address" register={() => register("address")} />
-            <InputText labelTitle="Client" placeholder="ClientName" register={() => register("clientName")} />
+            <InputText labelTitle="Address" register={() => register("address")} />
+            <InputText labelTitle="Client" register={() => register("clientName")} />
             <div>
                 <div className="m-2">
                     <label htmlFor="file-input">Front Elevation Image</label>
                 </div>
-                <InputImage {...register("frontElevationImage")} />
+                <InputImage register={() => register("frontElevationImage")} />
             </div>
 
         </>

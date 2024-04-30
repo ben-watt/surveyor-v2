@@ -6,7 +6,7 @@ interface InputTextProps {
   register: () => UseFormRegisterReturn<string>
 }
 
-function InputText({ labelTitle, defaultValue, register}: InputTextProps) {
+function InputText({ labelTitle, defaultValue, register }: InputTextProps) {
   return (
     <div className="relative">
       <input type="text" id="input-text" className="peer border p-4 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:border-purple-600 focus:ring-purple-600 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600
