@@ -33,8 +33,12 @@ const TableBlock = ({ children, widths  }: { children: React.ReactNode, widths: 
   )
 }
 
+interface ContentBlockProps extends React.PropsWithChildren<any> {
+  tocProvider: TocProvider
+}
 
-const ContentBlock = ({ children, tocProvider }: { children: React.ReactNode,  tocProvider: TocProvider  }) => {
+
+const ContentBlock = ({ children, tocProvider }: ContentBlockProps) => {
   let firstElement = null;
   if(Array.isArray(children)) {
     firstElement = children[0]
@@ -42,7 +46,7 @@ const ContentBlock = ({ children, tocProvider }: { children: React.ReactNode,  t
     firstElement = children;
   }
 
-  let dynamicElement = React.createElement(firstElement.type, { children: tocProvider(firstElement.type) });
+  let dynamicElement = React.createElement(firstElement.type, tocProvider(firstElement.type));
 
   return (
     <table className="w-100-perc">
@@ -88,7 +92,7 @@ const H2 = (props: PProps) => {
 }
 
 
-const getImagesFromFileList = (fileList: FileList) : string[] => {
+const getImagesFromFileList = (fileList: File[]) : string[] => {
   const images = [];
 
   if(fileList === null || fileList === undefined)
@@ -104,8 +108,7 @@ const getImagesFromFileList = (fileList: FileList) : string[] => {
 const Page = (props: React.PropsWithChildren<any>) => 
     (<><section className={"mt-8 mb-8 " + props.className}>{props.children}</section><p>---------</p></>);
 
-export default ({ form }: { form: BuildingSurveyFormData }) => {
-  console.log(form);
+export default function PDF({ form } : { form: BuildingSurveyFormData }) {
   const clientName = form.clientName;
   const address = form.address;
 

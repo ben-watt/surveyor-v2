@@ -120,7 +120,7 @@ export default function Report(props: any) {
                 </div>
               </div>
               {defaultValues.conditionSections.map((k, i) => (
-                <section className="mt-2">
+                <section key={i} className="mt-2">
                   <ToggleSection label={k.name} register={() => register(`conditionSections.${i}.isPartOfSurvey`)}>
                     <div>
                       <SmartTextArea
