@@ -45,19 +45,24 @@ export default function Report(props: any) {
     conditionSections: [
       { name: "Foundations and Substructure", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Roof Coverings", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Chimneys", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Rainwater Disposal System", isPartOfSurvey: false, description: "", components: [], images: [] },
-      { name: "Soffits and Fascias", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Sofits and Fascias", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Main Walls", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Damp Proof Courses", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Windows and Doors", isPartOfSurvey: false, description: "", components: [], images: [] },
-      { name: "Roof Void", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Roof Structure", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Ceilings", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Walls and Partitions", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Floors", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Internal Joinery", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Sanitaryware & Kitchen", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Fireplaces", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Electrical Installation", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Gas/Oil Installations", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Cold Water Supply", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Hot Water Supply / Heating Installations", isPartOfSurvey: false, description: "", components: [], images: [] },
+      { name: "Surface water soil & drainage", isPartOfSurvey: false, description: "", components: [], images: [] },
       { name: "Boundaries, Fencing, Drives, Lawn, etc", isPartOfSurvey: false, description: "", components: [], images: [] }
     ],
   };
@@ -70,7 +75,6 @@ export default function Report(props: any) {
       let form = watch();
       let _ = await reportClient.models.Reports.create({ id: form.id, content: JSON.stringify(form) });
       successToast("Report created")
-      /*router.push(`/reports`)*/
     }
     catch(error) {
       console.error(error);
@@ -120,9 +124,9 @@ export default function Report(props: any) {
                 </div>
               </div>
               {defaultValues.conditionSections.map((k, i) => (
-                <section key={i} className="mt-2">
+                <section key={i} className="mt-2">  
                   <ToggleSection label={k.name} register={() => register(`conditionSections.${i}.isPartOfSurvey`)}>
-                    <div>
+                    <div className="p-5">
                       <SmartTextArea
                         label={k.name}
                         placeholder={`Description of the ${k.name.toLowerCase()}...`}
