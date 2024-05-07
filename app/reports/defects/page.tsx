@@ -1,8 +1,14 @@
 "use client";
 
+import { InfiniteHits, InstantSearch, SearchBox } from "react-instantsearch";
+import searchClient from "@/app/clients/SearchClient";
 import { DefectHit } from "@/app/components/DefectHit";
-import { SearchToSelect } from "../../components/Search";
-import SelectedDefectHit from "@/app/components/SelectedDefectHit";
+
+const Hit = ({ hit }) => (
+  <div className="border-2 m-1 p-2 rounded-sm">
+    <DefectHit hit={hit} onClick={() => {}} />
+  </div>
+)
 
 export default function Page() {
   return (
@@ -10,7 +16,10 @@ export default function Page() {
       <div className="flex justify-center">
         <h1 className="text-4xl dark:text-white m-4">Defect Database</h1>
       </div>
-      <SearchToSelect indexName={"defects"} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} onRemoveInput={() => {}}  />
+      <InstantSearch indexName="defects" searchClient={searchClient}>
+        <SearchBox />
+        <InfiniteHits hitComponent={Hit} />
+      </InstantSearch>
     </div>
   );
 }

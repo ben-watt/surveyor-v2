@@ -1,13 +1,11 @@
 "use client";
 
-import algoliasearch from "algoliasearch/lite";
+import searchClient from "@/app/clients/SearchClient";
 import "instantsearch.css/themes/satellite.css";
 import { Hits, InstantSearch, SearchBox, Configure } from "react-instantsearch";
 
 import { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-
-const searchClient = algoliasearch("ZJ2NDPRTUZ", "4e8f03e6c31600da8e3218d30547bb1f");
 
 export interface SearchProps<T> {
   indexName: string;
