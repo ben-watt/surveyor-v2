@@ -284,7 +284,7 @@ export default function Report(props: any) {
       </div>
       <div className="col-span-4">
         <TextEditor
-          onInit={(evt, editor) => {
+          onInit={(evt: any, editor: TinyMCEEditor | undefined) => {
             editorRef.current = editor;
           }}
           initialValue={initialValue}
