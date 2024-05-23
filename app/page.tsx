@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import React from 'react'
 import { Nav } from './components/Navbar';
-import { OutlineBtn, PrimaryBtn } from './components/Buttons';
+import { PrimaryBtn } from './components/Buttons';
 import Lottie from 'react-lottie-player';
 import animationData from './lottie/report-inspector.json';
 import { useRouter } from 'next/navigation'

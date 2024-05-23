@@ -1,7 +1,6 @@
 "use client";
 
 import searchClient from "@/app/clients/SearchClient";
-import "instantsearch.css/themes/satellite.css";
 import { Hits, InstantSearch, SearchBox, Configure } from "react-instantsearch";
 
 import { useState } from "react";

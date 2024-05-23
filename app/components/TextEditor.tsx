@@ -1,7 +1,7 @@
 import React from "react";
 import { Editor } from "@tinymce/tinymce-react";
 
-export const TextEditor = ({ initialValue, onInit, contentCss, onDirty }: any) => {
+export const TextEditor = ({ initialValue, onInit, onDirty, contentCss = "document" }: any) => {
   const TINY_API_KEY = process.env.NEXT_PUBLIC_TINY_MCE_API_KEY;
 
   return (

@@ -58,7 +58,11 @@ const ContentBlock = ({ children, tocProvider }: ContentBlockProps) => {
     firstElement = children;
   }
 
-  let dynamicElement = React.createElement(firstElement.type, {}, tocProvider(firstElement.type));
+  let dynamicElement = React.createElement(
+    firstElement.type,
+    {},
+    tocProvider(firstElement.type)
+  );
 
   return (
     <table className="w-100-perc">
@@ -128,6 +132,7 @@ const Page = (props: React.PropsWithChildren<any>) => (
 export default function PDF({ form }: { form: BuildingSurveyFormData }) {
   const clientName = form.clientName;
   const address = form.address;
+  const reportDate = new Date(form.reportDate);
 
   return (
     <TocContext.Provider value={DefaultTocProvider()}>
@@ -164,7 +169,7 @@ export default function PDF({ form }: { form: BuildingSurveyFormData }) {
         <p></p>
         <div className="text-sm">
           <p className="m-0">Email: admin@cwbc.co.uk</p>
-          <p className="m-0">Date: {form.reportDate.toDateString()}</p>
+          <p className="m-0">Date: {reportDate.toDateString()}</p>
           <p className="m-0">Ref: 23.120</p>
         </div>
       </Page>
@@ -196,9 +201,9 @@ export default function PDF({ form }: { form: BuildingSurveyFormData }) {
           <p>Email:</p>
           <p>sam.watt@cwbc.co.uk</p>
           <p>Inspection Date:</p>
-          <p>{form.reportDate.toDateString()}</p>
+          <p>{reportDate.toDateString()}</p>
           <p>Report Issue Date:</p>
-          <p>{form.reportDate.toDateString()}</p>
+          <p>{reportDate.toDateString()}</p>
           <p>Weather at the time of inspection:</p>
           <p>Unknown</p>
           <p>Orientation</p>
@@ -294,7 +299,7 @@ export default function PDF({ form }: { form: BuildingSurveyFormData }) {
       </Page>
       <Page>
         <H1>Description Of the Property</H1>
-        <P></P>
+        <p>Unknown</p>
       </Page>
       <Page>
         <H2>Location Plan</H2>
@@ -312,48 +317,105 @@ export default function PDF({ form }: { form: BuildingSurveyFormData }) {
       <Page>
         <H1>Issues for your Legal Advisor</H1>
         <H2>Planning & Building Regulations</H2>
-        <P>
+        <p>
           As mentioned within the body of this report, we strongly recommend
           that you obtain certificates and warranties from the Vendor relating
           to the electrical and gas installations, extensions, etc. to confirm
           that all fully comply with the Building Regulations.
-        </P>
+        </p>
         <H2>Statutory</H2>
-        <P>
-        <ul>
-          <li>Confirm all Statutory Approvals for all alteration and construction work. Obtain copies of all Approved Plans for any alterations or extensions to the property.</li>
-          <li>Any rights or responsibilities for the maintenance and upkeep of jointly used services including drainage, gutters, downpipes and chimneys should be established.</li>
-          <li>The right for you to enter the adjacent property to maintain any structure situated on or near the boundary and any similar rights your neighbour may have to enter onto your property.</li>
-          <li>Any responsibilities to maintain access roads and driveways, which may not be adopted by the Local Authority, should be established.</li>
-          <li>Obtain any certificates or guarantees, accompanying reports and plans for works that may have been carried out on the property. The guarantees should be formally assigned to you and preferably indemnified against eventualities such as contractors going out of business.</li>
-          <li>Investigate if any fire, public health or other requirements or regulations are satisfied and that up-to-date certificates are available.</li>
-          <li>Investigate any proposed use of adjoining land and clarify the likelihood of any future type of development, which could adversely affect this property.</li>
-          <li>Where there are trees in the adjacent gardens, which are growing sufficiently close to the property to cause possible damage, we would suggest that the owners are notified of the situation.</li>
-          <li>Whilst there were clearly defined physical boundaries to the site, these may not necessarily lie on the legal boundaries. These matters should be checked through your Solicitors.</li>
-          <li>The tenure is assumed to be Freehold, or Long Leasehold subject to nil or nominal Chief or Ground Rent. Your legal adviser should confirm all details.</li>
-          <li>Confirmation should be obtained that all main services are indeed connected. Confirmation should be obtained by the provision of service documentation, of when the electric and gas installations were last tested.</li>
-        </ul>
-        </P>
+        <p>
+          <ul>
+            <li>
+              Confirm all Statutory Approvals for all alteration and
+              construction work. Obtain copies of all Approved Plans for any
+              alterations or extensions to the property.
+            </li>
+            <li>
+              Any rights or responsibilities for the maintenance and upkeep of
+              jointly used services including drainage, gutters, downpipes and
+              chimneys should be established.
+            </li>
+            <li>
+              The right for you to enter the adjacent property to maintain any
+              structure situated on or near the boundary and any similar rights
+              your neighbour may have to enter onto your property.
+            </li>
+            <li>
+              Any responsibilities to maintain access roads and driveways, which
+              may not be adopted by the Local Authority, should be established.
+            </li>
+            <li>
+              Obtain any certificates or guarantees, accompanying reports and
+              plans for works that may have been carried out on the property.
+              The guarantees should be formally assigned to you and preferably
+              indemnified against eventualities such as contractors going out of
+              business.
+            </li>
+            <li>
+              Investigate if any fire, public health or other requirements or
+              regulations are satisfied and that up-to-date certificates are
+              available.
+            </li>
+            <li>
+              Investigate any proposed use of adjoining land and clarify the
+              likelihood of any future type of development, which could
+              adversely affect this property.
+            </li>
+            <li>
+              Where there are trees in the adjacent gardens, which are growing
+              sufficiently close to the property to cause possible damage, we
+              would suggest that the owners are notified of the situation.
+            </li>
+            <li>
+              Whilst there were clearly defined physical boundaries to the site,
+              these may not necessarily lie on the legal boundaries. These
+              matters should be checked through your Solicitors.
+            </li>
+            <li>
+              The tenure is assumed to be Freehold, or Long Leasehold subject to
+              nil or nominal Chief or Ground Rent. Your legal adviser should
+              confirm all details.
+            </li>
+            <li>
+              Confirmation should be obtained that all main services are indeed
+              connected. Confirmation should be obtained by the provision of
+              service documentation, of when the electric and gas installations
+              were last tested.
+            </li>
+          </ul>
+        </p>
       </Page>
       <Page>
         <H2>Thermal Insulation & Energy Efficiency</H2>
-        <P>As part of the marketing process, current regulations require the provision of an Energy Performance Certificate. Legal enquiries are advised to
-confirm that such a Certificate has been obtained. This document provides the usual information regarding advice on energy efficiency and thermal
-improvement, which will assist in potentially reducing heating expenditure. The property is currently listed as achieving a rating of 41 (E), with the
-potential to achieve 66 (D). We recommend reviewing the EPC Certificate and considering making the improvements listed therein.
-From 1 April 2018, under the Minimum Energy Efficiency Standards (MEES) 2015, it became illegal to lease a property with an F or G Energy
-Performance Certificate Rating. In the residential market, the regulations extend to all properties with a valid EPC on 1 April 2020. This report does
-not provide extended advice on Minimum Energy Efficiency Standards (MEES) Regulations (2015) and is not designed to be used as evidence for
-the PRS Exemption Register. The responsibility for complying with MEES is allocated to the landlord and/or owner of the property.</P>
+        <p>
+          As part of the marketing process, current regulations require the
+          provision of an Energy Performance Certificate. Legal enquiries are
+          advised to confirm that such a Certificate has been obtained. This
+          document provides the usual information regarding advice on energy
+          efficiency and thermal improvement, which will assist in potentially
+          reducing heating expenditure. The property is currently listed as
+          achieving a rating of 41 (E), with the potential to achieve 66 (D). We
+          recommend reviewing the EPC Certificate and considering making the
+          improvements listed therein. From 1 April 2018, under the Minimum
+          Energy Efficiency Standards (MEES) 2015, it became illegal to lease a
+          property with an F or G Energy Performance Certificate Rating. In the
+          residential market, the regulations extend to all properties with a
+          valid EPC on 1 April 2020. This report does not provide extended
+          advice on Minimum Energy Efficiency Standards (MEES) Regulations
+          (2015) and is not designed to be used as evidence for the PRS
+          Exemption Register. The responsibility for complying with MEES is
+          allocated to the landlord and/or owner of the property.
+        </p>
       </Page>
       <Page>
         <H1>Risks</H1>
         <H2>Risks to the building</H2>
-        <P>Unknown</P>
+        <p>Unknown</p>
         <H2>Risks to the grounds</H2>
-        <P>Unknown</P>
+        <p>Unknown</p>
         <H2>Risks to the people</H2>
-        <P>Unknown</P>
+        <p>Unknown</p>
       </Page>
       <Page>
         <H1>Conclusion</H1>
@@ -398,18 +460,13 @@ const ConditionSection = ({ conditionSection }: ConditionSectionProps) => {
           <strong className="text-red-500">Description:</strong>
         </p>
         <p>{cs.description}</p>
+        <table style={{ width: "100%" }}>
+          <tbody>{tableRows}</tbody>
+        </table>
         <p>
           <strong>Defects:</strong>
         </p>
-        {/* {cs.components?.map((d, i) => {
-            return (
-              <p>{d.name}&nbsp;<strong>{d.cost}</strong></p>
-            )
-          })} */}
       </div>
-      <table style={{ width: "100%" }}>
-        <tbody>{tableRows}</tbody>
-      </table>
     </>
   );
 };

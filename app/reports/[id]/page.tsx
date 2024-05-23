@@ -8,26 +8,29 @@ import BuildingSurveyReportTiny from "../building-survey-reports/BuildingSurveyR
 import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportData";
 
 export default function Page({ params }: { params: { id: string } }) {
+  const [reportData, setReport] = useState<BuildingSurveyFormData>();
+  useEffect(() => {
+    const getReport = async () => {
+      let result = await reportClient.models.Reports.get({ id: params.id });
 
-    const [reportData, setReport] = useState<BuildingSurveyFormData>();
-    useEffect(() => {
-        const getReport = async () => {
-            let result = await reportClient.models.Reports.get({ id: params.id });
+      if (!result.errors) {
+        const formData = JSON.parse(
+          result.data.content.toString()
+        ) as BuildingSurveyFormData;
+        setReport(formData);
+      }
+    };
 
-            if(!result.errors) {
-                const formData = JSON.parse(result.data.content.toString()) as BuildingSurveyFormData
-                setReport(formData)
-            }
-        }
+    getReport();
+  }, []);
 
-        getReport()
-    }, [])
+  if (reportData == undefined) return <div>Loading...</div>;
 
-
-
-    
-    if(reportData == undefined) return (<div>Loading...</div>)
-
-    console.log(reportData)
-    return (<TextEditor initialValue={renderToString(<BuildingSurveyReportTiny form={reportData} />)} />)
-  }
+  return (
+    <TextEditor
+      initialValue={renderToString(
+        <BuildingSurveyReportTiny form={reportData} />
+      )}
+    />
+  );
+}

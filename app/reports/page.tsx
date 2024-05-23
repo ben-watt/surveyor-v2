@@ -5,7 +5,7 @@ import client from "@/app/clients/ReportsClient";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportData";
-import { basicToast } from "../components/Toasts";
+import { DropDown, DropDownItem } from "../components/DropDown";
 
 function HomePage() {
   const [reports, setReports] = useState<BuildingSurveyFormData[]>([]);
@@ -85,7 +85,7 @@ function HomePage() {
                       scope="col"
                       className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase"
                     >
-                      Action
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -94,9 +94,7 @@ function HomePage() {
                     return (
                       <tr key={report.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                          <Link href={`/reports/${report.id}`}>
-                          {report.id?.split("-")[0] || "N/A"}
-                          </Link>
+                          #{report.id?.split("-")[0] || "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
                           {report.clientName}
@@ -108,13 +106,10 @@ function HomePage() {
                           {new Date(report.reportDate).toDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                          <button
-                            type="button"
-                            onClick={() => deleteReport(report.id)}
-                            className="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                          >
-                            Delete
-                          </button>
+                          <DropDown>
+                            <DropDownItem><Link href={`/reports/${report.id}`}>View Report</Link></DropDownItem>
+                            <DropDownItem onClick={() => deleteReport(report.id)}  className="text-red-500">Delete</DropDownItem>
+                          </DropDown>
                         </td>
                       </tr>
                     );

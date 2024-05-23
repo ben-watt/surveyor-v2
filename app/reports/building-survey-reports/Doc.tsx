@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {  } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { renderToString } from "react-dom/server";
 import { BuildingSurveyFormData } from "./BuildingSurveyReportData";
 
 import { useForm, FormProvider } from "react-hook-form";
-import type { Editor as TinyMCEEditor } from "tinymce";
-import BuildingSurveyReport from "./BuildingSurveyReportTiny";
 import { DefectInput, ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "../Input/InputText";
@@ -15,20 +12,9 @@ import SmartTextArea from "../Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
 import { successToast } from "@/app/components/Toasts";
-import { TextEditor } from "../../components/TextEditor";
+import { useRouter } from 'next/navigation'
 
 export default function Report(props: any) {
-  const [dirty, setDirty] = useState(false);
-  const editorRef = useRef<TinyMCEEditor>();
-  const [initialValue, setInitialValue] = useState("");
-  const [contentCss, setContentCss] = useState("writer");
-
-  useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile) {
-      setContentCss("document");
-    }
-  });
 
   const defaultValues: BuildingSurveyFormData = {
     id: uuidv4(),
@@ -189,6 +175,7 @@ export default function Report(props: any) {
 
   const methods = useForm<BuildingSurveyFormData>({ defaultValues });
   const { register, handleSubmit, watch, formState } = methods;
+  const router = useRouter();
 
   const onSubmit = async () => {
     try {
@@ -197,19 +184,12 @@ export default function Report(props: any) {
         id: form.id,
         content: JSON.stringify(form),
       });
-      successToast("Report created");
+
+      successToast("Saved");
+      router.push("/reports");
+
     } catch (error) {
       console.error(error);
-    }
-
-    setInitialValue(renderToString(<BuildingSurveyReport form={watch()} />));
-  };
-
-  const save = () => {
-    if (editorRef.current) {
-      const content = editorRef.current.getContent();
-      setDirty(false);
-      editorRef.current.setDirty(false);
     }
   };
 
@@ -253,7 +233,7 @@ export default function Report(props: any) {
                       register(`conditionSections.${i}.isPartOfSurvey`)
                     }
                   >
-                    <div className="p-5">
+                    <div className="flex-row space-y-2">
                       <SmartTextArea
                         label={k.name}
                         placeholder={`Description of the ${k.name.toLowerCase()}...`}
@@ -261,45 +241,27 @@ export default function Report(props: any) {
                           register(`conditionSections.${i}.description`)
                         }
                       />
-                      <DefectInput
-                        register={() =>
-                          register(`conditionSections.${i}.components`)
-                        }
-                      ></DefectInput>
                       <InputImage
                         register={() =>
                           register(`conditionSections.${i}.images`)
                         }
                       />
+                      <DefectInput
+                        register={() =>
+                          register(`conditionSections.${i}.components`)
+                        }
+                      ></DefectInput>
                     </div>
                   </ToggleSection>
                 </section>
               ))}
             </div>
-            <div className="flex justify-center mt-8 mb-8">
-              <PrimaryBtn type="submit">Generate Report</PrimaryBtn>
+            <div className="mt-8 mb-8">
+              <PrimaryBtn className="w-full flex justify-center" type="submit">Save</PrimaryBtn>
             </div>
           </form>
         </FormProvider>
       </div>
-      <div className="col-span-4">
-        <TextEditor
-          onInit={(evt: any, editor: TinyMCEEditor | undefined) => {
-            editorRef.current = editor;
-          }}
-          initialValue={initialValue}
-          contentCss={contentCss}
-          onDirty={() => setDirty(true)}
-        />
-        {dirty && <p>You have unsaved content!</p>}
-        <div className="flex justify-end mt-8 mb-8">
-          <PrimaryBtn onClick={save} disabled={!dirty}>
-            Save
-          </PrimaryBtn>
-        </div>
-      </div>
     </div>
   );
 }
-
-

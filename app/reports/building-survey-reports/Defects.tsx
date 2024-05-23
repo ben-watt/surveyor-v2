@@ -31,8 +31,8 @@ export const DefectInput = ({ register } : DefectInputProps) => {
 
     if (currentDefects.length === 0) {
         return (
-            <div className="flex justify-end pt-3 pb-3">
-                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Condition</CopyMarkupBtn>
+            <div className="flex justify-end">
+                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Defect</CopyMarkupBtn>
             </div>
         )
     }
@@ -40,11 +40,11 @@ export const DefectInput = ({ register } : DefectInputProps) => {
     return (
         <>
             {currentDefects.map((defect: any, index: Key) => (
-                <div key={index} className="mt-2">
+                <div key={index}>
                     <SearchToSelect indexName={"defects"} onRemoveInput={() => removeDefect(index)} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} />
                 </div>
             ))}
-            <div className="flex justify-end pt-3 pb-3">
+            <div className="flex justify-end">
                 <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Defect</CopyMarkupBtn>
             </div>
         </>
