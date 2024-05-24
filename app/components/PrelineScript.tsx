@@ -24,8 +24,8 @@ export default function PrelineScript() {
       // To fix this, we can use a setTimeout to delay the auto init but it means thoes components
       // will not be available for a short period of time
       setTimeout(() => {
-        window.HSStaticMethods.autoInit();
-        console.log("Preline loaded");
+          window.HSStaticMethods.autoInit();
+          console.log("Preline loaded");
       }, 1000)
     };
 

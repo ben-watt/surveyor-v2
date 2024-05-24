@@ -1,12 +1,14 @@
 import { UseFormRegisterReturn } from "react-hook-form";
 
 interface SelectBoxProps extends React.PropsWithChildren<any> {
+  labelTitle: string;
   defaultValue?: string;
   placeholder?: string;
   register: () => UseFormRegisterReturn<string>;
 }
 
 function SelectBox({
+  labelTitle,
   defaultValue = "Select option...",
   placeholder = "Select option...",
   register,
@@ -21,11 +23,22 @@ function SelectBox({
     "optionClasses": "hs-selected:"
   }`;
 
+  const props = register();
+
   return (
-    <select className="rounded-md border-gray-300" data-hs-select={dataHsSelect} {...register()}>
-      <option>{defaultValue}</option>
-      {children}
-    </select>
+    <>
+      <label htmlFor={props.name} className="sr-only">
+        <span>{labelTitle}</span>
+      </label>
+      <select
+        className="rounded-md border-gray-300 text-sm"
+        data-hs-select={dataHsSelect}
+        {...props}
+      >
+        <option>{defaultValue}</option>
+        {children}
+      </select>
+    </>
   );
 }
 
