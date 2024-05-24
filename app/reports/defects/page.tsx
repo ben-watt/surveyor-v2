@@ -3,12 +3,13 @@
 import { InfiniteHits, InstantSearch, SearchBox } from "react-instantsearch";
 import searchClient from "@/app/clients/SearchClient";
 import { DefectHit } from "@/app/components/DefectHit";
+import { DefectHitRecord } from "@/app/components/SelectedDefectHit";
 
-const Hit = ({ hit }) => (
-  <div className="border-2 m-1 p-2 rounded-sm">
-    <DefectHit hit={hit} onClick={() => {}} />
-  </div>
-)
+interface HitProps {
+  hit: DefectHitRecord;
+}
+
+const Hit = ({ hit }: HitProps) => <DefectHit hit={hit} onClick={() => {}} />;
 
 export default function Page() {
   return (
