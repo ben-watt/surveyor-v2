@@ -107,7 +107,7 @@ function HomePage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
                           <DropDown>
-                            <DropDownItem><Link href={`/reports/${report.id}`}>View Report</Link></DropDownItem>
+                            <DropDownItem href={`/reports/${report.id}`}>View Report</DropDownItem>
                             <DropDownItem onClick={() => deleteReport(report.id)}  className="text-red-500">Delete</DropDownItem>
                           </DropDown>
                         </td>
