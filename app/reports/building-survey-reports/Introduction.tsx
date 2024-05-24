@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
-import InputText from '../Input/InputText'
+import InputText from '../../components/Input/InputText'
 import { useFormContext } from 'react-hook-form';
-import InputImage from '../Input/ImageInput';
+import InputImage from '../../components/Input/ImageInput';
 
 
 export default function Introduction() {

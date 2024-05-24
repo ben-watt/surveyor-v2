@@ -1,5 +1,5 @@
 import { Key, MouseEvent, useState } from "react";
-import ToogleInput from "../Input/ToggleInput";
+import ToogleInput from "../../components/Input/ToggleInput";
 import { UseFormRegisterReturn, useFormContext } from 'react-hook-form';
 import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { SearchToSelect } from "@/app/components/Search";
