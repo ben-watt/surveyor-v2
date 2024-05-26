@@ -1,6 +1,6 @@
 "use client";
 
-import config from "@/amplifyconfiguration.json";
+import config from "@/amplify_outputs.json";
 import { Amplify } from "aws-amplify";
 
 Amplify.configure(config, { ssr: true });

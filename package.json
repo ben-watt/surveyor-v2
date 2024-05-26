@@ -19,6 +19,7 @@
     "@tinymce/tinymce-react": "^4.3.2",
     "@types/react-instantsearch-dom": "^6.12.7",
     "algoliasearch": "^4.22.1",
+    "ampx": "^0.2.1",
     "aws-amplify": "^6.0.15",
     "instantsearch.css": "^8.1.0",
     "next": "13.5.4",

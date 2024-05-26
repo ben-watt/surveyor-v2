@@ -16,7 +16,7 @@ function SelectBox({
 }: SelectBoxProps) {
     
   const dataHsSelect = `{
-    "placeholder": ${placeholder},
+    "placeholder": "${placeholder}",
     "toggleTag": "<button type=\"button\"></button>",
     "toggleClasses": "",
     "dropdownClasses": "",
