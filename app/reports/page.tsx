@@ -29,7 +29,7 @@ function HomePage() {
   const deleteReport = async (id: string) => {
     try {
       const response = await client.models.Reports.delete({ id });
-      if (response.data.id) {
+      if (!response.errors && response.data != null) {
         setReports(reports.filter((r) => r.id !== id));
       }
     } catch (error) {

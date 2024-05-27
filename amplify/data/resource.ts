@@ -14,8 +14,8 @@ const schema = a.schema({
       id: a.id().required(),
       content: a.json().required(),
     })
-    .authorization([
-      a.allow.owner().to(["create", "read", "update", "delete"]),
+    .authorization((allow) => [
+      allow.owner().to(["create", "read", "update", "delete"]),
     ]),
   Defects: a
     .model({
@@ -26,8 +26,8 @@ const schema = a.schema({
       element: a.string().required(),
       component: a.string().required(),
     })
-    .authorization([
-      a.allow.owner().to(["create", "read", "update", "delete"]),
+    .authorization((allow) => [
+      allow.owner().to(["create", "read", "update", "delete"]),
     ]),
 });
 
