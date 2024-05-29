@@ -8,16 +8,25 @@ import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { Table } from "@/app/components/Table";
 import { TableRow } from "@/app/components/Table";
 import { DropDown, DropDownItem } from "@/app/components/DropDown";
+import InputText from "@/app/components/Input/InputText";
 
 type DefectData = Schema["Defects"]["type"];
 
 export default function Page() {
   const [defects, setDefects] = useState<DefectData[]>([]);
+  const [search, setSearch] = useState<string>("");
 
   useEffect(() => {
     async function fetchReports() {
       try {
-        const response = await client.models.Defects.list();
+        const response = await client.models.Defects.list(search ? {
+          filter: {
+            name: {
+              contains: search,
+            },
+          },
+        }: {});
+
         if (response.data) {
           setDefects(response.data);
         }
@@ -27,7 +36,7 @@ export default function Page() {
     }
 
     fetchReports();
-  }, []);
+  }, [search]);
 
   function deleteDefect(id: string): void {
     async function deleteDefect() {
@@ -55,8 +64,21 @@ export default function Page() {
         </Link>
       </div>
       <div>
+        <input
+          onChange={(ev) => setSearch(ev.target.value)}
+          type="text"
+        ></input>
+      </div>
+      <div>
         <Table
-          headers={["Name", "Description", "Cause", "Element", "Component", "Actions"]}
+          headers={[
+            "Name",
+            "Description",
+            "Cause",
+            "Element",
+            "Component",
+            "Actions",
+          ]}
         >
           {defects.map((defect) => (
             <TableRow key={defect.id}>
