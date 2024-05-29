@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportData";
 import { DropDown, DropDownItem } from "../components/DropDown";
+import { Table, TableRow } from "../components/Table";
 
 function HomePage() {
   const [reports, setReports] = useState<BuildingSurveyFormData[]>([]);
@@ -51,74 +52,39 @@ function HomePage() {
       </div>
 
       <div>
-        <div className="-m-1.5 overflow-x-auto">
-          <div className="p-1.5 min-w-full inline-block align-middle">
-            <div className="overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase"
+        <Table headers={["Id", "Client Name", "Address", "Created", "Actions"]}>
+          {reports.map((report) => {
+            return (
+              <TableRow id={report.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                  #{report.id?.split("-")[0] || "N/A"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {report.clientName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
+                  {report.address}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
+                  {new Date(report.reportDate).toDateString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                  <DropDown>
+                    <DropDownItem href={`/reports/${report.id}`}>
+                      View Report
+                    </DropDownItem>
+                    <DropDownItem
+                      onClick={() => deleteReport(report.id)}
+                      className="text-red-500"
                     >
-                      Id
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase"
-                    >
-                      Client
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase"
-                    >
-                      Address
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase"
-                    >
-                      Date
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {reports.map((report) => {
-                    return (
-                      <tr key={report.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                          #{report.id?.split("-")[0] || "N/A"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                          {report.clientName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
-                          {report.address}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
-                          {new Date(report.reportDate).toDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                          <DropDown>
-                            <DropDownItem href={`/reports/${report.id}`}>View Report</DropDownItem>
-                            <DropDownItem onClick={() => deleteReport(report.id)}  className="text-red-500">Delete</DropDownItem>
-                          </DropDown>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+                      Delete
+                    </DropDownItem>
+                  </DropDown>
+                </td>
+              </TableRow>
+            );
+          })}
+        </Table>
       </div>
     </div>
   );
