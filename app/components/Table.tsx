@@ -13,7 +13,7 @@ export const Table = ({ headers, children }: TableProps) => {
                 <tr>
                   {headers.map((h) => {
                     return (
-                      <th
+                      <th key={h}
                         scope="col"
                         className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase"
                       >
@@ -32,15 +32,15 @@ export const Table = ({ headers, children }: TableProps) => {
       </div>
     </div>
   );
-};interface TableRowProps extends React.PropsWithChildren {
-  id: string;
-}
-export const TableRow = ({ id, children }: TableRowProps) => {
+};
+
+interface TableRowProps extends React.PropsWithChildren {}
+
+export const TableRow = ({ children }: TableRowProps) => {
   return (
-    <tr key={id}>
+    <tr>
       {children}
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200"></td>
     </tr>
   );
 };
-

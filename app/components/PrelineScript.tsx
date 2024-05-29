@@ -17,6 +17,11 @@ export default function PrelineScript() {
   useEffect(() => {
     const loadPreline = async () => {
       await import("preline/preline");
+
+      setTimeout(() => {
+        window.HSStaticMethods.autoInit();
+        console.log("Preline loaded after 1 seconds");
+      }, 1000);
       // Sometimes it looks like it doesn't work but it's because auto init is being called
       // prior to the components existing in the DOM meaning that it can't find them
       // This means the components fail.
@@ -24,9 +29,9 @@ export default function PrelineScript() {
       // To fix this, we can use a setTimeout to delay the auto init but it means thoes components
       // will not be available for a short period of time
       setTimeout(() => {
-          window.HSStaticMethods.autoInit();
-          console.log("Preline loaded");
-      }, 1000)
+        window.HSStaticMethods.autoInit();
+        console.log("Preline loaded second time after 2 seconds");
+      }, 2000);
     };
 
     loadPreline();

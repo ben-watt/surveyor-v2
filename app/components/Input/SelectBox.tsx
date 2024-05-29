@@ -14,15 +14,7 @@ function SelectBox({
   register,
   children,
 }: SelectBoxProps) {
-    
-  const dataHsSelect = `{
-    "placeholder": "${placeholder}",
-    "toggleTag": "<button type=\"button\"></button>",
-    "toggleClasses": "",
-    "dropdownClasses": "",
-    "optionClasses": "hs-selected:"
-  }`;
-
+  
   const props = register();
 
   return (
@@ -32,7 +24,6 @@ function SelectBox({
       </label>
       <select
         className="rounded-md border-gray-300 text-sm"
-        data-hs-select={dataHsSelect}
         {...props}
       >
         <option>{defaultValue}</option>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportData";
 import { DropDown, DropDownItem } from "../components/DropDown";
-import { Table, TableRow } from "../components/Table";
+import { Table, TableRow } from "@/app/components/Table";
 
 function HomePage() {
   const [reports, setReports] = useState<BuildingSurveyFormData[]>([]);
@@ -40,7 +40,7 @@ function HomePage() {
 
   return (
     <div>
-      <div className="flex justify-between mb-8 mt-8 items-baseline">
+      <div className="flex justify-between  p-3 mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Reports</h1>
         </div>
@@ -55,7 +55,7 @@ function HomePage() {
         <Table headers={["Id", "Client Name", "Address", "Created", "Actions"]}>
           {reports.map((report) => {
             return (
-              <TableRow id={report.id}>
+              <TableRow key={report.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
                   #{report.id?.split("-")[0] || "N/A"}
                 </td>
