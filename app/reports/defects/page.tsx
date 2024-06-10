@@ -8,7 +8,7 @@ import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { Table } from "@/app/components/Table";
 import { TableRow } from "@/app/components/Table";
 import { DropDown, DropDownItem } from "@/app/components/DropDown";
-import InputText from "@/app/components/Input/InputText";
+import { SearchBox } from "../../components/SearchBox";
 
 type DefectData = Schema["Defects"]["type"];
 
@@ -64,10 +64,7 @@ export default function Page() {
         </Link>
       </div>
       <div>
-        <input
-          onChange={(ev) => setSearch(ev.target.value)}
-          type="text"
-        ></input>
+        <SearchBox onChange={(ev) => setSearch(ev.target.value)} />
       </div>
       <div>
         <Table
