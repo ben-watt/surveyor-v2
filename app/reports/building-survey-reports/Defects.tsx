@@ -11,7 +11,7 @@ interface DefectInputProps {
     register: () => UseFormRegisterReturn<string>;
 }
 
-export const DefectInput = ({ register } : DefectInputProps) => {
+export const ComponentInput = ({ register } : DefectInputProps) => {
     const { unregister, getValues, setValue, watch } = useFormContext()
     const props = register();
 
@@ -24,7 +24,7 @@ export const DefectInput = ({ register } : DefectInputProps) => {
         unregister(props.name + `.${index}.cost`);
     }
 
-    const addDefect = (ev: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => {
+    const addComponent = (ev: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => {
         ev.preventDefault()
         setValue(props.name, currentDefects.concat({ name: "", cost: "£0" }));
     }
@@ -32,7 +32,7 @@ export const DefectInput = ({ register } : DefectInputProps) => {
     if (currentDefects.length === 0) {
         return (
             <div className="flex justify-end">
-                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Defect</CopyMarkupBtn>
+                <CopyMarkupBtn onClick={(ev) => addComponent(ev)}>Add Component</CopyMarkupBtn>
             </div>
         )
     }
@@ -44,9 +44,6 @@ export const DefectInput = ({ register } : DefectInputProps) => {
                     <SearchToSelect indexName={"defects"} onRemoveInput={() => removeDefect(index)} hitComponent={DefectHit} selectedHitComponent={SelectedDefectHit} />
                 </div>
             ))}
-            <div className="flex justify-end">
-                <CopyMarkupBtn onClick={(ev) => addDefect(ev)}>Add Defect</CopyMarkupBtn>
-            </div>
         </>
     )
 }

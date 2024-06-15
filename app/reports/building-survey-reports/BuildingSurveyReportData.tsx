@@ -4,10 +4,10 @@ export type BuildingSurveyFormData = {
     clientName: string,
     reportDate: Date,   
     frontElevationImage: File[],
-    conditionSections: ConditionSection[],
+    elementSections: ElementSection[],
 }
 
-export type ConditionSection = {
+export type ElementSection = {
     name: string,
     isPartOfSurvey: boolean,
     description: string,

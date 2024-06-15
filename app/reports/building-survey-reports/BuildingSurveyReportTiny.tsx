@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import type {
   BuildingSurveyFormData,
-  ConditionSection,
+  ElementSection,
 } from "./BuildingSurveyReportData";
 import {
   DefaultTocProvider,
@@ -310,7 +310,7 @@ export default function PDF({ form }: { form: BuildingSurveyFormData }) {
         <img></img>
       </Page>
       <Page>
-        {form.conditionSections.map((cs, i) => (
+        {form.elementSections.map((cs, i) => (
           <ConditionSection key={i} conditionSection={cs} />
         ))}
       </Page>
@@ -426,7 +426,7 @@ export default function PDF({ form }: { form: BuildingSurveyFormData }) {
 
 type ConditionSectionProps = {
   key: number;
-  conditionSection: ConditionSection;
+  conditionSection: ElementSection;
 };
 
 const ConditionSection = ({ conditionSection }: ConditionSectionProps) => {

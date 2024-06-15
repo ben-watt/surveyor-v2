@@ -53,7 +53,7 @@ function HomePage() {
 
       <div>
         <Table headers={["Id", "Client Name", "Address", "Created", "Actions"]}>
-          {reports.map((report) => {
+          {reports.sort((a, b) => a.reportDate < b.reportDate ? 1 : 0).map((report) => {
             return (
               <TableRow key={report.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">

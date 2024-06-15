@@ -1,10 +1,10 @@
 import React, {  } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { BuildingSurveyFormData } from "./BuildingSurveyReportData";
+import { BuildingSurveyFormData, ElementSection } from "./BuildingSurveyReportData";
 
 import { useForm, FormProvider } from "react-hook-form";
-import { DefectInput, ToggleSection } from "./Defects";
+import { ComponentInput, ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "../../components/Input/InputText";
 import InputImage from "../../components/Input/ImageInput";
@@ -16,161 +16,45 @@ import { useRouter } from 'next/navigation'
 
 export default function Report(props: any) {
 
+  const createDefaultElementSection = (name: string) : ElementSection => ({
+    name,
+    isPartOfSurvey: false,
+    description: "",
+    components: [],
+    images: [],
+  });
+
+  const elementSections = [
+    "Foundations and Substructure",
+    "Roof Coverings",
+    "Chimneys",
+    "Rainwater Disposal System",
+    "Sofits and Fascias",
+    "Main Walls",
+    "Damp Proof Courses",
+    "Windows and Doors",
+    "Roof Structure",
+    "Ceilings",
+    "Walls and Partitions",
+    "Floors",
+    "Internal Joinery",
+    "Sanitaryware & Kitchen",
+    "Fireplaces",
+    "Electrical Installation",
+    "Gas/Oil Installations",
+    "Cold Water Supply",
+    "Hot Water Supply / Heating Installations",
+    "Surface water soil & drainage",
+    "Boundaries, Fencing, Drives, Lawn, etc",
+  ].map(createDefaultElementSection);
+
   const defaultValues: BuildingSurveyFormData = {
     id: uuidv4(),
     reportDate: new Date(),
     address: "",
     clientName: "",
     frontElevationImage: [],
-    conditionSections: [
-      {
-        name: "Foundations and Substructure",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Roof Coverings",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Chimneys",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Rainwater Disposal System",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Sofits and Fascias",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Main Walls",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Damp Proof Courses",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Windows and Doors",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Roof Structure",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Ceilings",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Walls and Partitions",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Floors",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Internal Joinery",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Sanitaryware & Kitchen",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Fireplaces",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Electrical Installation",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Gas/Oil Installations",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Cold Water Supply",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Hot Water Supply / Heating Installations",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Surface water soil & drainage",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-      {
-        name: "Boundaries, Fencing, Drives, Lawn, etc",
-        isPartOfSurvey: false,
-        description: "",
-        components: [],
-        images: [],
-      },
-    ],
+    elementSections: elementSections,
   };
 
   const methods = useForm<BuildingSurveyFormData>({ defaultValues });
@@ -225,12 +109,12 @@ export default function Report(props: any) {
                   />
                 </div>
               </div>
-              {defaultValues.conditionSections.map((k, i) => (
+              {defaultValues.elementSections.map((k, i) => (
                 <section key={i} className="mt-2">
                   <ToggleSection
                     label={k.name}
                     register={() =>
-                      register(`conditionSections.${i}.isPartOfSurvey`)
+                      register(`elementSections.${i}.isPartOfSurvey`)
                     }
                   >
                     <div className="flex-row space-y-2">
@@ -238,19 +122,19 @@ export default function Report(props: any) {
                         label={k.name}
                         placeholder={`Description of the ${k.name.toLowerCase()}...`}
                         register={() =>
-                          register(`conditionSections.${i}.description`)
+                          register(`elementSections.${i}.description`)
                         }
                       />
                       <InputImage
                         register={() =>
-                          register(`conditionSections.${i}.images`)
+                          register(`elementSections.${i}.images`)
                         }
                       />
-                      <DefectInput
+                      <ComponentInput
                         register={() =>
-                          register(`conditionSections.${i}.components`)
+                          register(`elementSections.${i}.components`)
                         }
-                      ></DefectInput>
+                      ></ComponentInput>
                     </div>
                   </ToggleSection>
                 </section>
