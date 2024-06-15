@@ -5,8 +5,21 @@ import client from "@/app/clients/ReportsClient";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportData";
-import { DropDown, DropDownItem } from "../components/DropDown";
-import { Table, TableRow } from "@/app/components/Table";
+
+import { ColumnDef } from "@tanstack/react-table";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTable, SortableHeader } from "../components/DataTable";
 
 function HomePage() {
   const [reports, setReports] = useState<BuildingSurveyFormData[]>([]);
@@ -51,43 +64,71 @@ function HomePage() {
         </div>
       </div>
 
-      <div>
-        <Table headers={["Id", "Client Name", "Address", "Created", "Actions"]}>
-          {reports.sort((a, b) => a.reportDate < b.reportDate ? 1 : 0).map((report) => {
-            return (
-              <TableRow key={report.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                  #{report.id?.split("-")[0] || "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                  {report.clientName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
-                  {report.address}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
-                  {new Date(report.reportDate).toDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
-                  <DropDown>
-                    <DropDownItem href={`/reports/${report.id}`}>
-                      View Report
-                    </DropDownItem>
-                    <DropDownItem
-                      onClick={() => deleteReport(report.id)}
-                      className="text-red-500"
-                    >
-                      Delete
-                    </DropDownItem>
-                  </DropDown>
-                </td>
-              </TableRow>
-            );
-          })}
-        </Table>
+      <div className="m-2 md:m-10">
+        {RenderTable()}
       </div>
     </div>
   );
+
+  function RenderTable() {
+    const columns: ColumnDef<BuildingSurveyFormData>[] = [
+      {
+        header: "Id",
+        accessorFn: (v) => "#" + v.id.split("-")[0] || "N/A",
+      },
+      {
+        header: "Client Name",
+        accessorKey: "clientName",
+      },
+      {
+        header: "Address",
+        accessorKey: "address",
+      },
+      {
+        id: "created",
+        header: ({ column }) => <SortableHeader column={column} header="Created" />,
+        accessorFn: (v) => new Date(v.reportDate).toDateString(),
+      },
+      {
+        id: "actions",
+        cell: (props) => {
+          const reportId = props.row.original.id;
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => navigator.clipboard.writeText(reportId)}
+                >
+                  Copy report ID
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link href={`/reports/${reportId}`}>
+                    View report
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-500"
+                  onClick={() => deleteReport(reportId)}
+                >
+                  <span className="text-red-500">Delete report</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ];
+
+    return <DataTable columns={columns} data={reports} />
+  }
 }
 
 export default HomePage;

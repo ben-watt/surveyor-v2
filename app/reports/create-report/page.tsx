@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import Doc from '../../reports/building-survey-reports/Doc';
+import Doc from '../building-survey-reports/Doc';
 
 
 function Home() {
