@@ -130,6 +130,8 @@ const Page = (props: React.PropsWithChildren<any>) => (
 );
 
 export default function PDF({ form }: { form: BuildingSurveyFormData }) {
+  console.debug(form);
+
   const clientName = form.clientName;
   const address = form.address;
   const reportDate = new Date(form.reportDate);

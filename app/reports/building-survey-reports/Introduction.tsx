@@ -17,7 +17,6 @@ export default function Introduction() {
                 </div>
                 <InputImage register={() => register("frontElevationImage")} />
             </div>
-
         </>
     )
 }

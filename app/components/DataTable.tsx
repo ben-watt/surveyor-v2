@@ -68,10 +68,6 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
         <div className="flex items-center py-4">
             <Input disabled
             placeholder="Filter..."
-            value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-                table.getColumn("email")?.setFilterValue(event.target.value)
-            }
             className="max-w-sm"
             />
             <DropdownMenu>
