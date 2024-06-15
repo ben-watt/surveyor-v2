@@ -13,6 +13,7 @@ import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
 import { successToast } from "@/app/components/Toasts";
 import { useRouter } from 'next/navigation'
+import { uploadData } from "aws-amplify/storage";
 
 export default function Report(props: any) {
 
@@ -69,8 +70,12 @@ export default function Report(props: any) {
         content: JSON.stringify(form),
       });
 
+      console.debug(form);
       successToast("Saved");
-      router.push("/reports");
+
+
+      // get all images from the form
+      //router.push("/reports");
 
     } catch (error) {
       console.error(error);

@@ -1,5 +1,10 @@
 import { defineStorage } from '@aws-amplify/backend';
 
 export const storage = defineStorage({
-  name: 'reportImages'
+  name: 'surveyorappstorage',
+  access: (allow) => ({
+    'report-images/*' : [
+        allow.authenticated.to(['read', 'write', 'delete'])
+    ]
+  })
 });

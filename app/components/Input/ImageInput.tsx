@@ -1,4 +1,5 @@
-import { XCircleIcon } from "@heroicons/react/16/solid";
+import { uploadData } from 'aws-amplify/storage';
+import { X } from 'lucide-react'
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
 
 interface InputImageProps {
@@ -18,6 +19,11 @@ const InputImage = (props: InputImageProps) => {
       previewImageUrls.push(
         URL.createObjectURL(new Blob([images[i]], { type: "image/*" }))
       );
+      
+      uploadData({
+        path: `report-images/${reg.name}_${i}`,
+        data: images[i],
+      })
     }
   }
 
@@ -44,8 +50,8 @@ const InputImage = (props: InputImageProps) => {
       <div className="flex justify-start gap-x-5 mt-5">
         {previewImageUrls.map((src, i) => (
           <div key={i} className="relative">
-            <XCircleIcon
-              className="absolute top-0 right-0 w-5 text-red-500 cursor-pointer"
+            <X
+              className="absolute top-0 right-0 w-4 text-red-500 cursor-pointer"
               onClick={() => removeImage(i)}
             />
             <img src={src} width={100} height={100} />
