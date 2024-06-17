@@ -109,19 +109,7 @@ const H2 = (props: PProps) => {
 };
 
 const getImagesFromFileList = (fileList: string[]): string[] => {
-  const images = [];
-
-  console.log("fileList", fileList)
-
-  if (fileList === null || fileList === undefined) return [];
-
-  for (let i = 0; i < fileList.length; i++) {
-      images.push(
-        URL.createObjectURL(new Blob([fileList[i]], { type: "image/*" }))
-      );
-  }
-
-  return images;
+  return fileList;
 };
 
 const Page = (props: React.PropsWithChildren<any>) => (

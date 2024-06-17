@@ -21,12 +21,8 @@ export default function Page({ params }: { params: { id: string } }) {
           result.data.content.toString()
         ) as BuildingSurveyFormData;
 
-        const path = await getUrl({
-          path: formData.frontElevationImagesUri[0],
-        });
-
-        formData.frontElevationImagesUri = [path.url.href];
-        setInitialValue(renderToString(<BuildingSurveyReportTiny form={formData} />));
+        const initialValue = await mapFormDataToTinyMceHtml(formData);
+        setInitialValue(initialValue);
 
         if (typeof window !== "undefined" && window.innerWidth < 768) {
           setContentCss("mobile");
@@ -43,8 +39,29 @@ export default function Page({ params }: { params: { id: string } }) {
   return <div>Loading...</div>;  
 }
 
-function resolve(path : string, obj : any) : any {
-  return path.split('.').reduce(function(prev, curr) {
-      return prev ? prev[curr] : null
-  }, obj || self)
+async function mapFormDataToTinyMceHtml(formData: BuildingSurveyFormData): Promise<string> {
+
+  formData.frontElevationImagesUri = await getImagesHref(formData.frontElevationImagesUri);
+
+  let newImages = formData.elementSections.map(async (section, i) => {
+    formData.elementSections[i].images = await getImagesHref(section.images);
+  });
+
+  await Promise.all(newImages);
+  return renderToString(<BuildingSurveyReportTiny form={formData} />);
 }
+
+async function getImagesHref(imagesUri: string[]): Promise<string[]> {
+  return await Promise.all(imagesUri.map(async (imageUri) => {
+    return await getImageHref(imageUri);
+  }));
+}
+
+async function getImageHref(imageUri: string): Promise<string> {
+  const path = await getUrl({
+    path: imageUri,
+  });
+
+  return path.url.href;
+}
+
