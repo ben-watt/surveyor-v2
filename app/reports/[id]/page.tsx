@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { renderToString } from "react-dom/server";
 import BuildingSurveyReportTiny from "../building-survey-reports/BuildingSurveyReportTiny";
 import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportData";
+import { getUrl } from "aws-amplify/storage";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [initialValue, setInitialValue] = useState<string>();
@@ -20,8 +21,13 @@ export default function Page({ params }: { params: { id: string } }) {
           result.data.content.toString()
         ) as BuildingSurveyFormData;
 
+        const path = await getUrl({
+          path: formData.frontElevationImagesUri[0],
+        });
 
+        formData.frontElevationImagesUri = [path.url.href];
         setInitialValue(renderToString(<BuildingSurveyReportTiny form={formData} />));
+
         if (typeof window !== "undefined" && window.innerWidth < 768) {
           setContentCss("mobile");
         }
@@ -31,9 +37,14 @@ export default function Page({ params }: { params: { id: string } }) {
     getReport();
   }, []);
 
-  if (initialValue == undefined) return <div>Loading...</div>;
 
-  return (
-    <TextEditor contentCss={contentCss} initialValue={initialValue} />
-  );
+  if(initialValue)
+    return <TextEditor contentCss={contentCss} initialValue={initialValue} />
+  return <div>Loading...</div>;  
+}
+
+function resolve(path : string, obj : any) : any {
+  return path.split('.').reduce(function(prev, curr) {
+      return prev ? prev[curr] : null
+  }, obj || self)
 }

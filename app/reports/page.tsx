@@ -58,7 +58,7 @@ function HomePage() {
           <h1 className="text-3xl dark:text-white">Reports</h1>
         </div>
         <div>
-          <Link href="/reports/create-report">
+          <Link href="/reports/create">
             <CopyMarkupBtn>Create</CopyMarkupBtn>
           </Link>
         </div>

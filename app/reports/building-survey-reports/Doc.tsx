@@ -1,7 +1,10 @@
-import React, {  } from "react";
+import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { BuildingSurveyFormData, ElementSection } from "./BuildingSurveyReportData";
+import {
+  BuildingSurveyFormData,
+  ElementSection,
+} from "./BuildingSurveyReportData";
 
 import { useForm, FormProvider } from "react-hook-form";
 import { ComponentInput, ToggleSection } from "./Defects";
@@ -12,12 +15,10 @@ import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
 import { successToast } from "@/app/components/Toasts";
-import { useRouter } from 'next/navigation'
-import { uploadData } from "aws-amplify/storage";
+import { useRouter } from "next/navigation";
 
 export default function Report(props: any) {
-
-  const createDefaultElementSection = (name: string) : ElementSection => ({
+  const createDefaultElementSection = (name: string): ElementSection => ({
     name,
     isPartOfSurvey: false,
     description: "",
@@ -54,12 +55,14 @@ export default function Report(props: any) {
     reportDate: new Date(),
     address: "",
     clientName: "",
-    frontElevationImage: [],
+    frontElevationImagesUri: [],
     elementSections: elementSections,
   };
 
+  console.log("reportId", defaultValues.id)
+
   const methods = useForm<BuildingSurveyFormData>({ defaultValues });
-  const { register, handleSubmit, watch, formState } = methods;
+  const { register, handleSubmit, watch, formState, control } = methods;
   const router = useRouter();
 
   const onSubmit = async () => {
@@ -72,11 +75,7 @@ export default function Report(props: any) {
 
       console.debug(form);
       successToast("Saved");
-
-
-      // get all images from the form
-      //router.push("/reports");
-
+      router.push("/reports");
     } catch (error) {
       console.error(error);
     }
@@ -109,9 +108,9 @@ export default function Report(props: any) {
                   <label className="mt-2" htmlFor="file-input">
                     Front Elevation Image
                   </label>
-                  <InputImage
-                    register={() => register("frontElevationImage")}
-                  />
+                  <InputImage 
+                    register={() => register("frontElevationImagesUri")} 
+                    path={`report-images/${defaultValues.id}/frontElevationImages/`} />
                 </div>
               </div>
               {defaultValues.elementSections.map((k, i) => (
@@ -134,19 +133,22 @@ export default function Report(props: any) {
                         register={() =>
                           register(`elementSections.${i}.images`)
                         }
+                        path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
                       />
-                      <ComponentInput
+                      {/* <ComponentInput
                         register={() =>
                           register(`elementSections.${i}.components`)
                         }
-                      ></ComponentInput>
+                      ></ComponentInput> */}
                     </div>
                   </ToggleSection>
                 </section>
               ))}
             </div>
             <div className="mt-8 mb-8">
-              <PrimaryBtn className="w-full flex justify-center" type="submit">Save</PrimaryBtn>
+              <PrimaryBtn className="w-full flex justify-center" type="submit">
+                Save
+              </PrimaryBtn>
             </div>
           </form>
         </FormProvider>

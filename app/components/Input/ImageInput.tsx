@@ -1,63 +1,43 @@
-import { uploadData } from 'aws-amplify/storage';
-import { X } from 'lucide-react'
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
+import { StorageManager } from '@aws-amplify/ui-react-storage';
+import { useEffect, useState } from "react";
+
 
 interface InputImageProps {
+  path: string;
   label?: string;
-  register: () => UseFormRegisterReturn<string>;
+  maxFileCount?: number;
+  register: () => UseFormRegisterReturn<string>
 }
 
-const InputImage = (props: InputImageProps) => {
-  const { watch, setValue } = useFormContext();
-
-  const reg = props.register();
-  const images = watch(reg.name, []);
-
-  const previewImageUrls = [];
-  if (images.length !== 0) {
-    for (let i = 0; i < images.length; i++) {
-      previewImageUrls.push(
-        URL.createObjectURL(new Blob([images[i]], { type: "image/*" }))
-      );
-      
-      uploadData({
-        path: `report-images/${reg.name}_${i}`,
-        data: images[i],
-      })
-    }
-  }
-
-  const removeImage = (index: number) => {
-    const newImages = [...images];
-    newImages.splice(index, 1);
-    setValue(reg.name, newImages);
-  };
-
+const InputImage = ({ path, label, maxFileCount = 10, register }: InputImageProps) => {
+  const reg = register();
+  const { setValue, getValues } = useFormContext();
+  
   return (
     <div>
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        id="file-input"
-        className="block w-full border border-gray-200 shadow-sm rounded-lg text-sm focus:z-10 focus:border-purple-600 focus:ring-purple-600 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600
-                        file:border-0
-                        file:bg-gray-100 file:me-4
-                        file:py-3 file:px-4
-                        dark:file:bg-gray-700 dark:file:text-gray-400"
-        {...reg}
-      />
-      <div className="flex justify-start gap-x-5 mt-5">
-        {previewImageUrls.map((src, i) => (
-          <div key={i} className="relative">
-            <X
-              className="absolute top-0 right-0 w-4 text-red-500 cursor-pointer"
-              onClick={() => removeImage(i)}
-            />
-            <img src={src} width={100} height={100} />
-          </div>
-        ))}
-      </div>
+       <StorageManager
+          acceptedFileTypes={['image/*']}
+          path={path}
+          maxFileCount={maxFileCount}
+          
+          components={{
+            DropZone({ children, displayText, inDropZone, ...rest }) {
+              return children;
+            },
+          }}
+
+          onUploadSuccess={(file) => { 
+            const currentVal = getValues(reg.name) || [];
+            setValue(reg.name, currentVal.concat(file.key)) 
+          }}
+
+          onFileRemove={(file) => {
+            const currentVal = getValues(reg.name) || [];
+            setValue(reg.name, currentVal.filter((v: string) => v !== file.key))
+          }}
+          isResumable
+        />
     </div>
   );
 };

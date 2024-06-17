@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import type {
   BuildingSurveyFormData,
   ElementSection,
@@ -8,6 +8,8 @@ import {
   TocContext,
   TocProvider,
 } from "../../components/Toc";
+
+import { StorageImage } from '@aws-amplify/ui-react-storage';
 
 const TableBlock = ({
   children,
@@ -106,15 +108,17 @@ const H2 = (props: PProps) => {
   );
 };
 
-const getImagesFromFileList = (fileList: File[]): string[] => {
+const getImagesFromFileList = (fileList: string[]): string[] => {
   const images = [];
+
+  console.log("fileList", fileList)
 
   if (fileList === null || fileList === undefined) return [];
 
   for (let i = 0; i < fileList.length; i++) {
-    images.push(
-      URL.createObjectURL(new Blob([fileList[i]], { type: "image/*" }))
-    );
+      images.push(
+        URL.createObjectURL(new Blob([fileList[i]], { type: "image/*" }))
+      );
   }
 
   return images;
@@ -129,9 +133,13 @@ const Page = (props: React.PropsWithChildren<any>) => (
   </>
 );
 
-export default function PDF({ form }: { form: BuildingSurveyFormData }) {
-  console.debug(form);
+interface PdfProps {
+  form: BuildingSurveyFormData;
+}
 
+/// This must be a sync function
+/// It needs to be rendered to a basic string rather than a react component
+export default function PDF({ form }: PdfProps) {
   const clientName = form.clientName;
   const address = form.address;
   const reportDate = new Date(form.reportDate);
@@ -176,12 +184,7 @@ export default function PDF({ form }: { form: BuildingSurveyFormData }) {
         </div>
       </Page>
       <Page className="text-center">
-        <img
-          src={getImagesFromFileList(form.frontElevationImage)[0]}
-          alt="front elevation"
-          width="80%"
-          height="80%"
-        />
+        <img src="/cwbc-logo.webp" alt="cwbc logo" />
         <p>
           <strong>{address}</strong>
         </p>

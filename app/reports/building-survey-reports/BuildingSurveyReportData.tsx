@@ -3,7 +3,7 @@ export type BuildingSurveyFormData = {
     address: string,
     clientName: string,
     reportDate: Date,   
-    frontElevationImage: File[],
+    frontElevationImagesUri: string[],
     elementSections: ElementSection[],
 }
 
@@ -12,7 +12,7 @@ export type ElementSection = {
     isPartOfSurvey: boolean,
     description: string,
     components : Component[],
-    images: File[],
+    images: string[],
 }
 
 export type Component = {
