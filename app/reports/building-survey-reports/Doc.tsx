@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -7,7 +7,7 @@ import {
 } from "./BuildingSurveyReportData";
 
 import { useForm, FormProvider } from "react-hook-form";
-import { ComponentInput, ToggleSection } from "./Defects";
+import { ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "../../components/Input/InputText";
 import InputImage from "../../components/Input/ImageInput";
@@ -27,14 +27,16 @@ export default function Report(props: any) {
   });
 
   const elementSections = [
+    // External Condition
     "Foundations and Substructure",
     "Roof Coverings",
     "Chimneys",
     "Rainwater Disposal System",
     "Sofits and Fascias",
     "Main Walls",
-    "Damp Proof Courses",
     "Windows and Doors",
+    //"Damp Proof Courses",
+    // Internal Condition
     "Roof Structure",
     "Ceilings",
     "Walls and Partitions",
@@ -42,11 +44,13 @@ export default function Report(props: any) {
     "Internal Joinery",
     "Sanitaryware & Kitchen",
     "Fireplaces",
+    // Services
     "Electrical Installation",
-    "Gas/Oil Installations",
+    "Gas Installations",
     "Cold Water Supply",
     "Hot Water Supply / Heating Installations",
-    "Surface water soil & drainage",
+    "Surface water & Soil drainage",
+    // Grounds
     "Boundaries, Fencing, Drives, Lawn, etc",
   ].map(createDefaultElementSection);
 
@@ -57,6 +61,12 @@ export default function Report(props: any) {
     clientName: "",
     frontElevationImagesUri: [],
     elementSections: elementSections,
+    sections: [
+      { name: "External Condition", elementSections: elementSections.slice(0, 6)},
+      { name: "Internal Condition", elementSections: elementSections.slice(7, 13) },
+      { name: "Services", elementSections: elementSections.slice(14,18) },
+      { name: "Grounds", elementSections: elementSections.slice(19, 20)}
+    ]
   };
 
   console.log("reportId", defaultValues.id)
@@ -113,36 +123,33 @@ export default function Report(props: any) {
                     path={`report-images/${defaultValues.id}/frontElevationImages/`} />
                 </div>
               </div>
-              {defaultValues.elementSections.map((k, i) => (
-                <section key={i} className="mt-2">
-                  <ToggleSection
-                    label={k.name}
-                    register={() =>
-                      register(`elementSections.${i}.isPartOfSurvey`)
-                    }
-                  >
-                    <div className="flex-row space-y-2">
-                      <SmartTextArea
+              {defaultValues.sections.map((section, sectionIndex) => 
+                  section.elementSections.map((k, i) => (
+                    <section key={`${sectionIndex}.${i}`} className="mt-2">
+                      <ToggleSection
                         label={k.name}
-                        placeholder={`Description of the ${k.name.toLowerCase()}...`}
                         register={() =>
-                          register(`elementSections.${i}.description`)
+                          register(`sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`)
                         }
-                      />
-                      <InputImage
-                        register={() =>
-                          register(`elementSections.${i}.images`)
-                        }
-                        path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
-                      />
-                      {/* <ComponentInput
-                        register={() =>
-                          register(`elementSections.${i}.components`)
-                        }
-                      ></ComponentInput> */}
-                    </div>
-                  </ToggleSection>
-                </section>
+                      >
+                        <div className="flex-row space-y-2">
+                          <SmartTextArea
+                            label={k.name}
+                            placeholder={`Description of the ${k.name.toLowerCase()}...`}
+                            register={() =>
+                              register(`sections.${sectionIndex}.elementSections.${i}.description`)
+                            }
+                          />
+                          <InputImage
+                            register={() =>
+                              register(`sections.${sectionIndex}.elementSections.${i}.images`)
+                            }
+                            path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
+                          />
+                        </div>
+                      </ToggleSection>
+                    </section>
+                )
               ))}
             </div>
             <div className="mt-8 mb-8">

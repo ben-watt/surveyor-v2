@@ -9,8 +9,6 @@ import {
   TocProvider,
 } from "../../components/Toc";
 
-import { StorageImage } from '@aws-amplify/ui-react-storage';
-
 const TableBlock = ({
   children,
   widths,
@@ -136,7 +134,7 @@ export default function PDF({ form }: PdfProps) {
     <TocContext.Provider value={DefaultTocProvider()}>
       <img width={300} src="/cwbc-logo.webp" alt="cwbc logo" />
       <Page className="text-right">
-        <h1>Building Survey Report</h1>
+        <h1>Level 3 Building Survey Report</h1>
         <p></p>
         <div>
           <p>Of the premises known as</p>
@@ -168,7 +166,7 @@ export default function PDF({ form }: PdfProps) {
         <div className="text-sm">
           <p className="m-0">Email: admin@cwbc.co.uk</p>
           <p className="m-0">Date: {reportDate.toDateString()}</p>
-          <p className="m-0">Ref: 23.120</p>
+          <p className="m-0">Ref: Unknown</p>
         </div>
       </Page>
       <Page className="text-center">
@@ -182,17 +180,26 @@ export default function PDF({ form }: PdfProps) {
           <p>Prepared by:</p>
           <div>
             <p>Samuel Watt BSc (Hons)</p>
-            <p>Clarke & Watt Building Consultancy Ltd</p>
-            <p>Unit 4</p>
-            <p>Booth Road</p>
-            <p>33 Greek Street</p>
-            <p>Stockport</p>
-            <p>SK3 8AX</p>
           </div>
-          <p>Telephone:</p>
-          <p>0116 403 0221</p>
-          <p>Email:</p>
-          <p>sam.watt@cwbc.co.uk</p>
+        </TableBlock>
+        <p>
+          This document has been prepared and checked in accordance with the
+          CWBC's Quality Assurance procedures and authorised for release.
+        </p>
+        <div></div>
+        <p>Signed:</p>
+        <TableBlock widths={[50, 50]}>
+          <div>
+            <img src="/sw-sig.png" alt="signature"></img>
+            <p>Samuel Watt BSc (Hons) </p>
+          </div>
+          <div>
+            <img src="/jc-sig.png" alt="signature"></img>
+            <p>Jordan Clarke BSc (Hons) MRICS</p>
+          </div>
+        </TableBlock>
+        <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>
+        <TableBlock widths={[40, 60]}>
           <p>Inspection Date:</p>
           <p>{reportDate.toDateString()}</p>
           <p>Report Issue Date:</p>
@@ -204,24 +211,9 @@ export default function PDF({ form }: PdfProps) {
           <p>Situation</p>
           <p>Unknown</p>
         </TableBlock>
-        <div>
-          <p>
-            This document has been prepared and checked in accordance with the
-            CWBC's Quality Assurance procedures and authorised for release.
-          </p>
-          <p>Signed:</p>
-          <TableBlock widths={[50, 50]}>
-            <div>
-              <img src="/sw-sig.png" alt="signature"></img>
-              <p>Samuel Watt BSc (Hons) </p>
-            </div>
-            <div>
-              <img src="/jc-sig.png" alt="signature"></img>
-              <p>Jordan Clarke BSc (Hons) MRICS</p>
-            </div>
-          </TableBlock>
-          <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>
-        </div>
+      </Page>
+      <Page>
+        <h1>Contents</h1>
       </Page>
       <Page>
         <H1>Definitions</H1>
@@ -297,14 +289,21 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <H2>Location Plan</H2>
         <p>
-          Redline demarcations do not represent the legal boundary of the
-          property and are for indicative purposes only.
+          Red line demarcations do not represent the legal boundary of the property and are to indicate the approximate areas of the property subject to
+          inspection.
         </p>
         <img></img>
       </Page>
       <Page>
-        {form.elementSections.map((cs, i) => (
-          <ConditionSection key={i} conditionSection={cs} />
+        {form.sections.map((s, i) => (
+          <div>
+            <H1>{s.name}</H1>
+            {s.elementSections.map((cs, j) => (
+              <>
+                <ConditionSection key={`${i}.${j}`} conditionSection={cs} />
+              </>
+            ))}
+          </div>
         ))}
       </Page>
       <Page>
@@ -418,7 +417,7 @@ export default function PDF({ form }: PdfProps) {
 }
 
 type ConditionSectionProps = {
-  key: number;
+  key: string;
   conditionSection: ElementSection;
 };
 

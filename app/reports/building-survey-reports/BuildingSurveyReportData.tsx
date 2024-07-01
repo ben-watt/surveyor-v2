@@ -4,6 +4,12 @@ export type BuildingSurveyFormData = {
     clientName: string,
     reportDate: Date,   
     frontElevationImagesUri: string[],
+    sections: SurveySection[],
+    elementSections: ElementSection[],
+}
+
+export type SurveySection = {
+    name: string,
     elementSections: ElementSection[],
 }
 

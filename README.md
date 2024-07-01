@@ -47,6 +47,18 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
   - Don't use algolia for search?s
 
+### Sam Requests
+
+  - two templates level 2 & level 3 
+  - easy insert photos and save on devise 
+  - drop down defects and add as many defects as possible per section if you want 
+  - also note section and can amend the drop downs 
+  - costings on the level 3 
+  - color code defects 
+  - Also we would like to add like a banner to the reports to make it look more professional 
+
+
+
 ### Next
 
 Can we do something where we're less structured???. Rock up at a property take a load of pictures take a load of audio / video then interpret that data to understand what is useful in order to generate a survey. What would we need? An understanding of what is required for a survey 

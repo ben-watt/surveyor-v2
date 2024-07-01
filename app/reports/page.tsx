@@ -53,7 +53,7 @@ function HomePage() {
 
   return (
     <div>
-      <div className="flex justify-between  p-3 mb-5 mt-5 items-baseline">
+      <div className="flex justify-between p-3 mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Reports</h1>
         </div>
@@ -63,7 +63,6 @@ function HomePage() {
           </Link>
         </div>
       </div>
-
       <div className="m-2 md:m-10">
         {RenderTable()}
       </div>

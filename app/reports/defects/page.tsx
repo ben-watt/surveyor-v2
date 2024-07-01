@@ -5,16 +5,67 @@ import client from "@/app/clients/ReportsClient";
 import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
 import { CopyMarkupBtn } from "@/app/components/Buttons";
-import { Table } from "@/app/components/Table";
-import { TableRow } from "@/app/components/Table";
-import { DropDown, DropDownItem } from "@/app/components/DropDown";
-import { SearchBox } from "../../components/SearchBox";
+import { ColumnDef } from "@tanstack/react-table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
+import { DataTable, SortableHeader } from "@/app/components/DataTable";
 
 type DefectData = Schema["Defects"]["type"];
 
 export default function Page() {
   const [defects, setDefects] = useState<DefectData[]>([]);
   const [search, setSearch] = useState<string>("");
+
+  const columns: ColumnDef<DefectData>[] = [
+    {
+      header: "Id",
+      accessorFn: (v) => "#" + v.id.split("-")[0] || "N/A",
+    },
+    {
+      header: "Name",
+      accessorKey: "name",
+    },
+    {
+      header: "Description",
+      accessorKey: "description",
+    },
+    {
+      id: "created",
+      header: ({ column }) => <SortableHeader column={column} header="Created" />,
+      accessorFn: (v) => new Date(v.createdAt).toDateString(),
+    },
+    {
+      id: "actions",
+      cell: (props) => {
+        const defectId = props.row.original.id;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Link href={`defects/edit/${defectId}`}>
+                  Edit
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-500"
+                onClick={() => deleteDefect(defectId)}
+              >
+                <span className="text-red-500">Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    }
+  ];
 
   useEffect(() => {
     async function fetchReports() {
@@ -63,54 +114,7 @@ export default function Page() {
           <CopyMarkupBtn>Create</CopyMarkupBtn>
         </Link>
       </div>
-      <div>
-        <SearchBox onChange={(ev) => setSearch(ev.target.value)} />
-      </div>
-      <div>
-        <Table
-          headers={[
-            "Name",
-            "Description",
-            "Cause",
-            "Element",
-            "Component",
-            "Actions",
-          ]}
-        >
-          {defects.map((defect) => (
-            <TableRow key={defect.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                {defect.name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                {defect.description}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                {defect.cause}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                {defect.element}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
-                {defect.component}
-              </td>
-              <td>
-                <DropDown>
-                  <DropDownItem href={`defects/edit/${defect.id}`}>
-                    Edit
-                  </DropDownItem>
-                  <DropDownItem
-                    onClick={() => deleteDefect(defect.id)}
-                    className="text-red-500"
-                  >
-                    Delete
-                  </DropDownItem>
-                </DropDown>
-              </td>
-            </TableRow>
-          ))}
-        </Table>
-      </div>
+      <DataTable columns={columns} data={defects} />
     </div>
   );
 }
