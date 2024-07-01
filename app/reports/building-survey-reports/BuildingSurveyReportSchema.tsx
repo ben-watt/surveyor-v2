@@ -13,6 +13,7 @@ export type SurveySection = {
 }
 
 export type ElementSection = {
+    
     name: string,
     isPartOfSurvey: boolean,
     ragStatus: "Red" | "Amber" | "Green" | "N/A"

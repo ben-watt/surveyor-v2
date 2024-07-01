@@ -17,6 +17,9 @@ const InputImage = ({ path, label, maxFileCount = 10, register }: InputImageProp
   return (
     <div>
        <StorageManager
+          displayText={{
+              browseFilesText: 'Upload Images',
+          }}
           acceptedFileTypes={['image/*']}
           path={path}
           maxFileCount={maxFileCount}
@@ -36,6 +39,7 @@ const InputImage = ({ path, label, maxFileCount = 10, register }: InputImageProp
             const currentVal = getValues(reg.name) || [];
             setValue(reg.name, currentVal.filter((v: string) => v !== file.key))
           }}
+
           isResumable
         />
     </div>

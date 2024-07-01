@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import Doc from '../building-survey-reports/Doc';
+import BuildingSurveyForm from '../building-survey-reports/BuildingSurveyForm';
 
 
 function Home() {
@@ -11,7 +11,7 @@ function Home() {
         <div className="flex justify-center">
           <h1 className="text-3xl dark:text-white mb-8 mt-8">Building Survey Report</h1>
         </div>
-        <Doc />
+        <BuildingSurveyForm />
       </div>
     </>
   )

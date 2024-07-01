@@ -4,7 +4,7 @@ import { CopyMarkupBtn } from "@/app/components/Buttons";
 import client from "@/app/clients/ReportsClient";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportData";
+import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
 
 import { ColumnDef } from "@tanstack/react-table";
 

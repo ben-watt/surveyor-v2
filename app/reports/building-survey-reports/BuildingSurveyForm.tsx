@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   BuildingSurveyFormData,
   ElementSection,
-} from "./BuildingSurveyReportData";
+} from "./BuildingSurveyReportSchema";
 
 import { useForm, FormProvider, Controller } from "react-hook-form";
 import { ToggleSection } from "./Defects";
@@ -14,6 +14,7 @@ import InputImage from "../../components/Input/ImageInput";
 import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
+import { Combobox } from "../../components/Input/ComboBox";
 import { successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import {
@@ -201,7 +202,7 @@ export default function Report(props: any) {
                           }
                           path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
                         />
-                      </div>
+                      </div>  
                     </ToggleSection>
                   </section>
                 ))

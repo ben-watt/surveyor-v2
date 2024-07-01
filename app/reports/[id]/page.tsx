@@ -5,12 +5,14 @@ import { ContentCss, TextEditor } from "@/app/components/TextEditor";
 import React, { useEffect, useState } from "react";
 import { renderToString } from "react-dom/server";
 import BuildingSurveyReportTiny from "../building-survey-reports/BuildingSurveyReportTiny";
-import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportData";
+import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportSchema";
 import { getUrl } from "aws-amplify/storage";
+
 
 export default function Page({ params }: { params: { id: string } }) {
   const [initialValue, setInitialValue] = useState<string>();
   const [contentCss, setContentCss] = useState<ContentCss>("document");
+  
 
   useEffect(() => {
     const getReport = async () => {
@@ -35,7 +37,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
 
   if(initialValue)
-    return <TextEditor contentCss={contentCss} initialValue={initialValue} />
+    return <TextEditor contentCss={"/styles.css"} initialValue={initialValue} />
   return <div>Loading...</div>;  
 }
 
@@ -43,9 +45,11 @@ async function mapFormDataToTinyMceHtml(formData: BuildingSurveyFormData): Promi
 
   formData.frontElevationImagesUri = await getImagesHref(formData.frontElevationImagesUri);
 
-  let newImages = formData.elementSections.map(async (section, i) => {
-    formData.elementSections[i].images = await getImagesHref(section.images);
-  });
+  let newImages = formData.sections.map((section, si) => {
+    return section.elementSections.map(async (es, i) => {
+      formData.sections[si].elementSections[i].images = await getImagesHref(es.images);
+    });
+  })
 
   await Promise.all(newImages);
   return renderToString(<BuildingSurveyReportTiny form={formData} />);

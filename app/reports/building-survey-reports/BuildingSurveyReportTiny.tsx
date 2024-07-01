@@ -1,8 +1,8 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import type {
   BuildingSurveyFormData,
   ElementSection,
-} from "./BuildingSurveyReportData";
+} from "./BuildingSurveyReportSchema";
 import {
   DefaultTocProvider,
   TocContext,
@@ -31,7 +31,7 @@ const TableBlock = ({
     let row = [];
     for (let j = 0; j < widths.length; j++) {
       row.push(
-        <td key={j} className={"w-" + widths[j] + "-perc " + "text-top"}>
+        <td key={j} style={{ verticalAlign: "top", width: `${widths[j]}%` }}>
           {childrenArray[i + j]}
         </td>
       );
@@ -40,7 +40,7 @@ const TableBlock = ({
   }
 
   return (
-    <table className="w-100-perc">
+    <table className="w-full">
       <tbody>{tableRows}</tbody>
     </table>
   );
@@ -106,14 +106,33 @@ const H2 = (props: PProps) => {
   );
 };
 
+const H3 = (props: PProps) => {
+  const tocProvider = useContext(TocContext);
+  return (
+    <ContentBlock tocProvider={tocProvider}>
+      <h3>{props.children}</h3>
+    </ContentBlock>
+  );
+};
+
 const getImagesFromFileList = (fileList: string[]): string[] => {
   return fileList;
 };
 
 const Page = (props: React.PropsWithChildren<any>) => (
   <>
-    <section className={"mt-8 mb-8 " + props.className}>
-      {props.children}
+    <section>
+      <header className="flex space-between align-center">
+        <div>
+          <p>Level 3 Building Survey Report</p>
+        </div>
+        <div>
+          <img style={{ width: 150 }} src="/cwbc-logo.webp" alt="cwbc logo" />
+        </div>
+      </header>
+      <main>
+        {props.children}
+      </main>
     </section>
     <p>---------</p>
   </>
@@ -132,7 +151,6 @@ export default function PDF({ form }: PdfProps) {
 
   return (
     <TocContext.Provider value={DefaultTocProvider()}>
-      <img width={300} src="/cwbc-logo.webp" alt="cwbc logo" />
       <Page className="text-right">
         <h1>Level 3 Building Survey Report</h1>
         <p></p>
@@ -168,12 +186,6 @@ export default function PDF({ form }: PdfProps) {
           <p className="m-0">Date: {reportDate.toDateString()}</p>
           <p className="m-0">Ref: Unknown</p>
         </div>
-      </Page>
-      <Page className="text-center">
-        <img src="/cwbc-logo.webp" alt="cwbc logo" />
-        <p>
-          <strong>{address}</strong>
-        </p>
       </Page>
       <Page>
         <TableBlock widths={[40, 60]}>
@@ -218,7 +230,7 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <H1>Definitions</H1>
         <H2>Key</H2>
-        <TableBlock widths={[90, 10]}>
+        <TableBlock widths={[97, 3]}>
           <ul>
             <li>
               For information purposes, generally, no repair is required.
@@ -256,22 +268,28 @@ export default function PDF({ form }: PdfProps) {
             <strong>NI</strong>
           </p>
         </TableBlock>
-        <H2>Glossary of Terms</H2>
-        <ul>
-          <li>Immediate: Within 1 year</li>
-          <li>Short Term: Within the next 1 to 3 years</li>
-          <li>Medium Term: Within the next 4 to 10 years</li>
-          <li>Long Term: Within the next 10 years </li>
-        </ul>
-        <H2>Crack Definitions (BRE Digest 251)</H2>
-        <ul>
-          <li>Category 0: Negligible (&gt; 0.1mm)</li>
-          <li>Category 1: Very slight (Up to 1mm)</li>
-          <li>Category 2: Slight (Up to 5mm)</li>
-          <li>Category 3: Moderate (5 - 15mm)</li>
-          <li>Category 4: Severe (15 - 25mm)</li>
-          <li>Category 5: Very severe (&lt; 25 mm)</li>
-        </ul>
+        <TableBlock widths={[50, 50]}>
+          <div>
+            <H2>Glossary of Terms</H2>
+            <ul>
+              <li>Immediate: Within 1 year</li>
+              <li>Short Term: Within the next 1 to 3 years</li>
+              <li>Medium Term: Within the next 4 to 10 years</li>
+              <li>Long Term: Within the next 10 years </li>
+            </ul>
+          </div>
+          <div>
+            <H2>Crack Definitions (BRE Digest 251)</H2>
+            <ul>
+              <li>Category 0: Negligible (&gt; 0.1mm)</li>
+              <li>Category 1: Very slight (Up to 1mm)</li>
+              <li>Category 2: Slight (Up to 5mm)</li>
+              <li>Category 3: Moderate (5 - 15mm)</li>
+              <li>Category 4: Severe (15 - 25mm)</li>
+              <li>Category 5: Very severe (&lt; 25 mm)</li>
+            </ul>
+          </div>
+        </TableBlock>
       </Page>
       <Page>
         <H2>Typical House Diagram</H2>
@@ -287,7 +305,7 @@ export default function PDF({ form }: PdfProps) {
         <p>Unknown</p>
       </Page>
       <Page>
-        <H2>Location Plan</H2>
+        <H1>Location Plan</H1>
         <p>
           Red line demarcations do not represent the legal boundary of the property and are to indicate the approximate areas of the property subject to
           inspection.
@@ -421,6 +439,21 @@ type ConditionSectionProps = {
   conditionSection: ElementSection;
 };
 
+
+
+const mapRagStatusToColor = (ragStatus: string) => {
+  switch (ragStatus) {
+    case "Red":
+      return "red";
+    case "Amber":
+      return "orange";
+    case "Green":
+      return "green";
+    default:
+      return "white";
+  }
+}
+
 const ConditionSection = ({ conditionSection }: ConditionSectionProps) => {
   const cs = conditionSection;
 
@@ -446,7 +479,10 @@ const ConditionSection = ({ conditionSection }: ConditionSectionProps) => {
 
   return (
     <>
-      <h2>{cs.name}</h2>
+      <TableBlock widths={[97, 3]}>
+        <H3>{cs.name}</H3>
+        <p className="w-100-perc h-100-perc text-centre" style={{ backgroundColor: mapRagStatusToColor(conditionSection.ragStatus) }}></p>
+      </TableBlock>
       <div className="grid grid-cols-2 gap-4">
         <p>
           <strong className="text-red-500">Description:</strong>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Editor } from "@tinymce/tinymce-react";
 
-export type ContentCss = "document" | "mobile";
+export type ContentCss = "document" | "mobile" | string;
 
 interface TextEditorProps {
   initialValue?: string;
