@@ -4,8 +4,7 @@ export type BuildingSurveyFormData = {
     clientName: string,
     reportDate: Date,   
     frontElevationImagesUri: string[],
-    sections: SurveySection[],
-    elementSections: ElementSection[],
+    sections: SurveySection[]
 }
 
 export type SurveySection = {
@@ -16,6 +15,7 @@ export type SurveySection = {
 export type ElementSection = {
     name: string,
     isPartOfSurvey: boolean,
+    ragStatus: "Red" | "Amber" | "Green" | "N/A"
     description: string,
     components : Component[],
     images: string[],

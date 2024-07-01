@@ -6,7 +6,7 @@ import {
   ElementSection,
 } from "./BuildingSurveyReportData";
 
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, Controller } from "react-hook-form";
 import { ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "../../components/Input/InputText";
@@ -16,11 +16,21 @@ import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
 import { successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Report(props: any) {
   const createDefaultElementSection = (name: string): ElementSection => ({
     name,
     isPartOfSurvey: false,
+    ragStatus: "N/A",
     description: "",
     components: [],
     images: [],
@@ -60,16 +70,21 @@ export default function Report(props: any) {
     address: "",
     clientName: "",
     frontElevationImagesUri: [],
-    elementSections: elementSections,
     sections: [
-      { name: "External Condition", elementSections: elementSections.slice(0, 6)},
-      { name: "Internal Condition", elementSections: elementSections.slice(7, 13) },
-      { name: "Services", elementSections: elementSections.slice(14,18) },
-      { name: "Grounds", elementSections: elementSections.slice(19, 20)}
-    ]
+      {
+        name: "External Condition of Property",
+        elementSections: elementSections.slice(0, 6),
+      },
+      {
+        name: "Internal Condition of Property",
+        elementSections: elementSections.slice(7, 13),
+      },
+      { name: "Services", elementSections: elementSections.slice(14, 18) },
+      { name: "Grounds", elementSections: elementSections.slice(19, 20) },
+    ],
   };
 
-  console.log("reportId", defaultValues.id)
+  console.log("reportId", defaultValues.id);
 
   const methods = useForm<BuildingSurveyFormData>({ defaultValues });
   const { register, handleSubmit, watch, formState, control } = methods;
@@ -118,39 +133,79 @@ export default function Report(props: any) {
                   <label className="mt-2" htmlFor="file-input">
                     Front Elevation Image
                   </label>
-                  <InputImage 
-                    register={() => register("frontElevationImagesUri")} 
-                    path={`report-images/${defaultValues.id}/frontElevationImages/`} />
+                  <InputImage
+                    register={() => register("frontElevationImagesUri")}
+                    path={`report-images/${defaultValues.id}/frontElevationImages/`}
+                  />
                 </div>
               </div>
-              {defaultValues.sections.map((section, sectionIndex) => 
-                  section.elementSections.map((k, i) => (
-                    <section key={`${sectionIndex}.${i}`} className="mt-2">
-                      <ToggleSection
-                        label={k.name}
-                        register={() =>
-                          register(`sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`)
-                        }
-                      >
-                        <div className="flex-row space-y-2">
-                          <SmartTextArea
-                            label={k.name}
-                            placeholder={`Description of the ${k.name.toLowerCase()}...`}
-                            register={() =>
-                              register(`sections.${sectionIndex}.elementSections.${i}.description`)
-                            }
-                          />
-                          <InputImage
-                            register={() =>
-                              register(`sections.${sectionIndex}.elementSections.${i}.images`)
-                            }
-                            path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
-                          />
-                        </div>
-                      </ToggleSection>
-                    </section>
-                )
-              ))}
+              {defaultValues.sections.map((section, sectionIndex) =>
+                section.elementSections.map((k, i) => (
+                  <section key={`${sectionIndex}.${i}`} className="mt-2">
+                    <ToggleSection
+                      label={k.name}
+                      register={() =>
+                        register(
+                          `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`
+                        )
+                      }
+                    >
+                      <div className="flex-row space-y-2">
+                        <Controller
+                          name={`sections.${sectionIndex}.elementSections.${i}.ragStatus`}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              onValueChange={field.onChange}
+                              defaultValue={k.ragStatus}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select a RAG Status..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  <SelectLabel>RAG Status</SelectLabel>
+                                  <SelectItem value="Red">
+                                    <span className="text-red-600">Red</span>
+                                  </SelectItem>
+                                  <SelectItem value="Amber">
+                                    <span className="text-amber-600">
+                                      Amber
+                                    </span>
+                                  </SelectItem>
+                                  <SelectItem value="Green">
+                                    <span className="text-green-600">
+                                      Green
+                                    </span>
+                                  </SelectItem>
+                                  <SelectItem value="N/A">N/A</SelectItem>
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        <SmartTextArea
+                          label={k.name}
+                          placeholder={`Description of the ${k.name.toLowerCase()}...`}
+                          register={() =>
+                            register(
+                              `sections.${sectionIndex}.elementSections.${i}.description`
+                            )
+                          }
+                        />
+                        <InputImage
+                          register={() =>
+                            register(
+                              `sections.${sectionIndex}.elementSections.${i}.images`
+                            )
+                          }
+                          path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
+                        />
+                      </div>
+                    </ToggleSection>
+                  </section>
+                ))
+              )}
             </div>
             <div className="mt-8 mb-8">
               <PrimaryBtn className="w-full flex justify-center" type="submit">
