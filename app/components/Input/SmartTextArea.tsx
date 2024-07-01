@@ -18,6 +18,12 @@ interface SmartTextAreaProps {
 const SmartTextArea = ({ label, placeholder, register } : SmartTextAreaProps) => {
     const [audio, setAudio] = useState<AudioState>({});
     const [audioText, setAudioText] = useState("");
+    const enableAudioRecording = false;
+
+    const setAudioTextFn = (text: string) => {
+        console.debug("Setting audio text", text)
+        setAudioText(text);
+    }
 
     const getTranscription = async (blob: Blob) => {
         const data = new FormData();
@@ -32,9 +38,9 @@ const SmartTextArea = ({ label, placeholder, register } : SmartTextAreaProps) =>
             },
             body: data
         })
-            .then(response => response.json())
-            .then(data => setAudioText(data.text))
-            .catch(error => setAudioText(error.message));
+        .then(response => response.json())
+        .then(data => setAudioTextFn(data.text))
+        .catch(error => setAudioText(error.message));
     }
 
     useEffect(() => {
@@ -54,6 +60,7 @@ const SmartTextArea = ({ label, placeholder, register } : SmartTextAreaProps) =>
             <div className="relative">
                 <div className="h-36">
                     <TextAreaInput defaultValue={audioText} placeholder={placeholder} register={register} />
+                    {enableAudioRecording &&
                     <div className="absolute bottom-2 right-2">
                         <AudioRecorder showVisualizer onRecordingComplete={(blob) => addAudioElement(blob)} audioTrackConstraints={{
                             noiseSuppression: true,
@@ -61,6 +68,7 @@ const SmartTextArea = ({ label, placeholder, register } : SmartTextAreaProps) =>
                         }} recorderControls={recorderControls} />
 
                     </div>
+                    }
                 </div>
 
             </div>
