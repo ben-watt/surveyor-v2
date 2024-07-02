@@ -27,7 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function Report(props: any) {
+
+interface BuildingSurveyFormProps {
+  initDefaultValues?: BuildingSurveyFormData;
+}
+
+export default function Report({ initDefaultValues } : BuildingSurveyFormProps) {
   const createDefaultElementSection = (name: string): ElementSection => ({
     name,
     isPartOfSurvey: false,
@@ -65,7 +70,7 @@ export default function Report(props: any) {
     "Boundaries, Fencing, Drives, Lawn, etc",
   ].map(createDefaultElementSection);
 
-  const defaultValues: BuildingSurveyFormData = {
+  let defaultValues: BuildingSurveyFormData = {
     id: uuidv4(),
     reportDate: new Date(),
     address: "",
@@ -85,10 +90,14 @@ export default function Report(props: any) {
     ],
   };
 
+  if(initDefaultValues) { 
+    defaultValues = initDefaultValues;
+  }  
+
   console.log("reportId", defaultValues.id);
 
   const methods = useForm<BuildingSurveyFormData>({ defaultValues });
-  const { register, handleSubmit, watch, formState, control } = methods;
+  const { register, handleSubmit, watch, formState } = methods;
   const router = useRouter();
 
   const onSubmit = async () => {
@@ -144,6 +153,7 @@ export default function Report(props: any) {
                 section.elementSections.map((k, i) => (
                   <section key={`${sectionIndex}.${i}`} className="mt-2">
                     <ToggleSection
+                      defaultValue={k.isPartOfSurvey}
                       label={k.name}
                       register={() =>
                         register(
@@ -156,7 +166,8 @@ export default function Report(props: any) {
                           name={`sections.${sectionIndex}.elementSections.${i}.ragStatus`}
                           render={({ field }) => (
                             <Select
-                              {...field}
+                              name={field.name}
+                              value={field.value}
                               onValueChange={field.onChange}
                               defaultValue={k.ragStatus}
                             >

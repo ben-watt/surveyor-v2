@@ -52,15 +52,17 @@ export const ComponentInput = ({ register } : DefectInputProps) => {
 interface ToggleSectionProps {
     label: string;
     children: any;
+    defaultValue: boolean;
     register: () => UseFormRegisterReturn<string>;
 }
 
-export const ToggleSection = ({ label, children, register }: ToggleSectionProps) => {
-    const [enabled, setEnabled] = useState(false);
+export const ToggleSection = ({ label, children, defaultValue, register }: ToggleSectionProps) => {
+    const [enabled, setEnabled] = useState(defaultValue);
 
     return (
         <>
             <ToogleInput
+                defaultValue={defaultValue}
                 labelStyle="text-lg font-medium"
                 labelTitle={label}
                 onClick={(ev: React.ChangeEvent<HTMLInputElement>) => setEnabled(ev.target.checked)} register={register}></ToogleInput>

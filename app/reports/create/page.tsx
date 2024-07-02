@@ -1,7 +1,9 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import BuildingSurveyForm from '../building-survey-reports/BuildingSurveyForm';
+import reportClient from '@/app/clients/ReportsClient';
+import { BuildingSurveyFormData } from '../building-survey-reports/BuildingSurveyReportSchema';
 
 
 function Home() {

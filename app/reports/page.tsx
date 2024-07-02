@@ -110,8 +110,13 @@ function HomePage() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
+                  <Link href={`reports/${reportId}/edit`}>
+                    Edit report
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
                   <Link href={`/reports/${reportId}`}>
-                    View report
+                    Generate report
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-red-500"
