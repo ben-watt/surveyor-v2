@@ -13,34 +13,25 @@ export type SurveySection = {
 }
 
 export type ElementSection = {
-    
     name: string,
     isPartOfSurvey: boolean,
-    ragStatus: "Red" | "Amber" | "Green" | "N/A"
+    ragStatus: RagStatus
     description: string,
     components : Component[],
     images: string[],
 }
 
 export type Component = {
+    type: string,
     name: string,
-    defects: Defect[],
-    conditions: Condition[]
-}
-
-export type Condition = {
-    description : string
+    defects: Defect[]
 }
 
 export type Defect = {
     name: string,
     description: string,
-    cause: string,
-    implications: string,
-    treatment: string,
-    cost: number,
+    isChecked: boolean,
+    condition: RagStatus,
 }
 
-export function nameof<T>(key: keyof T, instance?: T): keyof T {
-    return key;
-}
+export type RagStatus = "Red" | "Amber" | "Green" | "N/A";

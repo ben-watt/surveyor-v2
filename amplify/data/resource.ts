@@ -17,14 +17,25 @@ const schema = a.schema({
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
     ]),
-  Defects: a
+  Elements: a.model({
+    id: a.id().required(),
+    name: a.string().required(),
+    description: a.string(),
+    components: a.hasMany("Components", "id"),
+  }).authorization((allow) => [
+    allow.owner().to(["create", "read", "update", "delete"]),
+  ]),
+  Defect: a.customType({
+    name: a.string().required(),
+    description: a.string().required(),
+  }),
+  Components: a
     .model({
       id: a.id().required(),
       name: a.string().required(),
-      description: a.string().required(),
-      cause: a.string().required(),
-      element: a.string().required(),
-      component: a.string().required(),
+      element: a.belongsTo("Element", "id"),
+      type: a.string().required(),
+      defects: a.ref("Defect").array().required(),
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),

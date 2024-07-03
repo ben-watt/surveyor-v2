@@ -11,11 +11,12 @@ type AudioState = {
 
 interface SmartTextAreaProps {
     label: string;
-    placeholder: string;
+    placeholder?: string;
+    defaultValue?: string;
     register: () => UseFormRegisterReturn<string>;
 }
 
-const SmartTextArea = ({ label, placeholder, register } : SmartTextAreaProps) => {
+const SmartTextArea = ({ label, placeholder, defaultValue, register } : SmartTextAreaProps) => {
     const [audio, setAudio] = useState<AudioState>({});
     const [audioText, setAudioText] = useState("");
     const enableAudioRecording = false;
@@ -58,8 +59,8 @@ const SmartTextArea = ({ label, placeholder, register } : SmartTextAreaProps) =>
     return (
         <div>
             <div className="relative">
-                <div className="h-36">
-                    <TextAreaInput defaultValue={audioText} placeholder={placeholder} register={register} />
+                <div>
+                    <TextAreaInput labelTitle={label} defaultValue={defaultValue} placeholder={placeholder} register={register} />
                     {enableAudioRecording &&
                     <div className="absolute bottom-2 right-2">
                         <AudioRecorder showVisualizer onRecordingComplete={(blob) => addAudioElement(blob)} audioTrackConstraints={{

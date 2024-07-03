@@ -12,24 +12,24 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
 
-type DefectData = Schema["Defects"]["type"];
+type ElementData = Schema["Elements"]["type"];
 
 export default function Page() {
-  const [defects, setDefects] = useState<DefectData[]>([]);
+  const [elementData, setElementData] = useState<ElementData[]>([]);
   const [search, setSearch] = useState<string>("");
 
-  const columns: ColumnDef<DefectData>[] = [
+  const columns: ColumnDef<ElementData>[] = [
     {
       header: "Id",
       accessorFn: (v) => "#" + v.id.split("-")[0] || "N/A",
     },
     {
       header: "Name",
-      accessorKey: "name",
+      accessorKey: "name"
     },
     {
-      header: "Description",
-      accessorKey: "description",
+      header: "Component Count",
+      accessorFn: (v) => v.components.length,
     },
     {
       id: "created",
@@ -39,7 +39,7 @@ export default function Page() {
     {
       id: "actions",
       cell: (props) => {
-        const defectId = props.row.original.id;
+        const rowId = props.row.original.id;
 
         return (
           <DropdownMenu>
@@ -51,12 +51,12 @@ export default function Page() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>
-                <Link href={`defects/edit/${defectId}`}>
+                <Link href={`elements/edit/${rowId}`}>
                   Edit
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem className="text-red-500"
-                onClick={() => deleteDefect(defectId)}
+                onClick={() => deleteFn(rowId)}
               >
                 <span className="text-red-500">Delete</span>
               </DropdownMenuItem>
@@ -70,7 +70,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchReports() {
       try {
-        const response = await client.models.Defects.list(search ? {
+        const response = await client.models.Elements.list(search ? {
           filter: {
             name: {
               contains: search,
@@ -79,7 +79,7 @@ export default function Page() {
         }: {});
 
         if (response.data) {
-          setDefects(response.data);
+          setElementData(response.data);
         }
       } catch (error) {
         console.log(error);
@@ -89,32 +89,32 @@ export default function Page() {
     fetchReports();
   }, [search]);
 
-  function deleteDefect(id: string): void {
-    async function deleteDefect() {
+  function deleteFn(id: string): void {
+    async function deleteAsync() {
       try {
-        const response = await client.models.Defects.delete({ id });
+        const response = await client.models.Elements.delete({ id });
         if (!response.errors && response.data != null) {
-          setDefects(defects.filter((r) => r.id !== id));
+          setElementData(elementData.filter((r) => r.id !== id));
         }
       } catch (error) {
         console.error(error);
       }
     }
 
-    deleteDefect();
+    deleteAsync();
   }
 
   return (
     <div>
       <div className="flex justify-between p-3 mb-5 mt-5 items-baseline">
         <div>
-          <h1 className="text-3xl dark:text-white">Defects</h1>
+          <h1 className="text-3xl dark:text-white">Elements</h1>
         </div>
-        <Link href="/reports/defects/create">
+        <Link href="/reports/elements/create">
           <CopyMarkupBtn>Create</CopyMarkupBtn>
         </Link>
       </div>
-      <DataTable columns={columns} data={defects} />
+      <DataTable columns={columns} data={elementData} />
     </div>
   );
 }
