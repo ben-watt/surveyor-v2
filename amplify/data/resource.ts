@@ -29,13 +29,18 @@ const schema = a.schema({
     name: a.string().required(),
     description: a.string().required(),
   }),
+  Material: a.customType({
+    name: a.string().required(),
+    defects: a.ref("Defect")
+    .array().required(),
+  }),
   Components: a
     .model({
       id: a.id().required(),
       name: a.string().required(),
-      element: a.belongsTo("Element", "id"),
-      type: a.string().required(),
-      defects: a.ref("Defect").array().required(),
+      materials: a.ref("Material").array().required(),
+      elementId: a.id().required(),
+      element: a.belongsTo("Elements", "id"),
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),

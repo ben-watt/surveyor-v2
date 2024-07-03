@@ -2,7 +2,6 @@
 
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "@/app/components/Input/InputText";
-import SelectBox from "@/app/components/Input/SelectBox";
 import { FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
@@ -28,6 +27,7 @@ export function DataForm({ id }: DataFormProps) {
         try {
           const response = await reportClient.models.Elements.get({ id });
           form.reset(response.data as ElementsDataUpdate);
+          console.debug("existing Data", response.data);
         } catch (error) {
           console.error("Failed to fetch defect", error);
         }
@@ -53,7 +53,7 @@ export function DataForm({ id }: DataFormProps) {
         router.push("/reports/elements");
       } catch (error) {
         basicToast("Error");
-        console.error("Failed to save defect", error);
+        console.error("Failed to save", error);
       }
     };
 

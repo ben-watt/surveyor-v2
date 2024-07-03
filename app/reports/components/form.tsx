@@ -2,84 +2,93 @@
 
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "@/app/components/Input/InputText";
-import SelectBox from "@/app/components/Input/SelectBox";
-import { FormProvider, useFieldArray, useForm } from "react-hook-form";
+import { Controller, FormProvider, UseFieldArrayRemove, useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/ReportsClient";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
+import { Combobox } from "@/app/components/Input/ComboBox";
+import { Button } from "@/components/ui/button";
+import TextAreaInput from "@/app/components/Input/TextAreaInput";
 
 type ComponentData = Schema["Components"]["type"];
-type ComponentDataUpdate = Omit<ComponentData, "createdAt" | "updatedAt">;
+type ComponentDataUpdate = Omit<ComponentData, "createdAt" | "updatedAt" | "element" | "owner">;
 
-interface DefectFormProps {
+interface DataFormProps {
   id?: string;
 }
 
-export function DefectForm({ id }: DefectFormProps) {
+export function DataForm({ id }: DataFormProps) {
   const form = useForm<ComponentDataUpdate>({});
-  const { register, handleSubmit, control } = form;
-  const { append, fields } = useFieldArray({ control: control, name: "defects" });
+  const { register, handleSubmit } = form;
+  
+  const [elements, setElements] = useState<Schema["Elements"]["type"][]>([]);
   const router = useRouter();
 
   useEffect(() => {
     if (id) {
-      const fetchDefect = async () => {
+      const fetchData = async () => {
         try {
           const response = await reportClient.models.Components.get({ id });
+          console.log(response.data)
           form.reset(response.data as ComponentDataUpdate);
         } catch (error) {
-          console.error("Failed to fetch defect", error);
+          console.error("Failed to fetch data", error);
         }
       };
 
-      fetchDefect();
+      fetchData();
     }
   }, [id]);
 
+  useEffect(() => {
+    const fetchElements = async () => {
+      try {
+        const response = await reportClient.models.Elements.list();
+        setElements(response.data);
+      } catch (error) {
+        console.error("Failed to fetch elements", error);
+      }
+    }
+
+    fetchElements();
+  }, [])
+
   const onSubmit = (data: ComponentDataUpdate) => {
-    const saveDefect = async () => {
+    const saveData = async () => {
       try {
         if (!data.id) {
           await reportClient.models.Components.create(data);
         } else {
-          await reportClient.models.Components.update({
-            id: data.id,
-            name: data.name,
+          await reportClient.models.Components.update({ 
+            id: data.id, 
+            name: data.name, 
+            elementId: data.elementId, 
+            materials: data.materials 
           });
         }
 
         successToast("Saved");
-        router.push("/reports/defects");
+        router.push("/reports/components");
       } catch (error) {
-        basicToast("Error");
-        console.error("Failed to save defect", error);
+        console.error("Failed to save data", error)
+        basicToast(`Error unable to save data.`);
       }
     };
 
-    saveDefect();
+    saveData();
   };
 
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-        <SelectBox
-          labelTitle="Element"
-          register={() => register("element", { required: true })}
-        >
-          <option value="walls">Walls</option>
-          <option value="floor">Floor</option>
-          <option value="ground">Ground</option>
-        </SelectBox>
         <InputText
-          labelTitle="Type"
-          register={() => register("type", { required: true })}
-        />
-        <InputText
-          labelTitle="Name"
-          register={() => register("name", { required: true })}
-        />        
+            labelTitle="Name"
+            register={() => register("name", { required: true })}
+          /> 
+        <Combobox register={() => register("elementId", { required: true })} data={elements.map(x => ({ label: x.name, value: x.id }))} />
+        <AddMaterials />
         <PrimaryBtn className="w-full flex justify-center" type="submit">
           Save
         </PrimaryBtn>
@@ -87,3 +96,89 @@ export function DefectForm({ id }: DefectFormProps) {
     </FormProvider>
   );
 }
+
+
+const AddMaterials = () => {
+  const { control } = useFormContext<ComponentDataUpdate>();
+  const { append, remove, fields } = useFieldArray({ control: control, name: "materials" });
+
+  return (
+    <>
+      {fields.map((field, index) => (
+        <ListMaterials key={field.id} field={field} index={index} remove={remove} />
+      ))}
+      <Button
+        variant="outline"
+        onClick={() => append({ name: "", defects: [] })}
+      >
+        Add Material
+      </Button>
+    </>
+  );
+}
+
+interface ListMaterialsProps {
+  field: { name: string; defects: ({ name: string; description: string; } | null)[]; } & Record<"id", string>;
+  index: number;
+  remove: UseFieldArrayRemove;
+}
+
+const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
+  const { control, register } = useFormContext<ComponentDataUpdate>();
+  const { append, remove: removeDefect, fields } = useFieldArray({ control: control, name: `materials.${index}.defects` });
+  
+  return (
+    <div key={field.id}>
+      <div className="flex gap-4">
+        <InputText
+          labelTitle="Material Name"
+          register={() =>
+            register(`materials.${index}.name`, { required: true })
+          }
+        />
+        <Button
+          className="h-full"
+          variant="secondary"
+          onClick={() => append({ name: "", description: "" })}
+        >
+          Add Defect
+        </Button>
+        <Button
+          className="h-full"
+          variant="destructive"
+          onClick={() => remove(index)}
+        >
+          Remove
+        </Button>
+      </div>
+
+      {fields.map((defect, defectIndex) => (
+        <div className="grid gap-4 m-4">
+          <div className="flex gap-4">
+            <InputText
+              key={defect.id}
+              labelTitle="Defect Name"
+              register={() =>
+                register(`materials.${index}.defects.${defectIndex}.name`, {
+                  required: true,
+                })
+              }
+            />
+            <Button variant="destructive" onClick={() => removeDefect(defectIndex)}>Remove</Button>
+          </div>
+          <TextAreaInput
+            key={defect.id}
+            labelTitle="Defect Description"
+            register={() =>
+              register(
+                `materials.${index}.defects.${defectIndex}.description`,
+                { required: true }
+              )
+            }
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+

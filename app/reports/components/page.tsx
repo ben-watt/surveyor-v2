@@ -6,41 +6,68 @@ import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
 import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { ColumnDef } from "@tanstack/react-table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
+import { SelectionSet } from "aws-amplify/api";
 
-type ComponentData = Schema["Components"]["type"];
+const selectionSet = [
+  "id",
+  "name",
+  "createdAt",
+  "elementId",
+  "element.*",
+  "elementId",
+  "materials.name",
+] as const;
+type ComponentDataForPage = SelectionSet<
+  Schema["Components"]["type"],
+  typeof selectionSet
+>;
+
+const selectionSetElement = ["id", "name"] as const;
+type ElementData = SelectionSet<
+  Schema["Elements"]["type"],
+  typeof selectionSetElement
+>;
 
 export default function Page() {
-  const [defects, setDefects] = useState<ComponentData[]>([]);
+  const [data, setData] = useState<ComponentDataForPage[]>([]);
+  const [elements, setElements] = useState<ElementData[]>([]);
   const [search, setSearch] = useState<string>("");
 
-  const columns: ColumnDef<ComponentData>[] = [
-    {
-      header: "Id",
-      accessorFn: (v) => "#" + v.id.split("-")[0] || "N/A",
-    },
+  const columns: ColumnDef<ComponentDataForPage>[] = [
     {
       header: "Name",
-      accessorFn: (v) => `${v.type} > ${v.name}`,
+      accessorKey: "name",
     },
     {
       header: "Element",
-      accessorKey: "element",
+      accessorFn: (v) => elements.find((x) => x.id == v.elementId)?.name || "",
+    },
+    {
+      header: "Materials Count",
+      accessorFn: (v) => v.materials.length,
     },
     {
       id: "created",
-      header: ({ column }) => <SortableHeader column={column} header="Created" />,
+      header: ({ column }) => (
+        <SortableHeader column={column} header="Created" />
+      ),
       accessorFn: (v) => new Date(v.createdAt).toDateString(),
     },
     {
       id: "actions",
       cell: (props) => {
         const defectId = props.row.original.id;
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -50,12 +77,11 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Link href={`components/edit/${defectId}`}>
-                  Edit
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-500"
+              <Link href={`components/edit/${defectId}`}>
+                <DropdownMenuItem>Edit</DropdownMenuItem>
+              </Link>
+              <DropdownMenuItem
+                className="text-red-500"
                 onClick={() => deleteDefect(defectId)}
               >
                 <span className="text-red-500">Delete</span>
@@ -64,37 +90,51 @@ export default function Page() {
           </DropdownMenu>
         );
       },
-    }
+    },
   ];
 
   useEffect(() => {
-    async function fetchReports() {
+    async function fetchData() {
       try {
-        const response = await client.models.Components.list(search ? {
-          filter: {
-            name: {
-              contains: search,
-            },
-          },
-        }: {});
+        const response = await client.models.Components.list({
+          selectionSet: selectionSet,
+        });
 
         if (response.data) {
-          setDefects(response.data);
+          setData(response.data);
         }
       } catch (error) {
         console.log(error);
       }
     }
 
-    fetchReports();
+    fetchData();
   }, [search]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await client.models.Elements.list({
+          selectionSet: selectionSetElement,
+        });
+
+        if (response.data) {
+          setElements(response.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   function deleteDefect(id: string): void {
     async function deleteDefect() {
       try {
         const response = await client.models.Components.delete({ id });
         if (!response.errors && response.data != null) {
-          setDefects(defects.filter((r) => r.id !== id));
+          setData(data.filter((r) => r.id !== id));
         }
       } catch (error) {
         console.error(error);
@@ -114,7 +154,7 @@ export default function Page() {
           <CopyMarkupBtn>Create</CopyMarkupBtn>
         </Link>
       </div>
-      <DataTable columns={columns} data={defects} />
+      <DataTable columns={columns} data={data} />
     </div>
   );
 }

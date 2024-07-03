@@ -16,20 +16,11 @@ type ElementData = Schema["Elements"]["type"];
 
 export default function Page() {
   const [elementData, setElementData] = useState<ElementData[]>([]);
-  const [search, setSearch] = useState<string>("");
 
   const columns: ColumnDef<ElementData>[] = [
     {
-      header: "Id",
-      accessorFn: (v) => "#" + v.id.split("-")[0] || "N/A",
-    },
-    {
       header: "Name",
       accessorKey: "name"
-    },
-    {
-      header: "Component Count",
-      accessorFn: (v) => v.components.length,
     },
     {
       id: "created",
@@ -50,11 +41,9 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Link href={`elements/edit/${rowId}`}>
-                  Edit
-                </Link>
-              </DropdownMenuItem>
+              <Link href={`/reports/elements/${rowId}`}>
+                <DropdownMenuItem>Edit</DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="text-red-500"
                 onClick={() => deleteFn(rowId)}
               >
@@ -70,13 +59,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchReports() {
       try {
-        const response = await client.models.Elements.list(search ? {
-          filter: {
-            name: {
-              contains: search,
-            },
-          },
-        }: {});
+        const response = await client.models.Elements.list();
 
         if (response.data) {
           setElementData(response.data);
@@ -87,7 +70,7 @@ export default function Page() {
     }
 
     fetchReports();
-  }, [search]);
+  }, []);
 
   function deleteFn(id: string): void {
     async function deleteAsync() {

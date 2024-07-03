@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { SortAsc, CheckIcon } from "lucide-react"
+import {  CheckIcon, ArrowDownNarrowWide } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -18,33 +18,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { UseFormRegisterReturn, useFormContext } from "react-hook-form"
 
-const components = [
-  {
-    value: "next.js",
-    label: "Next.js",
-  },
-  {
-    value: "sveltekit",
-    label: "SvelteKit",
-  },
-  {
-    value: "nuxt.js",
-    label: "Nuxt.js",
-  },
-  {
-    value: "remix",
-    label: "Remix",
-  },
-  {
-    value: "astro",
-    label: "Astro",
-  },
-]
+interface ComboboxProps {
+  data : { value: string; label: string }[]
+  register: () => UseFormRegisterReturn<string>
+}
 
-export function Combobox() {
+export function Combobox(props : ComboboxProps) {
+  const { setValue, getValues } = useFormContext();
+  const reg = props.register()
+  const value = getValues(reg.name)
+
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -53,34 +39,35 @@ export function Combobox() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className=" justify-between"
         >
           {value
-            ? components.find((framework) => framework.value === value)?.label
-            : "Select component..."}
-          <SortAsc className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            ? props.data.find((d) => d.value === value)?.label
+            : "Select..."}
+          <ArrowDownNarrowWide className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search components..." className="h-9" />
+          <CommandInput placeholder="Search..." className="h-9 border-none focus:ring-0" />
           <CommandList>
-            <CommandEmpty>No framework found.</CommandEmpty>
+            <CommandEmpty>Nothing found.</CommandEmpty>
             <CommandGroup>
-              {components.map((framework) => (
+              {props.data.map((d) => (
                 <CommandItem
-                  key={framework.value}
-                  value={framework.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
+                  key={d.value}
+                  value={d.value}
+                  onSelect={(selectedValue) => {
+                    setValue(reg.name, selectedValue === value ? "" : selectedValue)
                     setOpen(false)
                   }}
+                  {...reg}
                 >
-                  {framework.label}
+                  {d.label}
                   <CheckIcon
                     className={cn(
                       "ml-auto h-4 w-4",
-                      value === framework.value ? "opacity-100" : "opacity-0"
+                      value === d.value ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>
