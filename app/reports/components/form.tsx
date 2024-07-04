@@ -108,7 +108,7 @@ const AddMaterials = () => {
         <ListMaterials key={field.id} field={field} index={index} remove={remove} />
       ))}
       <Button
-        variant="outline"
+        variant="secondary"
         onClick={() => append({ name: "", defects: [] })}
       >
         Add Material

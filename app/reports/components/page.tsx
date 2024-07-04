@@ -10,8 +10,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -27,6 +25,7 @@ const selectionSet = [
   "element.*",
   "elementId",
   "materials.name",
+  "materials.defects.*"
 ] as const;
 type ComponentDataForPage = SelectionSet<
   Schema["Components"]["type"],
@@ -56,6 +55,10 @@ export default function Page() {
     {
       header: "Materials Count",
       accessorFn: (v) => v.materials.length,
+    },
+    {
+      header: "Defect Count",
+      accessorFn: (v) => v.materials.reduce((acc, m) => acc + m.defects.length, 0),
     },
     {
       id: "created",
