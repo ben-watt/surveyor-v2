@@ -115,10 +115,6 @@ const H3 = (props: PProps) => {
   );
 };
 
-const getImagesFromFileList = (fileList: string[]): string[] => {
-  return fileList;
-};
-
 const Page = (props: React.PropsWithChildren<any>) => (
   <>
     <section>
@@ -148,6 +144,8 @@ export default function PDF({ form }: PdfProps) {
   const clientName = form.clientName;
   const address = form.address;
   const reportDate = new Date(form.reportDate);
+
+  console.debug("Building Survey Report", form)
 
   return (
     <TocContext.Provider value={DefaultTocProvider()}>
@@ -318,7 +316,7 @@ export default function PDF({ form }: PdfProps) {
             <H1>{s.name}</H1>
             {s.elementSections.map((cs, j) => (
               <>
-                <ConditionSection key={`${i}.${j}`} conditionSection={cs} />
+                <ConditionSection key={`${i}.${j}`} elementSection={cs} />
               </>
             ))}
           </div>
@@ -436,41 +434,34 @@ export default function PDF({ form }: PdfProps) {
 
 type ConditionSectionProps = {
   key: string;
-  conditionSection: ElementSection;
+  elementSection: ElementSection;
 };
 
-
-
-const mapRagStatusToColor = (ragStatus: string) => {
-  switch (ragStatus) {
-    case "Red":
-      return "red";
-    case "Amber":
-      return "orange";
-    case "Green":
-      return "green";
-    default:
-      return "white";
-  }
+const InvokeOnRender = ({ onRender }: { onRender: () => void }) => {
+  onRender();
+  return <></>;
 }
 
-const ConditionSection = ({ conditionSection }: ConditionSectionProps) => {
-  const cs = conditionSection;
+const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
+  const es = elementSection;
 
-  if (!cs.isPartOfSurvey) return <></>;
+  if (!es.isPartOfSurvey) return <></>;
 
-  const images = getImagesFromFileList(cs.images);
+  console.debug("images.1", es.images);
+  console.debug("Condition Section", es);
+  console.debug("images.2", es.images);
 
   let tableRows = [];
-  for (let i = 0; i < images.length; i = i + 2) {
+  for (let i = 0; i < es.images.length; i = i + 2) {
     tableRows.push(
       <tr>
         <td>
-          <img key={i} src={images[i]} width={200} />
+          <InvokeOnRender onRender={() => console.debug("Image", es.images[i])} />
+          <img key={i} src={es.images[i]} width={200} />
         </td>
-        {images.length >= i + 1 && (
+        {es.images.length >= i + 1 && (
           <td>
-            <img key={i + 1} src={images[i + 1]} width={200} />
+            <img key={i + 1} src={es.images[i + 1]} width={200} />
           </td>
         )}
       </tr>
@@ -479,21 +470,37 @@ const ConditionSection = ({ conditionSection }: ConditionSectionProps) => {
 
   return (
     <>
-      <TableBlock widths={[97, 3]}>
-        <H3>{cs.name}</H3>
-        <p className="w-100-perc h-100-perc text-centre" style={{ backgroundColor: mapRagStatusToColor(conditionSection.ragStatus) }}></p>
-      </TableBlock>
+      <H3>{es.name}</H3>
       <div className="grid grid-cols-2 gap-4">
         <p>
           <strong className="text-red-500">Description:</strong>
         </p>
-        <p>{cs.description}</p>
+        <p>{es.description}</p>
+        <p>
+          <strong className="text-red-500">Components:</strong>
+        </p>
+        <p>
+          {es.materialComponents.map((mc) => (
+            <div key={mc.id}>
+              <p>
+                <strong>{mc.useNameOveride ? mc.name : mc.id}</strong>
+              </p>
+              <p>
+                <span>{mc.ragStatus}</span>
+              </p>
+              <ul>
+                {mc.defects.map((d) => (
+                  <li key={d.name}>
+                    {d.name} - {d.description}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </p>
         <table style={{ width: "100%" }}>
           <tbody>{tableRows}</tbody>
         </table>
-        <p>
-          <strong>Defects:</strong>
-        </p>
       </div>
     </>
   );

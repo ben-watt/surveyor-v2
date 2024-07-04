@@ -1,5 +1,5 @@
 import { Textarea } from "@/components/ui/textarea";
-import { UseFormRegisterReturn, useForm } from "react-hook-form";
+import { UseFormRegisterReturn } from "react-hook-form";
 
 interface TextAreaInputProps {
     labelTitle?: string;

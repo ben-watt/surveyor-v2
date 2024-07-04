@@ -8,7 +8,6 @@ import BuildingSurveyReportTiny from "../building-survey-reports/BuildingSurveyR
 import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportSchema";
 import { getUrl } from "aws-amplify/storage";
 
-
 export default function Page({ params }: { params: { id: string } }) {
   const [initialValue, setInitialValue] = useState<string>();
   const [contentCss, setContentCss] = useState<ContentCss>("document");
@@ -36,29 +35,36 @@ export default function Page({ params }: { params: { id: string } }) {
   }, []);
 
 
-  if(initialValue)
-    return <TextEditor contentCss={"/styles.css"} initialValue={initialValue} />
+  if(initialValue) {
+    return <TextEditor contentCss={`/${contentCss}.css`} initialValue={initialValue} />
+  }
+
   return <div>Loading...</div>;  
 }
 
 async function mapFormDataToTinyMceHtml(formData: BuildingSurveyFormData): Promise<string> {
 
-  formData.frontElevationImagesUri = await getImagesHref(formData.frontElevationImagesUri);
+  let newFormData = { ...formData };
+  newFormData.frontElevationImagesUri = await getImagesHref(formData.frontElevationImagesUri);
 
-  let newImages = formData.sections.map((section, si) => {
+  let preSignedUrlTasks = formData.sections.flatMap((section, si) => {
     return section.elementSections.map(async (es, i) => {
-      formData.sections[si].elementSections[i].images = await getImagesHref(es.images);
+      const preSignedUrl = await getImagesHref(es.images);
+      newFormData.sections[si].elementSections[i].images = preSignedUrl
+      return Promise.resolve();
     });
   })
 
-  await Promise.all(newImages);
-  return renderToString(<BuildingSurveyReportTiny form={formData} />);
+  await Promise.all(preSignedUrlTasks);
+  return renderToString(<BuildingSurveyReportTiny form={newFormData} />)
 }
 
 async function getImagesHref(imagesUri: string[]): Promise<string[]> {
-  return await Promise.all(imagesUri.map(async (imageUri) => {
+  const tasks = imagesUri.map(async (imageUri) => {
     return await getImageHref(imageUri);
-  }));
+  })
+
+  return await Promise.all(tasks);
 }
 
 async function getImageHref(imageUri: string): Promise<string> {

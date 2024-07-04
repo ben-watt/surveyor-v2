@@ -7,6 +7,7 @@ export type BuildingSurveyFormData = {
     sections: SurveySection[]
 }
 
+
 export type SurveySection = {
     name: string,
     elementSections: ElementSection[],

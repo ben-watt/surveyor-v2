@@ -120,15 +120,11 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
           { selectionSet: selectionSetElement }
         );
 
-        console.log(response.data);
-        
         if (response.data) {
           defaultValues.sections[0].elementSections = response.data.map((element) => createDefaultElementSection(element));
         }
 
-        console.log("resetting default values", defaultValues)
         reset(defaultValues);
-
       } catch (error) {
         console.error("Failed to fetch elements", error);
       }
@@ -181,10 +177,12 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
                   <label className="mt-2" htmlFor="file-input">
                     Front Elevation Image
                   </label>
-                  <InputImage
-                    register={() => register("frontElevationImagesUri")}
-                    path={`report-images/${fields.id}/frontElevationImages/`}
-                  />
+                  <div>
+                    <InputImage
+                      register={() => register("frontElevationImagesUri")}
+                      path={`report-images/${fields.id}/frontElevationImages/`}
+                    />
+                  </div>
                 </div>
               </div>
               {fields.sections.map((section, sectionIndex) => {
@@ -212,15 +210,17 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
                                 )
                               }
                             />
-                            <InputImage
-                              register={() =>
-                                register(
-                                  `sections.${sectionIndex}.elementSections.${i}.images`
-                                )
-                              }
-                              path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
-                            />
-                            <ComponentPicker name={`sections.${sectionIndex}.elementSections.${i}.components`} />
+                            <div>
+                              <InputImage
+                                register={() =>
+                                  register(
+                                    `sections.${sectionIndex}.elementSections.${i}.images`
+                                  )
+                                }
+                                path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
+                              />
+                            </div>
+                            <ComponentPicker name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`} />
                           </div>
                         </ToggleSection>
                       </section>
@@ -364,11 +364,9 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
 
                   return (
                     <div {...field}>
-                      <Select >
-                        <SelectTrigger >
-                          <Button className={`${mapValueToColor(field.value)} text-white`} variant="outline">
-                            <SelectValue  placeholder="RAG" />
-                          </Button>
+                      <Select>
+                        <SelectTrigger className={`${mapValueToColor(field.value)} text-white rounded w-10 h-10`} >
+                          <SelectValue  placeholder="RAG" hidden />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="N/I">N.I</SelectItem>
@@ -393,7 +391,7 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                       key={defectIndex.toString()}
                       defect={defect}
                       {...register(
-                        `${typedName}.${index}.defects.${defectIndex}.isChecked`
+                        `${typedName}.${index}.defects.${defectIndex}`
                       )}
                     />
                   ))}
@@ -446,12 +444,13 @@ const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
           </div>
           {isChecked && (
             <div className="ml-5 p-2">
+              <input type="hidden" {...register(`${typedName}.name` as const)} value={defect.name} />
               <TextAreaInput
                 labelTitle={defect.name}
                 defaultValue={defect.description}
                 placeholder={"Defect text..."}
                 register={() =>
-                  register(`${typedName}.description`, { required: true })
+                  register(`${typedName}.description` as const, { required: true })
                 }
               />
             </div>

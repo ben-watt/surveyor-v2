@@ -12,37 +12,38 @@ interface InputImageProps {
 
 const InputImage = ({ path, label, maxFileCount = 10, register }: InputImageProps) => {
   const reg = register();
-  const { setValue, getValues } = useFormContext();
-  
+  const { setValue, getValues, watch } = useFormContext();
+  const fileName = watch(reg.name);
+
   return (
-    <div>
-       <StorageManager
-          displayText={{
-              browseFilesText: 'Upload Images',
-          }}
-          acceptedFileTypes={['image/*']}
-          path={path}
-          maxFileCount={maxFileCount}
-          
-          components={{
-            DropZone({ children, displayText, inDropZone, ...rest }) {
-              return children;
-            },
-          }}
+      <StorageManager
+        displayText={{
+            browseFilesText: 'Upload Images',
+        }}
 
-          onUploadSuccess={(file) => { 
-            const currentVal = getValues(reg.name) || [];
-            setValue(reg.name, currentVal.concat(file.key)) 
-          }}
+        defaultFiles={fileName.map((fn : string) => ({ key: fn })) || []}
+        acceptedFileTypes={['image/*']}
+        path={path}
+        maxFileCount={maxFileCount}
+        
+        components={{
+          DropZone({ children, displayText, inDropZone, ...rest }) {
+            return children;
+          },
+        }}
 
-          onFileRemove={(file) => {
-            const currentVal = getValues(reg.name) || [];
-            setValue(reg.name, currentVal.filter((v: string) => v !== file.key))
-          }}
+        onUploadSuccess={(file) => {
+          const currentVal = getValues(reg.name) || [];
+          setValue(reg.name, currentVal.concat(file.key)) 
+        }}
 
-          isResumable
-        />
-    </div>
+        onFileRemove={(file) => {
+          const currentVal = getValues(reg.name) || [];
+          setValue(reg.name, currentVal.filter((v: string) => v !== file.key))
+        }}
+
+        isResumable
+      />
   );
 };
 
