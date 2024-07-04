@@ -28,6 +28,11 @@ import { Schema } from "@/amplify/data/resource";
 import { SelectionSet } from "aws-amplify/api";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { Toggle } from "@/components/ui/toggle";
+import { DropDown } from "@/app/components/DropDown";
+import { DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { SelectTrigger } from "@radix-ui/react-select";
 
 
 
@@ -301,7 +306,7 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
 
           return (
             <div key={field.id} className="border border-grey-600 rounded p-4">
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 <div className="flex-grow">
                   {!watch(`${typedName}.${index}.useNameOveride` as const) && (
                     <Combobox
@@ -343,6 +348,38 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                     )}
                   />
                 )}
+                <Controller name={`${typedName}.${index}.ragStatus`} render={({ field }) => {
+                  const mapValueToColor = (value: RagStatus) => {
+                    switch(value) {
+                      case "N/I":
+                        return "bg-gray-400";
+                      case "Red":
+                        return "bg-red-400";
+                      case "Amber":
+                        return "bg-yellow-400";
+                      case "Green":
+                        return "bg-green-400";
+                    }
+                  }
+
+                  return (
+                    <div {...field}>
+                      <Select >
+                        <SelectTrigger >
+                          <Button className={`${mapValueToColor(field.value)} text-white`} variant="outline">
+                            <SelectValue  placeholder="RAG" />
+                          </Button>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="N/I">N.I</SelectItem>
+                          <SelectItem value="Red">Red</SelectItem>
+                          <SelectItem value="Amber">Amber</SelectItem>
+                          <SelectItem value="Green">Green</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )
+                }}/>
                 <Button variant="destructive" onClick={(ev) => remove(index)}>
                   Remove
                 </Button>
