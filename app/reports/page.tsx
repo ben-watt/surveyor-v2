@@ -73,7 +73,7 @@ function HomePage() {
     const columns: ColumnDef<BuildingSurveyFormData>[] = [
       {
         header: "Id",
-        accessorFn: (v) => "#" + v.id.split("-")[0] || "N/A",
+        accessorFn: (v) => "#" + v?.id?.split("-")[0] || "N/A",
       },
       {
         header: "Client Name",

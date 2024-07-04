@@ -1,9 +1,9 @@
-import React, {  } from "react";
+import React, { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import {
   BuildingSurveyFormData,
-  Component,
+  MaterialComponent,
   ElementSection,
   Defect,
   RagStatus
@@ -19,103 +19,118 @@ import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
 import { successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuPortal,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { DropdownMenuGroup } from "@radix-ui/react-dropdown-menu";
 import { Pencil, X } from "lucide-react";
 import { Label } from "@aws-amplify/ui-react";
+import { Combobox } from "@/app/components/Input/ComboBox";
+import { Button } from "@/components/ui/button";
+import { Schema } from "@/amplify/data/resource";
+import { SelectionSet } from "aws-amplify/api";
+import TextAreaInput from "@/app/components/Input/TextAreaInput";
+import { Toggle } from "@/components/ui/toggle";
+
+
+
+      // {
+      //   name: "External Condition of Property",
+      //   elementSections: [
+      //     "Foundations and Substructure",
+      //     "Roof Coverings",
+      //     "Chimneys",
+      //     "Rainwater Disposal System",
+      //     "Sofits and Fascias",
+      //     "Main Walls",
+      //     "Windows and Doors",
+      //   ].map(createDefaultElementSection),
+      // },
+      // {
+      //   name: "Internal Condition of Property",
+      //   elementSections: [
+      //     "Roof Structure",
+      //     "Ceilings",
+      //     "Walls and Partitions",
+      //     "Floors",
+      //     "Internal Joinery",
+      //     "Sanitaryware & Kitchen",
+      //     "Fireplaces",
+      //   ].map(createDefaultElementSection),
+      // },
+      // {
+      //   name: "Services",
+      //   elementSections: [
+      //     "Electrical Installation",
+      //     "Gas Installations",
+      //     "Cold Water Supply",
+      //     "Hot Water Supply / Heating Installations",
+      //     "Surface water & Soil drainage",
+      //   ].map(createDefaultElementSection),
+      // },
+      // {
+      //   name: "Grounds",
+      //   elementSections: ["Boundaries, Fencing, Drives, Lawn, etc"].map(
+      //     createDefaultElementSection
+      //   ),
+      // },
 
 interface BuildingSurveyFormProps {
   initDefaultValues?: BuildingSurveyFormData;
 }
 
-export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
-  const createDefaultElementSection = (name: string): ElementSection => ({
-    name,
-    isPartOfSurvey: false,
-    ragStatus: "N/A",
-    description: "",
-    components: [],
-    images: [],
-  });
+const selectionSetElement = ["id", "name", "components.*"] as const;
+type ElementData = SelectionSet<Schema["Elements"]["type"], typeof selectionSetElement>;
 
+export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
   let defaultValues: BuildingSurveyFormData = {
     id: uuidv4(),
     reportDate: new Date(),
     address: "",
     clientName: "",
     frontElevationImagesUri: [],
-    sections: [
-      {
-        name: "External Condition of Property",
-        elementSections: [
-          "Foundations and Substructure",
-          "Roof Coverings",
-          "Chimneys",
-          "Rainwater Disposal System",
-          "Sofits and Fascias",
-          "Main Walls",
-          "Windows and Doors",
-        ].map(createDefaultElementSection),
-      },
-      {
-        name: "Internal Condition of Property",
-        elementSections: [
-          "Roof Structure",
-          "Ceilings",
-          "Walls and Partitions",
-          "Floors",
-          "Internal Joinery",
-          "Sanitaryware & Kitchen",
-          "Fireplaces",
-        ].map(createDefaultElementSection),
-      },
-      {
-        name: "Services",
-        elementSections: [
-          "Electrical Installation",
-          "Gas Installations",
-          "Cold Water Supply",
-          "Hot Water Supply / Heating Installations",
-          "Surface water & Soil drainage",
-        ].map(createDefaultElementSection),
-      },
-      {
-        name: "Grounds",
-        elementSections: ["Boundaries, Fencing, Drives, Lawn, etc"].map(
-          createDefaultElementSection
-        ),
-      },
-    ],
+    sections: [{
+      name: "External Condition of Property",
+      elementSections: []
+    }],
   };
+
+  const methods = useForm<BuildingSurveyFormData>({ defaultValues });
+  const { register, handleSubmit, watch, formState, reset  } = methods;
+  const router = useRouter();
+
+  const createDefaultElementSection = (element : ElementData): ElementSection => ({
+    name: element.name,
+    isPartOfSurvey: false,
+    description: "",
+    images: [],
+    materialComponents: []
+  });
 
   if (initDefaultValues) {
     defaultValues = initDefaultValues;
   }
 
-  console.log("reportId", defaultValues.id);
+  useEffect(() => {
+    const fetchElements = async () => {
+      try {
+        const response = await reportClient.models.Elements.list(
+          { selectionSet: selectionSetElement }
+        );
 
-  const methods = useForm<BuildingSurveyFormData>({ defaultValues });
-  const { register, handleSubmit, watch, formState } = methods;
-  const router = useRouter();
+        console.log(response.data);
+        
+        if (response.data) {
+          defaultValues.sections[0].elementSections = response.data.map((element) => createDefaultElementSection(element));
+        }
+
+        console.log("resetting default values", defaultValues)
+        reset(defaultValues);
+
+      } catch (error) {
+        console.error("Failed to fetch elements", error);
+      }
+    };
+
+    fetchElements();
+  }, [])
 
   const onSubmit = async () => {
     try {
@@ -124,14 +139,15 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
         id: form.id,
         content: JSON.stringify(form),
       });
-
-      console.debug(form);
+      
       successToast("Saved");
       router.push("/reports");
     } catch (error) {
       console.error(error);
     }
   };
+
+  const fields = watch();
 
   return (
     <div className="md:grid md:grid-cols-4 ">
@@ -162,82 +178,53 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
                   </label>
                   <InputImage
                     register={() => register("frontElevationImagesUri")}
-                    path={`report-images/${defaultValues.id}/frontElevationImages/`}
+                    path={`report-images/${fields.id}/frontElevationImages/`}
                   />
                 </div>
               </div>
-              {defaultValues.sections.map((section, sectionIndex) =>
-                section.elementSections.map((elementSection, i) => (
-                  <section key={`${sectionIndex}.${i}`} className="mt-2">
-                    <ToggleSection
-                      defaultValue={elementSection.isPartOfSurvey}
-                      label={elementSection.name}
-                      register={() =>
-                        register(
-                          `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`
-                        )
-                      }
-                    >
-                      <div className="flex-row space-y-2 p-2">
-                        <Controller
-                          name={`sections.${sectionIndex}.elementSections.${i}.ragStatus`}
-                          render={({ field }) => (
-                            <Select
-                              name={field.name}
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              defaultValue={elementSection.ragStatus}
-                            >
-                              <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Select a RAG Status..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectGroup>
-                                  <SelectLabel>RAG Status</SelectLabel>
-                                  <SelectItem value="Red">
-                                    <span className="text-red-600">Red</span>
-                                  </SelectItem>
-                                  <SelectItem value="Amber">
-                                    <span className="text-amber-600">
-                                      Amber
-                                    </span>
-                                  </SelectItem>
-                                  <SelectItem value="Green">
-                                    <span className="text-green-600">
-                                      Green
-                                    </span>
-                                  </SelectItem>
-                                  <SelectItem value="N/A">N/A</SelectItem>
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                        <SmartTextArea
+              {fields.sections.map((section, sectionIndex) => {
+                return (
+                  <div className="border border-grey-600 p-2 mt-2 mb-2 rounded" key={`${section}-${sectionIndex}`}>
+                    <div>{section.name}</div>
+                    {section.elementSections.map((elementSection, i) => (
+                      <section key={`${sectionIndex}.${i}`} className="border border-grey-600 p-2 m-2 rounded ">
+                        <ToggleSection
+                          defaultValue={elementSection.isPartOfSurvey}
                           label={elementSection.name}
-                          placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
                           register={() =>
                             register(
-                              `sections.${sectionIndex}.elementSections.${i}.description`
+                              `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`
                             )
                           }
-                        />
-                        <InputImage
-                          register={() =>
-                            register(
-                              `sections.${sectionIndex}.elementSections.${i}.images`
-                            )
-                          }
-                          path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
-                        />
-                        <ComponentPicker name={`sections.${sectionIndex}.elementSections.${i}.components`} filterFn={(c) => c.element === elementSection.name } onClick={(ev, comp) => {}} />
-                      </div>
-                    </ToggleSection>
-                  </section>
-                ))
-              )}
+                        >
+                          <div className="flex-row space-y-2 p-2">
+                            <SmartTextArea
+                              label={elementSection.name}
+                              placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
+                              register={() =>
+                                register(
+                                  `sections.${sectionIndex}.elementSections.${i}.description`
+                                )
+                              }
+                            />
+                            <InputImage
+                              register={() =>
+                                register(
+                                  `sections.${sectionIndex}.elementSections.${i}.images`
+                                )
+                              }
+                              path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
+                            />
+                            <ComponentPicker name={`sections.${sectionIndex}.elementSections.${i}.components`} />
+                          </div>
+                        </ToggleSection>
+                      </section>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
-            <div className="mt-8 mb-8">
+            <div>
               <PrimaryBtn className="w-full flex justify-center" type="submit">
                 Save
               </PrimaryBtn>
@@ -249,30 +236,139 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
   );
 }
 
-interface ComponentRendererProps extends React.PropsWithChildren<{}> {
+
+interface ComponentPickerProps {
   name: string;
-  label: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur: (event: React.FocusEvent<HTMLInputElement>) => void;
-  onDelete: () => void;
-  ref: React.Ref<HTMLInputElement>;
 }
 
-const ComponentRenderer = ({
-  name,
-  label,
-  onDelete,
-  children,
-}: ComponentRendererProps) => {
+const componentDataSelectList = ["id", "name", "materials.*"] as const;
+type ComponentData = SelectionSet<Schema["Components"]["type"], typeof componentDataSelectList>;
+
+const ComponentPicker = ({ name }: ComponentPickerProps) => {
+  const typedName = name as `sections.0.elementSections.0.materialComponents`
+  const { control, register, watch, setValue, getValues } = useFormContext<BuildingSurveyFormData>();
+  const { fields, remove, append } = useFieldArray({ name : typedName, control: control });
+  const [components, setComponents] = React.useState<ComponentData[]>([]);
+
+  useEffect(() => {
+    async function fetchData(){
+      const availableComponents = await reportClient.models.Components.list({
+        selectionSet: componentDataSelectList
+      })
+
+      if(availableComponents.data) {
+        setComponents(availableComponents.data)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if(components.length === 0) {
+    return null;
+  }
+
+  function addMaterialComponent(ev : React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    ev.preventDefault();
+    append({ id: "", name: "", ragStatus: "N/I", defects: [], useNameOveride: false  }, { shouldFocus: true });
+  }
+
+  function getDefectsFor(materialComponentName: string) : Defect[] {
+    const [componentName, materialName] = materialComponentName.split("_");
+    const component = components.find(c => c.name === componentName);
+
+    if(!component) {
+      return [];
+    }
+
+    const material = component.materials.find(m => m.name === materialName);
+
+    if(!material) {
+      return [];
+    }
+
+    return material.defects;
+  }
+
+  const  mapToComboBoxProps = (components: ComponentData[]) : { label: string, value: string }[]  => components
+    .flatMap(c => c.materials.map(m => ({ label: `${c.name} • ${m.name}`, value: `${c.name}_${m.name}` }))
+    .sort((a, b) => a.label.localeCompare(b.label)));
+
   return (
-    <div className="border border-grey-400 p-2 rounded w-full">
-      <div className="flex justify-between">
-        <div>{label}</div>
-        <X className="hover:cursor-pointer text-red-700" onClick={onDelete} />
+    <div className="grid gap-2">
+      <div className="grid gap-2">
+        {fields.map((field, index) => {
+
+          return (
+            <div key={field.id} className="border border-grey-600 rounded p-4">
+              <div className="flex gap-4">
+                <div className="flex-grow">
+                  {!watch(`${typedName}.${index}.useNameOveride` as const) && (
+                    <Combobox
+                      key={field.id}
+                      data={mapToComboBoxProps(components)}
+                      register={() =>
+                        register(`${typedName}.${index}.id` as const, {
+                          required: true,
+                        })
+                      }
+                    />
+                  )}
+                  {watch(`${typedName}.${index}.useNameOveride` as const) && (
+                    <InputText
+                      labelTitle="Name"
+                      register={() =>
+                        register(`${typedName}.${index}.name` as const, {
+                          required: true
+                        })
+                      }
+                    />
+                  )}
+                </div>
+                {watch(`${typedName}.${index}.id` as const) && (
+                  <Controller
+                    name={`${typedName}.${index}.useNameOveride` as const}
+                    render={({ field }) => (
+                      <Toggle
+                        {...field}  
+                        onPressedChange={(v) => {
+                          const id = getValues(`${typedName}.${index}.id` as const)
+                          setValue(`${typedName}.${index}.name`, id)
+                          setValue(`${typedName}.${index}.useNameOveride`, v)
+                        }}    
+                        variant="outline"
+                      >
+                        <Pencil className="w-4" />
+                      </Toggle>
+                    )}
+                  />
+                )}
+                <Button variant="destructive" onClick={(ev) => remove(index)}>
+                  Remove
+                </Button>
+              </div>
+              {watch(`${typedName}.${index}.id` as const) && (
+                <div className="p-4">
+                  {getDefectsFor(
+                    watch(`${typedName}.${index}.id` as const)
+                  ).map((defect, defectIndex) => (
+                    <DefectCheckbox
+                      key={defectIndex.toString()}
+                      defect={defect}
+                      {...register(
+                        `${typedName}.${index}.defects.${defectIndex}.isChecked`
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-      <ul>
-        {children}
-      </ul>
+      <Button variant="secondary" onClick={addMaterialComponent}>
+        Add Material Component
+      </Button>
     </div>
   );
 };
@@ -287,23 +383,10 @@ interface DefectCheckboxProps {
 }
 
 const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
+  const typedName = name as `sections.0.elementSections.0.materialComponents.0.defects.0`
+  const { register, control, watch } = useFormContext<BuildingSurveyFormData>();
 
-  const typedName = name as `sections.0.elementSections.0.components.0.defects.0`
-  const { register, control } = useFormContext<BuildingSurveyFormData>();
-
-  const mapConditionToColor = (condition: RagStatus) => {
-    switch (condition) {
-      case "Red":
-        return "border-red-600 data-[state=checked]:bg-red-600";
-      case "Amber":
-        return "border-orange-600 data-[state=checked]:bg-orange-600";
-      case "Green":
-        return "border-green-600 data-[state=checked]:bg-green-600";
-      case "N/A":
-        return "";
-
-    }
-  };
+  const isChecked = watch(`${typedName}.isChecked`);
 
   return (
     <Controller
@@ -319,161 +402,25 @@ const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
               ref={field.ref}
               checked={field.value}
               onBlur={field.onBlur}
-              className={`rounded-full border-2 ${mapConditionToColor(
-                defect.condition
-              )}`}
             />
             <Label htmlFor={field.name} className="text-sm cursor-pointer">
               {defect.name}
             </Label>
           </div>
-          <div className="ml-7">
-            {defect.isChecked && (
-                <SmartTextArea
-                  label={defect.name}
-                  defaultValue={defect.description}
-                  register={() =>
-                    register(`${typedName}.description` as const)
-                  }
-                />
-            )}
-          </div>
+          {isChecked && (
+            <div className="ml-5 p-2">
+              <TextAreaInput
+                labelTitle={defect.name}
+                defaultValue={defect.description}
+                placeholder={"Defect text..."}
+                register={() =>
+                  register(`${typedName}.description`, { required: true })
+                }
+              />
+            </div>
+          )}
         </div>
       )}
     ></Controller>
   );
 }
-
-interface ComponentPickerProps {
-  name: string;
-  onClick: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, component: Component) => void;
-  filterFn: (c: ComponentPickerComponent) => boolean;
-}
-
-
-interface ComponentPickerComponent extends Component {
-  element: string;
-}
-
-const ComponentPicker = ({ name, filterFn = () => true }: ComponentPickerProps) => {
-  const typedName = name as `sections.0.elementSections.0.components`
-  const { control, register } = useFormContext<BuildingSurveyFormData>();
-  const fieldArray = useFieldArray({ name : typedName, control: control });
-
-  const componentList : ComponentPickerComponent[] = [
-    {
-      element: "Roof Coverings",
-      type: "Pitched Roof",
-      name: "Slate Tiles",
-      defects: [
-        {
-          name: "Minor undulations",
-          description: "Where visible, the roof is generally in reasonable condition with no evidence of significant structural defects. ",
-          isChecked: false,
-          condition: "Amber",
-        },
-        {
-          name: "Loose ridge tiles",
-          description: "We identified that ridge tiles appeared loose during the inspection. When ridge tiles are loose, gaps and openings can form between the tiles and the roof structure. This creates an opportunity for water ingression. It is recommended that the ridge tiles are removed, cleaned and re-bedded using appropriate fixing methods to secure the tiles in line with the manufacturer’s guidelines.",
-          isChecked: false,
-          condition: "Amber",
-        },
-        {
-          name: "Slipped or damaged slates",
-          description: "Slipped or damaged slates were identified across the surface of the roof coverings. Slipped or damaged slates create openings through which rainwater can infiltrate the roof structure. It is recommended that areas of slipped or damaged slates are addressed in the immediate term. ",
-          isChecked: false,
-          condition: "Amber",
-        },
-        {
-          name: "Lead tingle repairs",
-          description: "We identified instances of lead tingle repairs to the rear pitch which suggests previous slipped or damaged slates have been addressed. We note that with the expansion and contraction of the slate due to temperature changes, this can create stress on the lead tingle, leading to eventual failure of the repair. Lead tingles suggest that some of the nails holdings the slates have failed and likely corroded. This could be an early warning sign that further slipped slates will start to occur as additional nails start to corrode further.",
-          isChecked: false,
-          condition: "Red",
-        },
-        {
-          name: "Significant sagging",
-          description: "We note that the roof appears to be sagging particularly around the area whereby lead tingle repairs are undertaken. This suggests that timber roof structure elements could be decayed or subject to structural movement.",
-          isChecked: false,
-          condition: "Red",
-        },
-        {
-          name: "Recovering required",
-          description: "Given the poor condition of the roof coverings generally, we recommend allocating a budget to recover the roof as part of a long-term maintenance plan.",
-          isChecked: false,
-          condition: "Red",
-        },
-        {
-          name: "End of serviceable life in the long term",
-          description: "Given the current condition, we anticipate that the roof coverings are approaching the end of serviceable life and we recommend allocating a budget to recover the roof as part of a long-term maintenance plan at a budget cost of circa £9,000, including for a new breathable membrane and replacing timber structure elements that are unsuitable for reuse",
-          isChecked: false,
-          condition: "Amber",
-        },
-      ],
-    },
-    {
-      element: "Roof Coverings",
-      type: "Pitched Roof",
-      name: "Rosemary Tiles",
-      defects: [
-        {
-          name: "Minor Undulations",
-          description: "Where visible, the roof is generally in reasonable condition with no evidence of significant structural defects.",
-          isChecked: false,
-          condition: "Green",
-        }
-      ],
-    },
-  ]
-
-  const filteredComponents = componentList.filter(filterFn);
-  const orderedComponents = filteredComponents.sort((a, b) => a.type.localeCompare(b.type));
-  const types = orderedComponents.map((c) => c.type).filter((v, i, a) => a.indexOf(v) === i);
-
-  if(filteredComponents.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="grid gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger className="border border-gray-400 pl-2 pr-2 p-1 rounded-sm w-full">
-          Add Component
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuGroup>
-            {types.map((type, index) => (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>{type}</DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {orderedComponents
-                      .filter((c) => c.type === type)
-                      .map((c, i) => (
-                        <DropdownMenuItem
-                          key={i}
-                          onClick={(ev) => fieldArray.append(c)}
-                        >
-                          {c.name}
-                        </DropdownMenuItem>
-                      ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-            ))}
-          </DropdownMenuGroup>
-          {/* <DropdownMenuItem className="font-bold">Add New</DropdownMenuItem> */}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <div className="grid gap-2">
-        {fieldArray.fields.map((field, index) => (
-          <ComponentRenderer 
-              key={field.id} 
-              label={`${field.type} > ${field.name}`} 
-              onDelete={() => fieldArray.remove(index)} {...register(`${typedName}.${index}` as const)}>
-                {field.defects.map((defect, i) => (<DefectCheckbox defect={defect} key={`${field.id}.defect.${i}`} {...register(`${typedName}.${index}.defects.${i}` as const)} />))}
-          </ComponentRenderer>
-        ))}
-      </div>
-    </div>
-  );
-};

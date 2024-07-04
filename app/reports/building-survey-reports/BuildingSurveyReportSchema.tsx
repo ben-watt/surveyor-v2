@@ -15,23 +15,23 @@ export type SurveySection = {
 export type ElementSection = {
     name: string,
     isPartOfSurvey: boolean,
-    ragStatus: RagStatus
     description: string,
-    components : Component[],
+    materialComponents : MaterialComponent[],
     images: string[],
 }
 
-export type Component = {
-    type: string,
+export type MaterialComponent = {
+    id: string,
     name: string,
-    defects: Defect[]
+    defects: Defect[],
+    ragStatus: RagStatus,
+    useNameOveride: boolean,
 }
 
 export type Defect = {
     name: string,
     description: string,
-    isChecked: boolean,
-    condition: RagStatus,
+    isChecked: boolean
 }
 
-export type RagStatus = "Red" | "Amber" | "Green" | "N/A";
+export type RagStatus = "Red" | "Amber" | "Green" | "N/I";

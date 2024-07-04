@@ -86,7 +86,7 @@ export function DataForm({ id }: DataFormProps) {
         <InputText
             labelTitle="Name"
             register={() => register("name", { required: true })}
-          /> 
+          />
         <Combobox register={() => register("elementId", { required: true })} data={elements.map(x => ({ label: x.name, value: x.id }))} />
         <AddMaterials />
         <PrimaryBtn className="w-full flex justify-center" type="submit">
@@ -153,7 +153,7 @@ const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
       </div>
 
       {fields.map((defect, defectIndex) => (
-        <div className="grid gap-4 m-4">
+        <div key={defectIndex} className="grid gap-4 m-4">
           <div className="flex gap-4">
             <InputText
               key={defect.id}

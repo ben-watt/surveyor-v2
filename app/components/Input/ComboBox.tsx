@@ -19,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form"
+import { Edu_NSW_ACT_Foundation } from "next/font/google"
 
 interface ComboboxProps {
   data : { value: string; label: string }[]
@@ -39,7 +40,7 @@ export function Combobox(props : ComboboxProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className=" justify-between"
+          className=" justify-between w-full"
         >
           {value
             ? props.data.find((d) => d.value === value)?.label
@@ -49,7 +50,10 @@ export function Combobox(props : ComboboxProps) {
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search..." className="h-9 border-none focus:ring-0" />
+          <CommandInput
+            placeholder="Search..."
+            className="h-9 border-none focus:ring-0"
+          />
           <CommandList>
             <CommandEmpty>Nothing found.</CommandEmpty>
             <CommandGroup>
@@ -58,8 +62,11 @@ export function Combobox(props : ComboboxProps) {
                   key={d.value}
                   value={d.value}
                   onSelect={(selectedValue) => {
-                    setValue(reg.name, selectedValue === value ? "" : selectedValue)
-                    setOpen(false)
+                    setValue(
+                      reg.name,
+                      selectedValue === value ? "" : selectedValue
+                    );
+                    setOpen(false);
                   }}
                   {...reg}
                 >
@@ -77,5 +84,5 @@ export function Combobox(props : ComboboxProps) {
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
