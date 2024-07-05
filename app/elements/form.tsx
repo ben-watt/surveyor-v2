@@ -47,6 +47,8 @@ export function DataForm({ id }: DataFormProps) {
           await reportClient.models.Elements.update({
             id: data.id,
             name: data.name,
+            priority: data.priority,
+            description: data.description,          
           });
         }
 

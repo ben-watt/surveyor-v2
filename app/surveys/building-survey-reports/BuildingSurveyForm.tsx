@@ -77,7 +77,7 @@ interface BuildingSurveyFormProps {
   id?: string;
 }
 
-const selectionSetElement = ["id", "name", "components.*"] as const;
+const selectionSetElement = ["id", "name", "components.*", "priority"] as const;
 type ElementData = SelectionSet<Schema["Elements"]["type"], typeof selectionSetElement>;
 
 export default function Report({ id }: BuildingSurveyFormProps) {
@@ -134,11 +134,16 @@ export default function Report({ id }: BuildingSurveyFormProps) {
           const currentForm = watch();
   
           if (response.data) {
-            currentForm.sections[0].elementSections = response.data.map((element) => createDefaultElementSection(element));
+            currentForm.sections[0].elementSections = response.data
+              .sort((x, y) => {
+                let a = x.priority ? x.priority : 0;
+                let b = y.priority ? y.priority : 0;
+                return a - b;
+              })
+              .map((element) => createDefaultElementSection(element));
           }
   
           reset(currentForm);
-          console.log("reset from fetchElements", currentForm)
         } catch (error) {
           console.error("Failed to fetch elements", error);
         }
@@ -152,7 +157,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const onSubmit = async () => {
     try {
       let form = watch();
-      let _ = await reportClient.models.Reports.create({
+      let _ = await reportClient.models.Surveys.create({
         id: form.id,
         content: JSON.stringify(form),
       });
@@ -267,7 +272,7 @@ type ComponentData = SelectionSet<Schema["Components"]["type"], typeof component
 
 const ComponentPicker = ({ name }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`
-  const { control, register, watch, setValue, getValues } = useFormContext<string>();
+  const { control, register, watch, setValue, getValues } = useFormContext();
   const { fields, remove, append } = useFieldArray({ name : typedName, control: control });
   const [components, setComponents] = React.useState<ComponentData[]>([]);
 
@@ -435,7 +440,7 @@ interface DefectCheckboxProps {
 
 const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents.0.defects.0`
-  const { register, control, watch } = useFormContext<string>();
+  const { register, control, watch } = useFormContext();
 
   const isChecked = watch(`${typedName}.isChecked`);
 
