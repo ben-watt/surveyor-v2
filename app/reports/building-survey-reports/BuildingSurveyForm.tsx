@@ -2,10 +2,11 @@ import React, { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import {
-  BuildingSurveyFormData,
+  BuildingSurveyFormData as string,
   ElementSection,
   Defect,
-  RagStatus
+  RagStatus,
+  BuildingSurveyFormData as BuildingSurveyForm
 } from "./BuildingSurveyReportSchema";
 
 import { useForm, FormProvider, Controller, useFormContext, useFieldArray } from "react-hook-form";
@@ -29,6 +30,7 @@ import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { Toggle } from "@/components/ui/toggle";
 import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
+import toast from "react-hot-toast";
 
 
 
@@ -74,14 +76,14 @@ import { SelectTrigger } from "@radix-ui/react-select";
       // },
 
 interface BuildingSurveyFormProps {
-  initDefaultValues?: BuildingSurveyFormData;
+  id?: string;
 }
 
 const selectionSetElement = ["id", "name", "components.*"] as const;
 type ElementData = SelectionSet<Schema["Elements"]["type"], typeof selectionSetElement>;
 
-export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
-  let defaultValues: BuildingSurveyFormData = {
+export default function Report({ id }: BuildingSurveyFormProps) {
+  let defaultValues: BuildingSurveyForm = {
     id: uuidv4(),
     reportDate: new Date(),
     address: "",
@@ -93,7 +95,7 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
     }],
   };
 
-  const methods = useForm<BuildingSurveyFormData>({ defaultValues });
+  const methods = useForm<BuildingSurveyForm>({ defaultValues });
   const { register, handleSubmit, watch, formState, reset  } = methods;
   const router = useRouter();
 
@@ -105,29 +107,49 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
     materialComponents: []
   });
 
-  if (initDefaultValues) {
-    defaultValues = initDefaultValues;
+  if(id) {
+    useEffect(() => {
+        const fetchReport = async () => {
+          const report = await reportClient.models.Reports.get({ id });
+  
+          if(report.data) {
+            const formData = JSON.parse(report.data.content as string) as BuildingSurveyForm;
+            reset(formData);
+            console.log("reset from fetchReport", formData)
+          }
+          else {
+            console.error("Failed to fetch report", report.errors);
+          }
+        }
+  
+        fetchReport();
+    }, [])
+  }
+  else {
+    useEffect(() => {
+      const fetchElements = async () => {
+        try {
+          const response = await reportClient.models.Elements.list(
+            { selectionSet: selectionSetElement }
+          );
+  
+          const currentForm = watch();
+  
+          if (response.data) {
+            currentForm.sections[0].elementSections = response.data.map((element) => createDefaultElementSection(element));
+          }
+  
+          reset(currentForm);
+          console.log("reset from fetchElements", currentForm)
+        } catch (error) {
+          console.error("Failed to fetch elements", error);
+        }
+      };
+  
+      fetchElements();
+    }, [])
   }
 
-  useEffect(() => {
-    const fetchElements = async () => {
-      try {
-        const response = await reportClient.models.Elements.list(
-          { selectionSet: selectionSetElement }
-        );
-
-        if (response.data) {
-          defaultValues.sections[0].elementSections = response.data.map((element) => createDefaultElementSection(element));
-        }
-
-        reset(defaultValues);
-      } catch (error) {
-        console.error("Failed to fetch elements", error);
-      }
-    };
-
-    fetchElements();
-  }, [])
 
   const onSubmit = async () => {
     try {
@@ -147,7 +169,7 @@ export default function Report({ initDefaultValues }: BuildingSurveyFormProps) {
   const fields = watch();
 
   return (
-    <div className="md:grid md:grid-cols-4 ">
+    <div className="md:grid md:grid-cols-4 mb-4">
       <div className="col-start-2 col-span-2">
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -247,7 +269,7 @@ type ComponentData = SelectionSet<Schema["Components"]["type"], typeof component
 
 const ComponentPicker = ({ name }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`
-  const { control, register, watch, setValue, getValues } = useFormContext<BuildingSurveyFormData>();
+  const { control, register, watch, setValue, getValues } = useFormContext<string>();
   const { fields, remove, append } = useFieldArray({ name : typedName, control: control });
   const [components, setComponents] = React.useState<ComponentData[]>([]);
 
@@ -415,7 +437,7 @@ interface DefectCheckboxProps {
 
 const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents.0.defects.0`
-  const { register, control, watch } = useFormContext<BuildingSurveyFormData>();
+  const { register, control, watch } = useFormContext<string>();
 
   const isChecked = watch(`${typedName}.isChecked`);
 
