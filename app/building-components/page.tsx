@@ -70,7 +70,7 @@ export default function Page() {
     {
       id: "actions",
       cell: (props) => {
-        const defectId = props.row.original.id;
+        const id = props.row.original.id;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -80,12 +80,12 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`components/edit/${defectId}`}>
+              <Link href={`building-components/edit/${id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
               <DropdownMenuItem
                 className="text-red-500"
-                onClick={() => deleteDefect(defectId)}
+                onClick={() => deleteDefect(id)}
               >
                 <span className="text-red-500">Delete</span>
               </DropdownMenuItem>

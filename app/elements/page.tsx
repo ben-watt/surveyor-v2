@@ -6,7 +6,7 @@ import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
 import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { ColumnDef } from "@tanstack/react-table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
