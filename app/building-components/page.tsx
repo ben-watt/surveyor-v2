@@ -149,7 +149,7 @@ export default function Page() {
 
   return (
     <div>
-      <div className="flex justify-between p-3 mb-5 mt-5 items-baseline">
+      <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Components</h1>
         </div>

@@ -9,7 +9,7 @@ authenticated via an API key, can only "read" records.
 =========================================================================*/
 
 const schema = a.schema({
-  Reports: a
+  Surveys: a
     .model({
       id: a.id().required(),
       content: a.json().required(),
@@ -20,6 +20,7 @@ const schema = a.schema({
   Elements: a.model({
     id: a.id().required(),
     name: a.string().required(),
+    priority: a.float(),
     description: a.string(),
     components: a.hasMany("Components", "id"),
   }).authorization((allow) => [

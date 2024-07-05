@@ -23,6 +23,11 @@ export default function Page() {
       accessorKey: "name"
     },
     {
+      id: "priority",
+      header: ({ column }) => <SortableHeader column={column} header="Priority" />,
+      accessorFn: (v) => v.priority ? v.priority : 0,
+    },
+    {
       id: "created",
       header: ({ column }) => <SortableHeader column={column} header="Created" />,
       accessorFn: (v) => new Date(v.createdAt).toDateString(),
@@ -89,7 +94,7 @@ export default function Page() {
 
   return (
     <div>
-      <div className="flex justify-between p-3 mb-5 mt-5 items-baseline">
+      <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Elements</h1>
         </div>

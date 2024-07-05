@@ -108,7 +108,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   if(id) {
     useEffect(() => {
         const fetchReport = async () => {
-          const report = await reportClient.models.Reports.get({ id });
+          const report = await reportClient.models.Surveys.get({ id });
   
           if(report.data) {
             const formData = JSON.parse(report.data.content as string) as BuildingSurveyForm;

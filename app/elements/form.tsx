@@ -2,12 +2,13 @@
 
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "@/app/components/Input/InputText";
-import { FormProvider, useFieldArray, useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/ReportsClient";
 import { useEffect } from "react";
 import { Schema } from "@/amplify/data/resource";
+import { Input } from "@/components/ui/input";
 
 type ElementsData = Schema["Elements"]["type"];
 type ElementsDataUpdate = Omit<ElementsData, "createdAt" | "updatedAt">;
@@ -65,11 +66,19 @@ export function DataForm({ id }: DataFormProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
         <InputText
           labelTitle="Name"
-          register={() => register("name", { required: "Name is required" })} />
+          register={() => register("name", { required: "Name is required" })}
+        />
         <InputText
           labelTitle="Description"
-          register={() => register("description")} />
+          register={() => register("description")}
+        />
         <div>
+          <Input
+            type="number"
+            placeholder="priority"
+            defaultValue={1000}
+            {...register("priority", { required: "priority is required" })}
+          />
         </div>
         <PrimaryBtn className="w-full flex justify-center" type="submit">
           Save

@@ -27,7 +27,7 @@ function HomePage() {
   useEffect(() => {
     async function fetchSurveys() {
       try {
-        const response = await client.models.Reports.list();
+        const response = await client.models.Surveys.list();
         const reports = response.data.map((i) =>
           JSON.parse(i.content as string)
         );
@@ -42,7 +42,7 @@ function HomePage() {
 
   const deleteSurvey = async (id: string) => {
     try {
-      const response = await client.models.Reports.delete({ id });
+      const response = await client.models.Surveys.delete({ id });
       if (!response.errors && response.data != null) {
         setSurveys(surveys.filter((r) => r.id !== id));
       }
@@ -53,7 +53,7 @@ function HomePage() {
 
   return (
     <div>
-      <div className="flex justify-between p-3 mb-5 mt-5 items-baseline">
+      <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Surveys</h1>
         </div>

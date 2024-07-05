@@ -16,7 +16,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const getReport = async () => {
-      let result = await reportClient.models.Reports.get({ id: params.id });
+      let result = await reportClient.models.Surveys.get({ id: params.id });
 
       if (!result.errors && result.data != null) {
         const formData = JSON.parse(
