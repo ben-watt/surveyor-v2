@@ -22,29 +22,29 @@ import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
 
 function HomePage() {
-  const [reports, setReports] = useState<BuildingSurveyFormData[]>([]);
+  const [surveys, setSurveys] = useState<BuildingSurveyFormData[]>([]);
 
   useEffect(() => {
-    async function fetchReports() {
+    async function fetchSurveys() {
       try {
         const response = await client.models.Reports.list();
         const reports = response.data.map((i) =>
           JSON.parse(i.content as string)
         );
-        setReports(reports);
+        setSurveys(reports);
       } catch (error) {
         console.log(error);
       }
     }
 
-    fetchReports();
+    fetchSurveys();
   }, []);
 
-  const deleteReport = async (id: string) => {
+  const deleteSurvey = async (id: string) => {
     try {
       const response = await client.models.Reports.delete({ id });
       if (!response.errors && response.data != null) {
-        setReports(reports.filter((r) => r.id !== id));
+        setSurveys(surveys.filter((r) => r.id !== id));
       }
     } catch (error) {
       console.error(error);
@@ -55,15 +55,15 @@ function HomePage() {
     <div>
       <div className="flex justify-between p-3 mb-5 mt-5 items-baseline">
         <div>
-          <h1 className="text-3xl dark:text-white">Reports</h1>
+          <h1 className="text-3xl dark:text-white">Surveys</h1>
         </div>
         <div>
-          <Link href="/reports/create">
+          <Link href="/surveys/create">
             <CopyMarkupBtn>Create</CopyMarkupBtn>
           </Link>
         </div>
       </div>
-      <div className="m-2 md:m-10">
+      <div>
         {RenderTable()}
       </div>
     </div>
@@ -110,19 +110,19 @@ function HomePage() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Link href={`reports/${reportId}/edit`}>
-                    Edit report
+                  <Link href={`surveys/${reportId}`}>
+                    Edit survey
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href={`/reports/${reportId}`}>
+                  <Link href={`/surveys/${reportId}/report`}>
                     Generate report
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-red-500"
-                  onClick={() => deleteReport(reportId)}
+                  onClick={() => deleteSurvey(reportId)}
                 >
-                  <span className="text-red-500">Delete report</span>
+                  <span className="text-red-500">Delete survey</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -131,7 +131,7 @@ function HomePage() {
       },
     ];
 
-    return <DataTable columns={columns} data={reports} />
+    return <DataTable columns={columns} data={surveys} />
   }
 }
 

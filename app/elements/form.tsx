@@ -50,7 +50,7 @@ export function DataForm({ id }: DataFormProps) {
         }
 
         successToast("Saved");
-        router.push("/reports/elements");
+        router.push("/elements");
       } catch (error) {
         basicToast("Error");
         console.error("Failed to save", error);

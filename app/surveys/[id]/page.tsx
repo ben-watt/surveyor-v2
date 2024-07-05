@@ -1,9 +1,7 @@
 "use client"
 
-import React, { useEffect } from 'react'
-import BuildingSurveyForm from '../../building-survey-reports/BuildingSurveyForm';
-import reportClient from '@/app/clients/ReportsClient';
-import { BuildingSurveyFormData } from '../../building-survey-reports/BuildingSurveyReportSchema';
+import React from 'react'
+import BuildingSurveyForm from '../building-survey-reports/BuildingSurveyForm';
 
 
 function Home({ params }: { params: { id: string }}) {

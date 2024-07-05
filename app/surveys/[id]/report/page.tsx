@@ -4,10 +4,9 @@ import reportClient from "@/app/clients/ReportsClient";
 import { ContentCss, TextEditor } from "@/app/components/TextEditor";
 import React, { useEffect, useState } from "react";
 import { renderToString } from "react-dom/server";
-import BuildingSurveyReportTiny from "../building-survey-reports/BuildingSurveyReportTiny";
-import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportSchema";
+import BuildingSurveyReportTiny from "../../building-survey-reports/BuildingSurveyReportTiny";
+import { BuildingSurveyFormData } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { getUrl } from "aws-amplify/storage";
-import { renderToHTML } from "next/dist/server/render";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [initialValue, setInitialValue] = useState<string>();

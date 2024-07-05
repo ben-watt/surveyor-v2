@@ -52,12 +52,14 @@ export default function SecureNav() {
     setIsOpen(false);
   }
 
+  if(!user) return null;
+
   return (
     <NavContainer>
       <div className="hidden md:block">
           <Link
             className="flex-none text-xl font-semibold dark:text-white"
-            href="/reports"
+            href="/"
           >
             WATT
           </Link>
@@ -75,22 +77,22 @@ export default function SecureNav() {
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
                 <CommandGroup heading="Suggestions">
-                  <CommandItem onSelect={() => handleNaviate("/reports/create")}>
+                  <CommandItem onSelect={() => handleNaviate("/surveys/create")}>
                     <NotebookPen className="mr-2 h-4 w-4" />
                     <span>Create Survey</span>
                   </CommandItem>
                 </CommandGroup>
                 <CommandSeparator />
                 <CommandGroup heading="Nav">
-                  <CommandItem onSelect={() => handleNaviate("/reports")}>
+                  <CommandItem onSelect={() => handleNaviate("/surveys")}>
                     <span>Surveys</span>
                     <CommandShortcut>⌘S</CommandShortcut>
                   </CommandItem>
-                  <CommandItem onSelect={() => handleNaviate("/reports/elements")}>
+                  <CommandItem onSelect={() => handleNaviate("/elements")}>
                     <span>Elements</span>
                     <CommandShortcut>⌘E</CommandShortcut>
                   </CommandItem>
-                  <CommandItem onSelect={() => handleNaviate("/reports/components")}>
+                  <CommandItem onSelect={() => handleNaviate("/building-components")}>
                     <span>Components</span>
                     <CommandShortcut>⌘C</CommandShortcut>
                   </CommandItem>

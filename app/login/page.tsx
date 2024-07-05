@@ -35,7 +35,7 @@ const amplifyTheme = {
   export default function SignIn() {
     return (
         <ThemeProvider theme={amplifyTheme}>
-          <WithRedirect path="/reports"/>
+          <WithRedirect path="/surveys"/>
         </ThemeProvider>
       )
   }

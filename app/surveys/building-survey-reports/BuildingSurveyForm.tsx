@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import {
-  BuildingSurveyFormData as string,
   ElementSection,
   Defect,
   RagStatus,
@@ -30,7 +29,6 @@ import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { Toggle } from "@/components/ui/toggle";
 import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
-import toast from "react-hot-toast";
 
 
 
@@ -160,7 +158,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
       });
       
       successToast("Saved");
-      router.push("/reports");
+      router.push("/surveys");
     } catch (error) {
       console.error(error);
     }

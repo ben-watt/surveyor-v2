@@ -1,18 +1,15 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Inter } from "next/font/google";
-import PrelineScript from "./components/PrelineScript";
 import "./globals.css";
 import ConfigureAmplifyClientSide from "./components/ConfigureAmplify";
 import "@aws-amplify/ui-react/styles.css";
 import "instantsearch.css/themes/satellite.css";
-
+import { Authenticator } from "@aws-amplify/ui-react";
+import { Toaster } from "react-hot-toast";
+import SecureNav from "./components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Surveyor",
-  description: "Report generation for surveyors",
-};
 
 export default function RootLayout({
   children,
@@ -23,7 +20,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ConfigureAmplifyClientSide />
-        {children}
+        <Authenticator.Provider>
+          <SecureNav />
+          <Toaster position="top-right" />
+          <div className="m-auto max-w-[85rem]">
+            <div className="m-2 md:m-10">
+              {children}
+            </div>
+          </div>
+        </Authenticator.Provider>
       </body>
     </html>
   );

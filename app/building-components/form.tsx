@@ -70,7 +70,7 @@ export function DataForm({ id }: DataFormProps) {
         }
 
         successToast("Saved");
-        router.push("/reports/components");
+        router.push("/components");
       } catch (error) {
         console.error("Failed to save data", error)
         basicToast(`Error unable to save data.`);

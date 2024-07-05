@@ -41,7 +41,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`/reports/elements/${rowId}`}>
+              <Link href={`/elements/${rowId}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
               <DropdownMenuItem className="text-red-500"
@@ -93,7 +93,7 @@ export default function Page() {
         <div>
           <h1 className="text-3xl dark:text-white">Elements</h1>
         </div>
-        <Link href="/reports/elements/create">
+        <Link href="/elements/create">
           <CopyMarkupBtn>Create</CopyMarkupBtn>
         </Link>
       </div>
