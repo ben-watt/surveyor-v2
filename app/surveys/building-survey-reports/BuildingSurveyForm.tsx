@@ -30,49 +30,6 @@ import { Toggle } from "@/components/ui/toggle";
 import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
 
-
-
-      // {
-      //   name: "External Condition of Property",
-      //   elementSections: [
-      //     "Foundations and Substructure",
-      //     "Roof Coverings",
-      //     "Chimneys",
-      //     "Rainwater Disposal System",
-      //     "Sofits and Fascias",
-      //     "Main Walls",
-      //     "Windows and Doors",
-      //   ].map(createDefaultElementSection),
-      // },
-      // {
-      //   name: "Internal Condition of Property",
-      //   elementSections: [
-      //     "Roof Structure",
-      //     "Ceilings",
-      //     "Walls and Partitions",
-      //     "Floors",
-      //     "Internal Joinery",
-      //     "Sanitaryware & Kitchen",
-      //     "Fireplaces",
-      //   ].map(createDefaultElementSection),
-      // },
-      // {
-      //   name: "Services",
-      //   elementSections: [
-      //     "Electrical Installation",
-      //     "Gas Installations",
-      //     "Cold Water Supply",
-      //     "Hot Water Supply / Heating Installations",
-      //     "Surface water & Soil drainage",
-      //   ].map(createDefaultElementSection),
-      // },
-      // {
-      //   name: "Grounds",
-      //   elementSections: ["Boundaries, Fencing, Drives, Lawn, etc"].map(
-      //     createDefaultElementSection
-      //   ),
-      // },
-
 interface BuildingSurveyFormProps {
   id?: string;
 }
