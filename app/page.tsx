@@ -1,8 +1,7 @@
 "use client"
 
-import Link from 'next/link';
 import React from 'react'
-import { Nav } from './components/Navbar';
+import { NavContainer } from './components/Navbar';
 import { PrimaryBtn } from './components/Buttons';
 import Lottie from 'react-lottie-player';
 import animationData from './lottie/report-inspector.json';
@@ -13,11 +12,7 @@ function Home() {
 
   return (
     <>
-      <Nav>
-        <Link href="/login">Login</Link>
-        <Link href="/login">Sign Up</Link>
-        <Link href="/reports">Reports</Link>
-      </Nav>
+      <NavContainer />
       <div className="m-10 z-10">
         <div>
           <h1 className="font-bold text-center text-xl mb-1">Reporting Reimagined. Professional Surveys, Streamlined.</h1>

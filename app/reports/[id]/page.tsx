@@ -7,10 +7,12 @@ import { renderToString } from "react-dom/server";
 import BuildingSurveyReportTiny from "../building-survey-reports/BuildingSurveyReportTiny";
 import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportSchema";
 import { getUrl } from "aws-amplify/storage";
+import { renderToHTML } from "next/dist/server/render";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [initialValue, setInitialValue] = useState<string>();
-  const [contentCss, setContentCss] = useState<ContentCss>("document");
+  const [contentCss, setContentCss] = useState<ContentCss>("/styles.css");
+  const [formData, setFormData] = useState<BuildingSurveyFormData>();
   
 
   useEffect(() => {
@@ -24,19 +26,25 @@ export default function Page({ params }: { params: { id: string } }) {
 
         const initialValue = await mapFormDataToTinyMceHtml(formData);
         setInitialValue(initialValue);
-
-        if (typeof window !== "undefined" && window.innerWidth < 768) {
-          setContentCss("mobile");
-        }
+        setFormData(formData);
       }
     };
 
     getReport();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setContentCss("mobile");
+    } else {
+      setContentCss("/styles.css");
+    }
+  }, [window.innerWidth])
 
-  if(initialValue) {
-    return <TextEditor contentCss={`/${contentCss}.css`} initialValue={initialValue} />
+
+  if(formData) {
+    //return <TextEditor contentCss={contentCss} initialValue={initialValue} />
+    return <BuildingSurveyReportTiny form={formData} />
   }
 
   return <div>Loading...</div>;  

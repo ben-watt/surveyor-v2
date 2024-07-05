@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import {
   BuildingSurveyFormData,
-  MaterialComponent,
   ElementSection,
   Defect,
   RagStatus
@@ -28,9 +27,6 @@ import { Schema } from "@/amplify/data/resource";
 import { SelectionSet } from "aws-amplify/api";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { Toggle } from "@/components/ui/toggle";
-import { DropDown } from "@/app/components/DropDown";
-import { DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { DropdownMenu, DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
 
@@ -378,8 +374,8 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                     </div>
                   )
                 }}/>
-                <Button variant="destructive" onClick={(ev) => remove(index)}>
-                  Remove
+                <Button className="p-2" variant="ghost" onClick={(ev) => remove(index)}>
+                  <X className="w-8 text-red-400" />
                 </Button>
               </div>
               {watch(`${typedName}.${index}.id` as const) && (
