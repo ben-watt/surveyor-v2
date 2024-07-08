@@ -21,10 +21,12 @@ export default function RootLayout({
       <body className={inter.className}>
         <ConfigureAmplifyClientSide />
         <Authenticator.Provider>
-          <SecureNav />
-          <Toaster position="top-right" />
-          <div className="m-auto max-w-[85rem]">
-            <div className="m-2 md:m-10">
+          <div className="print:hidden">
+            <SecureNav />
+            <Toaster position="top-right" />
+          </div>
+          <div className="m-auto max-w-[85rem] print:max-w-max">
+            <div className="m-2 md:m-10 print:m-0">
               {children}
             </div>
           </div>

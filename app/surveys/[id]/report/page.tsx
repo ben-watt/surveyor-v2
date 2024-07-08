@@ -42,8 +42,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
 
   if(formData) {
-    //return <TextEditor contentCss={contentCss} initialValue={initialValue} />
-    return <BuildingSurveyReportTiny form={formData} />
+    return <TextEditor contentCss={contentCss} initialValue={initialValue} />
   }
 
   return <div>Loading...</div>;  
