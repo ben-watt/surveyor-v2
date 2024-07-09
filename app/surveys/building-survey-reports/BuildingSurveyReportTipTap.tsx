@@ -8,6 +8,7 @@ import {
   TocContext,
   TocProvider,
 } from "../../components/Toc";
+import { Table } from "lucide-react";
 
 const TableBlock = ({
   children,
@@ -26,15 +27,29 @@ const TableBlock = ({
   if (childrenArray.length % widths.length !== 0)
     throw new Error("Number of children must be a multiple of widths");
 
+
+  const landscapeWidth = 948; // Width of the page in landscape
+
   let tableRows = [];
   for (let i = 0; i < childrenArray.length; i = i + widths.length) {
     let row = [];
     for (let j = 0; j < widths.length; j++) {
-      row.push(
-        <td key={j} style={{ verticalAlign: "top", width: `${widths[j]}%` }}>
-          {childrenArray[i + j]}
-        </td>
-      );
+      const childElement = childrenArray[i + j];
+
+      if(j === widths.length - 1) {
+        row.push(
+          <td key={j}>
+            {childElement}
+          </td>
+        );
+      }
+      else {
+        row.push(
+          <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
+            {childElement}
+          </td>
+        );
+      }
     }
     tableRows.push(<tr key={i}>{row}</tr>);
   }
@@ -65,14 +80,10 @@ const ContentBlock = ({ children, tocProvider }: ContentBlockProps) => {
   );
 
   return (
-    <table className="w-100-perc">
-      <tbody>
-        <tr>
-          <td className="w-10-perc text-top text-right">{dynamicElement}</td>
-          <td className="w-90-perc">{children}</td>
-        </tr>
-      </tbody>
-    </table>
+    <TableBlock widths={[10, 90]}>
+      <div>{dynamicElement}</div>
+      <div>{children}</div>
+    </TableBlock>
   );
 };
 
@@ -115,11 +126,7 @@ const H3 = (props: PProps) => {
   );
 };
 
-const Page = (props: React.PropsWithChildren<any>) => (
-  <>
-    {props.children}
-  </>
-);
+const Page = (props: React.PropsWithChildren<any>) => <>{props.children}<br/></>;
 
 interface PdfProps {
   form: BuildingSurveyFormData;
@@ -132,58 +139,61 @@ export default function PDF({ form }: PdfProps) {
   const address = form.address;
   const reportDate = new Date(form.reportDate);
 
-  console.debug("Building Survey Report", form)
+  console.debug("Building Survey Report", form);
 
   return (
     <TocContext.Provider value={DefaultTocProvider()}>
       <Page>
-        <h1>Level 3 Building Survey Report</h1>
-        <div className="column-block">
-          <div className="column">block 1</div>
-          <div className="column">block 2</div>
-        </div>
-        <p></p>
-        <div>
-          <p>Of the premises known as</p>
-          <p></p>
-          {address.split(",").map((word, i) => (
-            <p key={i} className="m-0">
-              <strong>{word}</strong>
-            </p>
-          ))}
-        </div>
-        <p></p>
-        <div>
-          <p>For and on behalf of</p>
-          <p></p>
-          <p>
-            <strong>{clientName}</strong>
-          </p>
-        </div>
-        <p></p>
-        <p>Prepared By</p>
-        <p>Clarke & Watt Building Consultancy Ltd</p>
-        <p>Northern Assurance Building</p>
-        <p>9-21 Princess Street</p>
-        <p>Manchester</p>
-        <p>M2 4DN</p>
-        <p></p>
-        <p>Email: admin@cwbc.co.uk</p>
-        <p>Date: {reportDate.toDateString()}</p>
-        <p>Ref: Unknown</p>
+        <TableBlock widths={[60, 40]}>
+          <div>
+            <img
+              src="/typical-house.webp"
+              alt="typical house"
+              width="700"
+              height="480"
+            ></img>
+          </div>
+
+          <div>
+            <h1>Level 3 Building Survey Report</h1>
+            <p></p>
+            <div>
+              <p>Of the premises known as</p>
+              <p></p>
+              {address.split(",").map((word, i) => (
+                <p key={i} className="m-0">
+                  <strong>{word}</strong>
+                </p>
+              ))}
+            </div>
+            <p></p>
+            <div>
+              <p>For and on behalf of</p>
+              <p></p>
+              <p>
+                <strong>{clientName}</strong>
+              </p>
+            </div>
+            <p></p>
+            <p>Prepared By</p>
+            <p>Clarke & Watt Building Consultancy Ltd</p>
+            <p>Northern Assurance Building</p>
+            <p>9-21 Princess Street</p>
+            <p>Manchester</p>
+            <p>M2 4DN</p>
+            <p></p>
+            <p>Email: admin@cwbc.co.uk</p>
+            <p>Date: {reportDate.toDateString()}</p>
+            <p>Ref: Unknown</p>
+          </div>
+        </TableBlock>
       </Page>
       <Page>
         <TableBlock widths={[40, 60]}>
           <p>Prepared by:</p>
-          <div>
-            <p>Samuel Watt BSc (Hons)</p>
-          </div>
+          <p>Samuel Watt BSc (Hons)</p>
         </TableBlock>
-        <p>
-          This document has been prepared and checked in accordance with the
-          CWBC's Quality Assurance procedures and authorised for release.
-        </p>
-        <div></div>
+        <p>This document has been prepared and checked in accordance with the CWBC's Quality Assurance procedures and authorised for release.</p>
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
@@ -211,14 +221,15 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1>Contents</h1>
+        <p>PUT TOC HERE.</p>
       </Page>
       <Page>
         <H1>Definitions</H1>
         <H2>Key</H2>
-        <TableBlock widths={[97, 3]}>
+        <TableBlock widths={[92, 8]}>
           <ul>
             <li>
-              For information purposes, generally, no repair is required.
+              - For information purposes, generally, no repair is required.
               Property to be maintained as usual.
             </li>
           </ul>
@@ -228,7 +239,7 @@ export default function PDF({ form }: PdfProps) {
           ></p>
           <ul>
             <li>
-              Defects requiring repair/replacement but not considered urgent nor
+              - Defects requiring repair/replacement but not considered urgent nor
               serious. Property to be maintained as usual.
             </li>
           </ul>
@@ -238,7 +249,7 @@ export default function PDF({ form }: PdfProps) {
           ></p>
           <ul>
             <li>
-              Serious defects to be fully considered prior to purchase that need
+              - Serious defects to be fully considered prior to purchase that need
               to be repaired, replace or investigated urgently.
             </li>
           </ul>
@@ -247,7 +258,7 @@ export default function PDF({ form }: PdfProps) {
             style={{ backgroundColor: "red" }}
           ></p>
           <ul>
-            <li>Not inspected (see 'Important note' below)/</li>
+            <li>- Not inspected (see 'Important note' below)/</li>
           </ul>
           <p className="w-100-perc h-100-perc text-centre">
             <strong>NI</strong>
@@ -292,8 +303,9 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <H1>Location Plan</H1>
         <p>
-          Red line demarcations do not represent the legal boundary of the property and are to indicate the approximate areas of the property subject to
-          inspection.
+          Red line demarcations do not represent the legal boundary of the
+          property and are to indicate the approximate areas of the property
+          subject to inspection.
         </p>
         <img></img>
       </Page>
@@ -427,7 +439,7 @@ type ConditionSectionProps = {
 const InvokeOnRender = ({ onRender }: { onRender: () => void }) => {
   onRender();
   return <></>;
-}
+};
 
 const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
   const es = elementSection;
@@ -443,7 +455,9 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
     tableRows.push(
       <tr>
         <td>
-          <InvokeOnRender onRender={() => console.debug("Image", es.images[i])} />
+          <InvokeOnRender
+            onRender={() => console.debug("Image", es.images[i])}
+          />
           <img key={i} src={es.images[i]} width={200} />
         </td>
         {es.images.length >= i + 1 && (

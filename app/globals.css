@@ -76,7 +76,6 @@
   }
 }
 
-
 .tiptap {
   --purple-light: #f3f2ff;
   --black: #000000;
@@ -87,7 +86,7 @@
 
 .tiptap p {
   line-height: 24px;
-  height: 24px;
+  min-height: 24px;
 }
 
 /* Basic editor styles */
@@ -194,16 +193,19 @@
 }
 
 
- /* Table-specific styling */
+/* Table-specific styling */
 
- .tiptap table {
+.tiptap table {
   border-collapse: collapse;
   margin: 0;
   overflow: hidden;
   table-layout: fixed;
   width: 100%;
+  page-break-inside: avoid;
 }
-.tiptap table td, .tiptap table th {
+
+.tiptap table td,
+.tiptap table th {
   border: 1px solid var(--gray-3);
   box-sizing: border-box;
   min-width: 1em;
@@ -211,14 +213,18 @@
   position: relative;
   vertical-align: top;
 }
-.tiptap table td > *, .tiptap table th > * {
+
+.tiptap table td>*,
+.tiptap table th>* {
   margin-bottom: 0;
 }
+
 .tiptap table th {
   background-color: var(--gray-1);
   font-weight: bold;
   text-align: left;
 }
+
 .tiptap table .selectedCell:after {
   background: var(--gray-2);
   content: "";
@@ -230,6 +236,7 @@
   position: absolute;
   z-index: 2;
 }
+
 .tiptap table .column-resize-handle {
   background-color: var(--purple);
   bottom: -2px;
@@ -239,10 +246,12 @@
   top: 0;
   width: 4px;
 }
+
 .tiptap .tableWrapper {
   margin: 1.5rem 0;
   overflow-x: auto;
 }
+
 .tiptap.resize-cursor {
   cursor: ew-resize;
   cursor: col-resize;

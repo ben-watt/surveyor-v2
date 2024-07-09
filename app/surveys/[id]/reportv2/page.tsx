@@ -56,10 +56,21 @@ export default function Page() {
 
   }, [previewContent], 500);
 
+  // I've wrapped the viewer in the .tiptap class to ensure it picks up the tip tap styles.
+  // I've also set the container to be 962px wide to match the viewer in landscape mode.
+
   return (
-    <div className="tiptap">
-      {editorContent && <NewEditor content={editorContent} onUpdate={(e) => setPreviewContent(e.editor.getHTML()) } onPrint={(html) => window.print()} /> }
-      <div className="pagedjs_print_preview">
+    <div className="flex">
+      <div className="w-[962px]">
+        {editorContent && (
+          <NewEditor
+            content={editorContent}
+            onUpdate={(e) => setPreviewContent(e.editor.getHTML())}
+            onPrint={(html) => window.print()}
+          />
+        )}
+      </div>
+      <div className="pagedjs_print_preview tiptap">
         <div ref={previewRef} />
       </div>
     </div>

@@ -334,24 +334,22 @@ const MenuBar = ({ onPrint } : MenuBarProps) => {
 const CustomParagraph = Paragraph.extend({
   addAttributes() {
       return {
-          class: {
+          style: {
               default: null,
-              // Take the attribute values
               renderHTML: attributes => {
-                  // … and return an object with HTML attributes.
-
-                  if (!attributes.class) {
-                      return {}
+                  if (attributes.style) {
+                      return {
+                        style: `${attributes.style}`,
+                      }
                   }
 
-                  return {
-                      class: `${attributes.class}`,
-                  }
+                  return {}
               },
           },
       }
   },
 })
+
 
 const extensions = [
   Color.configure({ types: [TextStyle.name, ListItem.name] }),
