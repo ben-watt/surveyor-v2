@@ -25,6 +25,8 @@ import Image from "@tiptap/extension-image";
 import { EditorProvider, useCurrentEditor } from "@tiptap/react";
 import React from "react";
 import Paragraph from "@tiptap/extension-paragraph";
+import { Bold, Italic, Strikethrough } from "lucide-react";
+import BlockMenuBar from "./BlockMenuBar";
 
 interface BlockEditorProps {
   content?: string;
@@ -168,29 +170,30 @@ const MenuBar = ({ onPrint } : MenuBarProps) => {
     return null;
   }
 
+
   return (
-    <div className="control-group print:hidden">
+    <div className="control-group print:hidden border border-red-500 rounded">
       <div className="button-group">
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={!editor.can().chain().focus().toggleBold().run()}
           className={editor.isActive("bold") ? "is-active" : ""}
         >
-          Bold
+          <Bold />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editor.can().chain().focus().toggleItalic().run()}
           className={editor.isActive("italic") ? "is-active" : ""}
         >
-          Italic
+          <Italic />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleStrike().run()}
           disabled={!editor.can().chain().focus().toggleStrike().run()}
           className={editor.isActive("strike") ? "is-active" : ""}
         >
-          Strike
+          <Strikethrough />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleCode().run()}
@@ -331,6 +334,7 @@ const MenuBar = ({ onPrint } : MenuBarProps) => {
   );
 };
 
+// Used to create a custom paragraph with style attribute
 const CustomParagraph = Paragraph.extend({
   addAttributes() {
       return {
@@ -387,7 +391,7 @@ export const NewEditor = ({ onPrint, content, onUpdate } : NewEditorProps) => {
     <div className="print:hidden">
       <EditorProvider
         onUpdate={onUpdate}
-        slotBefore={<MenuBar onPrint={onPrint} />}
+        slotBefore={<BlockMenuBar />}
         extensions={extensions}
         content={content}>
         </EditorProvider>
