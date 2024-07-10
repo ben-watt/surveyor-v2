@@ -3,7 +3,7 @@ import { useCurrentEditor, type Editor } from '@tiptap/react'
 import { Fragment } from 'react'
 
 import MenuItem from './BlockMenuItem'
-import { Bold, Code, Code2,  EllipsisVertical, Heading1, Heading2, Italic, List, ListOrdered, SeparatorHorizontal, Strikethrough, TextQuote, Text, RemoveFormatting, WrapText, Forward, Redo, Undo } from 'lucide-react';
+import { Bold, Code, Code2,  EllipsisVertical, Heading1, Heading2, Italic, List, ListOrdered, SeparatorHorizontal, Strikethrough, TextQuote, Text, RemoveFormatting, WrapText, Forward, Redo, Undo, Printer } from 'lucide-react';
 
 export default function MenuBar () {
   const { editor } = useCurrentEditor();
@@ -127,6 +127,14 @@ export default function MenuBar () {
       title: 'Redo',
       action: () => editor.chain().focus().redo().run(),
     },
+    {
+        type: "divider",
+    },
+    {
+        icon: <Printer />,
+        title: 'Print',
+        action: () => window.print(),
+    }
   ]
 
   return (
