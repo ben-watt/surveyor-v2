@@ -3,8 +3,42 @@
     @page {
         size: A4 landscape;
     
+        @bottom-center {
+            content: counter(page);
+            font-size: small;
+        }
+
         @top-left {
-            content: "Testubgbbgbgbgb";
+            content: element(addressRunning);
+            font-size: x-small;
+        }
+
+        @top-right {
+            content: element(headerRunning);
+            width: 4cm;
+        }
+
+        @bottom-right {
+            content: element(footerRunning);
+            width: 3cm;
         }
     }
+}
+
+.headerAddress {
+    position: running(addressRunning);
+}
+
+/* Override the default line-height and min-height which we put in tiptap to emulate new lines */
+.headerAddress p {
+    line-height: normal;
+    min-height: auto;
+}
+
+.footerImage {
+    position: running(footerRunning);
+}
+
+.headerImage {
+    position: running(headerRunning);
 }

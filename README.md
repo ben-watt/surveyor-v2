@@ -29,23 +29,29 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ### Now
 
+  - Getting the export just rig
+  ht
+    - Headers and Footers
+    - Table of Contents (not as important)
+    - Bind to the relevant Sections and export
 
-  - Create CRUD for different entities with searchable lookups for each entity as a standard
-    - Defects
-    - Clients
-    - Properties
-    
-  - Getting the export just right
-    - Sorting out a defect vs. a condition
+  - Get this deployed
+  - Ensure on mobile it'll upload everything correctly on submittion
+  - Multi account?
 
-
-  - Getting the export just right
   - Address lookup
 
   - List out the form
   - Toasts (Deleted a form)
 
   - Don't use algolia for search?s
+
+  - Create CRUD for different entities with searchable lookups for each entity as a standard
+    - Defects
+    - Clients
+    - Properties
+
+
 
 ### Sam Requests
 

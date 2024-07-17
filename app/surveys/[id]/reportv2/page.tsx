@@ -1,7 +1,7 @@
 "use client";
 
 import reportClient from "@/app/clients/ReportsClient";
-import BlockEditor, { NewEditor } from "@/app/components/Input/BlockEditor";
+import { NewEditor } from "@/app/components/Input/BlockEditor";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 
 import { Previewer } from "pagedjs";
@@ -11,7 +11,6 @@ import { BuildingSurveyFormData } from "../../building-survey-reports/BuildingSu
 import BuildingSurveyReport from "../../building-survey-reports/BuildingSurveyReportTipTap";
 import { renderToString } from "react-dom/server";
 import { getUrl } from "aws-amplify/storage";
-import { EditorContent, useCurrentEditor } from "@tiptap/react";
 
 export default function Page() {
   const previewRef = useRef<HTMLDivElement>(null);
@@ -65,16 +64,33 @@ export default function Page() {
         {editorContent && (
           <NewEditor
             content={editorContent}
-            onUpdate={(e) => setPreviewContent(e.editor.getHTML())}
+            onUpdate={(e) => setPreviewContent(getHeaderFooterHtml() + e.editor.getHTML())}
             onPrint={(html) => window.print()}
           />
         )}
       </div>
+ 
       <div className="pagedjs_print_preview tiptap">
         <div ref={previewRef} />
       </div>
     </div>
   );
+}
+
+function getHeaderFooterHtml() {
+  const jsx = (
+    <>
+      <img className="headerImage" src="/cwbc-logo.webp" alt="CWBC Logo" />
+      <div className="headerAddress">
+        <p>Address From the form It's going to be long</p>
+        <p>Some other lines</p>
+        <p>More lines</p>
+      </div>
+      <img className="footerImage" src="/rics-purple-logo.jpg" alt="RICS Logo" />
+    </>
+  )
+
+  return renderToString(jsx);
 }
 
 
