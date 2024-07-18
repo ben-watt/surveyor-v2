@@ -29,8 +29,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ### Now
 
-  - Getting the export just rig
-  ht
+  - Getting the export just right
     - Headers and Footers
     - Table of Contents (not as important)
     - Bind to the relevant Sections and export

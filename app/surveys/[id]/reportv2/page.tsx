@@ -12,30 +12,37 @@ import BuildingSurveyReport from "../../building-survey-reports/BuildingSurveyRe
 import { renderToString } from "react-dom/server";
 import { getUrl } from "aws-amplify/storage";
 
-export default function Page() {
+export default function Page({ params }: { params: { id: string } }) {
   const previewRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState<string | undefined>();
   const [previewContent, setPreviewContent] = useState("<h1>loading...</h1>");
   const [isInitilised, setIsInitilised] = useState(false);
+  const [editorData, setEditorData] = useState<BuildingSurveyFormData>();
 
   useEffect(() => {
     const getReport = async () => {
-      let result = await reportClient.models.Surveys.get({ id: "28c47f49-85fe-4c4e-8b77-8b924de174e5" });
+      let result = await reportClient.models.Surveys.get({ id: params.id });
 
       if (!result.errors && result.data != null) {
         const formData = JSON.parse(
           result.data.content.toString()
         ) as BuildingSurveyFormData;
 
-        const initialValue = await mapFormDataToTinyMceHtml(formData);
-        setEditorContent(initialValue);
-        console.log("fetched data")
+        
+        setEditorData(formData)
       }
     };
 
     getReport();
   }, [])
 
+  useEffect(() => {
+    if(editorData) {
+      mapFormDataToTinyMceHtml(editorData).then((html) => {
+        setEditorContent(html);
+      })
+    }
+  }, [editorData])
 
   useDebouncedEffect(() => {
     const paged = new Previewer({});
@@ -64,7 +71,7 @@ export default function Page() {
         {editorContent && (
           <NewEditor
             content={editorContent}
-            onUpdate={(e) => setPreviewContent(getHeaderFooterHtml() + e.editor.getHTML())}
+            onUpdate={(e) => setPreviewContent(getHeaderFooterHtml(editorData) + e.editor.getHTML())}
             onPrint={(html) => window.print()}
           />
         )}
@@ -77,14 +84,12 @@ export default function Page() {
   );
 }
 
-function getHeaderFooterHtml() {
+function getHeaderFooterHtml(editorData : BuildingSurveyFormData | undefined) : string {
   const jsx = (
     <>
       <img className="headerImage" src="/cwbc-logo.webp" alt="CWBC Logo" />
       <div className="headerAddress">
-        <p>Address From the form It's going to be long</p>
-        <p>Some other lines</p>
-        <p>More lines</p>
+          <p>{editorData ? editorData.address : "Unknown"}</p>
       </div>
       <img className="footerImage" src="/rics-purple-logo.jpg" alt="RICS Logo" />
     </>

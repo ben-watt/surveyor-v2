@@ -42,3 +42,7 @@
 .headerImage {
     position: running(headerRunning);
 }
+
+.pagedjs_area td {
+    border: none !important;
+}
