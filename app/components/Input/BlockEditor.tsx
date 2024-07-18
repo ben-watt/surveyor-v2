@@ -15,6 +15,7 @@ import tippy from "tippy.js";
 import { Color } from "@tiptap/extension-color";
 import ListItem from "@tiptap/extension-list-item";
 import TextStyle from "@tiptap/extension-text-style";
+import TextAlign from "@tiptap/extension-text-align";
 
 import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
@@ -367,6 +368,9 @@ const extensions = [
   TableRow,
   TableHeader,
   TableCell,
+  TextAlign.configure({
+    types: ["paragraph", "heading"],
+  }),
   CustomParagraph,
   StarterKit.configure({
     bulletList: {
@@ -383,13 +387,15 @@ const extensions = [
 interface NewEditorProps {
   content: Content
   onUpdate?: (props: EditorEvents["update"]) => void
+  onCreate?: (props: EditorEvents["create"]) => void
   onPrint: (html: string) => void
 }
 
-export const NewEditor = ({ onPrint, content, onUpdate } : NewEditorProps) => {
+export const NewEditor = ({ onPrint, content, onUpdate, onCreate } : NewEditorProps) => {
   return (
     <div className="print:hidden">
       <EditorProvider
+        onCreate={onCreate}
         onUpdate={onUpdate}
         slotBefore={<BlockMenuBar />}
         extensions={extensions}

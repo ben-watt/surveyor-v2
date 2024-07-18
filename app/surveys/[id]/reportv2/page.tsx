@@ -66,17 +66,17 @@ export default function Page({ params }: { params: { id: string } }) {
   // I've also set the container to be 962px wide to match the viewer in landscape mode.
 
   return (
-    <div className="flex">
-      <div className="w-[962px]">
+    <div>
+      <div className="w-[962px] m-auto">
         {editorContent && (
           <NewEditor
             content={editorContent}
+            onCreate={(e) => setPreviewContent(getHeaderFooterHtml(editorData) + e.editor.getHTML())}
             onUpdate={(e) => setPreviewContent(getHeaderFooterHtml(editorData) + e.editor.getHTML())}
             onPrint={(html) => window.print()}
           />
         )}
       </div>
- 
       <div className="pagedjs_print_preview tiptap">
         <div ref={previewRef} />
       </div>

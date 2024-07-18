@@ -8,7 +8,6 @@ import {
   TocContext,
   TocProvider,
 } from "../../components/Toc";
-import { Table } from "lucide-react";
 
 const TableBlock = ({
   children,
@@ -126,7 +125,7 @@ const H3 = (props: PProps) => {
   );
 };
 
-const Page = (props: React.PropsWithChildren<any>) => <>{props.children}<br/></>;
+const Page = (props: React.PropsWithChildren<any>) => <>{props.children}<hr /></>;
 
 interface PdfProps {
   form: BuildingSurveyFormData;
@@ -153,38 +152,33 @@ export default function PDF({ form }: PdfProps) {
               height="480"
             ></img>
           </div>
-
           <div>
-            <h1>Level 3 Building Survey Report</h1>
-            <p></p>
-            <div>
-              <p>Of the premises known as</p>
-              <p></p>
-              {address.split(",").map((word, i) => (
-                <p key={i} className="m-0">
-                  <strong>{word}</strong>
-                </p>
-              ))}
-            </div>
-            <p></p>
-            <div>
-              <p>For and on behalf of</p>
-              <p></p>
-              <p>
-                <strong>{clientName}</strong>
+            <h1 style={{ textAlign: "right" }}>Level 3 Building Survey Report</h1>
+            <p style={{ textAlign: "right" }}></p>
+            <p style={{ textAlign: "right" }}>Of the premises known as</p>
+            <p style={{ textAlign: "right" }}></p>
+            {address.split(",").map((word, i) => (
+              <p style={{ textAlign: "right" }} key={i} className="m-0">
+                <strong>{word}</strong>
               </p>
-            </div>
-            <p></p>
-            <p>Prepared By</p>
-            <p>Clarke & Watt Building Consultancy Ltd</p>
-            <p>Northern Assurance Building</p>
-            <p>9-21 Princess Street</p>
-            <p>Manchester</p>
-            <p>M2 4DN</p>
-            <p></p>
-            <p>Email: admin@cwbc.co.uk</p>
-            <p>Date: {reportDate.toDateString()}</p>
-            <p>Ref: Unknown</p>
+            ))}
+            <p style={{ textAlign: "right" }}></p>
+            <p style={{ textAlign: "right" }}>For and on behalf of</p>
+            <p style={{ textAlign: "right" }}></p>
+            <p style={{ textAlign: "right" }}>
+              <strong>{clientName}</strong>
+            </p>
+            <p style={{ textAlign: "right" }}></p>
+            <p style={{ textAlign: "right" }}>Prepared By</p>
+            <p style={{ textAlign: "right" }}>Clarke & Watt Building Consultancy Ltd</p>
+            <p style={{ textAlign: "right" }}>Northern Assurance Building</p>
+            <p style={{ textAlign: "right" }}>9-21 Princess Street</p>
+            <p style={{ textAlign: "right" }}>Manchester</p>
+            <p style={{ textAlign: "right" }}>M2 4DN</p>
+            <p style={{ textAlign: "right" }}></p>
+            <p style={{ textAlign: "right" }}>Email: admin@cwbc.co.uk</p>
+            <p style={{ textAlign: "right" }}>Date: {reportDate.toDateString()}</p>
+            <p style={{ textAlign: "right" }}>Ref: Unknown</p>
           </div>
         </TableBlock>
       </Page>
@@ -292,8 +286,8 @@ export default function PDF({ form }: PdfProps) {
         <img
           src="/typical-house.webp"
           alt="typical house"
-          width="700"
-          height="480"
+          width="600"
+          height="400"
         ></img>
       </Page>
       <Page>
@@ -307,7 +301,7 @@ export default function PDF({ form }: PdfProps) {
           property and are to indicate the approximate areas of the property
           subject to inspection.
         </p>
-        <img></img>
+        <img src="https://placehold.co/600x400"></img>
       </Page>
       <Page>
         {form.sections.map((s, i) => (
