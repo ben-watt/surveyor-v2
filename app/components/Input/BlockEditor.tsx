@@ -89,8 +89,9 @@ const BlockEditor = ({ content }: BlockEditorProps) => {
               return;
             }
 
+            // TODO: Review why we have to comment out this line
             popup = tippy("body", {
-              getReferenceClientRect: props.clientRect,
+              //getReferenceClientRect: props.clientRect,
               appendTo: () => document.body,
               content: component.element,
               showOnCreate: true,
@@ -358,7 +359,7 @@ const CustomParagraph = Paragraph.extend({
 
 const extensions = [
   Color.configure({ types: [TextStyle.name, ListItem.name] }),
-  TextStyle.configure({ types: [ListItem.name] }),
+  TextStyle,
   Image.configure({
     allowBase64: true,
   }),

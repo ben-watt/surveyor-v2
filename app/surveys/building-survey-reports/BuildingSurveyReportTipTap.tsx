@@ -45,7 +45,7 @@ const TableBlock = ({
       }
       else {
         row.push(
-          <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
+          <td key={j} data-colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
             {childElement}
           </td>
         );
