@@ -1,16 +1,23 @@
-import { Input } from "@/components/ui/input";
+import { Input as ShadInput } from "@/components/ui/input";
 import { UseFormRegisterReturn } from "react-hook-form";
 
 interface InputTextProps {
   labelTitle: string;
+  type?: string;
   defaultValue?: string;
+  placeholder?: string;
   register: () => UseFormRegisterReturn<string>
 }
 
-function InputText({ labelTitle, defaultValue, register }: InputTextProps) {
+function Input({ labelTitle, defaultValue, placeholder, type = "text", register }: InputTextProps) {
   return (
-    <Input className="focus:ring-0 focus:border-none" type="text" placeholder={labelTitle} defaultValue={defaultValue} {...register()} />
+    <>
+      <label>
+        <span className="text-sm">{labelTitle}</span>
+      </label>
+      <ShadInput className="focus:ring-0 focus:border-none" type={type} defaultValue={defaultValue} placeholder={placeholder} {...register()} />
+    </>
   );
 }
 
-export default InputText;
+export default Input;

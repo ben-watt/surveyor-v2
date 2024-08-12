@@ -28,6 +28,7 @@ import React from "react";
 import Paragraph from "@tiptap/extension-paragraph";
 import { Bold, Italic, Strikethrough } from "lucide-react";
 import BlockMenuBar from "./BlockMenuBar";
+import BulletList from "@tiptap/extension-bullet-list";
 
 interface BlockEditorProps {
   content?: string;

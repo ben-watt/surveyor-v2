@@ -1,7 +1,7 @@
 "use client";
 
 import { PrimaryBtn } from "@/app/components/Buttons";
-import InputText from "@/app/components/Input/InputText";
+import Input from "@/app/components/Input/InputText";
 import { Controller, FormProvider, UseFieldArrayRemove, useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
@@ -83,7 +83,7 @@ export function DataForm({ id }: DataFormProps) {
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-        <InputText
+        <Input
             labelTitle="Name"
             register={() => register("name", { required: true })}
           />
@@ -130,7 +130,7 @@ const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
   return (
     <div key={field.id}>
       <div className="flex gap-4">
-        <InputText
+        <Input
           labelTitle="Material Name"
           register={() =>
             register(`materials.${index}.name`, { required: true })
@@ -155,7 +155,7 @@ const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
       {fields.map((defect, defectIndex) => (
         <div key={defectIndex} className="grid gap-4 m-4">
           <div className="flex gap-4">
-            <InputText
+            <Input
               key={defect.id}
               labelTitle="Defect Name"
               register={() =>

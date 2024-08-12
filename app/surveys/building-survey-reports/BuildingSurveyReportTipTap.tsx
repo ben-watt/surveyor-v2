@@ -200,11 +200,11 @@ export default function PDF({ form }: PdfProps) {
           <p>Report Issue Date:</p>
           <p>{reportDate.toDateString()}</p>
           <p>Weather at the time of inspection:</p>
-          <p>Unknown</p>
+          <p>{form.weather}</p>
           <p>Orientation</p>
-          <p>Unknown</p>
+          <p>{form.orientation}</p>
           <p>Situation</p>
-          <p>Unknown</p>
+          <p>{form.situation}</p>
         </TableBlock>
       </Page>
       <Page>
@@ -216,37 +216,28 @@ export default function PDF({ form }: PdfProps) {
         <H2>Key</H2>
         <TableBlock widths={[92, 8]}>
           <ul>
-            <li>
-              - For information purposes, generally, no repair is required.
-              Property to be maintained as usual.
-            </li>
+            <li>For information purposes, generally, no repair is required. Property to be maintained as usual.</li>
           </ul>
           <p
             className="w-100-perc h-100-perc text-centre"
             style={{ backgroundColor: "green" }}
           ></p>
           <ul>
-            <li>
-              - Defects requiring repair/replacement but not considered urgent nor
-              serious. Property to be maintained as usual.
-            </li>
+            <li>Defects requiring repair/replacement but not considered urgent nor serious. Property to be maintained as usual.</li>
           </ul>
           <p
             className="w-100-perc h-100-perc text-centre"
             style={{ backgroundColor: "orange" }}
           ></p>
           <ul>
-            <li>
-              - Serious defects to be fully considered prior to purchase that need
-              to be repaired, replace or investigated urgently.
-            </li>
+            <li>Serious defects to be fully considered prior to purchase that need to be repaired, replace or investigated urgently.</li>
           </ul>
           <p
             className="w-100-perc h-100-perc text-centre"
             style={{ backgroundColor: "red" }}
           ></p>
           <ul>
-            <li>- Not inspected (see 'Important note' below)/</li>
+            <li>Not inspected</li>
           </ul>
           <p className="w-100-perc h-100-perc text-centre">
             <strong>NI</strong>

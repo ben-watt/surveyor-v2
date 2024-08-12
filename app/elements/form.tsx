@@ -1,7 +1,7 @@
 "use client";
 
 import { PrimaryBtn } from "@/app/components/Buttons";
-import InputText from "@/app/components/Input/InputText";
+import Input from "@/app/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
@@ -66,11 +66,11 @@ export function DataForm({ id }: DataFormProps) {
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-        <InputText
+        <Input
           labelTitle="Name"
           register={() => register("name", { required: "Name is required" })}
         />
-        <InputText
+        <Input
           labelTitle="Description"
           register={() => register("description")}
         />

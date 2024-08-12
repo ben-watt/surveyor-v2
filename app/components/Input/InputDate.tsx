@@ -14,18 +14,25 @@ import {
 } from "@/components/ui/popover";
 
 interface InputDateProps {
+  labelTitle: string;
   onChange: (d: Date | undefined) => void;
   value?: Date;
 }
 
-const InputDate = ({ onChange, value }: InputDateProps) => {
+const InputDate = ({ onChange, value, labelTitle }: InputDateProps) => {
   const date = value;
   const handleSelect = (d: Date | undefined) => {
     onChange(d);
-  }
+  };
 
   return (
-    <div>
+    <>
+      <div>
+        <label>
+          <span className="text-sm">{labelTitle}</span>
+        </label>
+      </div>
+
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -48,7 +55,7 @@ const InputDate = ({ onChange, value }: InputDateProps) => {
           />
         </PopoverContent>
       </Popover>
-    </div>
+    </>
   );
 };
 

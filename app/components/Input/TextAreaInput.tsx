@@ -12,8 +12,8 @@ export default function TextAreaInput({ register, labelTitle = "", defaultValue 
     const props = register();
     return(
         <>
-            <label htmlFor={props.name} className="sr-only">
-                <span>{labelTitle}</span>
+            <label htmlFor={props.name}>
+                <span className="text-sm">{labelTitle}</span>
             </label>
             <Textarea {...props} placeholder={placeholder} defaultValue={defaultValue} />
         </>

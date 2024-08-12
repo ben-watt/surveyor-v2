@@ -13,11 +13,12 @@ import {
   FormProvider,
   Controller,
   useFormContext,
-  useFieldArray,
+  useFieldArray
 } from "react-hook-form";
+import { ErrorMessage } from "@hookform/error-message"
 import { ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
-import InputText from "../../components/Input/InputText";
+import Input from "../../components/Input/InputText";
 import InputImage from "../../components/Input/ImageInput";
 import InputDate from "../../components/Input/InputDate";
 import SmartTextArea from "../../components/Input/SmartTextArea";
@@ -60,6 +61,88 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     address: "",
     clientName: "",
     inspectionDate: new Date(),
+    weather: "",
+    orientation: "",
+    situation: "",
+    propertyDescription: {
+      propertyType: {
+        type: "text",
+        value: "",
+        label: "Property Type",
+        placeholder: "Detached, Semi-detached, Terraced, Flat, Bungalow, Maisonette, Other",
+        required: true,
+      },
+      yearOfConstruction: {
+        type: "number",
+        value: 0,
+        label: "Year of Construction",
+        placeholder: "Year of Construction",
+        required: true,
+      },
+      yearOfRefurbishment: {
+        type: "number",
+        value: 0,
+        label: "Year of Refurbishment",
+        placeholder: "Year of Refurbishment",
+        required: false,
+      },
+      constructionDetails: {
+        type: "textarea",
+        value: "",
+        label: "Construction Details",
+        placeholder: "Brick, Stone, Timber, Concrete, Steel, Glass, Other",
+        required: true,
+      },
+      grounds: {
+        type: "textarea",
+        value: "",
+        label: "Grounds",
+        placeholder: "Garden, Yard, Paved, Lawn, Other",
+        required: true,
+      },
+      services: {
+        type: "text",
+        value: "",
+        label: "Services",
+        placeholder: "Electricity, Gas, Water, Drainage, Telephone, Broadband, Other",
+        required: true,
+      },
+      otherServices: {
+        type: "text",
+        value: "",
+        label: "Other Services",
+        placeholder: "Cable TV, Satellite TV, Solar Panels, Other",
+        required: false,
+      },
+      energyRating: {
+        type: "text",
+        value: "",
+        label: "Energy Rating",
+        placeholder: "A, B, C, D, E, F, G, Other",
+        required: true,
+      },
+      numberOfBedrooms: {
+        type: "number",
+        value: 0,
+        label: "Number of Bedrooms",
+        placeholder: "Number of Bedrooms",
+        required: true,
+      },
+      numberOfBathrooms: {
+        type: "number",
+        value: 0,
+        label: "Number of Bathrooms",
+        placeholder: "Number of Bathrooms",
+        required: true,
+      },
+      tenure: {
+        type: "select",
+        value: "Unknown",
+        label: "Tenure",
+        placeholder: "Freehold, Leasehold, Commonhold, Other",
+        required: true,
+      },
+    },
     frontElevationImagesUri: [],
     sections: [
       {
@@ -162,6 +245,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
 
   const fields = watch();
   console.log(fields);
+  console.log(formState.errors)
 
   return (
     <div className="md:grid md:grid-cols-4 mb-4">
@@ -171,8 +255,9 @@ export default function Report({ id }: BuildingSurveyFormProps) {
             <div>
               <div className="space-y-4">
                 <div>
-                  <InputText
+                  <Input
                     labelTitle="Address"
+                    placeholder="123 Main St, London, UK"
                     register={() =>
                       register("address", { required: "Address is required" })
                     }
@@ -180,23 +265,45 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   <InputError message={formState.errors.address?.message} />
                 </div>
                 <div>
-                  <InputText
+                  <Input
                     labelTitle="Client"
+                    placeholder="Mr John Doe"
                     register={() => register("clientName", { required: true })}
                   />
                   <InputError message={formState.errors.clientName?.message} />
                 </div>
-                <div className="flex justify-between items-center">
-                  <label className="text-sm">Inspection Date</label>
+                <div>
                   <Controller
                     name="inspectionDate"
                     control={control}
                     rules={{ required: true }}
-                    render={({ field }) => <InputDate {...field} />}
+                    render={({ field }) => <InputDate labelTitle="Inspection Date" {...field} />}
                   />
                   <InputError
                     message={formState.errors.inspectionDate?.message}
                   />
+                </div>
+                <div>
+                  <Input
+                    labelTitle="Weather"
+                    placeholder="Sunny, clear, 20°C"
+                    register={() => register("weather", { required: true })}
+                  />
+                  <InputError message={formState.errors.weather?.message} />
+                </div>
+                <div>
+                  <TextAreaInput
+                    labelTitle="Orientation"
+                    register={() => register("orientation", { required: true })}
+                  />
+                  <InputError message={formState.errors.orientation?.message} />
+                </div>
+                <div>
+                  <TextAreaInput
+                    labelTitle="Situation"
+                    register={() => register("situation", { required: true })}
+                  />
+                  <InputError message={formState.errors.situation?.message} />
                 </div>
                 <div>
                   <label className="mt-2" htmlFor="file-input">
@@ -208,7 +315,82 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                       path={`report-images/${fields.id}/frontElevationImages/`}
                     />
                   </div>
-                </div>
+                </div>  
+              </div>
+              <div>
+                {Object.keys(defaultValues.propertyDescription)?.map((key) => {
+                  type PropertyDescriptionKey = keyof typeof defaultValues.propertyDescription;
+                  let propertyKey = key as PropertyDescriptionKey;
+                  let property = defaultValues.propertyDescription[propertyKey];
+
+                  const mapToInputType = (type: string) => {
+                    switch (type) {
+                      case "text":
+                        return (
+                          <Input
+                            labelTitle={property.label}
+                            placeholder={property.placeholder}
+                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
+                          />
+                        );
+                      case "number":
+                        return (
+                          <Input
+                            type="number"
+                            labelTitle={property.label}
+                            placeholder={property.placeholder}
+                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
+                          />
+                        );
+                      case "textarea":
+                        return (
+                          <TextAreaInput
+                            labelTitle={property.label}
+                            placeholder={property.placeholder}
+                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
+                          />
+                        );
+                      case "select":
+                        return (
+                          <>
+                            <label htmlFor={property.label} className="text-sm">
+                              {property.label}
+                            </label>
+                            <Combobox
+                              data={[
+                                { label: "Freehold", value: "Freehold" },
+                                { label: "Leasehold", value: "Leasehold" },
+                                { label: "Commonhold", value: "Commonhold" },
+                                { label: "Other", value: "Other" },
+                                { label: "Unknown", value: "Unknown" },
+                              ]}
+                              register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
+                            />
+                          </>
+                          
+                        )
+                      default:
+                        return (
+                          <Input
+                            labelTitle={property.label}
+                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
+                          />
+                        );
+                    }
+                  }
+
+                  return (
+                    <div key={key} className="mt-1 mb-1">
+                      {mapToInputType(property.type)}
+                      <ErrorMessage
+                        errors={formState.errors}
+                        name={`propertyDescription.${propertyKey}.value`}
+                        message="This field is required"
+                        render={({ message }) => <span role="alert" className="text-red-700 text-sm">{message}</span>}
+                      />
+                    </div>
+                  );
+                })}
               </div>
               {fields.sections.map((section, sectionIndex) => {
                 return (
@@ -376,7 +558,7 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                     />
                   )}
                   {watch(`${typedName}.${index}.useNameOveride` as const) && (
-                    <InputText
+                    <Input
                       labelTitle="Name"
                       register={() =>
                         register(`${typedName}.${index}.name` as const, {
