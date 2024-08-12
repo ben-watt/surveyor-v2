@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+
 import React, { useContext } from "react";
 import Image from "next/image";
 import type {
