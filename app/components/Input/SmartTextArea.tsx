@@ -26,25 +26,25 @@ const SmartTextArea = ({ label, placeholder, defaultValue, register } : SmartTex
         setAudioText(text);
     }
 
-    const getTranscription = async (blob: Blob) => {
-        const data = new FormData();
-        data.append("file", new File([blob], "rec.mp3", { type: "audio/mpeg" }));
-        data.append("model", "whisper-1");
-        data.append("response_format", "json");
-
-        fetch("https://api.openai.com/v1/audio/transcriptions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPEN_AI_API_KEY}`
-            },
-            body: data
-        })
-        .then(response => response.json())
-        .then(data => setAudioTextFn(data.text))
-        .catch(error => setAudioText(error.message));
-    }
-
     useEffect(() => {
+        const getTranscription = async (blob: Blob) => {
+            const data = new FormData();
+            data.append("file", new File([blob], "rec.mp3", { type: "audio/mpeg" }));
+            data.append("model", "whisper-1");
+            data.append("response_format", "json");
+    
+            fetch("https://api.openai.com/v1/audio/transcriptions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPEN_AI_API_KEY}`
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => setAudioTextFn(data.text))
+            .catch(error => setAudioText(error.message));
+        }
+
         if (audio.blob !== undefined) {
             getTranscription(audio.blob);
         }

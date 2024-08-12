@@ -36,7 +36,7 @@ export function DataForm({ id }: DataFormProps) {
 
       fetchDefect();
     }
-  }, [id]);
+  }, [form, id]);
 
   const onSubmit = (data: ElementsDataUpdate) => {
     const saveDefect = async () => {

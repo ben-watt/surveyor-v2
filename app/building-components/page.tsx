@@ -58,7 +58,7 @@ export default function Page() {
     },
     {
       header: "Defect Count",
-      accessorFn: (v) => v.materials.reduce((acc, m) => acc + m.defects.length, 0),
+      accessorFn: (v) => 0,
     },
     {
       id: "created",

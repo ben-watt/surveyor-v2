@@ -1,4 +1,5 @@
-import { XMarkIcon } from "@heroicons/react/16/solid"
+import { XMarkIcon } from "@heroicons/react/16/solid";
+import Image from "next/image";
 import type { BaseHit, Hit } from 'instantsearch.js';
 
 export interface DefectHitRecord extends Hit<BaseHit> {
@@ -23,7 +24,7 @@ export default function SelectedDefectHit({ hit, onClick }: SelectedDefectHitPro
           </button>
         </div>
         <div>
-          <img src="https://via.placeholder.com/100" height={100} width={100} />
+          <Image src="https://via.placeholder.com/100" alt="placeholder" height={100} width={100} />
         </div>
         <div className="p-2">
           <h2>{hit.name} &middot; £100</h2>

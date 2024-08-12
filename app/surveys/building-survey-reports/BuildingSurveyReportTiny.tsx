@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import Image from "next/image";
 import type {
   BuildingSurveyFormData,
   ElementSection,
@@ -123,7 +124,7 @@ const Page = (props: React.PropsWithChildren<any>) => (
           <p>Level 3 Building Survey Report</p>
         </div>
         <div>
-          <img style={{ width: 150 }} src="/cwbc-logo.webp" alt="cwbc logo" />
+          <Image style={{ width: 150 }} src="/cwbc-logo.webp" alt="cwbc logo" />
         </div>
       </header>
       <main>
@@ -200,11 +201,11 @@ export default function PDF({ form }: PdfProps) {
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <img src="/sw-sig.png" alt="signature"></img>
+            <Image src="/sw-sig.png" alt="signature"/>
             <p>Samuel Watt BSc (Hons) </p>
           </div>
           <div>
-            <img src="/jc-sig.png" alt="signature"></img>
+            <Image src="/jc-sig.png" alt="signature" />
             <p>Jordan Clarke BSc (Hons) MRICS</p>
           </div>
         </TableBlock>
@@ -291,12 +292,12 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <H2>Typical House Diagram</H2>
-        <img
+        <Image
           src="/typical-house.webp"
           alt="typical house"
           width="700"
           height="480"
-        ></img>
+        />
       </Page>
       <Page>
         <H1>Description Of the Property</H1>
@@ -308,7 +309,6 @@ export default function PDF({ form }: PdfProps) {
           Red line demarcations do not represent the legal boundary of the property and are to indicate the approximate areas of the property subject to
           inspection.
         </p>
-        <img></img>
       </Page>
       <Page>
         {form.sections.map((s, i) => (
@@ -456,12 +456,11 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
     tableRows.push(
       <tr>
         <td>
-          <InvokeOnRender onRender={() => console.debug("Image", es.images[i])} />
-          <img key={i} src={es.images[i]} width={200} />
+          <Image key={i} src={es.images[i]} alt={es.name + ".image." + {i}} width={200} />
         </td>
         {es.images.length >= i + 1 && (
           <td>
-            <img key={i + 1} src={es.images[i + 1]} width={200} />
+            <Image key={i + 1} src={es.images[i + 1]} alt={es.name + ".image." + {i}} width={200} />
           </td>
         )}
       </tr>

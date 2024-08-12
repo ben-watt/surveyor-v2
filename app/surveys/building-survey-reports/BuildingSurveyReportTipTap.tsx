@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import Image from "next/image";
 import type {
   BuildingSurveyFormData,
   ElementSection,
@@ -145,12 +146,12 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <TableBlock widths={[60, 40]}>
           <div>
-            <img
+            <Image
               src="/typical-house.webp"
               alt="typical house"
               width="700"
               height="480"
-            ></img>
+            />
           </div>
           <div>
             <h1 style={{ textAlign: "right" }}>Level 3 Building Survey Report</h1>
@@ -191,11 +192,11 @@ export default function PDF({ form }: PdfProps) {
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <img src="/sw-sig.png" alt="signature"></img>
+            <Image src="/sw-sig.png" alt="signature"/>
             <p>Samuel Watt BSc (Hons) </p>
           </div>
           <div>
-            <img src="/jc-sig.png" alt="signature"></img>
+            <Image src="/jc-sig.png" alt="signature"/>
             <p>Jordan Clarke BSc (Hons) MRICS</p>
           </div>
         </TableBlock>
@@ -283,12 +284,12 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <H2>Typical House Diagram</H2>
-        <img
+        <Image
           src="/typical-house.webp"
           alt="typical house"
           width="600"
           height="400"
-        ></img>
+        />
       </Page>
       <Page>
         <H1>Description Of the Property</H1>
@@ -301,7 +302,7 @@ export default function PDF({ form }: PdfProps) {
           property and are to indicate the approximate areas of the property
           subject to inspection.
         </p>
-        <img src="https://placehold.co/600x400"></img>
+        <Image src="https://placehold.co/600x400" alt="placeholder"/>
       </Page>
       <Page>
         {form.sections.map((s, i) => (
@@ -452,11 +453,11 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
           <InvokeOnRender
             onRender={() => console.debug("Image", es.images[i])}
           />
-          <img key={i} src={es.images[i]} width={200} />
+          <Image key={i} src={es.images[i]} alt={elementSection.name + ".image." + {i}} width={200} />
         </td>
         {es.images.length >= i + 1 && (
           <td>
-            <img key={i + 1} src={es.images[i + 1]} width={200} />
+            <Image key={i + 1} src={es.images[i + 1]} alt={elementSection.name + ".image." + {i}} width={200} />
           </td>
         )}
       </tr>

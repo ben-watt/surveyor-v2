@@ -40,7 +40,7 @@ export function DataForm({ id }: DataFormProps) {
 
       fetchData();
     }
-  }, [id]);
+  }, [form, id]);
 
   useEffect(() => {
     const fetchElements = async () => {

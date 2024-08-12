@@ -30,7 +30,7 @@ export default function Page({ params }: { params: { id: string } }) {
     };
 
     getReport();
-  }, []);
+  }, [params.id]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -38,7 +38,7 @@ export default function Page({ params }: { params: { id: string } }) {
     } else {
       setContentCss("/styles.css");
     }
-  }, [window.innerWidth])
+  }, [])
 
 
   if(formData) {

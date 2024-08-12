@@ -1,6 +1,7 @@
 "use client";
 
 import reportClient from "@/app/clients/ReportsClient";
+import Image from "next/image";
 import { NewEditor } from "@/app/components/Input/BlockEditor";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 
@@ -34,7 +35,7 @@ export default function Page({ params }: { params: { id: string } }) {
     };
 
     getReport();
-  }, [])
+  }, [params.id])
 
   useEffect(() => {
     if(editorData) {
@@ -87,11 +88,11 @@ export default function Page({ params }: { params: { id: string } }) {
 function getHeaderFooterHtml(editorData : BuildingSurveyFormData | undefined) : string {
   const jsx = (
     <>
-      <img className="headerImage" src="/cwbc-logo.webp" alt="CWBC Logo" />
+      <Image className="headerImage" src="/cwbc-logo.webp" alt="CWBC Logo" />
       <div className="headerAddress">
           <p>{editorData ? editorData.address : "Unknown"}</p>
       </div>
-      <img className="footerImage" src="/rics-purple-logo.jpg" alt="RICS Logo" />
+      <Image className="footerImage" src="/rics-purple-logo.jpg" alt="RICS Logo" />
     </>
   )
 
