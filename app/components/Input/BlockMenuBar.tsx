@@ -5,9 +5,12 @@ import { Fragment } from 'react'
 import MenuItem from './BlockMenuItem'
 import { Bold, Code, Code2,  EllipsisVertical, Heading1, Heading2, Italic, List, ListOrdered, SeparatorHorizontal, Strikethrough, TextQuote, Text, RemoveFormatting, WrapText, Forward, Redo, Undo, Printer } from 'lucide-react';
 
-export default function MenuBar () {
-  const { editor } = useCurrentEditor();
 
+interface MenuBarProps {
+  editor: Editor | null
+}
+
+export default function MenuBar ({ editor } : MenuBarProps) {
   if(!editor) return null;
 
   const items = [

@@ -12,6 +12,7 @@ import { BuildingSurveyFormData } from "../../building-survey-reports/BuildingSu
 import BuildingSurveyReport from "../../building-survey-reports/BuildingSurveyReportTipTap";
 import { renderToString } from "react-dom/server";
 import { getUrl } from "aws-amplify/storage";
+import { useCurrentEditor, useEditor } from "@tiptap/react";
 
 export default function Page({ params }: { params: { id: string } }) {
   const previewRef = useRef<HTMLDivElement>(null);
@@ -39,7 +40,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if(editorData) {
-      mapFormDataToTinyMceHtml(editorData).then((html) => {
+      mapFormDataToHtml(editorData).then((html) => {
         setEditorContent(html);
       })
     }
@@ -100,7 +101,7 @@ function getHeaderFooterHtml(editorData : BuildingSurveyFormData | undefined) : 
 }
 
 
-async function mapFormDataToTinyMceHtml(formData: BuildingSurveyFormData): Promise<string> {
+async function mapFormDataToHtml(formData: BuildingSurveyFormData): Promise<string> {
 
   let newFormData = { ...formData };
   newFormData.frontElevationImagesUri = await getImagesHref(formData.frontElevationImagesUri);

@@ -75,12 +75,14 @@ const ContentBlock = ({ children, tocProvider }: ContentBlockProps) => {
     tocProvider(firstElement.type)
   );
 
-  return (
-    <TableBlock widths={[10, 90]}>
-      <div>{dynamicElement}</div>
-      <div>{children}</div>
-    </TableBlock>
-  );
+  return (<div>{children}</div>)
+
+  // return (
+  //   <TableBlock widths={[10, 90]}>
+  //     <div>{dynamicElement}</div>
+  //     <div>{children}</div>
+  //   </TableBlock>
+  // );
 };
 
 interface PProps extends React.PropsWithChildren<any> {}
@@ -505,7 +507,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
 
   return (
     <>
-      <H3>{es.name}</H3>
+      <H2>{es.name}</H2>
       <p></p>
       <TableBlock widths={[30, 70]}>
         <p>
@@ -530,6 +532,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
           </TableBlock>
         </>
       ))}
+      <p></p>
       <div>
         <table style={{ width: "100%" }}>
           <tbody>{tableRows}</tbody>
