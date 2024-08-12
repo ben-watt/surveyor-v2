@@ -88,11 +88,11 @@ export default function Page({ params }: { params: { id: string } }) {
 function getHeaderFooterHtml(editorData : BuildingSurveyFormData | undefined) : string {
   const jsx = (
     <>
-      <Image className="headerImage" src="/cwbc-logo.webp" alt="CWBC Logo" />
+      <Image className="headerImage" src="/cwbc-logo.webp" alt="CWBC Logo" width="600" height="400" />
       <div className="headerAddress">
           <p>{editorData ? editorData.address : "Unknown"}</p>
       </div>
-      <Image className="footerImage" src="/rics-purple-logo.jpg" alt="RICS Logo" />
+      <Image className="footerImage" src="/rics-purple-logo.jpg" alt="RICS Logo" width="600" height="400" />
     </>
   )
 

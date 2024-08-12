@@ -45,7 +45,7 @@ const TableBlock = ({
       }
       else {
         row.push(
-          <td key={j} data-colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
+          <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
             {childElement}
           </td>
         );
@@ -192,11 +192,11 @@ export default function PDF({ form }: PdfProps) {
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <Image src="/sw-sig.png" alt="signature"/>
+            <Image src="/sw-sig.png" alt="signature" fill={true}/>
             <p>Samuel Watt BSc (Hons) </p>
           </div>
           <div>
-            <Image src="/jc-sig.png" alt="signature"/>
+            <Image src="/jc-sig.png" alt="signature" fill={true}/>
             <p>Jordan Clarke BSc (Hons) MRICS</p>
           </div>
         </TableBlock>
@@ -302,7 +302,7 @@ export default function PDF({ form }: PdfProps) {
           property and are to indicate the approximate areas of the property
           subject to inspection.
         </p>
-        <Image src="https://placehold.co/600x400" alt="placeholder"/>
+        <img src="https://placehold.co/600x400" alt="placeholder" width="600" height="400"/>
       </Page>
       <Page>
         {form.sections.map((s, i) => (
@@ -453,11 +453,11 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
           <InvokeOnRender
             onRender={() => console.debug("Image", es.images[i])}
           />
-          <Image key={i} src={es.images[i]} alt={elementSection.name + ".image." + {i}} width={200} />
+          <img key={i} src={es.images[i]} alt={elementSection.name + ".image." + {i}} width={200} />
         </td>
         {es.images.length >= i + 1 && (
           <td>
-            <Image key={i + 1} src={es.images[i + 1]} alt={elementSection.name + ".image." + {i}} width={200} />
+            <img key={i + 1} src={es.images[i + 1]} alt={elementSection.name + ".image." + {i}} width={200} />
           </td>
         )}
       </tr>

@@ -124,7 +124,7 @@ const Page = (props: React.PropsWithChildren<any>) => (
           <p>Level 3 Building Survey Report</p>
         </div>
         <div>
-          <Image style={{ width: 150 }} src="/cwbc-logo.webp" alt="cwbc logo" />
+          <Image width="150" height="150" src="/cwbc-logo.webp" alt="cwbc logo" />
         </div>
       </header>
       <main>
@@ -201,11 +201,11 @@ export default function PDF({ form }: PdfProps) {
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <Image src="/sw-sig.png" alt="signature"/>
+            <Image src="/sw-sig.png" alt="signature" fill={true} />
             <p>Samuel Watt BSc (Hons) </p>
           </div>
           <div>
-            <Image src="/jc-sig.png" alt="signature" />
+            <Image src="/jc-sig.png" alt="signature" fill={true} />
             <p>Jordan Clarke BSc (Hons) MRICS</p>
           </div>
         </TableBlock>
@@ -456,11 +456,11 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
     tableRows.push(
       <tr>
         <td>
-          <Image key={i} src={es.images[i]} alt={es.name + ".image." + {i}} width={200} />
+          <img key={i} src={es.images[i]} alt={es.name + ".image." + {i}} width={200} height={200} />
         </td>
         {es.images.length >= i + 1 && (
           <td>
-            <Image key={i + 1} src={es.images[i + 1]} alt={es.name + ".image." + {i}} width={200} />
+            <img key={i + 1} src={es.images[i + 1]} alt={es.name + ".image." + {i}} width={200} height={200} />
           </td>
         )}
       </tr>
