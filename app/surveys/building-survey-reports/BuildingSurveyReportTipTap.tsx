@@ -29,7 +29,6 @@ const TableBlock = ({
   if (childrenArray.length % widths.length !== 0)
     throw new Error("Number of children must be a multiple of widths");
 
-
   const landscapeWidth = 948; // Width of the page in landscape
 
   let tableRows = [];
@@ -38,14 +37,9 @@ const TableBlock = ({
     for (let j = 0; j < widths.length; j++) {
       const childElement = childrenArray[i + j];
 
-      if(j === widths.length - 1) {
-        row.push(
-          <td key={j}>
-            {childElement}
-          </td>
-        );
-      }
-      else {
+      if (j === widths.length - 1) {
+        row.push(<td key={j}>{childElement}</td>);
+      } else {
         row.push(
           <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
             {childElement}
@@ -118,7 +112,12 @@ const H3 = (props: PProps) => {
   );
 };
 
-const Page = (props: React.PropsWithChildren<any>) => <>{props.children}<hr /></>;
+const Page = (props: React.PropsWithChildren<any>) => (
+  <>
+    {props.children}
+    <hr />
+  </>
+);
 
 interface PdfProps {
   form: BuildingSurveyFormData;
@@ -147,7 +146,9 @@ export default function PDF({ form }: PdfProps) {
             />
           </div>
           <div>
-            <h1 style={{ textAlign: "right" }}>Level 3 Building Survey Report</h1>
+            <h1 style={{ textAlign: "right" }}>
+              Level 3 Building Survey Report
+            </h1>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>Of the premises known as</p>
             <p style={{ textAlign: "right" }}></p>
@@ -164,14 +165,18 @@ export default function PDF({ form }: PdfProps) {
             </p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>Prepared By</p>
-            <p style={{ textAlign: "right" }}>Clarke & Watt Building Consultancy Ltd</p>
+            <p style={{ textAlign: "right" }}>
+              Clarke & Watt Building Consultancy Ltd
+            </p>
             <p style={{ textAlign: "right" }}>Northern Assurance Building</p>
             <p style={{ textAlign: "right" }}>9-21 Princess Street</p>
             <p style={{ textAlign: "right" }}>Manchester</p>
             <p style={{ textAlign: "right" }}>M2 4DN</p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>Email: admin@cwbc.co.uk</p>
-            <p style={{ textAlign: "right" }}>Date: {reportDate.toDateString()}</p>
+            <p style={{ textAlign: "right" }}>
+              Date: {reportDate.toDateString()}
+            </p>
             <p style={{ textAlign: "right" }}>Ref: Unknown</p>
           </div>
         </TableBlock>
@@ -181,15 +186,18 @@ export default function PDF({ form }: PdfProps) {
           <p>Prepared by:</p>
           <p>Samuel Watt BSc (Hons)</p>
         </TableBlock>
-        <p>This document has been prepared and checked in accordance with the CWBC's Quality Assurance procedures and authorised for release.</p>
+        <p>
+          This document has been prepared and checked in accordance with the
+          CWBC's Quality Assurance procedures and authorised for release.
+        </p>
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <Image src="/sw-sig.png" alt="signature" fill={true}/>
+            <Image src="/sw-sig.png" alt="signature" fill={true} />
             <p>Samuel Watt BSc (Hons) </p>
           </div>
           <div>
-            <Image src="/jc-sig.png" alt="signature" fill={true}/>
+            <Image src="/jc-sig.png" alt="signature" fill={true} />
             <p>Jordan Clarke BSc (Hons) MRICS</p>
           </div>
         </TableBlock>
@@ -216,21 +224,30 @@ export default function PDF({ form }: PdfProps) {
         <H2>Key</H2>
         <TableBlock widths={[92, 8]}>
           <ul>
-            <li>For information purposes, generally, no repair is required. Property to be maintained as usual.</li>
+            <li>
+              For information purposes, generally, no repair is required.
+              Property to be maintained as usual.
+            </li>
           </ul>
           <p
             className="w-100-perc h-100-perc text-centre"
             style={{ backgroundColor: "green" }}
           ></p>
           <ul>
-            <li>Defects requiring repair/replacement but not considered urgent nor serious. Property to be maintained as usual.</li>
+            <li>
+              Defects requiring repair/replacement but not considered urgent nor
+              serious. Property to be maintained as usual.
+            </li>
           </ul>
           <p
             className="w-100-perc h-100-perc text-centre"
             style={{ backgroundColor: "orange" }}
           ></p>
           <ul>
-            <li>Serious defects to be fully considered prior to purchase that need to be repaired, replace or investigated urgently.</li>
+            <li>
+              Serious defects to be fully considered prior to purchase that need
+              to be repaired, replace or investigated urgently.
+            </li>
           </ul>
           <p
             className="w-100-perc h-100-perc text-centre"
@@ -277,7 +294,30 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <H1>Description Of the Property</H1>
-        <p>Unknown</p>
+        <TableBlock widths={[50, 50]}>
+          <H2>Property Type</H2>
+          <p>{form.propertyDescription.propertyType.value}</p>
+          <H2>Construction Details</H2>
+          <p>{form.propertyDescription.constructionDetails.value}</p>
+          <H2>Year of Construction</H2>
+          <p>{form.propertyDescription.yearOfConstruction.value}</p>
+          <H2>Year of Refurbishment</H2>
+          <p>{form.propertyDescription.yearOfRefurbishment.value}</p>
+          <H2>Grounds</H2>
+          <p>{form.propertyDescription.grounds.value}</p>
+          <H2>Services</H2>
+          <p>{form.propertyDescription.services.value}</p>
+          <H2>Other Services</H2>
+          <p>{form.propertyDescription.otherServices.value}</p>
+          <H2>Energy Rating</H2>
+          <p>{form.propertyDescription.energyRating.value}</p>
+          <H2>Number of Bedrooms</H2>
+          <p>{form.propertyDescription.numberOfBedrooms.value}</p>
+          <H2>Number of Bathrooms</H2>
+          <p>{form.propertyDescription.numberOfBathrooms.value}</p>
+          <H2>Tenure</H2>
+          <p>{form.propertyDescription.tenure.value}</p>
+        </TableBlock>
       </Page>
       <Page>
         <H1>Location Plan</H1>
@@ -286,7 +326,12 @@ export default function PDF({ form }: PdfProps) {
           property and are to indicate the approximate areas of the property
           subject to inspection.
         </p>
-        <img src="https://placehold.co/600x400" alt="placeholder" width="600" height="400"/>
+        <img
+          src="https://placehold.co/600x400"
+          alt="placeholder"
+          width="600"
+          height="400"
+        />
       </Page>
       <Page>
         {form.sections.map((s, i) => (
@@ -437,11 +482,21 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
           <InvokeOnRender
             onRender={() => console.debug("Image", es.images[i])}
           />
-          <img key={i} src={es.images[i]} alt={elementSection.name + ".image." + {i}} width={200} />
+          <img
+            key={i}
+            src={es.images[i]}
+            alt={elementSection.name + ".image." + { i }}
+            width={200}
+          />
         </td>
         {es.images.length >= i + 1 && (
           <td>
-            <img key={i + 1} src={es.images[i + 1]} alt={elementSection.name + ".image." + {i}} width={200} />
+            <img
+              key={i + 1}
+              src={es.images[i + 1]}
+              alt={elementSection.name + ".image." + { i }}
+              width={200}
+            />
           </td>
         )}
       </tr>
@@ -451,33 +506,31 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
   return (
     <>
       <H3>{es.name}</H3>
-      <div className="grid grid-cols-2 gap-4">
+      <p></p>
+      <TableBlock widths={[30, 70]}>
         <p>
-          <strong className="text-red-500">Description:</strong>
+          <strong>Description</strong>
         </p>
         <p>{es.description}</p>
-        <p>
-          <strong className="text-red-500">Components:</strong>
-        </p>
-        <p>
-          {es.materialComponents.map((mc) => (
-            <div key={mc.id}>
-              <p>
-                <strong>{mc.useNameOveride ? mc.name : mc.id}</strong>
-              </p>
-              <p>
-                <span>{mc.ragStatus}</span>
-              </p>
-              <ul>
-                {mc.defects.map((d) => (
-                  <li key={d.name}>
-                    {d.name} - {d.description}
-                  </li>
-                ))}
-              </ul>
+      </TableBlock>
+      {es.materialComponents.map((mc) => (
+        <>
+          <p></p>
+          <TableBlock widths={[30, 70]} key={mc.id}>
+            <p>
+              <strong>Component</strong>
+            </p>
+            <p>{mc.useNameOveride ? mc.name : mc.id} <span>{mc.ragStatus}</span></p>
+            <p><strong>Condition / Defect</strong></p>
+            <div>
+              {mc.defects.map((d) => (
+                  <p key={d.name}>{d.name} - {d.description}</p>
+              ))}
             </div>
-          ))}
-        </p>
+          </TableBlock>
+        </>
+      ))}
+      <div>
         <table style={{ width: "100%" }}>
           <tbody>{tableRows}</tbody>
         </table>

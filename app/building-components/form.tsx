@@ -2,7 +2,7 @@
 
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "@/app/components/Input/InputText";
-import { Controller, FormProvider, UseFieldArrayRemove, useFieldArray, useForm, useFormContext } from "react-hook-form";
+import { FormProvider, UseFieldArrayRemove, useFieldArray, useForm, useFormContext } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/ReportsClient";

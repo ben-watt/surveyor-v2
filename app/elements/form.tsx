@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/ReportsClient";
 import { useEffect } from "react";
 import { Schema } from "@/amplify/data/resource";
-import { Input } from "@/components/ui/input";
 
 type ElementsData = Schema["Elements"]["type"];
 type ElementsDataUpdate = Omit<ElementsData, "createdAt" | "updatedAt">;
@@ -76,10 +75,11 @@ export function DataForm({ id }: DataFormProps) {
         />
         <div>
           <Input
+            labelTitle="Priority"
             type="number"
             placeholder="priority"
             defaultValue={1000}
-            {...register("priority", { required: "priority is required" })}
+            register={() => register("priority", { required: "priority is required" })}
           />
         </div>
         <PrimaryBtn className="w-full flex justify-center" type="submit">

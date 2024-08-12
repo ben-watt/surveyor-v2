@@ -4,7 +4,7 @@ import { UseFormRegisterReturn } from "react-hook-form";
 interface InputTextProps {
   labelTitle: string;
   type?: string;
-  defaultValue?: string;
+  defaultValue?: string | number;
   placeholder?: string;
   register: () => UseFormRegisterReturn<string>
 }
