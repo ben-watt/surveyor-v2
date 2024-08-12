@@ -305,7 +305,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         {form.sections.map((s, i) => (
-          <div>
+          <div key={s.name}>
             <H1>{s.name}</H1>
             {s.elementSections.map((cs, j) => (
               <>

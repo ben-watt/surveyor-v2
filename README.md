@@ -27,10 +27,21 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Roadmap
 
+## Committed
+
+- Generate Level 3 Survey
+- Generate Level 2 Survey
+- Link Upload of photo to camera
+- Organisational Login (So you can see each other's reports) and it puts your name as the surveyor on the report.
+- Quick add from within a report of components and elements
+- Add an AI summary
+
 ### Now
 
   - Getting the export just right
     - Headers and Footers
+    - Page breaks
+    - Ignore blank pages
     - Table of Contents (not as important)
     - Bind to the relevant Sections and export
 
@@ -42,8 +53,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
   - List out the form
   - Toasts (Deleted a form)
-
-  - Don't use algolia for search?s
 
   - Create CRUD for different entities with searchable lookups for each entity as a standard
     - Defects

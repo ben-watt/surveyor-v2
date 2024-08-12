@@ -7,17 +7,17 @@ import React, {
 
 interface MentionListProps { 
     items: Record<string, any>[],
-    editor: Editor
+    editor: Editor,
 }
 
-export default forwardRef((props : MentionListProps, ref) => {
+const MentionList = (props : MentionListProps, ref : any) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
   const selectItem = (index : number) => {
     const item = props.items[index]
 
     if (item) {
-      props.command({ id: item })
+      //props.command({ id: item })
     }
   }
 
@@ -36,7 +36,7 @@ export default forwardRef((props : MentionListProps, ref) => {
   useEffect(() => setSelectedIndex(0), [props.items])
 
   useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }) => {
+    onKeyDown: (event : React.KeyboardEvent<any>) => {
       if (event.key === 'ArrowUp') {
         upHandler()
         return true
@@ -66,11 +66,13 @@ export default forwardRef((props : MentionListProps, ref) => {
             key={index}
             onClick={() => selectItem(index)}
           >
-            {item}
+            <p>{"hello"}</p>
           </button>
         ))
         : <div className="item">No result</div>
       }
     </div>
   )
-})
+}
+
+export default forwardRef(MentionList)

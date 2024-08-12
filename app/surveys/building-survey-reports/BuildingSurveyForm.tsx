@@ -5,10 +5,16 @@ import {
   ElementSection,
   Defect,
   RagStatus,
-  BuildingSurveyFormData as BuildingSurveyForm
+  BuildingSurveyFormData as BuildingSurveyForm,
 } from "./BuildingSurveyReportSchema";
 
-import { useForm, FormProvider, Controller, useFormContext, useFieldArray } from "react-hook-form";
+import {
+  useForm,
+  FormProvider,
+  Controller,
+  useFormContext,
+  useFieldArray,
+} from "react-hook-form";
 import { ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "../../components/Input/InputText";
@@ -27,7 +33,12 @@ import { Schema } from "@/amplify/data/resource";
 import { SelectionSet } from "aws-amplify/api";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { Toggle } from "@/components/ui/toggle";
-import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
 
 interface BuildingSurveyFormProps {
@@ -35,7 +46,10 @@ interface BuildingSurveyFormProps {
 }
 
 const selectionSetElement = ["id", "name", "components.*", "priority"] as const;
-type ElementData = SelectionSet<Schema["Elements"]["type"], typeof selectionSetElement>;
+type ElementData = SelectionSet<
+  Schema["Elements"]["type"],
+  typeof selectionSetElement
+>;
 
 export default function Report({ id }: BuildingSurveyFormProps) {
   let defaultValues: BuildingSurveyForm = {
@@ -44,72 +58,73 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     address: "",
     clientName: "",
     frontElevationImagesUri: [],
-    sections: [{
-      name: "External Condition of Property",
-      elementSections: []
-    }],
+    sections: [
+      {
+        name: "External Condition of Property",
+        elementSections: [],
+      },
+    ],
   };
 
   const methods = useForm<BuildingSurveyForm>({ defaultValues });
-  const { register, handleSubmit, watch, formState, reset  } = methods;
+  const { register, handleSubmit, watch, formState, reset } = methods;
   const router = useRouter();
 
-  const createDefaultElementSection = (element : ElementData): ElementSection => ({
+  const createDefaultElementSection = (
+    element: ElementData
+  ): ElementSection => ({
     name: element.name,
     isPartOfSurvey: false,
     description: "",
     images: [],
-    materialComponents: []
+    materialComponents: [],
   });
 
-  if(id) {
-    useEffect(() => {
-        const fetchReport = async () => {
-          const report = await reportClient.models.Surveys.get({ id });
-  
-          if(report.data) {
-            const formData = JSON.parse(report.data.content as string) as BuildingSurveyForm;
-            reset(formData);
-            console.log("reset from fetchReport", formData)
-          }
-          else {
-            console.error("Failed to fetch report", report.errors);
-          }
-        }
-  
-        fetchReport();
-    }, [])
-  }
-  else {
-    useEffect(() => {
-      const fetchElements = async () => {
-        try {
-          const response = await reportClient.models.Elements.list(
-            { selectionSet: selectionSetElement }
-          );
-  
-          const currentForm = watch();
-  
-          if (response.data) {
-            currentForm.sections[0].elementSections = response.data
-              .sort((x, y) => {
-                let a = x.priority ? x.priority : 0;
-                let b = y.priority ? y.priority : 0;
-                return a - b;
-              })
-              .map((element) => createDefaultElementSection(element));
-          }
-  
-          reset(currentForm);
-        } catch (error) {
-          console.error("Failed to fetch elements", error);
+  useEffect(() => {
+    const fetchReport = async (existingReportId : string) => {
+        const report = await reportClient.models.Surveys.get({ id: existingReportId });
+
+        if (report.data) {
+          const formData = JSON.parse(
+            report.data.content as string
+          ) as BuildingSurveyForm;
+          reset(formData);
+          console.log("reset from fetchReport", formData);
+        } else {
+          console.error("Failed to fetch report", report.errors);
         }
       };
-  
-      fetchElements();
-    }, [])
-  }
 
+    const fetchElements = async () => {
+      try {
+        const response = await reportClient.models.Elements.list({
+          selectionSet: selectionSetElement,
+        });
+
+        const currentForm = watch();
+
+        if (response.data) {
+          currentForm.sections[0].elementSections = response.data
+            .sort((x, y) => {
+              let a = x.priority ? x.priority : 0;
+              let b = y.priority ? y.priority : 0;
+              return a - b;
+            })
+            .map((element) => createDefaultElementSection(element));
+        }
+
+        reset(currentForm);
+      } catch (error) {
+        console.error("Failed to fetch elements", error);
+      }
+    };
+
+    if (id) {
+      fetchReport(id);
+    } else {
+      fetchElements();
+    }
+  }, [id, reset, watch]);
 
   const onSubmit = async () => {
     try {
@@ -118,7 +133,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         id: form.id,
         content: JSON.stringify(form),
       });
-      
+
       successToast("Saved");
       router.push("/surveys");
     } catch (error) {
@@ -165,10 +180,16 @@ export default function Report({ id }: BuildingSurveyFormProps) {
               </div>
               {fields.sections.map((section, sectionIndex) => {
                 return (
-                  <div className="border border-grey-600 p-2 mt-2 mb-2 rounded" key={`${section}-${sectionIndex}`}>
+                  <div
+                    className="border border-grey-600 p-2 mt-2 mb-2 rounded"
+                    key={`${section}-${sectionIndex}`}
+                  >
                     <div>{section.name}</div>
                     {section.elementSections.map((elementSection, i) => (
-                      <section key={`${sectionIndex}.${i}`} className="border border-grey-600 p-2 m-2 rounded ">
+                      <section
+                        key={`${sectionIndex}.${i}`}
+                        className="border border-grey-600 p-2 m-2 rounded "
+                      >
                         <ToggleSection
                           defaultValue={elementSection.isPartOfSurvey}
                           label={elementSection.name}
@@ -198,7 +219,9 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                                 path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
                               />
                             </div>
-                            <ComponentPicker name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`} />
+                            <ComponentPicker
+                              name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
+                            />
                           </div>
                         </ToggleSection>
                       </section>
@@ -219,69 +242,92 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   );
 }
 
-
 interface ComponentPickerProps {
   name: string;
 }
 
 const componentDataSelectList = ["id", "name", "materials.*"] as const;
-type ComponentData = SelectionSet<Schema["Components"]["type"], typeof componentDataSelectList>;
+type ComponentData = SelectionSet<
+  Schema["Components"]["type"],
+  typeof componentDataSelectList
+>;
 
 const ComponentPicker = ({ name }: ComponentPickerProps) => {
-  const typedName = name as `sections.0.elementSections.0.materialComponents`
+  const typedName = name as `sections.0.elementSections.0.materialComponents`;
   const { control, register, watch, setValue, getValues } = useFormContext();
-  const { fields, remove, append } = useFieldArray({ name : typedName, control: control });
+  const { fields, remove, append } = useFieldArray({
+    name: typedName,
+    control: control,
+  });
   const [components, setComponents] = React.useState<ComponentData[]>([]);
 
   useEffect(() => {
-    async function fetchData(){
+    async function fetchData() {
       const availableComponents = await reportClient.models.Components.list({
-        selectionSet: componentDataSelectList
-      })
+        selectionSet: componentDataSelectList,
+      });
 
-      if(availableComponents.data) {
-        setComponents(availableComponents.data)
+      if (availableComponents.data) {
+        setComponents(availableComponents.data);
       }
     }
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
-  if(components.length === 0) {
+  if (components.length === 0) {
     return null;
   }
 
-  function addMaterialComponent(ev : React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+  function addMaterialComponent(
+    ev: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) {
     ev.preventDefault();
-    append({ id: "", name: "", ragStatus: "N/I", defects: [], useNameOveride: false  }, { shouldFocus: true });
+    append(
+      {
+        id: "",
+        name: "",
+        ragStatus: "N/I",
+        defects: [],
+        useNameOveride: false,
+      },
+      { shouldFocus: true }
+    );
   }
 
-  function getDefectsFor(materialComponentName: string) : Defect[] {
+  function getDefectsFor(materialComponentName: string): Defect[] {
     const [componentName, materialName] = materialComponentName.split("_");
-    const component = components.find(c => c.name === componentName);
+    const component = components.find((c) => c.name === componentName);
 
-    if(!component) {
+    if (!component) {
       return [];
     }
 
-    const material = component.materials.find(m => m.name === materialName);
+    const material = component.materials.find((m) => m!.name == materialName);
 
-    if(!material) {
+    if (!material) {
       return [];
     }
 
     return material.defects;
   }
 
-  const  mapToComboBoxProps = (components: ComponentData[]) : { label: string, value: string }[]  => components
-    .flatMap(c => c.materials.map(m => ({ label: `${c.name} • ${m.name}`, value: `${c.name}_${m.name}` }))
-    .sort((a, b) => a.label.localeCompare(b.label)));
+  const mapToComboBoxProps = (
+    components: ComponentData[]
+  ): { label: string; value: string }[] =>
+    components.flatMap((c) =>
+      c.materials
+        .map((m) => ({
+          label: `${c.name} • ${m!.name}`,
+          value: `${c.name}_${m!.name}`,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+    );
 
   return (
     <div className="grid gap-2">
       <div className="grid gap-2">
         {fields.map((field, index) => {
-
           return (
             <div key={field.id} className="border border-grey-600 rounded p-4">
               <div className="flex gap-2">
@@ -302,7 +348,7 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                       labelTitle="Name"
                       register={() =>
                         register(`${typedName}.${index}.name` as const, {
-                          required: true
+                          required: true,
                         })
                       }
                     />
@@ -313,12 +359,14 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                     name={`${typedName}.${index}.useNameOveride` as const}
                     render={({ field }) => (
                       <Toggle
-                        {...field}  
+                        {...field}
                         onPressedChange={(v) => {
-                          const id = getValues(`${typedName}.${index}.id` as const)
-                          setValue(`${typedName}.${index}.name`, id)
-                          setValue(`${typedName}.${index}.useNameOveride`, v)
-                        }}    
+                          const id = getValues(
+                            `${typedName}.${index}.id` as const
+                          );
+                          setValue(`${typedName}.${index}.name`, id);
+                          setValue(`${typedName}.${index}.useNameOveride`, v);
+                        }}
                         variant="outline"
                       >
                         <Pencil className="w-4" />
@@ -326,37 +374,48 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                     )}
                   />
                 )}
-                <Controller name={`${typedName}.${index}.ragStatus`} render={({ field }) => {
-                  const mapValueToColor = (value: RagStatus) => {
-                    switch(value) {
-                      case "N/I":
-                        return "bg-gray-400";
-                      case "Red":
-                        return "bg-red-400";
-                      case "Amber":
-                        return "bg-yellow-400";
-                      case "Green":
-                        return "bg-green-400";
-                    }
-                  }
+                <Controller
+                  name={`${typedName}.${index}.ragStatus`}
+                  render={({ field }) => {
+                    const mapValueToColor = (value: RagStatus) => {
+                      switch (value) {
+                        case "N/I":
+                          return "bg-gray-400";
+                        case "Red":
+                          return "bg-red-400";
+                        case "Amber":
+                          return "bg-yellow-400";
+                        case "Green":
+                          return "bg-green-400";
+                      }
+                    };
 
-                  return (
-                    <div {...field}>
-                      <Select>
-                        <SelectTrigger className={`${mapValueToColor(field.value)} text-white rounded w-10 h-10`} >
-                          <SelectValue  placeholder="RAG" hidden />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="N/I">N.I</SelectItem>
-                          <SelectItem value="Red">Red</SelectItem>
-                          <SelectItem value="Amber">Amber</SelectItem>
-                          <SelectItem value="Green">Green</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )
-                }}/>
-                <Button className="p-2" variant="ghost" onClick={(ev) => remove(index)}>
+                    return (
+                      <div {...field}>
+                        <Select>
+                          <SelectTrigger
+                            className={`${mapValueToColor(
+                              field.value
+                            )} text-white rounded w-10 h-10`}
+                          >
+                            <SelectValue placeholder="RAG" hidden />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="N/I">N.I</SelectItem>
+                            <SelectItem value="Red">Red</SelectItem>
+                            <SelectItem value="Amber">Amber</SelectItem>
+                            <SelectItem value="Green">Green</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }}
+                />
+                <Button
+                  className="p-2"
+                  variant="ghost"
+                  onClick={(ev) => remove(index)}
+                >
                   <X className="w-8 text-red-400" />
                 </Button>
               </div>
@@ -395,8 +454,9 @@ interface DefectCheckboxProps {
   ref: React.Ref<HTMLInputElement>;
 }
 
-const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
-  const typedName = name as `sections.0.elementSections.0.materialComponents.0.defects.0`
+const DefectCheckbox = ({ defect, name }: DefectCheckboxProps) => {
+  const typedName =
+    name as `sections.0.elementSections.0.materialComponents.0.defects.0`;
   const { register, control, watch } = useFormContext();
 
   const isChecked = watch(`${typedName}.isChecked`);
@@ -422,13 +482,19 @@ const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
           </div>
           {isChecked && (
             <div className="ml-5 p-2">
-              <input type="hidden" {...register(`${typedName}.name` as const)} value={defect.name} />
+              <input
+                type="hidden"
+                {...register(`${typedName}.name` as const)}
+                value={defect.name}
+              />
               <TextAreaInput
                 labelTitle={defect.name}
                 defaultValue={defect.description}
                 placeholder={"Defect text..."}
                 register={() =>
-                  register(`${typedName}.description` as const, { required: true })
+                  register(`${typedName}.description` as const, {
+                    required: true,
+                  })
                 }
               />
             </div>
@@ -437,4 +503,4 @@ const DefectCheckbox = ({ defect, name } : DefectCheckboxProps) => {
       )}
     ></Controller>
   );
-}
+};
