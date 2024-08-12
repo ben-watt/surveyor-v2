@@ -91,16 +91,6 @@ const ContentBlock = ({ children, tocProvider }: ContentBlockProps) => {
 
 interface PProps extends React.PropsWithChildren<any> {}
 
-const P = (props: PProps) => {
-  const tocProvider = useContext(TocContext);
-
-  return (
-    <ContentBlock tocProvider={tocProvider}>
-      <p>{props.children}</p>
-    </ContentBlock>
-  );
-};
-
 const H1 = (props: PProps) => {
   const tocProvider = useContext(TocContext);
   return (
@@ -140,6 +130,7 @@ export default function PDF({ form }: PdfProps) {
   const clientName = form.clientName;
   const address = form.address;
   const reportDate = new Date(form.reportDate);
+  const inspectionDate = new Date(form.inspectionDate);
 
   console.debug("Building Survey Report", form);
 
@@ -205,7 +196,7 @@ export default function PDF({ form }: PdfProps) {
         <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>
         <TableBlock widths={[40, 60]}>
           <p>Inspection Date:</p>
-          <p>{reportDate.toDateString()}</p>
+          <p>{inspectionDate.toDateString()}</p>
           <p>Report Issue Date:</p>
           <p>{reportDate.toDateString()}</p>
           <p>Weather at the time of inspection:</p>

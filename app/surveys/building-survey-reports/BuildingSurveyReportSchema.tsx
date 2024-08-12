@@ -2,7 +2,8 @@ export type BuildingSurveyFormData = {
     id: string,
     address: string,
     clientName: string,
-    reportDate: Date,   
+    reportDate: Date,
+    inspectionDate: Date,
     frontElevationImagesUri: string[],
     sections: SurveySection[]
 }

@@ -19,6 +19,7 @@ import { ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputText from "../../components/Input/InputText";
 import InputImage from "../../components/Input/ImageInput";
+import InputDate from "../../components/Input/InputDate";
 import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/ReportsClient";
@@ -40,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
+import toast from "react-hot-toast";
 
 interface BuildingSurveyFormProps {
   id?: string;
@@ -57,6 +59,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     reportDate: new Date(),
     address: "",
     clientName: "",
+    inspectionDate: new Date(),
     frontElevationImagesUri: [],
     sections: [
       {
@@ -67,7 +70,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   };
 
   const methods = useForm<BuildingSurveyForm>({ defaultValues });
-  const { register, handleSubmit, watch, formState, reset } = methods;
+  const { register, handleSubmit, watch, formState, reset, control } = methods;
   const router = useRouter();
 
   const createDefaultElementSection = (
@@ -81,19 +84,21 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   });
 
   useEffect(() => {
-    const fetchReport = async (existingReportId : string) => {
-        const report = await reportClient.models.Surveys.get({ id: existingReportId });
+    const fetchReport = async (existingReportId: string) => {
+      const report = await reportClient.models.Surveys.get({
+        id: existingReportId,
+      });
 
-        if (report.data) {
-          const formData = JSON.parse(
-            report.data.content as string
-          ) as BuildingSurveyForm;
-          reset(formData);
-          console.log("reset from fetchReport", formData);
-        } else {
-          console.error("Failed to fetch report", report.errors);
-        }
-      };
+      if (report.data) {
+        const formData = JSON.parse(
+          report.data.content as string
+        ) as BuildingSurveyForm;
+        reset(formData);
+        console.log("reset from fetchReport", formData);
+      } else {
+        console.error("Failed to fetch report", report.errors);
+      }
+    };
 
     const fetchElements = async () => {
       try {
@@ -129,19 +134,34 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const onSubmit = async () => {
     try {
       let form = watch();
-      let _ = await reportClient.models.Surveys.create({
-        id: form.id,
-        content: JSON.stringify(form),
-      });
 
-      successToast("Saved");
+      if(!id) {
+        let _ = await reportClient.models.Surveys.create({
+          id: form.id,
+          content: JSON.stringify(form),
+        });
+
+        successToast("Created Survey");
+      }
+      else {
+        let _ = await reportClient.models.Surveys.update({
+          id: form.id,
+          content: JSON.stringify(form),
+        });
+
+        successToast("Updated Survey");
+      }
+
+      
       router.push("/surveys");
     } catch (error) {
+      toast.error("Failed to save report");
       console.error(error);
     }
   };
 
   const fields = watch();
+  console.log(fields);
 
   return (
     <div className="md:grid md:grid-cols-4 mb-4">
@@ -165,6 +185,18 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     register={() => register("clientName", { required: true })}
                   />
                   <InputError message={formState.errors.clientName?.message} />
+                </div>
+                <div className="flex justify-between items-center">
+                  <label className="text-sm">Inspection Date</label>
+                  <Controller
+                    name="inspectionDate"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => <InputDate {...field} />}
+                  />
+                  <InputError
+                    message={formState.errors.inspectionDate?.message}
+                  />
                 </div>
                 <div>
                   <label className="mt-2" htmlFor="file-input">
