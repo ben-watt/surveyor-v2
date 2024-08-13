@@ -148,7 +148,7 @@ export default function PDF({ form }: PdfProps) {
             />
           </div>
           <div>
-            <p style={{ textAlign: "right" }}>
+            <p style={{ textAlign: "right", fontSize: "1.5em" }}>
               Level 3 Building Survey Report
             </p>
             <p style={{ textAlign: "right" }}></p>
@@ -220,7 +220,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <p>Contents</p>
+        <p style={{ fontSize: "1.5em" }}>Contents</p>
         <p id="toc"></p>
       </Page>
       <Page>
