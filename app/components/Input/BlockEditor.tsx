@@ -28,6 +28,8 @@ import {
   TableOfContents,
 } from "@tiptap-pro/extension-table-of-contents";
 import { renderToStaticMarkup } from "react-dom/server";
+import { Node } from '@tiptap/core'
+
 
 // Used to create a custom paragraph with style attribute
 const CustomParagraph = Paragraph.extend({
@@ -164,7 +166,10 @@ export const NewEditor = ({
     if (tocData && editor) {
       tocData.map((d) => {
         // TODO: Not sure if we're supposed to do this feels a bit dirty
+        
         d.item.dom.innerText = d.hierarchyText + " " + d.item.textContent;
+
+        
       });
 
       console.debug("Inserting TOC");
