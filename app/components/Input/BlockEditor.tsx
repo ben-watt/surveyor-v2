@@ -20,6 +20,7 @@ import TableCell from "@tiptap/extension-table-cell";
 import Image from "@tiptap/extension-image";
 import React, { useEffect } from "react";
 import Paragraph from "@tiptap/extension-paragraph";
+import Heading from "@tiptap/extension-heading";
 import BlockMenuBar from "./BlockMenuBar";
 import {
   getHierarchicalIndexes,
@@ -28,8 +29,6 @@ import {
   TableOfContents,
 } from "@tiptap-pro/extension-table-of-contents";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Node } from '@tiptap/core'
-
 
 // Used to create a custom paragraph with style attribute
 const CustomParagraph = Paragraph.extend({
@@ -62,6 +61,25 @@ const CustomParagraph = Paragraph.extend({
     };
   },
 });
+
+const CustomHeading = Heading.extend({
+  addAttributes() {
+    return {
+      "data-add-toc-here-id": {
+        default: null,
+        renderHTML: (attributes) => {
+          if (attributes["data-add-toc-here-id"]) {
+            return {
+              "data-add-toc-here-id": attributes["data-add-toc-here-id"],
+            };
+          }
+
+          return {};
+        },
+      },
+    }
+  }
+})
 
 interface NewEditorProps {
   content: Content;
@@ -143,6 +161,7 @@ export const NewEditor = ({
       types: ["paragraph", "heading"],
     }),
     CustomParagraph,
+    CustomHeading,
     StarterKit.configure({
       bulletList: {
         keepMarks: true,
@@ -165,10 +184,17 @@ export const NewEditor = ({
   useEffect(() => {
     if (tocData && editor) {
       tocData.map((d) => {
-        // TODO: Not sure if we're supposed to do this feels a bit dirty
-        
-        d.item.dom.innerText = d.hierarchyText + " " + d.item.textContent;
-
+        // If the item contains attribute data-toc-id, then we need to update the id of the element
+        const id = d.item.dom.getAttribute("data-add-toc-here-id");
+        if (id) {
+          const tocId = document.getElementById(id);
+          if (tocId) {
+            tocId.innerText = d.hierarchyText;
+          }
+        }
+        else {
+          d.item.dom.innerText = d.hierarchyText + " " + d.item.textContent;
+        }
         
       });
 

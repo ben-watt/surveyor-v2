@@ -1,16 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useContext } from "react";
+import React from "react";
 import Image from "next/image";
 import type {
   BuildingSurveyFormData,
   ElementSection,
 } from "./BuildingSurveyReportSchema";
-import {
-  DefaultTocProvider,
-  TocContext,
-  TocProvider,
-} from "../../components/Toc";
 
 const TableBlock = ({
   children,
@@ -57,63 +52,6 @@ const TableBlock = ({
   );
 };
 
-interface ContentBlockProps extends React.PropsWithChildren<any> {
-  tocProvider: TocProvider;
-}
-
-const ContentBlock = ({ children, tocProvider }: ContentBlockProps) => {
-  let firstElement = null;
-  if (Array.isArray(children)) {
-    firstElement = children[0];
-  } else {
-    firstElement = children;
-  }
-
-  let dynamicElement = React.createElement(
-    firstElement.type,
-    {},
-    tocProvider(firstElement.type)
-  );
-
-  return <div>{children}</div>;
-
-  // return (
-  //   <TableBlock widths={[10, 90]}>
-  //     <div>{dynamicElement}</div>
-  //     <div>{children}</div>
-  //   </TableBlock>
-  // );
-};
-
-interface PProps extends React.PropsWithChildren<any> {}
-
-const H1 = (props: PProps) => {
-  const tocProvider = useContext(TocContext);
-  return (
-    <ContentBlock tocProvider={tocProvider}>
-      <h1>{props.children}</h1>
-    </ContentBlock>
-  );
-};
-
-const H2 = (props: PProps) => {
-  const tocProvider = useContext(TocContext);
-  return (
-    <ContentBlock tocProvider={tocProvider}>
-      <h2>{props.children}</h2>
-    </ContentBlock>
-  );
-};
-
-const H3 = (props: PProps) => {
-  const tocProvider = useContext(TocContext);
-  return (
-    <ContentBlock tocProvider={tocProvider}>
-      <h3>{props.children}</h3>
-    </ContentBlock>
-  );
-};
-
 const Page = (props: React.PropsWithChildren<any>) => (
   <>
     {props.children}
@@ -136,7 +74,7 @@ export default function PDF({ form }: PdfProps) {
   console.debug("Building Survey Report", form);
 
   return (
-    <TocContext.Provider value={DefaultTocProvider()}>
+    <>
       <Page>
         <TableBlock widths={[60, 40]}>
           <div>
@@ -224,8 +162,8 @@ export default function PDF({ form }: PdfProps) {
         <p id="toc"></p>
       </Page>
       <Page>
-        <H1>Definitions</H1>
-        <H2>Key</H2>
+        <h1>Definitions</h1>
+        <h2>Key</h2>
         <TableBlock widths={[94, 6]}>
           <ul>
             <li>
@@ -258,7 +196,7 @@ export default function PDF({ form }: PdfProps) {
         <p></p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <H2>Glossary of Terms</H2>
+            <h2>Glossary of Terms</h2>
             <ul>
               <li>Immediate: Within 1 year</li>
               <li>Short Term: Within the next 1 to 3 years</li>
@@ -267,7 +205,7 @@ export default function PDF({ form }: PdfProps) {
             </ul>
           </div>
           <div>
-            <H2>Crack Definitions (BRE Digest 251)</H2>
+            <h2>Crack Definitions (BRE Digest 251)</h2>
             <ul>
               <li>Category 0: Negligible (&gt; 0.1mm)</li>
               <li>Category 1: Very slight (Up to 1mm)</li>
@@ -280,7 +218,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <H2>Typical House Diagram</H2>
+        <h2>Typical House Diagram</h2>
         <Image
           src="/typical-house.webp"
           alt="typical house"
@@ -289,34 +227,34 @@ export default function PDF({ form }: PdfProps) {
         />
       </Page>
       <Page>
-        <H1>Description Of the Property</H1>
+        <h1>Description Of the Property</h1>
         <TableBlock widths={[50, 50]}>
-          <H3>Property Type</H3>
+          <h3>Property Type</h3>
           <p>{form.propertyDescription.propertyType.value}</p>
-          <H3>Construction Details</H3>
+          <h3>Construction Details</h3>
           <p>{form.propertyDescription.constructionDetails.value}</p>
-          <H3>Year of Construction</H3>
+          <h3>Year of Construction</h3>
           <p>{form.propertyDescription.yearOfConstruction.value}</p>
-          <H3>Year of Refurbishment</H3>
+          <h3>Year of Refurbishment</h3>
           <p>{form.propertyDescription.yearOfRefurbishment.value}</p>
-          <H3>Grounds</H3>
+          <h3>Grounds</h3>
           <p>{form.propertyDescription.grounds.value}</p>
-          <H3>Services</H3>
+          <h3>Services</h3>
           <p>{form.propertyDescription.services.value}</p>
-          <H3>Other Services</H3>
+          <h3>Other Services</h3>
           <p>{form.propertyDescription.otherServices.value}</p>
-          <H3>Energy Rating</H3>
+          <h3>Energy Rating</h3>
           <p>{form.propertyDescription.energyRating.value}</p>
-          <H3>Number of Bedrooms</H3>
+          <h3>Number of Bedrooms</h3>
           <p>{form.propertyDescription.numberOfBedrooms.value}</p>
-          <H3>Number of Bathrooms</H3>
+          <h3>Number of Bathrooms</h3>
           <p>{form.propertyDescription.numberOfBathrooms.value}</p>
-          <H3>Tenure</H3>
+          <h3>Tenure</h3>
           <p>{form.propertyDescription.tenure.value}</p>
         </TableBlock>
       </Page>
       <Page>
-        <H2>Location Plan</H2>
+        <h2>Location Plan</h2>
         <p>
           Red line demarcations do not represent the legal boundary of the
           property and are to indicate the approximate areas of the property
@@ -332,7 +270,7 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         {form.sections.map((s, i) => (
           <div key={s.name}>
-            <H1>{s.name}</H1>
+            <h1>{s.name}</h1>
             {s.elementSections.map((cs, j) => (
               <>
                 <ConditionSection key={`${i}.${j}`} elementSection={cs} />
@@ -342,15 +280,15 @@ export default function PDF({ form }: PdfProps) {
         ))}
       </Page>
       <Page>
-        <H1>Issues for your Legal Advisor</H1>
-        <H2>Planning & Building Regulations</H2>
+        <h1>Issues for your Legal Advisor</h1>
+        <h2>Planning & Building Regulations</h2>
         <p>
           As mentioned within the body of this report, we strongly recommend
           that you obtain certificates and warranties from the Vendor relating
           to the electrical and gas installations, extensions, etc. to confirm
           that all fully comply with the Building Regulations.
         </p>
-        <H2>Statutory</H2>
+        <h2>Statutory</h2>
         <p>
           <ul>
             <li>
@@ -414,7 +352,7 @@ export default function PDF({ form }: PdfProps) {
         </p>
       </Page>
       <Page>
-        <H2>Thermal Insulation & Energy Efficiency</H2>
+        <h2>Thermal Insulation & Energy Efficiency</h2>
         <p>
           As part of the marketing process, current regulations require the
           provision of an Energy Performance Certificate. Legal enquiries are
@@ -436,18 +374,18 @@ export default function PDF({ form }: PdfProps) {
         </p>
       </Page>
       <Page>
-        <H1>Risks</H1>
-        <H2>Risks to the building</H2>
+        <h1>Risks</h1>
+        <h2>Risks to the building</h2>
         <p>Unknown</p>
-        <H2>Risks to the grounds</H2>
+        <h2>Risks to the grounds</h2>
         <p>Unknown</p>
-        <H2>Risks to the people</H2>
+        <h2>Risks to the people</h2>
         <p>Unknown</p>
       </Page>
       <Page>
-        <H1>Conclusion</H1>
+        <h1>Conclusion</h1>
       </Page>
-    </TocContext.Provider>
+    </>
   );
 }
 
@@ -476,6 +414,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
             src={es.images[i]}
             alt={elementSection.name + ".image." + { i }}
             width={200}
+            height={200}
           />
         </td>
         {es.images.length >= i + 1 && (
@@ -507,9 +446,10 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
 
   return (
     <>
-      <H2>{es.name}</H2>
+      <h2>{es.name}</h2>
       <p></p>
-      <TableBlock widths={[30, 70]}>
+      <TableBlock widths={[10, 20, 70]}>
+        <p></p>
         <p>
           <strong>Description</strong>
         </p>
@@ -518,12 +458,15 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
       {es.materialComponents.map((mc) => (
         <>
           <p></p>
-          <TableBlock widths={[30, 64, 6]} key={mc.id}>
-            <h3>
+          <TableBlock widths={[10, 20, 64, 6]} key={mc.id}>
+            <p id={mc.id}></p>
+            <h3 data-add-toc-here-id={mc.id}>
               <strong>Component</strong>
             </h3>
             <p>{mc.useNameOveride ? mc.name : mc.id}</p>
             <p style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus) }}></p>
+
+            <p></p>
             <p>
               <strong>Condition / Defect</strong>
             </p>
