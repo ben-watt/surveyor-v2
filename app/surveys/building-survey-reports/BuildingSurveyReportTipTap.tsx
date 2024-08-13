@@ -75,7 +75,7 @@ const ContentBlock = ({ children, tocProvider }: ContentBlockProps) => {
     tocProvider(firstElement.type)
   );
 
-  return (<div>{children}</div>)
+  return <div>{children}</div>;
 
   // return (
   //   <TableBlock widths={[10, 90]}>
@@ -196,11 +196,11 @@ export default function PDF({ form }: PdfProps) {
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <Image src="/sw-sig.png" alt="signature" fill={true} />
+            {/* <Image src="/sw-sig.png" alt="signature" fill={true} /> */}
             <p>Samuel Watt BSc (Hons) </p>
           </div>
           <div>
-            <Image src="/jc-sig.png" alt="signature" fill={true} />
+            {/* <Image src="/jc-sig.png" alt="signature" fill={true} /> */}
             <p>Jordan Clarke BSc (Hons) MRICS</p>
           </div>
         </TableBlock>
@@ -220,45 +220,36 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <p style={{ fontSize: "1.5em" }}>Contents</p>
+        <p style={{ fontSize: "1.5em", marginBottom: "8mm" }}>Contents</p>
         <p id="toc"></p>
       </Page>
       <Page>
         <H1>Definitions</H1>
         <H2>Key</H2>
-        <TableBlock widths={[92, 8]}>
+        <TableBlock widths={[94, 6]}>
           <ul>
             <li>
-              For information purposes, generally, no repair is required.
+              - For information purposes, generally, no repair is required.
               Property to be maintained as usual.
             </li>
           </ul>
-          <p
-            className="w-100-perc h-100-perc text-centre"
-            style={{ backgroundColor: "green" }}
-          ></p>
+          <p style={{ backgroundColor: "green" }}></p>
           <ul>
             <li>
-              Defects requiring repair/replacement but not considered urgent nor
-              serious. Property to be maintained as usual.
+              - Defects requiring repair/replacement but not considered urgent
+              nor serious. Property to be maintained as usual.
             </li>
           </ul>
-          <p
-            className="w-100-perc h-100-perc text-centre"
-            style={{ backgroundColor: "orange" }}
-          ></p>
+          <p style={{ backgroundColor: "orange" }}></p>
           <ul>
             <li>
-              Serious defects to be fully considered prior to purchase that need
-              to be repaired, replace or investigated urgently.
+              - Serious defects to be fully considered prior to purchase that
+              need to be repaired, replace or investigated urgently.
             </li>
           </ul>
-          <p
-            className="w-100-perc h-100-perc text-centre"
-            style={{ backgroundColor: "red" }}
-          ></p>
+          <p style={{ backgroundColor: "red" }}></p>
           <ul>
-            <li>Not inspected</li>
+            <li>- Not inspected</li>
           </ul>
           <p className="w-100-perc h-100-perc text-centre">
             <strong>NI</strong>
@@ -293,8 +284,8 @@ export default function PDF({ form }: PdfProps) {
         <Image
           src="/typical-house.webp"
           alt="typical house"
-          width="600"
-          height="400"
+          width={400}
+          height={200}
         />
       </Page>
       <Page>
@@ -475,18 +466,11 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
 
   if (!es.isPartOfSurvey) return <></>;
 
-  console.debug("images.1", es.images);
-  console.debug("Condition Section", es);
-  console.debug("images.2", es.images);
-
   let tableRows = [];
   for (let i = 0; i < es.images.length; i = i + 2) {
     tableRows.push(
       <tr>
         <td>
-          <InvokeOnRender
-            onRender={() => console.debug("Image", es.images[i])}
-          />
           <img
             key={i}
             src={es.images[i]}
@@ -508,6 +492,19 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
     );
   }
 
+  function mapRagToBackgroundColour(ragStatus: string): string {
+    switch (ragStatus) {
+      case "Green":
+        return "green";
+      case "Amber":
+        return "orange";
+      case "Red":
+        return "red";
+      default:
+        return "white";
+    }
+  }
+
   return (
     <>
       <H2>{es.name}</H2>
@@ -521,17 +518,23 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
       {es.materialComponents.map((mc) => (
         <>
           <p></p>
-          <TableBlock widths={[30, 70]} key={mc.id}>
-            <p>
+          <TableBlock widths={[30, 64, 6]} key={mc.id}>
+            <h3>
               <strong>Component</strong>
+            </h3>
+            <p>{mc.useNameOveride ? mc.name : mc.id}</p>
+            <p style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus) }}></p>
+            <p>
+              <strong>Condition / Defect</strong>
             </p>
-            <p>{mc.useNameOveride ? mc.name : mc.id} <span>{mc.ragStatus}</span></p>
-            <p><strong>Condition / Defect</strong></p>
             <div>
               {mc.defects.map((d) => (
-                  <p key={d.name}>{d.name} - {d.description}</p>
+                <p key={d.name}>
+                  {d.name} - {d.description}
+                </p>
               ))}
             </div>
+            <p></p>
           </TableBlock>
         </>
       ))}

@@ -186,15 +186,16 @@
     margin: 1.5rem 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    page-break-before: page;
-}
-
 hr {
     page-break-before: always;
 }
 
 @media print {
+    .pagedjs_area hr {
+        border-top: none;
+        margin: 0;
+    }
+
     .pagedjs_area td {
         border: none !important;
     }

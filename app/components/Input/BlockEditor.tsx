@@ -3,16 +3,10 @@
 import {
   useEditor,
   EditorContent,
-  BubbleMenu,
-  ReactRenderer,
   Content,
   EditorEvents,
-  Editor,
 } from "@tiptap/react";
-import Mention from "@tiptap/extension-mention";
 import StarterKit from "@tiptap/starter-kit";
-import MentionList from "../MentionList";
-import tippy from "tippy.js";
 import { Color } from "@tiptap/extension-color";
 import ListItem from "@tiptap/extension-list-item";
 import TextStyle from "@tiptap/extension-text-style";
@@ -33,8 +27,7 @@ import {
   TableOfContentDataItem,
   TableOfContents,
 } from "@tiptap-pro/extension-table-of-contents";
-import { renderToHTML } from "next/dist/server/render";
-import { renderToStaticMarkup, renderToString } from "react-dom/server";
+import { renderToStaticMarkup } from "react-dom/server";
 
 // Used to create a custom paragraph with style attribute
 const CustomParagraph = Paragraph.extend({
@@ -72,7 +65,7 @@ interface NewEditorProps {
   content: Content;
   onUpdate?: (props: EditorEvents["update"]) => void;
   onCreate?: (props: EditorEvents["create"]) => void;
-  onPrint: (html: string) => void;
+  onPrint: () => void;
 }
 
 
@@ -160,7 +153,6 @@ export const NewEditor = ({
     if (tocData && editor) {
       tocData.map((d) => {
         // TODO: Not sure if we're supposed to do this feels a bit dirty
-        console.log(d.item.node);
         d.item.dom.innerText = d.hierarchyText + " " + d.item.textContent;
       });
 
@@ -182,7 +174,7 @@ export const NewEditor = ({
 
   return (
     <div className="print:hidden">
-      <BlockMenuBar editor={editor} />
+      <BlockMenuBar editor={editor} onPrint={onPrint} />
       <EditorContent editor={editor} />
     </div>
   );

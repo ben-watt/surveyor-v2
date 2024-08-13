@@ -3,14 +3,15 @@ import { useCurrentEditor, type Editor } from '@tiptap/react'
 import { Fragment } from 'react'
 
 import MenuItem from './BlockMenuItem'
-import { Bold, Code, Code2,  EllipsisVertical, Heading1, Heading2, Italic, List, ListOrdered, SeparatorHorizontal, Strikethrough, TextQuote, Text, RemoveFormatting, WrapText, Forward, Redo, Undo, Printer } from 'lucide-react';
+import { Bold, Code, Code2, Heading1, Heading2, Italic, List, ListOrdered, SeparatorHorizontal, Strikethrough, TextQuote, Text, RemoveFormatting, WrapText, Forward, Redo, Undo, Printer } from 'lucide-react';
 
 
 interface MenuBarProps {
   editor: Editor | null
+  onPrint: () => void
 }
 
-export default function MenuBar ({ editor } : MenuBarProps) {
+export default function MenuBar ({ editor, onPrint } : MenuBarProps) {
   if(!editor) return null;
 
   const items = [
@@ -136,7 +137,7 @@ export default function MenuBar ({ editor } : MenuBarProps) {
     {
         icon: <Printer />,
         title: 'Print',
-        action: () => window.print(),
+        action: onPrint || window.print(),
     }
   ]
 

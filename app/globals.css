@@ -251,3 +251,12 @@
   cursor: ew-resize;
   cursor: col-resize;
 }
+
+/* Custom */
+.tiptap hr + h1  {
+  margin-top: 0;
+}
+
+.tiptap hr + h2  {
+  margin-top: 0;
+}
