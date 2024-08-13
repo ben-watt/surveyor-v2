@@ -42,3 +42,13 @@
 .headerImage {
     position: running(headerRunning);
 }
+
+/*
+In the CSS, the target-counter property is used within ::before and ::after pseudo-elements, 
+using the content property. It can be translated as: find the counter named page that appears 
+where you find the element we’re targetting with the attribute data-toc-id-selector:
+*/
+#toc li p::after {
+    content: target-counter(attr(data-toc-id-selector), page);
+    float: right;
+}

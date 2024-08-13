@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEditor,
-  EditorContent,
-  Content,
-  EditorEvents,
-} from "@tiptap/react";
+import { useEditor, EditorContent, Content, EditorEvents } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Color } from "@tiptap/extension-color";
 import ListItem from "@tiptap/extension-list-item";
@@ -21,6 +16,7 @@ import Image from "@tiptap/extension-image";
 import React, { useEffect } from "react";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
+import Section from "../TipTapExtensions/Section";
 import BlockMenuBar from "./BlockMenuBar";
 import {
   getHierarchicalIndexes,
@@ -29,8 +25,9 @@ import {
   TableOfContents,
 } from "@tiptap-pro/extension-table-of-contents";
 import { renderToStaticMarkup } from "react-dom/server";
+import { v4 } from "uuid";
 
-// Used to create a custom paragraph with style attribute
+// Used to create a custom paragraph with style attributes
 const CustomParagraph = Paragraph.extend({
   addAttributes() {
     return {
@@ -58,6 +55,17 @@ const CustomParagraph = Paragraph.extend({
           return {};
         },
       },
+      "data-toc-id-selector": {
+        default: null,
+        renderHTML: (attributes) => {
+          if (attributes["data-toc-id-selector"]) {
+            return {
+              "data-toc-id-selector": `${attributes["data-toc-id-selector"]}`,
+            };
+          }
+          return {};
+        },
+      },
     };
   },
 });
@@ -77,9 +85,9 @@ const CustomHeading = Heading.extend({
           return {};
         },
       },
-    }
-  }
-})
+    };
+  },
+});
 
 interface NewEditorProps {
   content: Content;
@@ -88,8 +96,7 @@ interface NewEditorProps {
   onPrint: () => void;
 }
 
-
-function parseDataHierarchy(data : TableOfContentData) {
+function parseDataHierarchy(data: TableOfContentData) {
   let stack = [];
 
   return data.map((item, i, array) => {
@@ -97,7 +104,7 @@ function parseDataHierarchy(data : TableOfContentData) {
     if (previousItem && previousItem.originalLevel < item.originalLevel) {
       const levelsToPush = item.originalLevel - previousItem.originalLevel;
       for (let i = 0; i < levelsToPush; i++) {
-        if(i > 0) {
+        if (i > 0) {
           stack.push(1);
         } else {
           stack.push(previousItem.itemIndex);
@@ -137,8 +144,10 @@ export const NewEditor = ({
     React.useState<TableOfContentsDataItemWithHierarchy[]>();
 
   const extensions = [
+    Section,
     TableOfContents.configure({
       getIndex: getHierarchicalIndexes,
+      getId: (textContent) => "toc-" + v4().slice(0, 8),
       onUpdate: (data, isCreate) => {
         if (isCreate) {
           const dataWithHierarchy = parseDataHierarchy(data);
@@ -191,11 +200,9 @@ export const NewEditor = ({
           if (tocId) {
             tocId.innerText = d.hierarchyText;
           }
-        }
-        else {
+        } else {
           d.item.dom.innerText = d.hierarchyText + " " + d.item.textContent;
         }
-        
       });
 
       console.debug("Inserting TOC");
@@ -203,7 +210,7 @@ export const NewEditor = ({
       const element = editor.view.dom.querySelector(selector);
       if (element == null) {
         console.error(
-          `Element not found to insert TOC, please add a '<p id="${selector}"></p>' element.`
+          `Element not found to insert TOC, please add a '<section id="${selector}"></section>' element.`
         );
       } else {
         const pos = editor.view.posAtDOM(element, 0);
@@ -229,14 +236,23 @@ interface TocProps {
 
 const Toc = ({ data, maxDepth = 1 }: TocProps) => {
   return (
-    <>
+    <ul>
       {data
         .filter((d) => d.item.originalLevel <= maxDepth)
+        .map((d) => ({
+          itemId: d.item.id,
+          hierarchyText: d.hierarchyText,
+          textContent: d.item.textContent,
+          selector: `#${CSS.escape(d.item.id)}`,
+        }))
         .map((d) => (
-          <p key={d.item.id}>
-            {d.hierarchyText} - {d.item.textContent}
-          </p>
+          <li key={d.itemId}>
+            <p data-toc-id-selector={d.selector}>
+              {d.hierarchyText} - {d.textContent}
+            </p>
+          </li>
         ))}
-    </>
+    </ul>
   );
 };
+
