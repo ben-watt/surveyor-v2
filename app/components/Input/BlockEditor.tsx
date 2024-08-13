@@ -27,49 +27,99 @@ import Image from "@tiptap/extension-image";
 import React, { useEffect } from "react";
 import Paragraph from "@tiptap/extension-paragraph";
 import BlockMenuBar from "./BlockMenuBar";
-import { getHierarchicalIndexes, TableOfContentData, TableOfContentDataItem, TableOfContents } from "@tiptap-pro/extension-table-of-contents";
+import {
+  getHierarchicalIndexes,
+  TableOfContentData,
+  TableOfContentDataItem,
+  TableOfContents,
+} from "@tiptap-pro/extension-table-of-contents";
 import { renderToHTML } from "next/dist/server/render";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 // Used to create a custom paragraph with style attribute
 const CustomParagraph = Paragraph.extend({
   addAttributes() {
-      return {
-          style: {
-              default: null,
-              renderHTML: attributes => {
-                  if (attributes.style) {
-                      return {
-                        style: `${attributes.style}`,
-                      }
-                  }
+    return {
+      id: {
+        default: null,
+        renderHTML: (attributes) => {
+          if (attributes.id) {
+            return {
+              id: attributes.id,
+            };
+          }
 
-                  return {}
-              },
-          },
-      }
+          return {};
+        },
+      },
+      style: {
+        default: null,
+        renderHTML: (attributes) => {
+          if (attributes.style) {
+            return {
+              style: `${attributes.style}`,
+            };
+          }
+
+          return {};
+        },
+      },
+    };
   },
-})
+});
 
 interface NewEditorProps {
-  content: Content
-  onUpdate?: (props: EditorEvents["update"]) => void
-  onCreate?: (props: EditorEvents["create"]) => void
-  onPrint: (html: string) => void
+  content: Content;
+  onUpdate?: (props: EditorEvents["update"]) => void;
+  onCreate?: (props: EditorEvents["create"]) => void;
+  onPrint: (html: string) => void;
 }
 
-export const NewEditor = ({ onPrint, content, onUpdate, onCreate } : NewEditorProps) => {
-  const [tocData, setTocData] = React.useState<TableOfContentData>();
+
+function parseDataHierarchy(data : TableOfContentData) {
+  let stack = [];
+  return data.map((item, i, array) => {
+    const previousItem = array[i - 1];
+    if (previousItem && previousItem.level < item.level) {
+      stack.push(previousItem.itemIndex);
+    }
+
+    if (previousItem && previousItem.level > item.level) {
+      stack.pop();
+    }
+
+    stack.push(item.itemIndex);
+    const text = stack.join(".");
+    stack.pop();
+    return {
+      item,
+      hierarchyText: text,
+    };
+  });
+}
+
+interface TableOfContentsDataItemWithHierarchy {
+  item: TableOfContentDataItem;
+  hierarchyText: string;
+}
+
+export const NewEditor = ({
+  onPrint,
+  content,
+  onUpdate,
+  onCreate,
+}: NewEditorProps) => {
+  const [tocData, setTocData] =
+    React.useState<TableOfContentsDataItemWithHierarchy[]>();
+
   const extensions = [
     TableOfContents.configure({
       getIndex: getHierarchicalIndexes,
       onUpdate: (data, isCreate) => {
-        if(!isCreate) {
-          return;
+        if (isCreate) {
+          const dataWithHierarchy = parseDataHierarchy(data);
+          setTocData(dataWithHierarchy);
         }
-        
-        setTocData(data);
-        console.log(data)
       },
     }),
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
@@ -103,15 +153,32 @@ export const NewEditor = ({ onPrint, content, onUpdate, onCreate } : NewEditorPr
     extensions: extensions,
     content: content,
     onCreate: onCreate,
-    onUpdate: onUpdate
+    onUpdate: onUpdate,
   });
 
   useEffect(() => {
-    if(tocData) {
-      const toc = renderToStaticMarkup(<Toc data={tocData} />);
-      editor?.chain().insertContentAt(0, toc).run();
+    if (tocData && editor) {
+      tocData.map((d) => {
+        // TODO: Not sure if we're supposed to do this feels a bit dirty
+        console.log(d.item.node);
+        d.item.dom.innerText = d.hierarchyText + " " + d.item.textContent;
+      });
+
+      console.debug("Inserting TOC");
+      const selector = "#toc";
+      const element = editor.view.dom.querySelector(selector);
+      if (element == null) {
+        console.error(
+          `Element not found to insert TOC, please add a '<p id="${selector}"></p>' element.`
+        );
+      } else {
+        const pos = editor.view.posAtDOM(element, 0);
+        const toc = renderToStaticMarkup(<Toc data={tocData} />);
+        console.debug("Inserting TOC at", pos);
+        editor?.chain().insertContentAt(pos, toc).run();
+      }
     }
-  }, [editor, tocData])
+  }, [editor, tocData]);
 
   return (
     <div className="print:hidden">
@@ -121,33 +188,21 @@ export const NewEditor = ({ onPrint, content, onUpdate, onCreate } : NewEditorPr
   );
 };
 
-const Toc = ({ data }: { data: TableOfContentData }) => {
-  let stack = [];
-
-  return (
-    <div className="table-of-contents">
-      <ul>
-        {data.map((item, i, array) => {
-          const previousItem = array[i - 1];
-          if(previousItem && previousItem.level < item.level) {
-            stack.push(previousItem.itemIndex);
-          }
-
-          if(previousItem && previousItem.level > item.level) {
-            stack.pop();
-          }
-
-          stack.push(item.itemIndex);
-          const text = stack.join(".");
-          stack.pop();
-
-          return (
-            <li key={item.id}>
-              <p>{text} - {item.textContent}</p>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
+interface TocProps {
+  data: TableOfContentsDataItemWithHierarchy[];
+  maxDepth?: number;
 }
+
+const Toc = ({ data, maxDepth = 1 }: TocProps) => {
+  return (
+    <>
+      {data
+        .filter((d) => d.item.level <= maxDepth)
+        .map((d) => (
+          <p key={d.item.id}>
+            {d.hierarchyText} - {d.item.textContent}
+          </p>
+        ))}
+    </>
+  );
+};

@@ -148,9 +148,9 @@ export default function PDF({ form }: PdfProps) {
             />
           </div>
           <div>
-            <h1 style={{ textAlign: "right" }}>
+            <p style={{ textAlign: "right" }}>
               Level 3 Building Survey Report
-            </h1>
+            </p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>Of the premises known as</p>
             <p style={{ textAlign: "right" }}></p>
@@ -192,6 +192,7 @@ export default function PDF({ form }: PdfProps) {
           This document has been prepared and checked in accordance with the
           CWBC's Quality Assurance procedures and authorised for release.
         </p>
+        <p></p>
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <div>
@@ -203,6 +204,7 @@ export default function PDF({ form }: PdfProps) {
             <p>Jordan Clarke BSc (Hons) MRICS</p>
           </div>
         </TableBlock>
+        <p></p>
         <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>
         <TableBlock widths={[40, 60]}>
           <p>Inspection Date:</p>
@@ -218,8 +220,8 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <h1>Contents</h1>
-        <p>PUT TOC HERE.</p>
+        <p>Contents</p>
+        <p id="toc"></p>
       </Page>
       <Page>
         <H1>Definitions</H1>
@@ -262,6 +264,7 @@ export default function PDF({ form }: PdfProps) {
             <strong>NI</strong>
           </p>
         </TableBlock>
+        <p></p>
         <TableBlock widths={[50, 50]}>
           <div>
             <H2>Glossary of Terms</H2>

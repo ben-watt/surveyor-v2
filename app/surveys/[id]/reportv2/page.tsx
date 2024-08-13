@@ -10,16 +10,13 @@ import React, { useEffect } from "react";
 import { useRef, useState } from "react";
 import { BuildingSurveyFormData } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import BuildingSurveyReport from "../../building-survey-reports/BuildingSurveyReportTipTap";
-import { renderToString } from "react-dom/server";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { getUrl } from "aws-amplify/storage";
-import { useCurrentEditor, useEditor } from "@tiptap/react";
 
 export default function Page({ params }: { params: { id: string } }) {
-  const previewRef = useRef<HTMLDivElement>(null);
   const [editorContent, setEditorContent] = useState<string | undefined>();
-  const [previewContent, setPreviewContent] = useState("<h1>loading...</h1>");
-  const [isInitilised, setIsInitilised] = useState(false);
   const [editorData, setEditorData] = useState<BuildingSurveyFormData>();
+  const [previewContent, setPreviewContent] = useState("<h1>loading...</h1>");
 
   useEffect(() => {
     const getReport = async () => {
@@ -30,7 +27,6 @@ export default function Page({ params }: { params: { id: string } }) {
           result.data.content.toString()
         ) as BuildingSurveyFormData;
 
-        
         setEditorData(formData)
       }
     };
@@ -45,24 +41,6 @@ export default function Page({ params }: { params: { id: string } }) {
       })
     }
   }, [editorData])
-
-  useDebouncedEffect(() => {
-    const paged = new Previewer({});
-    
-    if (isInitilised) {
-      let emptyChildrenArray = new Array<Node>()
-      previewRef.current?.replaceChildren(...emptyChildrenArray);
-      paged.preview(previewContent, ["/pagedstyles.css", "/interface.css"], previewRef.current)
-      .then((flow: any) => {
-        console.log('Rendered', flow.total, 'pages.');
-      });
-    }
-
-    if(!isInitilised) {
-      setIsInitilised(true)
-    }
-
-  }, [previewContent], 500);
 
   // I've wrapped the viewer in the .tiptap class to ensure it picks up the tip tap styles.
   // I've also set the container to be 962px wide to match the viewer in landscape mode.
@@ -79,11 +57,38 @@ export default function Page({ params }: { params: { id: string } }) {
           />
         )}
       </div>
-      <div className="pagedjs_print_preview tiptap">
-        <div ref={previewRef} />
-      </div>
+      {/* <PrintPreviewer content={previewContent} /> */}
     </div>
   );
+}
+
+const PrintPreviewer = ({ content }: { content: string }) => {
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isInitilised, setIsInitilised] = useState(false);
+
+  useDebouncedEffect(() => {
+    const paged = new Previewer({});
+    
+    if (isInitilised) {
+      let emptyChildrenArray = new Array<Node>()
+      previewRef.current?.replaceChildren(...emptyChildrenArray);
+      paged.preview(content, ["/pagedstyles.css", "/interface.css"], previewRef.current)
+      .then((flow: any) => {
+        console.log('Rendered', flow.total, 'pages.');
+      });
+    }
+
+    if(!isInitilised) {
+      setIsInitilised(true)
+    }
+
+  }, [content], 500);
+
+  return (
+    <div className="pagedjs_print_preview tiptap">
+    <div ref={previewRef} />
+  </div>
+  )
 }
 
 function getHeaderFooterHtml(editorData : BuildingSurveyFormData | undefined) : string {
@@ -115,7 +120,7 @@ async function mapFormDataToHtml(formData: BuildingSurveyFormData): Promise<stri
   })
 
   await Promise.all(preSignedUrlTasks);
-  return renderToString(<BuildingSurveyReport form={newFormData} />)
+  return renderToStaticMarkup(<BuildingSurveyReport form={newFormData} />)
 }
 
 async function getImagesHref(imagesUri: string[]): Promise<string[]> {
