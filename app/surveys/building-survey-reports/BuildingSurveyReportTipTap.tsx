@@ -291,32 +291,32 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <H1>Description Of the Property</H1>
         <TableBlock widths={[50, 50]}>
-          <H2>Property Type</H2>
+          <H3>Property Type</H3>
           <p>{form.propertyDescription.propertyType.value}</p>
-          <H2>Construction Details</H2>
+          <H3>Construction Details</H3>
           <p>{form.propertyDescription.constructionDetails.value}</p>
-          <H2>Year of Construction</H2>
+          <H3>Year of Construction</H3>
           <p>{form.propertyDescription.yearOfConstruction.value}</p>
-          <H2>Year of Refurbishment</H2>
+          <H3>Year of Refurbishment</H3>
           <p>{form.propertyDescription.yearOfRefurbishment.value}</p>
-          <H2>Grounds</H2>
+          <H3>Grounds</H3>
           <p>{form.propertyDescription.grounds.value}</p>
-          <H2>Services</H2>
+          <H3>Services</H3>
           <p>{form.propertyDescription.services.value}</p>
-          <H2>Other Services</H2>
+          <H3>Other Services</H3>
           <p>{form.propertyDescription.otherServices.value}</p>
-          <H2>Energy Rating</H2>
+          <H3>Energy Rating</H3>
           <p>{form.propertyDescription.energyRating.value}</p>
-          <H2>Number of Bedrooms</H2>
+          <H3>Number of Bedrooms</H3>
           <p>{form.propertyDescription.numberOfBedrooms.value}</p>
-          <H2>Number of Bathrooms</H2>
+          <H3>Number of Bathrooms</H3>
           <p>{form.propertyDescription.numberOfBathrooms.value}</p>
-          <H2>Tenure</H2>
+          <H3>Tenure</H3>
           <p>{form.propertyDescription.tenure.value}</p>
         </TableBlock>
       </Page>
       <Page>
-        <H1>Location Plan</H1>
+        <H2>Location Plan</H2>
         <p>
           Red line demarcations do not represent the legal boundary of the
           property and are to indicate the approximate areas of the property

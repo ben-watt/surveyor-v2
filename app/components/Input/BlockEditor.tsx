@@ -71,14 +71,25 @@ interface NewEditorProps {
 
 function parseDataHierarchy(data : TableOfContentData) {
   let stack = [];
+
   return data.map((item, i, array) => {
     const previousItem = array[i - 1];
-    if (previousItem && previousItem.level < item.level) {
-      stack.push(previousItem.itemIndex);
+    if (previousItem && previousItem.originalLevel < item.originalLevel) {
+      const levelsToPush = item.originalLevel - previousItem.originalLevel;
+      for (let i = 0; i < levelsToPush; i++) {
+        if(i > 0) {
+          stack.push(1);
+        } else {
+          stack.push(previousItem.itemIndex);
+        }
+      }
     }
 
-    if (previousItem && previousItem.level > item.level) {
-      stack.pop();
+    if (previousItem && previousItem.originalLevel > item.originalLevel) {
+      const levelsToPop = previousItem.originalLevel - item.originalLevel;
+      for (let i = 0; i < levelsToPop; i++) {
+        stack.pop();
+      }
     }
 
     stack.push(item.itemIndex);
@@ -189,7 +200,7 @@ const Toc = ({ data, maxDepth = 1 }: TocProps) => {
   return (
     <>
       {data
-        .filter((d) => d.item.level <= maxDepth)
+        .filter((d) => d.item.originalLevel <= maxDepth)
         .map((d) => (
           <p key={d.item.id}>
             {d.hierarchyText} - {d.item.textContent}
