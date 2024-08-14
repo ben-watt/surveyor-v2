@@ -265,3 +265,11 @@
 .tiptap img.ProseMirror-selectednode {
   outline: 3px solid var(--purple);
 }
+
+.tiptap li {
+  list-style: circle;
+}
+
+.tiptap #toc li {
+  list-style: none;
+}

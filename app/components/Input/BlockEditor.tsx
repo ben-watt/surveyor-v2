@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent, Content, EditorEvents } from "@tiptap/react";
+import { useEditor, EditorContent, Content, EditorEvents, Attributes } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Color } from "@tiptap/extension-color";
 import ListItem from "@tiptap/extension-list-item";
@@ -27,69 +27,33 @@ import {
 } from "@tiptap-pro/extension-table-of-contents";
 import { renderToStaticMarkup } from "react-dom/server";
 import { v4 } from "uuid";
-import { Fragment, Slice } from "@tiptap/pm/model";
+import { Node } from "@tiptap/core";
 
-// Used to create a custom paragraph with style attributes
-const CustomParagraph = Paragraph.extend({
-  addAttributes() {
-    return {
-      id: {
-        default: null,
-        renderHTML: (attributes) => {
-          if (attributes.id) {
-            return {
-              id: attributes.id,
-            };
-          }
-
-          return {};
-        },
-      },
-      style: {
-        default: null,
-        renderHTML: (attributes) => {
-          if (attributes.style) {
-            return {
-              style: `${attributes.style}`,
-            };
-          }
-
-          return {};
-        },
-      },
-      "data-toc-id-selector": {
-        default: null,
-        renderHTML: (attributes) => {
-          if (attributes["data-toc-id-selector"]) {
-            return {
-              "data-toc-id-selector": `${attributes["data-toc-id-selector"]}`,
-            };
-          }
-          return {};
-        },
-      },
-    };
-  },
-});
-
-const CustomHeading = Heading.extend({
-  addAttributes() {
-    return {
-      "data-add-toc-here-id": {
-        default: null,
-        renderHTML: (attributes) => {
-          if (attributes["data-add-toc-here-id"]) {
-            return {
-              "data-add-toc-here-id": attributes["data-add-toc-here-id"],
-            };
-          }
-
-          return {};
-        },
-      },
-    };
-  },
-});
+/*
+  Will allow the node to have the attributes mentioned in the array
+*/
+function allowAttributes<T>(node: Node<T>, attrs: string[]) {
+  return node.extend({
+      addAttributes() {
+          return attrs.reduce((acc: Record<string, any>, attr) => {
+              acc[attr] = {
+                  default: null,
+                  renderHTML: (attributes : Record<string, any>) => {
+                      if (attributes[attr]) {
+                          return {
+                              [attr]: attributes[attr],
+                          };
+                      }
+  
+                      return {};
+                  },
+              }
+  
+              return acc;
+          }, {});
+      }
+  })
+}
 
 interface NewEditorProps {
   content: Content;
@@ -149,10 +113,9 @@ export const NewEditor = ({
     Section,
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
     TextStyle,
-    Image.configure({
-      allowBase64: true,
+    ImageResize.configure({
+      allowBase64: true
     }),
-    ImageResize,
     Table.configure({
       resizable: true,
     }),
@@ -162,9 +125,10 @@ export const NewEditor = ({
     TextAlign.configure({
       types: ["paragraph", "heading"],
     }),
-    CustomParagraph,
-    CustomHeading,
+    allowAttributes(Paragraph, ["id", "style", "data-toc-id-selector"]),
+    allowAttributes(Heading, ["data-add-toc-here-id"]),
     StarterKit.configure({
+      listItem: {},
       bulletList: {
         keepMarks: true,
         keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
@@ -197,20 +161,20 @@ export const NewEditor = ({
     if (tocData && editor) {
       tocData.map((d) => {
         // If the item contains attribute data-toc-id, then we need to update the id of the element
-        console.info("Updating TOC", d.item);
         const id = d.item.dom.getAttribute("data-add-toc-here-id");
+
         if (id) {
-          const tocId = document.getElementById(id);
-          if (tocId) {
-            tocId.innerText = d.hierarchyText;
+          const $toc = editor.$node("paragraph", { id: id });
+          if ($toc) {
+            $toc.content = d.hierarchyText;
           }
         } else {
           const $header = editor.$node("heading", { id: d.item.id });
           if(!$header) {
             console.error("Header not found for TOC", d.item.id);
-          } else {
-            $header.content = d.hierarchyText + " " + d.item.textContent;
+            return;
           }
+          $header.content = d.hierarchyText + " " + d.item.textContent;
         }
       });
 
@@ -257,7 +221,7 @@ const Toc = ({ data, maxDepth = 1 }: TocProps) => {
         .map((d) => (
           <li key={d.itemId}>
             <p data-toc-id-selector={d.selector}>
-              {d.hierarchyText} - {d.textContent}
+              {d.hierarchyText}{" "}{d.textContent}
             </p>
           </li>
         ))}

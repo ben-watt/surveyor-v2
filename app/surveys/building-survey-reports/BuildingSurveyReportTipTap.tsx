@@ -5,7 +5,9 @@ import Image from "next/image";
 import type {
   BuildingSurveyFormData,
   ElementSection,
+  MaterialComponent,
 } from "./BuildingSurveyReportSchema";
+import { v4 as uuidv4 } from "uuid";
 
 const TableBlock = ({
   children,
@@ -22,7 +24,7 @@ const TableBlock = ({
 
   const childrenArray = React.Children.toArray(children);
   if (childrenArray.length % widths.length !== 0)
-    throw new Error("Number of children must be a multiple of widths");
+    console.warn("Number of children should be a multiple of widths");
 
   const landscapeWidth = 948; // Width of the page in landscape
 
@@ -46,7 +48,7 @@ const TableBlock = ({
   }
 
   return (
-    <table className="w-full">
+    <table>
       <tbody>{tableRows}</tbody>
     </table>
   );
@@ -76,9 +78,10 @@ export default function PDF({ form }: PdfProps) {
   return (
     <>
       <Page>
-        <TableBlock widths={[60, 40]}>
+        <TableBlock widths={[55, 45]}>
           <div>
             <Image
+              style={{ margin: "0 auto" }}
               src="/typical-house.webp"
               alt="typical house"
               width="700"
@@ -167,27 +170,27 @@ export default function PDF({ form }: PdfProps) {
         <TableBlock widths={[94, 6]}>
           <ul>
             <li>
-              - For information purposes, generally, no repair is required.
+              For information purposes, generally, no repair is required.
               Property to be maintained as usual.
             </li>
           </ul>
           <p style={{ backgroundColor: "green" }}></p>
           <ul>
             <li>
-              - Defects requiring repair/replacement but not considered urgent
+              Defects requiring repair/replacement but not considered urgent
               nor serious. Property to be maintained as usual.
             </li>
           </ul>
           <p style={{ backgroundColor: "orange" }}></p>
           <ul>
             <li>
-              - Serious defects to be fully considered prior to purchase that
+              Serious defects to be fully considered prior to purchase that
               need to be repaired, replace or investigated urgently.
             </li>
           </ul>
           <p style={{ backgroundColor: "red" }}></p>
           <ul>
-            <li>- Not inspected</li>
+            <li>Not inspected</li>
           </ul>
           <p className="w-100-perc h-100-perc text-centre">
             <strong>NI</strong>
@@ -222,8 +225,8 @@ export default function PDF({ form }: PdfProps) {
         <Image
           src="/typical-house.webp"
           alt="typical house"
-          width={400}
-          height={200}
+          width={800}
+          height={800}
         />
       </Page>
       <Page>
@@ -266,6 +269,12 @@ export default function PDF({ form }: PdfProps) {
           width="600"
           height="400"
         />
+      </Page>
+      <Page>
+        <TableBlock widths={[50,50]}>
+          {form.frontElevationImagesUri.map((uri, i) => 
+            (<img src={uri} key={`frontElevation_img_${i}`} alt={`frontElevation_img_${i}`}></img>))}
+        </TableBlock>
       </Page>
       <Page>
         {form.sections.map((s, i) => (
@@ -394,11 +403,6 @@ type ConditionSectionProps = {
   elementSection: ElementSection;
 };
 
-const InvokeOnRender = ({ onRender }: { onRender: () => void }) => {
-  onRender();
-  return <></>;
-};
-
 const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
   const es = elementSection;
 
@@ -413,18 +417,18 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
             key={i}
             src={es.images[i]}
             alt={elementSection.name + ".image." + i }
-            width={200}
-            height={200}
+            width={300}
+            height={300}
           />
         </td>
-        <td style={{ width: "5cm", height: "5cm" }}>
+        <td>
           {es.images.at(i + 1) && (
             <Image
               key={i + 1}
               src={es.images[i + 1]}
               alt={elementSection.name + ".image." + i }
-              width={200}
-              height={200}
+              width={400}
+              height={400}
             />
           )}
         </td>
@@ -446,7 +450,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
   }
 
   return (
-    <>
+    <Page>
       <h2>{es.name}</h2>
       <p></p>
       <TableBlock widths={[10, 20, 70]}>
@@ -456,12 +460,14 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
         </p>
         <p>{es.description}</p>
       </TableBlock>
-      {es.materialComponents.map((mc) => (
+      {es.materialComponents
+      .map((mc) => ({ mc : mc, id: uuidv4() }))
+      .map(({ mc, id }, i) => (
         <>
           <p></p>
-          <TableBlock widths={[10, 20, 64, 6]} key={mc.id}>
-            <p id={mc.id}></p>
-            <h3 data-add-toc-here-id={mc.id}>
+          <TableBlock widths={[10, 20, 64, 6]} key={i}>
+            <p id={id}></p>
+            <h3 data-add-toc-here-id={id}>
               <strong>Component</strong>
             </h3>
             <p>{mc.useNameOveride ? mc.name : mc.id}</p>
@@ -492,6 +498,6 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
           <tbody>{tableRows}</tbody>
         </table>
       </div>
-    </>
+    </Page>
   );
 };

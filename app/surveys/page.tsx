@@ -131,7 +131,7 @@ function HomePage() {
       },
     ];
 
-    return <DataTable columns={columns} data={surveys} />
+    return <DataTable initialState={{ sorting: [{ id: "created", desc : true }]}} columns={columns} data={surveys} />
   }
 }
 

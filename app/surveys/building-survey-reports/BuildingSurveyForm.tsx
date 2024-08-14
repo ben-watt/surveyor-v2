@@ -5,7 +5,9 @@ import {
   ElementSection,
   Defect,
   RagStatus,
+  Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
+  InputType,
 } from "./BuildingSurveyReportSchema";
 
 import {
@@ -13,9 +15,12 @@ import {
   FormProvider,
   Controller,
   useFormContext,
-  useFieldArray
+  useFieldArray,
+  UseFormRegister,
+  FieldValues,
+  Path,
 } from "react-hook-form";
-import { ErrorMessage } from "@hookform/error-message"
+import { ErrorMessage } from "@hookform/error-message";
 import { ToggleSection } from "./Defects";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "../../components/Input/InputText";
@@ -43,16 +48,102 @@ import {
 } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
 import toast from "react-hot-toast";
+import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
+import { FormSection } from "@/app/components/FormSection";
+
+function mapToInputType<T, K extends FieldValues>(
+  input: InputT<T>,
+  registerName: Path<K>,
+  register: UseFormRegister<K>
+) {
+  switch (input.type) {
+    case "text":
+      return (
+        <Input
+          labelTitle={input.label}
+          placeholder={input.placeholder}
+          register={() => register(registerName, { required: input.required })}
+        />
+      );
+    case "number":
+      return (
+        <Input
+          type="number"
+          labelTitle={input.label}
+          placeholder={input.placeholder}
+          register={() => register(registerName, { required: input.required })}
+        />
+      );
+    case "textarea":
+      return (
+        <TextAreaInput
+          labelTitle={input.label}
+          placeholder={input.placeholder}
+          register={() => register(registerName, { required: input.required })}
+        />
+      );
+    case "checkbox":
+      return (
+        <InputCheckbox
+          labelText={input.label}
+          rhfName={registerName}
+          controllerProps={{ rules: { required: input.required, validate: input.validate } }}
+        />
+      );
+    case "select":
+      return (
+        <>
+          <label htmlFor={input.label} className="text-sm">
+            {input.label}
+          </label>
+          <Combobox
+            data={[
+              { label: "Freehold", value: "Freehold" },
+              { label: "Leasehold", value: "Leasehold" },
+              { label: "Commonhold", value: "Commonhold" },
+              { label: "Other", value: "Other" },
+              { label: "Unknown", value: "Unknown" },
+            ]}
+            register={() =>
+              register(registerName, { required: input.required })
+            }
+          />
+        </>
+      );
+    default:
+      return (
+        <Input
+          labelTitle={input.label}
+          register={() => register(registerName, { required: input.required, validate: input.validate })}
+        />
+      );
+  }
+}
 
 interface BuildingSurveyFormProps {
   id?: string;
 }
 
-const selectionSetElement = ["id", "name", "components.*", "order", "section"] as const;
+const selectionSetElement = [
+  "id",
+  "name",
+  "components.*",
+  "order",
+  "section",
+] as const;
 type ElementData = SelectionSet<
   Schema["Elements"]["type"],
   typeof selectionSetElement
 >;
+
+const shouldBeTrueCheckBox = (label: string) : InputT<boolean> => ({
+    type: "checkbox",
+    placeholder: "",
+    value: false,
+    label: label,
+    required: true,
+    validate: (value: boolean) => value === true,
+  })
 
 export default function Report({ id }: BuildingSurveyFormProps) {
   let defaultValues: BuildingSurveyForm = {
@@ -69,7 +160,8 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         type: "text",
         value: "",
         label: "Property Type",
-        placeholder: "Detached, Semi-detached, Terraced, Flat, Bungalow, Maisonette, Other",
+        placeholder:
+          "Detached, Semi-detached, Terraced, Flat, Bungalow, Maisonette, Other",
         required: true,
       },
       yearOfConstruction: {
@@ -104,7 +196,8 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         type: "text",
         value: "",
         label: "Services",
-        placeholder: "Electricity, Gas, Water, Drainage, Telephone, Broadband, Other",
+        placeholder:
+          "Electricity, Gas, Water, Drainage, Telephone, Broadband, Other",
         required: true,
       },
       otherServices: {
@@ -161,12 +254,28 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         name: "Grounds (External Areas)",
         elementSections: [],
       },
-    ]
+    ],
+    checklist: [
+      shouldBeTrueCheckBox("Have you checked for asbestos?"),
+      shouldBeTrueCheckBox("Have you lifted manhole covers to drains?"),
+      shouldBeTrueCheckBox("Have you checked for Japanese Knotweed?"),
+      shouldBeTrueCheckBox("have you checked external ground levels in relation to DPCs / Air Vents?"),
+      shouldBeTrueCheckBox("Have you located services, elecs, gas, water, etc...?"),
+      shouldBeTrueCheckBox("Have the chimney breasts been removed internally?"),
+      shouldBeTrueCheckBox("Have the locations and severity of all cracks been logged?"),
+      shouldBeTrueCheckBox("Are there mature trees in close proximity to the building?"),
+      shouldBeTrueCheckBox("I confirm that the information provided is accurate"),
+    ],
   };
+
+
+  
 
   const methods = useForm<BuildingSurveyForm>({ defaultValues });
   const { register, handleSubmit, watch, formState, reset, control } = methods;
   const router = useRouter();
+
+  console.log(formState.errors);
 
   const createDefaultElementSection = (
     element: ElementData
@@ -204,7 +313,6 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         const currentForm = watch();
 
         if (response.data) {
-
           response.data
             .sort((x, y) => {
               let a = x.order ? x.order : 0;
@@ -214,9 +322,11 @@ export default function Report({ id }: BuildingSurveyFormProps) {
             .map((element) => {
               currentForm.sections.forEach((section) => {
                 if (section.name === element.section) {
-                  section.elementSections.push(createDefaultElementSection(element));
+                  section.elementSections.push(
+                    createDefaultElementSection(element)
+                  );
                 }
-              })
+              });
             });
         }
 
@@ -237,15 +347,14 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     try {
       let form = watch();
 
-      if(!id) {
+      if (!id) {
         let _ = await reportClient.models.Surveys.create({
           id: form.id,
           content: JSON.stringify(form),
         });
 
         successToast("Created Survey");
-      }
-      else {
+      } else {
         let _ = await reportClient.models.Surveys.update({
           id: form.id,
           content: JSON.stringify(form),
@@ -254,7 +363,6 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         successToast("Updated Survey");
       }
 
-      
       router.push("/surveys");
     } catch (error) {
       toast.error("Failed to save report");
@@ -264,7 +372,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
 
   const fields = watch();
   console.log(fields);
-  console.log(formState.errors)
+  console.log(formState.errors);
 
   return (
     <div className="md:grid md:grid-cols-4 mb-4">
@@ -277,11 +385,14 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   <Input
                     labelTitle="Address"
                     placeholder="123 Main St, London, UK"
-                    register={() =>
-                      register("address", { required: "Address is required" })
-                    }
+                    register={() => register("address", { required: true })}
                   />
-                  <InputError message={formState.errors.address?.message} />
+                   <ErrorMessage
+                      errors={formState.errors}
+                      name={"address"}
+                      message="This field is required"
+                      render={({ message }) => InputError({ message })}
+                    />
                 </div>
                 <div>
                   <Input
@@ -289,17 +400,27 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     placeholder="Mr John Doe"
                     register={() => register("clientName", { required: true })}
                   />
-                  <InputError message={formState.errors.clientName?.message} />
+                  <ErrorMessage
+                      errors={formState.errors}
+                      name={"clientName"}
+                      message="This field is required"
+                      render={({ message }) => InputError({ message })}
+                    />
                 </div>
                 <div>
                   <Controller
                     name="inspectionDate"
                     control={control}
                     rules={{ required: true }}
-                    render={({ field }) => <InputDate labelTitle="Inspection Date" {...field} />}
+                    render={({ field }) => (
+                      <InputDate labelTitle="Inspection Date" {...field} />
+                    )}
                   />
-                  <InputError
-                    message={formState.errors.inspectionDate?.message}
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"inspectionDate"}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
                   />
                 </div>
                 <div>
@@ -308,116 +429,69 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     placeholder="Sunny, clear, 20°C"
                     register={() => register("weather", { required: true })}
                   />
-                  <InputError message={formState.errors.weather?.message} />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"weather"}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
+                  />
                 </div>
                 <div>
                   <TextAreaInput
                     labelTitle="Orientation"
                     register={() => register("orientation", { required: true })}
                   />
-                  <InputError message={formState.errors.orientation?.message} />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"orientation"}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
+                  />
                 </div>
                 <div>
                   <TextAreaInput
                     labelTitle="Situation"
                     register={() => register("situation", { required: true })}
                   />
-                  <InputError message={formState.errors.situation?.message} />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"situation"}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
+                  />
                 </div>
                 <div>
-                  <label className="mt-2" htmlFor="file-input">
-                    Front Elevation Image
-                  </label>
-                  <div>
-                    <InputImage
-                      register={() => register("frontElevationImagesUri")}
-                      path={`report-images/${fields.id}/frontElevationImages/`}
-                    />
-                  </div>
-                </div>  
+                  <InputImage
+                    labelTitle="Elevation Images"
+                    register={() => register("frontElevationImagesUri")}
+                    path={`report-images/${fields.id}/frontElevationImages/`}
+                  />
+                </div>
               </div>
-              <div>
+              <FormSection title="Property Description">
                 {Object.keys(defaultValues.propertyDescription)?.map((key) => {
-                  type PropertyDescriptionKey = keyof typeof defaultValues.propertyDescription;
-                  let propertyKey = key as PropertyDescriptionKey;
-                  let property = defaultValues.propertyDescription[propertyKey];
-
-                  const mapToInputType = (type: string) => {
-                    switch (type) {
-                      case "text":
-                        return (
-                          <Input
-                            labelTitle={property.label}
-                            placeholder={property.placeholder}
-                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
-                          />
-                        );
-                      case "number":
-                        return (
-                          <Input
-                            type="number"
-                            labelTitle={property.label}
-                            placeholder={property.placeholder}
-                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
-                          />
-                        );
-                      case "textarea":
-                        return (
-                          <TextAreaInput
-                            labelTitle={property.label}
-                            placeholder={property.placeholder}
-                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
-                          />
-                        );
-                      case "select":
-                        return (
-                          <>
-                            <label htmlFor={property.label} className="text-sm">
-                              {property.label}
-                            </label>
-                            <Combobox
-                              data={[
-                                { label: "Freehold", value: "Freehold" },
-                                { label: "Leasehold", value: "Leasehold" },
-                                { label: "Commonhold", value: "Commonhold" },
-                                { label: "Other", value: "Other" },
-                                { label: "Unknown", value: "Unknown" },
-                              ]}
-                              register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
-                            />
-                          </>
-                          
-                        )
-                      default:
-                        return (
-                          <Input
-                            labelTitle={property.label}
-                            register={() => register(`propertyDescription.${propertyKey}.value`,  { required: property.required })}
-                          />
-                        );
-                    }
-                  }
+                  const propKey  = key as keyof typeof defaultValues.propertyDescription;
+                  const property = defaultValues.propertyDescription[propKey] as InputT<InputType>;
+                  const reqName = `propertyDescription.${propKey}.value` as const;
 
                   return (
                     <div key={key} className="mt-1 mb-1">
-                      {mapToInputType(property.type)}
+                      {mapToInputType(property, reqName, register)}
                       <ErrorMessage
                         errors={formState.errors}
-                        name={`propertyDescription.${propertyKey}.value`}
+                        name={`propertyDescription.${reqName}.value`}
                         message="This field is required"
-                        render={({ message }) => <span role="alert" className="text-red-700 text-sm">{message}</span>}
+                        render={({ message }) => InputError({ message })}
                       />
                     </div>
                   );
                 })}
-              </div>
+              </FormSection>
               {fields.sections.map((section, sectionIndex) => {
                 return (
-                  <div
-                    className="border border-grey-600 p-2 mt-2 mb-2 rounded"
+                  <FormSection title={section.name}
                     key={`${section}-${sectionIndex}`}
                   >
-                    <div>{section.name}</div>
                     {section.elementSections.map((elementSection, i) => (
                       <section
                         key={`${sectionIndex}.${i}`}
@@ -458,10 +532,31 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                         </ToggleSection>
                       </section>
                     ))}
-                  </div>
+                  </FormSection>
                 );
               })}
             </div>
+            <FormSection title="Checklist">
+              {fields.checklist.map((checklist, index) => {
+                return (
+                  <div className="mt-4 mb-4" key={index}>
+                    <div>
+                      {mapToInputType(
+                        checklist,
+                        `checklist.${index}.value`,
+                        register
+                      )}
+                    </div>
+                    <ErrorMessage
+                      errors={formState.errors}
+                      name={`checklist.${index}.value`}
+                      message="This field is required and must be checked"
+                      render={({ message }) => InputError({ message })}
+                    />
+                  </div>
+                );
+              })}
+            </FormSection>
             <div>
               <PrimaryBtn className="w-full flex justify-center" type="submit">
                 Save

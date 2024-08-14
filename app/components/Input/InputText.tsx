@@ -1,5 +1,6 @@
 import { Input as ShadInput } from "@/components/ui/input";
 import { UseFormRegisterReturn } from "react-hook-form";
+import { Label } from "./Label";
 
 interface InputTextProps {
   labelTitle?: string;
@@ -29,13 +30,5 @@ function Input({
     </>
   );
 }
-
-const Label = ({ text }: { text: string }) => {
-  return (
-    <label>
-      <span className="text-sm">{text}</span>
-    </label>
-  );
-};
 
 export default Input;

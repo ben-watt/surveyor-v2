@@ -10,17 +10,18 @@ export type BuildingSurveyFormData = {
     propertyDescription: PropertyDescription,
     frontElevationImagesUri: string[]
     sections: SurveySection[],
+    checklist: Array<Input<boolean>>,
 }
 
+export type InputType = "text" | "number" | "date" | "textarea" | "select" | "checkbox" | "boolean"
 
-type InputType = "text" | "number" | "date" | "textarea" | "select";
-
-type Input<T> = {
+export type Input<T> = {
     type: InputType,
     value: T,
     label: string,
     placeholder: string,
     required: boolean
+    validate?: (value: T) => boolean,
 }
 
 type description = string;

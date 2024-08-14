@@ -1,49 +1,54 @@
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
 import { StorageManager } from '@aws-amplify/ui-react-storage';
 import { useEffect, useState } from "react";
+import { Label } from "./Label";
 
 
 interface InputImageProps {
   path: string;
-  label?: string;
+  labelTitle?: string;
   maxFileCount?: number;
   register: () => UseFormRegisterReturn<string>
 }
 
-const InputImage = ({ path, label, maxFileCount = 10, register }: InputImageProps) => {
+const InputImage = ({ path, labelTitle, maxFileCount = 10, register }: InputImageProps) => {
   const reg = register();
   const { setValue, getValues, watch } = useFormContext();
   const fileName = watch(reg.name);
 
   return (
+    <>
+      <Label text={labelTitle}></Label>
       <StorageManager
-        displayText={{
-            browseFilesText: 'Upload Images',
-        }}
+          displayText={{
+              browseFilesText: 'Upload Images',
+          }}
 
-        defaultFiles={fileName.map((fn : string) => ({ key: fn })) || []}
-        acceptedFileTypes={['image/*']}
-        path={path}
-        maxFileCount={maxFileCount}
-        
-        components={{
-          DropZone({ children, displayText, inDropZone, ...rest }) {
-            return children;
-          },
-        }}
+          defaultFiles={fileName.map((fn : string) => ({ key: fn })) || []}
+          acceptedFileTypes={['image/*']}
+          path={path}
+          maxFileCount={maxFileCount}
 
-        onUploadSuccess={(file) => {
-          const currentVal = getValues(reg.name) || [];
-          setValue(reg.name, currentVal.concat(file.key)) 
-        }}
+          components={{
+            DropZone({ children, displayText, inDropZone, ...rest }) {
+              return children;
+            },
+          }}
 
-        onFileRemove={(file) => {
-          const currentVal = getValues(reg.name) || [];
-          setValue(reg.name, currentVal.filter((v: string) => v !== file.key))
-        }}
+          onUploadSuccess={(file) => {
+            const currentVal = getValues(reg.name) || [];
+            setValue(reg.name, currentVal.concat(file.key)) 
+          }}
 
-        isResumable
-      />
+          onFileRemove={(file) => {
+            const currentVal = getValues(reg.name) || [];
+            setValue(reg.name, currentVal.filter((v: string) => v !== file.key))
+          }}
+
+          isResumable
+        />
+    </>
+      
   );
 };
 
