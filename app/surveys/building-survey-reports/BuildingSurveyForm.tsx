@@ -434,7 +434,6 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                         >
                           <div className="flex-row space-y-2 p-2">
                             <SmartTextArea
-                              label={elementSection.name}
                               placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
                               register={() =>
                                 register(
