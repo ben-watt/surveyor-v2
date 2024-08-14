@@ -63,7 +63,7 @@ export default function SecureNav() {
           className="flex-none text-xl font-semibold dark:text-white"
           href="/"
         >
-          WATT
+          SURVEYOR
         </Link>
       </div>
       <div className="m-auto w-full md:max-w-96">

@@ -20,7 +20,8 @@ const schema = a.schema({
   Elements: a.model({
     id: a.id().required(),
     name: a.string().required(),
-    priority: a.float(),
+    order: a.float(),
+    section: a.string().required(),
     description: a.string(),
     components: a.hasMany("Components", "id"),
   }).authorization((allow) => [

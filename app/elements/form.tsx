@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/ReportsClient";
 import { useEffect } from "react";
 import { Schema } from "@/amplify/data/resource";
+import { Combobox } from "../components/Input/ComboBox";
 
 type ElementsData = Schema["Elements"]["type"];
 type ElementsDataUpdate = Omit<ElementsData, "createdAt" | "updatedAt">;
@@ -23,35 +24,37 @@ export function DataForm({ id }: DataFormProps) {
 
   useEffect(() => {
     if (id) {
-      const fetchDefect = async () => {
+      const fetch = async () => {
         try {
           const response = await reportClient.models.Elements.get({ id });
           form.reset(response.data as ElementsDataUpdate);
-          console.debug("existing Data", response.data);
+          console.debug("fetched existing data", response.data);
         } catch (error) {
           console.error("Failed to fetch defect", error);
         }
       };
 
-      fetchDefect();
+      fetch();
     }
   }, [form, id]);
 
   const onSubmit = (data: ElementsDataUpdate) => {
-    const saveDefect = async () => {
+    const save = async () => {
       try {
         if (!data.id) {
           await reportClient.models.Elements.create(data);
+          successToast("Created Element");
         } else {
           await reportClient.models.Elements.update({
             id: data.id,
             name: data.name,
-            priority: data.priority,
-            description: data.description,          
+            order: data.order,
+            section: data.section,
+            description: data.description,
           });
+          successToast("Updated Element");
         }
 
-        successToast("Saved");
         router.push("/elements");
       } catch (error) {
         basicToast("Error");
@@ -59,7 +62,7 @@ export function DataForm({ id }: DataFormProps) {
       }
     };
 
-    saveDefect();
+    save();
   };
 
   return (
@@ -73,15 +76,25 @@ export function DataForm({ id }: DataFormProps) {
           labelTitle="Description"
           register={() => register("description")}
         />
-        <div>
-          <Input
-            labelTitle="Priority"
-            type="number"
-            placeholder="priority"
-            defaultValue={1000}
-            register={() => register("priority", { required: "priority is required" })}
-          />
-        </div>
+        <Combobox
+          labelTitle="Section"
+          data={[
+            { value: "External Condition of Property", label: "External Condition of Property" },
+            { value: "Internal Condition of Property", label: "Internal Condition of Property" },
+            { value: "Sevices", label: "Sevices" },
+            { value: "Grounds (External Areas)", label: "Grounds (External Areas)" },
+          ]}
+          register={() =>
+            register("section", { required: "Section is required" })
+          }
+        />
+        <Input
+          labelTitle="Order"
+          type="number"
+          placeholder="order"
+          defaultValue={1000}
+          register={() => register("order", { required: "Order is required" })}
+        />
         <PrimaryBtn className="w-full flex justify-center" type="submit">
           Save
         </PrimaryBtn>

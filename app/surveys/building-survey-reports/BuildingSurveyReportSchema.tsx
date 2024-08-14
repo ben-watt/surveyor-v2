@@ -8,8 +8,8 @@ export type BuildingSurveyFormData = {
     orientation: string,
     situation: string,
     propertyDescription: PropertyDescription,
-    frontElevationImagesUri: string[],
-    sections: SurveySection[]
+    frontElevationImagesUri: string[]
+    sections: SurveySection[],
 }
 
 

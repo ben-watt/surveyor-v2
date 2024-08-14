@@ -10,6 +10,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  InitialTableState,
 } from "@tanstack/react-table";
 
 import {
@@ -33,12 +34,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type DataTableProps<TData> = {
+  initialState?: InitialTableState;
   columns: ColumnDef<TData>[];
   data: TData[];
 };
 
-export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+export function DataTable<TData>({ initialState, columns, data }: DataTableProps<TData>) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -46,17 +47,16 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
   );
 
   const table = useReactTable({
+    initialState,
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     state: {
-      sorting,
       columnFilters,
       columnVisibility,
     },
@@ -124,10 +124,10 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className={cell.column.columnDef.meta?.tw.cellClassName}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -180,7 +180,7 @@ export function SortableHeader<TData>({
   return (
     <Button
       variant="ghost"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      onClick={() => column.toggleSorting()}
     >
       {header}
       <ArrowUpDown className="ml-2 h-4 w-4" />

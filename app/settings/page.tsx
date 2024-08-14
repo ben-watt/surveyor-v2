@@ -7,108 +7,128 @@ import toast from "react-hot-toast";
 import { Schema } from "@/amplify/data/resource";
 
 const selectionSet = ["id"] as const;
-type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "priority">;
+type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section">;
 
 const seedElementData: ElementData[] = [
   {
     name: "Foundations and Substructure",
     description: "",
-    priority: 1,
+    order: 1,
+    section: "External Condition of Property",
   },
   {
     name: "Roof Coverings",
     description: "",
-    priority: 2,
+    order: 2,
+    section: "External Condition of Property",
   },
   {
     name: "Chimneys",
     description: "",
-    priority: 3,
+    order: 3,
+    section: "External Condition of Property",
   },
   {
     name: "Rainwater Disposal System",
     description: "",
-    priority: 4,
+    order: 4,
+    section: "External Condition of Property",
   },
   {
     name: "Sofits and Fascias",
     description: "",
-    priority: 5,
+    order: 5,
+    section: "External Condition of Property",
   },
   {
     name: "Main Walls",
     description: "",
-    priority: 6,
+    order: 6,
+    section: "External Condition of Property",
   },
   {
     name: "Windows and Doors",
     description: "",
-    priority: 7,
+    order: 7,
+    section: "External Condition of Property",
   },
   {
     name: "Roof Structure",
     description: "",
-    priority: 8,
+    order: 8,
+    section: "External Condition of Property",
   },
   {
     name: "Ceilings",
     description: "",
-    priority: 9,
+    order: 9,
+    section: "External Condition of Property",
   },
   {
     name: "Walls and Partitions",
     description: "",
-    priority: 10,
+    order: 10,
+    section: "Internal Condition of Property",
   },
   {
     name: "Floors",
     description: "",
-    priority: 11,
+    order: 11,
+    section: "Internal Condition of Property",
   },
   {
     name: "Internal Joinery",
     description: "",
-    priority: 12,
+    order: 12,
+    section: "Internal Condition of Property",
   },
   {
     name: "Sanitaryware & Kitchen",
     description: "",
-    priority: 13,
+    order: 13,
+    section: "Internal Condition of Property",
   },
   {
     name: "Fireplaces",
     description: "",
-    priority: 14,
+    order: 14,
+    section: "Internal Condition of Property",
   },
   {
     name: "Electrical Installation",
     description: "",
-    priority: 15,
+    order: 15,
+    section: "Services",
   },
   {
     name: "Gas Installations",
     description: "",
-    priority: 16,
+    order: 16,
+    section: "Services",
   },
   {
     name: "Cold Water Supply",
     description: "",
-    priority: 17,
+    order: 17,
+    section: "Services",
   },
   {
     name: "Hot Water Supply / Heating Installations",
     description: "",
-    priority: 18,
+    order: 18,
+    section: "Services",
   },
   {
     name: "Surface water & Soil drainage",
     description: "",
-    priority: 19,
+    order: 19,
+    section: "Services",
   },
   {
     name: "Boundaries, Fencing, Drives, Lawn, etc",
     description: "",
-    priority: 20,
+    order: 20,
+    section: "Grounds (External Areas)",
   }
 ]
 
@@ -118,9 +138,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchReports() {
       try {
-        const response = await reportClient.models.Elements.list({
-          selectionSet: selectionSet,
-        });
+        const response = await reportClient.models.Elements.list();
 
         if (response.data) {
           setElementIds(response.data.map((e) => e.id));

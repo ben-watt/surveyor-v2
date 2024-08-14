@@ -48,7 +48,7 @@ interface BuildingSurveyFormProps {
   id?: string;
 }
 
-const selectionSetElement = ["id", "name", "components.*", "priority"] as const;
+const selectionSetElement = ["id", "name", "components.*", "order", "section"] as const;
 type ElementData = SelectionSet<
   Schema["Elements"]["type"],
   typeof selectionSetElement
@@ -149,7 +149,19 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         name: "External Condition of Property",
         elementSections: [],
       },
-    ],
+      {
+        name: "Internal Condition of Property",
+        elementSections: [],
+      },
+      {
+        name: "Services",
+        elementSections: [],
+      },
+      {
+        name: "Grounds (External Areas)",
+        elementSections: [],
+      },
+    ]
   };
 
   const methods = useForm<BuildingSurveyForm>({ defaultValues });
@@ -192,13 +204,20 @@ export default function Report({ id }: BuildingSurveyFormProps) {
         const currentForm = watch();
 
         if (response.data) {
-          currentForm.sections[0].elementSections = response.data
+
+          response.data
             .sort((x, y) => {
-              let a = x.priority ? x.priority : 0;
-              let b = y.priority ? y.priority : 0;
+              let a = x.order ? x.order : 0;
+              let b = y.order ? y.order : 0;
               return a - b;
             })
-            .map((element) => createDefaultElementSection(element));
+            .map((element) => {
+              currentForm.sections.forEach((section) => {
+                if (section.name === element.section) {
+                  section.elementSections.push(createDefaultElementSection(element));
+                }
+              })
+            });
         }
 
         reset(currentForm);

@@ -23,9 +23,9 @@ export default function Page() {
       accessorKey: "name"
     },
     {
-      id: "priority",
-      header: ({ column }) => <SortableHeader column={column} header="Priority" />,
-      accessorFn: (v) => v.priority ? v.priority : 0,
+      id: "order",
+      header: ({ column }) => <SortableHeader column={column} header="Order" />,
+      accessorFn: (v) => v.order ? v.order : 0,
     },
     {
       id: "created",
@@ -102,7 +102,7 @@ export default function Page() {
           <CopyMarkupBtn>Create</CopyMarkupBtn>
         </Link>
       </div>
-      <DataTable columns={columns} data={elementData} />
+      <DataTable initialState={{ sorting: [{ id: "order", desc: false }] }} columns={columns} data={elementData} />
     </div>
   );
 }
