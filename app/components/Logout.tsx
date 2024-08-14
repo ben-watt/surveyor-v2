@@ -1,5 +1,3 @@
-// components/Logout.tsx
-
 "use client";
 
 import { signOut } from "aws-amplify/auth";

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "fix": "next lint --fix"
+    "fix": "next lint --fix",
+    "knip": "knip"
   },
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.2.1",
@@ -76,15 +77,16 @@
     "@aws-amplify/backend-cli": "^1.0.3",
     "@gocapsule/column-extension": "^1.0.0-beta-3",
     "@tailwindcss/forms": "^0.5.7",
-    "@types/node": "^20.12.12",
+    "@types/node": "^20.14.15",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.17",
     "eslint": "8.56.0",
     "eslint-config-next": "14.1.0",
+    "knip": "^5.27.2",
     "pagedjs": "^0.4.3",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.4"
   }
 }

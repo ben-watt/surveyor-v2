@@ -115,13 +115,8 @@ function HomePage() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href={`/surveys/${reportId}/report`}>
-                    Generate report
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
                   <Link href={`/surveys/${reportId}/reportv2`}>
-                    Generate report v2
+                    Generate report
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-red-500"
