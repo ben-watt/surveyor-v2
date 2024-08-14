@@ -1,10 +1,10 @@
 import { Checkbox } from "@/components/ui/checkbox"
-import { ControllerProps, FieldValues, Path, useController, UseControllerProps, UseFormRegisterReturn } from "react-hook-form";
+import { FieldValues, Path, useController, UseControllerProps } from "react-hook-form";
 import { v4 } from "uuid"
 
 interface InputCheckboxProps {
-    rhfName: Path<FieldValues>
     labelText? : string
+    rhfName: Path<FieldValues>
     controllerProps?: Omit<UseControllerProps<FieldValues>, "name">
 }
 

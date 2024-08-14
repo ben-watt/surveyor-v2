@@ -479,7 +479,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                       {mapToInputType(property, reqName, register)}
                       <ErrorMessage
                         errors={formState.errors}
-                        name={`propertyDescription.${reqName}.value`}
+                        name={reqName}
                         message="This field is required"
                         render={({ message }) => InputError({ message })}
                       />
