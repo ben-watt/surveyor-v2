@@ -537,7 +537,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
               })}
             </div>
             <FormSection title="Checklist">
-              {fields.checklist.map((checklist, index) => {
+              {defaultValues.checklist.map((checklist, index) => {
                 return (
                   <div className="mt-4 mb-4" key={index}>
                     <div>
