@@ -49,26 +49,35 @@ using the content property. It can be translated as: find the counter named page
 where you find the element we’re targetting with the attribute data-toc-id-selector:
 */
 #toc li p::after {
+    order: 3;
+    display: flex;
+    content: target-counter(attr(data-toc-id-selector), page);
+    background-color: white;
+    padding-left: 2mm;
+}
+
+/*
+Hack to get dot-leaders to work in the TOC.
+*/
+#toc li p::before {
+    order: 2;
+    display: flex;
     content: 
     ". . . . . . . . . . . . . . . . . . . . "
     ". . . . . . . . . . . . . . . . . . . . "
     ". . . . . . . . . . . . . . . . . . . . "
     ". . . . . . . . . . . . . . . . . . . . "
-    target-counter(attr(data-toc-id-selector), page);
-    float: right;
+    ". . . . . . . . . . . . . . . . . . . . ";
     overflow: hidden;
-}
-
-#toc {
-    overflow-x: hidden;
-    white-space: nowrap;
+    text-wrap: nowrap;
 }
 
 #toc li p {
-    background: white
-}
-
-#toc li p + p::after {
-    float: right;
-    background: white
+    order: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    text-wrap: nowrap;
 }
