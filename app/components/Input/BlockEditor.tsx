@@ -16,6 +16,7 @@ import Image from "@tiptap/extension-image";
 import React, { useEffect } from "react";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
+import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
 import BlockMenuBar from "./BlockMenuBar";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@tiptap-pro/extension-table-of-contents";
 import { renderToStaticMarkup } from "react-dom/server";
 import { v4 } from "uuid";
+import { Fragment, Slice } from "@tiptap/pm/model";
 
 // Used to create a custom paragraph with style attributes
 const CustomParagraph = Paragraph.extend({
@@ -145,21 +147,12 @@ export const NewEditor = ({
 
   const extensions = [
     Section,
-    TableOfContents.configure({
-      getIndex: getHierarchicalIndexes,
-      getId: (textContent) => "toc-" + v4().slice(0, 8),
-      onUpdate: (data, isCreate) => {
-        if (isCreate) {
-          const dataWithHierarchy = parseDataHierarchy(data);
-          setTocData(dataWithHierarchy);
-        }
-      },
-    }),
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
     TextStyle,
     Image.configure({
       allowBase64: true,
     }),
+    ImageResize,
     Table.configure({
       resizable: true,
     }),
@@ -181,6 +174,16 @@ export const NewEditor = ({
         keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
       },
     }),
+    TableOfContents.configure({
+      getIndex: getHierarchicalIndexes,
+      getId: (textContent) => "toc-" + v4().slice(0, 8),
+      onUpdate: (data, isCreate) => {
+        if (isCreate) {
+          const dataWithHierarchy = parseDataHierarchy(data);
+          setTocData(dataWithHierarchy);
+        }
+      },
+    }),
   ];
 
   const editor = useEditor({
@@ -194,6 +197,7 @@ export const NewEditor = ({
     if (tocData && editor) {
       tocData.map((d) => {
         // If the item contains attribute data-toc-id, then we need to update the id of the element
+        console.info("Updating TOC", d.item);
         const id = d.item.dom.getAttribute("data-add-toc-here-id");
         if (id) {
           const tocId = document.getElementById(id);
@@ -201,7 +205,12 @@ export const NewEditor = ({
             tocId.innerText = d.hierarchyText;
           }
         } else {
-          d.item.dom.innerText = d.hierarchyText + " " + d.item.textContent;
+          const $header = editor.$node("heading", { id: d.item.id });
+          if(!$header) {
+            console.error("Header not found for TOC", d.item.id);
+          } else {
+            $header.content = d.hierarchyText + " " + d.item.textContent;
+          }
         }
       });
 
@@ -255,4 +264,3 @@ const Toc = ({ data, maxDepth = 1 }: TocProps) => {
     </ul>
   );
 };
-

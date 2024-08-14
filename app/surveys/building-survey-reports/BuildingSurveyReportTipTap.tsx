@@ -409,24 +409,25 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
     tableRows.push(
       <tr>
         <td>
-          <img
+          <Image
             key={i}
             src={es.images[i]}
-            alt={elementSection.name + ".image." + { i }}
+            alt={elementSection.name + ".image." + i }
             width={200}
             height={200}
           />
         </td>
-        {es.images.length >= i + 1 && (
-          <td>
-            <img
+        <td style={{ width: "5cm", height: "5cm" }}>
+          {es.images.at(i + 1) && (
+            <Image
               key={i + 1}
               src={es.images[i + 1]}
-              alt={elementSection.name + ".image." + { i }}
+              alt={elementSection.name + ".image." + i }
               width={200}
+              height={200}
             />
-          </td>
-        )}
+          )}
+        </td>
       </tr>
     );
   }
@@ -464,7 +465,11 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
               <strong>Component</strong>
             </h3>
             <p>{mc.useNameOveride ? mc.name : mc.id}</p>
-            <p style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus) }}></p>
+            <p
+              style={{
+                backgroundColor: mapRagToBackgroundColour(mc.ragStatus),
+              }}
+            ></p>
 
             <p></p>
             <p>

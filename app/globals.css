@@ -78,6 +78,7 @@
 
 .tiptap {
   --purple-light: #f3f2ff;
+  --purple: #9635ff;
   --black: #000000;
   --white: #ffffff;
   --gray-2: #e2e8f0;
@@ -259,4 +260,8 @@
 
 .tiptap hr + h2  {
   margin-top: 0;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  outline: 3px solid var(--purple);
 }
