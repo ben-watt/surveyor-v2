@@ -578,7 +578,6 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                   )}
                   {watch(`${typedName}.${index}.useNameOveride` as const) && (
                     <Input
-                      labelTitle="Name"
                       register={() =>
                         register(`${typedName}.${index}.name` as const, {
                           required: true,
