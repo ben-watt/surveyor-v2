@@ -259,23 +259,20 @@ export default function Report({ id }: BuildingSurveyFormProps) {
       shouldBeTrueCheckBox("Have you checked for asbestos?"),
       shouldBeTrueCheckBox("Have you lifted manhole covers to drains?"),
       shouldBeTrueCheckBox("Have you checked for Japanese Knotweed?"),
-      shouldBeTrueCheckBox("have you checked external ground levels in relation to DPCs / Air Vents?"),
-      shouldBeTrueCheckBox("Have you located services, elecs, gas, water, etc...?"),
-      shouldBeTrueCheckBox("Have the chimney breasts been removed internally?"),
-      shouldBeTrueCheckBox("Have the locations and severity of all cracks been logged?"),
-      shouldBeTrueCheckBox("Are there mature trees in close proximity to the building?"),
+      shouldBeTrueCheckBox("Have you checked external ground levels in relation to DPCs / Air Vents?"),
+      shouldBeTrueCheckBox("Have you located services, elecs, gas, water, etc...?"),
+      shouldBeTrueCheckBox("Have you checked if chimney breasts been removed internally?"),
+      shouldBeTrueCheckBox("Have you checked the locations and severity of all cracks been logged?"),
+      shouldBeTrueCheckBox("Have you checked if there are any mature trees in close proximity to the building?"),
       shouldBeTrueCheckBox("I confirm that the information provided is accurate"),
     ],
   };
-
-
-  
 
   const methods = useForm<BuildingSurveyForm>({ defaultValues });
   const { register, handleSubmit, watch, formState, reset, control } = methods;
   const router = useRouter();
 
-  console.log(formState.errors);
+  const sections = watch("sections") as BuildingSurveyForm["sections"];
 
   const createDefaultElementSection = (
     element: ElementData
@@ -370,10 +367,6 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     }
   };
 
-  const fields = watch();
-  console.log(fields);
-  console.log(formState.errors);
-
   return (
     <div className="md:grid md:grid-cols-4 mb-4">
       <div className="col-start-2 col-span-2">
@@ -464,7 +457,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   <InputImage
                     labelTitle="Elevation Images"
                     register={() => register("frontElevationImagesUri")}
-                    path={`report-images/${fields.id}/frontElevationImages/`}
+                    path={`report-images/${defaultValues.id}/frontElevationImages/`}
                   />
                 </div>
               </div>
@@ -487,7 +480,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   );
                 })}
               </FormSection>
-              {fields.sections.map((section, sectionIndex) => {
+              {sections.map((section, sectionIndex) => {
                 return (
                   <FormSection title={section.name}
                     key={`${section}-${sectionIndex}`}
@@ -753,9 +746,7 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
                     <DefectCheckbox
                       key={defectIndex.toString()}
                       defect={defect}
-                      {...register(
-                        `${typedName}.${index}.defects.${defectIndex}`
-                      )}
+                      name={`${typedName}.${index}.defects.${defectIndex}`}
                     />
                   ))}
                 </div>
@@ -774,10 +765,7 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
 interface DefectCheckboxProps {
   key: string;
   defect: Defect;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur: (event: React.FocusEvent<HTMLInputElement>) => void;
   name: string;
-  ref: React.Ref<HTMLInputElement>;
 }
 
 const DefectCheckbox = ({ defect, name }: DefectCheckboxProps) => {

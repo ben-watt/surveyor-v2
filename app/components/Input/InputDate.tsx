@@ -17,9 +17,10 @@ interface InputDateProps {
   labelTitle: string;
   onChange: (d: Date | undefined) => void;
   value?: Date;
+  ref: React.Ref<HTMLInputElement>;
 }
 
-const InputDate = ({ onChange, value, labelTitle }: InputDateProps) => {
+const InputDate = ({ onChange, value, labelTitle }: InputDateProps, ref : React.LegacyRef<HTMLDivElement>) => {
   const date = value;
   const handleSelect = (d: Date | undefined) => {
     onChange(d);
@@ -46,7 +47,7 @@ const InputDate = ({ onChange, value, labelTitle }: InputDateProps) => {
             {date ? format(date, "PPP") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0" align="start" ref={ref}>
           <Calendar
             mode="single"
             selected={value}
@@ -59,4 +60,4 @@ const InputDate = ({ onChange, value, labelTitle }: InputDateProps) => {
   );
 };
 
-export default InputDate;
+export default React.forwardRef(InputDate);

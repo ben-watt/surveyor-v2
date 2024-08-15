@@ -5,7 +5,6 @@ import {
   useController,
   UseControllerProps,
 } from "react-hook-form";
-import { v4 } from "uuid";
 
 interface InputCheckboxProps {
   labelText?: string;
@@ -18,14 +17,13 @@ export function InputCheckbox({
   labelText,
   controllerProps,
 }: InputCheckboxProps) {
-  const id = "checkbox-" + v4().slice(0, 8);
   const { field } = useController({ name: rhfName, ...controllerProps });
 
   return (
     <div className="flex items-center space-x-2" >
-        <Checkbox id={id} checked={field.value} onCheckedChange={field.onChange} {...field}/>
+        <Checkbox id={rhfName} checked={field.value} onCheckedChange={field.onChange} {...field}/>
         <label
-          htmlFor={id}
+          htmlFor={rhfName}
           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           {labelText}
