@@ -1,5 +1,4 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { useEffect, createRef } from "react";
 import {
   FieldValues,
   Path,
@@ -24,7 +23,7 @@ export function InputCheckbox({
 
   return (
     <div className="flex items-center space-x-2" >
-        <Checkbox id={id} checked={field.value} onCheckedChange={field.onChange} {...field}/>
+        <Checkbox id={id} />
         <label
           htmlFor={id}
           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
