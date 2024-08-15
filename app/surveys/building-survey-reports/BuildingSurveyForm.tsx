@@ -24,7 +24,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { InputToggle } from "../../components/Input/InputToggle";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "../../components/Input/InputText";
-import InputImage from "../../components/Input/ImageInput";
+import InputImage from "../../components/Input/InputImage";
 import InputDate from "../../components/Input/InputDate";
 import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
