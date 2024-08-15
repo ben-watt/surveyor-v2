@@ -1,7 +1,11 @@
-namespace React {
-    interface TdHTMLAttributes<T> extends HTMLAttributes<T> {
+import React from 'react';
+
+declare global {
+  namespace React {
+    interface TdHTMLAttributes<T> extends React.TdHTMLAttributes<T> {
       colwidth?: string;
     }
+  }
 }
 
 import '@tanstack/react-table'
