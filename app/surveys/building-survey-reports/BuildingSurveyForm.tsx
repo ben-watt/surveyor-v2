@@ -21,7 +21,7 @@ import {
   Path,
 } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
-import { ToggleSection } from "./Defects";
+import { InputToggle } from "../../components/Input/InputToggle";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "../../components/Input/InputText";
 import InputImage from "../../components/Input/ImageInput";
@@ -497,7 +497,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                         key={`${sectionIndex}.${i}`}
                         className="border border-grey-600 p-2 m-2 rounded "
                       >
-                        <ToggleSection
+                        <InputToggle
                           defaultValue={elementSection.isPartOfSurvey}
                           label={elementSection.name}
                           register={() =>
@@ -529,7 +529,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                               name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
                             />
                           </div>
-                        </ToggleSection>
+                        </InputToggle>
                       </section>
                     ))}
                   </FormSection>
