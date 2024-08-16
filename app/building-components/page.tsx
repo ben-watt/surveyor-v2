@@ -153,7 +153,7 @@ export default function Page() {
         <div>
           <h1 className="text-3xl dark:text-white">Components</h1>
         </div>
-        <Link href="/components/create">
+        <Link href="/building-components/create">
           <CopyMarkupBtn>Create</CopyMarkupBtn>
         </Link>
       </div>

@@ -104,7 +104,7 @@ function HomePage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem
-                  onClick={() => navigator.clipboard.writeText(reportId)}
+                  onClick={() => {}}
                 >
                   Copy report ID
                 </DropdownMenuItem>
