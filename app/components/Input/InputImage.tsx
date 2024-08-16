@@ -21,8 +21,7 @@ const InputImage = ({
   register,
 }: InputImageProps) => {
   const { name } = register();
-  const { setValue, getValues, watch } = useFormContext();
-  const fileName = watch(name);
+  const { setValue, getValues } = useFormContext();
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [cameraFiles, setCameraFiles] = useState<File[]>([]);
@@ -60,8 +59,6 @@ const InputImage = ({
     })
   }
 
-  console.log("fileName", fileName);
-
   return (
     <>
       <Label text={labelTitle}></Label>
@@ -94,7 +91,7 @@ const InputImage = ({
                 </Button>
                 <Button type="button" variant="outline" onClick={handleCaptureClick} disabled>
                   <CameraIcon size={16} />
-                  <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleCaptureOnChange} hidden />
+                    <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleCaptureOnChange} hidden />
                 </Button>
               </div>
             );
