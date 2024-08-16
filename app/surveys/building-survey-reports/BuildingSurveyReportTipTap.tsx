@@ -5,7 +5,6 @@ import Image from "next/image";
 import type {
   BuildingSurveyFormData,
   ElementSection,
-  MaterialComponent,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
 

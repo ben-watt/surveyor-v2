@@ -1,6 +1,4 @@
-"use client"
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -90,7 +88,9 @@ function mapToInputType<T, K extends FieldValues>(
         <InputCheckbox
           labelText={input.label}
           rhfName={registerName}
-          controllerProps={{ rules: { required: input.required, validate: input.validate } }}
+          controllerProps={{
+            rules: { required: input.required, validate: input.validate },
+          }}
         />
       );
     case "select":
@@ -117,7 +117,12 @@ function mapToInputType<T, K extends FieldValues>(
       return (
         <Input
           labelTitle={input.label}
-          register={() => register(registerName, { required: input.required, validate: input.validate })}
+          register={() =>
+            register(registerName, {
+              required: input.required,
+              validate: input.validate,
+            })
+          }
         />
       );
   }
@@ -139,14 +144,14 @@ type ElementData = SelectionSet<
   typeof selectionSetElement
 >;
 
-const shouldBeTrueCheckBox = (label: string) : InputT<boolean> => ({
-    type: "checkbox",
-    placeholder: "",
-    value: false,
-    label: label,
-    required: true,
-    validate: (value: boolean) => value === true,
-  })
+const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
+  type: "checkbox",
+  placeholder: "",
+  value: false,
+  label: label,
+  required: true,
+  validate: (value: boolean) => value === true,
+});
 
 export default function Report({ id }: BuildingSurveyFormProps) {
   let defaultValues: BuildingSurveyForm = {
@@ -262,12 +267,24 @@ export default function Report({ id }: BuildingSurveyFormProps) {
       shouldBeTrueCheckBox("Have you checked for asbestos?"),
       shouldBeTrueCheckBox("Have you lifted manhole covers to drains?"),
       shouldBeTrueCheckBox("Have you checked for Japanese Knotweed?"),
-      shouldBeTrueCheckBox("Have you checked external ground levels in relation to DPCs / Air Vents?"),
-      shouldBeTrueCheckBox("Have you located services, elecs, gas, water, etc...?"),
-      shouldBeTrueCheckBox("Have you checked if chimney breasts been removed internally?"),
-      shouldBeTrueCheckBox("Have you checked the locations and severity of all cracks been logged?"),
-      shouldBeTrueCheckBox("Have you checked if there are any mature trees in close proximity to the building?"),
-      shouldBeTrueCheckBox("I confirm that the information provided is accurate"),
+      shouldBeTrueCheckBox(
+        "Have you checked external ground levels in relation to DPCs / Air Vents?"
+      ),
+      shouldBeTrueCheckBox(
+        "Have you located services, elecs, gas, water, etc...?"
+      ),
+      shouldBeTrueCheckBox(
+        "Have you checked if chimney breasts been removed internally?"
+      ),
+      shouldBeTrueCheckBox(
+        "Have you checked the locations and severity of all cracks been logged?"
+      ),
+      shouldBeTrueCheckBox(
+        "Have you checked if there are any mature trees in close proximity to the building?"
+      ),
+      shouldBeTrueCheckBox(
+        "I confirm that the information provided is accurate"
+      ),
     ],
   };
 
@@ -383,12 +400,12 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     placeholder="123 Main St, London, UK"
                     register={() => register("address", { required: true })}
                   />
-                   <ErrorMessage
-                      errors={formState.errors}
-                      name={"address"}
-                      message="This field is required"
-                      render={({ message }) => InputError({ message })}
-                    />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"address"}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
+                  />
                 </div>
                 <div>
                   <Input
@@ -397,11 +414,11 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     register={() => register("clientName", { required: true })}
                   />
                   <ErrorMessage
-                      errors={formState.errors}
-                      name={"clientName"}
-                      message="This field is required"
-                      render={({ message }) => InputError({ message })}
-                    />
+                    errors={formState.errors}
+                    name={"clientName"}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
+                  />
                 </div>
                 <div>
                   <Controller
@@ -464,14 +481,20 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   />
                 </div>
                 <div>
-                  <InputImageUppy path={`report-images/${defaultValues.id}/frontElevationImages/`} />
+                  <InputImageUppy
+                    path={`report-images/${defaultValues.id}/frontElevationImages/`}
+                  />
                 </div>
               </div>
               <FormSection title="Property Description">
                 {Object.keys(defaultValues.propertyDescription)?.map((key) => {
-                  const propKey  = key as keyof typeof defaultValues.propertyDescription;
-                  const property = defaultValues.propertyDescription[propKey] as InputT<InputType>;
-                  const reqName = `propertyDescription.${propKey}.value` as const;
+                  const propKey =
+                    key as keyof typeof defaultValues.propertyDescription;
+                  const property = defaultValues.propertyDescription[
+                    propKey
+                  ] as InputT<InputType>;
+                  const reqName =
+                    `propertyDescription.${propKey}.value` as const;
 
                   return (
                     <div key={key} className="mt-1 mb-1">
@@ -488,7 +511,8 @@ export default function Report({ id }: BuildingSurveyFormProps) {
               </FormSection>
               {sections.map((section, sectionIndex) => {
                 return (
-                  <FormSection title={section.name}
+                  <FormSection
+                    title={section.name}
                     key={`${section}-${sectionIndex}`}
                   >
                     {section.elementSections.map((elementSection, i) => (
@@ -585,7 +609,8 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
     name: typedName,
     control: control,
   });
-  const [components, setComponents] = React.useState<ComponentData[]>([]);
+
+  const [components, setComponents] = useState<ComponentData[]>([]);
 
   useEffect(() => {
     async function fetchData() {

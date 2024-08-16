@@ -1,13 +1,12 @@
 "use client"
 
 import React from 'react'
-import SecureNav, { NavContainer } from './components/Navbar';
+import { NavContainer } from './components/Navbar';
 import Lottie from 'react-lottie-player';
 import animationData from './lottie/report-inspector.json';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuthenticator } from '@aws-amplify/ui-react';
-import { useRouter } from 'next/router';
 import { redirect } from 'next/navigation';
 
 function FrontPage() {

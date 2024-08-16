@@ -1,4 +1,6 @@
-import { Meta, Uppy, UppyFile, BasePlugin, Body } from "@uppy/core";
+"use client";
+
+import { Meta, Uppy, UppyFile, BasePlugin } from "@uppy/core";
 import { PluginOpts } from "@uppy/core/lib/BasePlugin";
 import { TransferProgressEvent, uploadData } from "aws-amplify/storage";
 

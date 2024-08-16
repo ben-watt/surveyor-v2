@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import Uppy from "@uppy/core";
 import Webcam from "@uppy/webcam";
