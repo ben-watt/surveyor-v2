@@ -480,11 +480,11 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     path={`report-images/${defaultValues.id}/frontElevationImages/`}
                   />
                 </div>
-                <div>
+                {/* <div>
                   <InputImageUppy
                     path={`report-images/${defaultValues.id}/frontElevationImages/`}
                   />
-                </div>
+                </div> */}
               </div>
               <FormSection title="Property Description">
                 {Object.keys(defaultValues.propertyDescription)?.map((key) => {
