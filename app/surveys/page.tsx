@@ -87,6 +87,7 @@ function HomePage() {
         id: "created",
         header: ({ column }) => <SortableHeader column={column} header="Created" />,
         accessorFn: (v) => new Date(v.reportDate).toDateString(),
+        sortingFn: (a, b) => a.original.reportDate < b.original.reportDate ? 1 : 0,
       },
       {
         id: "actions",
@@ -131,7 +132,7 @@ function HomePage() {
       },
     ];
 
-    return <DataTable initialState={{ sorting: [{ id: "created", desc : true }]}} columns={columns} data={surveys} />
+    return <DataTable initialState={{ sorting: [{ id: "created", desc: false }]}} columns={columns} data={surveys} />
   }
 }
 

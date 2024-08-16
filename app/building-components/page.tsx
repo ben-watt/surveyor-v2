@@ -66,6 +66,7 @@ export default function Page() {
         <SortableHeader column={column} header="Created" />
       ),
       accessorFn: (v) => new Date(v.createdAt).toDateString(),
+      sortingFn: (a, b) => a.original.createdAt < b.original.createdAt ? 1 : 0,
     },
     {
       id: "actions",
