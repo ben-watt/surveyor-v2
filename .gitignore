@@ -36,3 +36,7 @@ amplifytools.xcconfig
 
 #ts
 *.tsbuildinfo
+
+# Serwist
+public/sw*
+public/swe-worker*

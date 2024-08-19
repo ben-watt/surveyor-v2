@@ -20,8 +20,8 @@ interface DataFormProps {
 }
 
 export function DataForm({ id }: DataFormProps) {
-  const form = useForm<ComponentDataUpdate>({});
-  const { register, handleSubmit } = form;
+  const methods = useForm<ComponentDataUpdate>({});
+  const { register, handleSubmit } = methods;
   
   const [elements, setElements] = useState<Schema["Elements"]["type"][]>([]);
   const router = useRouter();
@@ -32,7 +32,7 @@ export function DataForm({ id }: DataFormProps) {
         try {
           const response = await reportClient.models.Components.get({ id });
           console.log(response.data)
-          form.reset(response.data as ComponentDataUpdate);
+          methods.reset(response.data as ComponentDataUpdate);
         } catch (error) {
           console.error("Failed to fetch data", error);
         }
@@ -40,7 +40,7 @@ export function DataForm({ id }: DataFormProps) {
 
       fetchData();
     }
-  }, [form, id]);
+  }, [methods, id]);
 
   useEffect(() => {
     const fetchElements = async () => {
@@ -81,7 +81,7 @@ export function DataForm({ id }: DataFormProps) {
   };
 
   return (
-    <FormProvider {...form}>
+    <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
         <Input
             labelTitle="Name"
