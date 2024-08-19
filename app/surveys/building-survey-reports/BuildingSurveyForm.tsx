@@ -52,9 +52,14 @@ import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
 import { db } from "@/app/clients/Dexie";
-//import { input } from "@/app/components/Input/UppyInputImage";
 
-const ImageInput = dynamic(() => import("@/app/components/Input/UppyInputImage").then((x) => x.input.rhfImage), { ssr: false });
+const ImageInput = dynamic(
+  () =>
+    import("@/app/components/Input/UppyInputImage").then(
+      (x) => x.input.rhfImage
+    ),
+  { ssr: false }
+);
 
 function mapToInputType<T, K extends FieldValues>(
   input: InputT<T>,
@@ -370,19 +375,24 @@ export default function Report({ id }: BuildingSurveyFormProps) {
 
   useEffect(() => {
     const saveFormData = async () => {
-      const formData = await db.surveys.filter(x => x.id === defaultValues.id).toArray();
-      if(formData.length > 0) {
+      const formData = await db.surveys
+        .filter((x) => x.id === defaultValues.id)
+        .toArray();
+      if (formData.length > 0) {
         db.surveys.update(formData[0], { content: JSON.stringify(changes) });
       } else {
-        db.surveys.add({ id: defaultValues.id, content: JSON.stringify(changes) });
+        db.surveys.add({
+          id: defaultValues.id,
+          content: JSON.stringify(changes),
+        });
       }
 
       const surveys = db.surveys.toArray();
       console.log(surveys);
-    }
+    };
 
     saveFormData();
-  }, [defaultValues.id, changes, watch])
+  }, [defaultValues.id, changes, watch]);
 
   const onSubmit = async () => {
     try {
@@ -560,12 +570,11 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                               }
                             />
                             <div>
-                              <InputImage
-                                register={() =>
-                                  register(
-                                    `sections.${sectionIndex}.elementSections.${i}.images`
-                                  )
-                                }
+                              <ImageInput
+                                rhfProps={{
+                                  name:  `sections.${sectionIndex}.elementSections.${i}.images`,
+                                  rules: { required: true },
+                                }}
                                 path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
                               />
                             </div>
