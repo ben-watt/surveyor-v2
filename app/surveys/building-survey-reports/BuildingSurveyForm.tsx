@@ -50,7 +50,10 @@ import { SelectTrigger } from "@radix-ui/react-select";
 import toast from "react-hot-toast";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection } from "@/app/components/FormSection";
-import { input } from "@/app/components/Input/UppyInputImage";
+import dynamic from "next/dynamic";
+//import { input } from "@/app/components/Input/UppyInputImage";
+
+const ImageInput = dynamic(() => import("@/app/components/Input/UppyInputImage").then((x) => x.input.rhfImage), { ssr: false });
 
 function mapToInputType<T, K extends FieldValues>(
   input: InputT<T>,
@@ -474,10 +477,9 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   />
                 </div>
                 <div>
-                  <input.rhfImage
+                  <ImageInput
                     rhfProps={{
                       name: "frontElevationImagesUri",
-                      control: control,
                       rules: { required: true },
                     }}
                     path={`report-images/${defaultValues.id}/frontElevationImages/`}
