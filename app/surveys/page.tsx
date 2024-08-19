@@ -8,6 +8,8 @@ import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurvey
 
 import { ColumnDef } from "@tanstack/react-table";
 
+import { v4 } from "uuid";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,7 +60,7 @@ function HomePage() {
           <h1 className="text-3xl dark:text-white">Surveys</h1>
         </div>
         <div>
-          <Link href="/surveys/create">
+          <Link href={`/surveys/create?id=${v4()}`}>
             <CopyMarkupBtn>Create</CopyMarkupBtn>
           </Link>
         </div>

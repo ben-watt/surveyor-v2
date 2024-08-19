@@ -30,7 +30,7 @@ import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { successToast } from "@/app/components/Toasts";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, X } from "lucide-react";
 import { Label } from "@aws-amplify/ui-react";
@@ -51,6 +51,7 @@ import toast from "react-hot-toast";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
+import { db } from "@/app/clients/Dexie";
 //import { input } from "@/app/components/Input/UppyInputImage";
 
 const ImageInput = dynamic(() => import("@/app/components/Input/UppyInputImage").then((x) => x.input.rhfImage), { ssr: false });
@@ -157,8 +158,11 @@ const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
 });
 
 export default function Report({ id }: BuildingSurveyFormProps) {
+  const searchParams = useSearchParams();
+  const newFormId = searchParams.get("id");
+
   let defaultValues: BuildingSurveyForm = {
-    id: uuidv4(),
+    id: newFormId || "",
     reportDate: new Date(),
     address: "",
     clientName: "",
@@ -296,6 +300,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const router = useRouter();
 
   const sections = watch("sections") as BuildingSurveyForm["sections"];
+  const changes = watch();
 
   const createDefaultElementSection = (
     element: ElementData
@@ -362,6 +367,22 @@ export default function Report({ id }: BuildingSurveyFormProps) {
       fetchElements();
     }
   }, [id, reset, watch]);
+
+  useEffect(() => {
+    const saveFormData = async () => {
+      const formData = await db.surveys.filter(x => x.id === defaultValues.id).toArray();
+      if(formData.length > 0) {
+        db.surveys.update(formData[0], { content: JSON.stringify(changes) });
+      } else {
+        db.surveys.add({ id: defaultValues.id, content: JSON.stringify(changes) });
+      }
+
+      const surveys = db.surveys.toArray();
+      console.log(surveys);
+    }
+
+    saveFormData();
+  }, [defaultValues.id, changes, watch])
 
   const onSubmit = async () => {
     try {
