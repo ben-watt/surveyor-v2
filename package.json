@@ -46,6 +46,7 @@
     "@tiptap/starter-kit": "^2.4.0",
     "@tiptap/suggestion": "^2.4.0",
     "@types/react-instantsearch-dom": "^6.12.7",
+    "@uidotdev/usehooks": "^2.4.1",
     "@uppy/core": "^4.1.0",
     "@uppy/dashboard": "^4.0.2",
     "@uppy/drag-drop": "^4.0.1",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthenticator } from "@aws-amplify/ui-react";
-import { CircleUserRound, LogOut, NotebookPen, Settings } from "lucide-react";
+import { CircleUserRound, LogOut, NotebookPen, Settings, Squircle } from "lucide-react";
 import Link from "next/link";
 import {
   Command,
@@ -16,6 +16,8 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useNetworkState } from "@uidotdev/usehooks";
+
 
 
 export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
@@ -124,10 +126,28 @@ export default function SecureNav() {
           </div>
         </Command>
       </div>
-      <Avatar className="hidden md:block">
-        <AvatarImage src="https://github.com/shadcn.png" />
-        <AvatarFallback>CN</AvatarFallback>
-      </Avatar>
-    </NavContainer>
+      <div className="relative">
+        <Avatar className="hidden md:block">
+          <AvatarImage src="https://github.com/shadcn.png" />
+          <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
+        <div className="absolute -top-1 -right-1">
+          <NetworkStatus />
+        </div>
+      </div>
+      </NavContainer>
   );
+}
+
+
+const NetworkStatus = () => {
+  const status = useNetworkState();
+
+  const cssColour = status.online ? "fill-green-300" : "fill-red-300";
+
+  return (
+    <div className="">
+      <Squircle className={cssColour} strokeWidth={1} size={16} />
+    </div>
+  )
 }
