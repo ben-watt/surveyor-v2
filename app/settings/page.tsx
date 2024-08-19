@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import reportClient from "../clients/ReportsClient";
+import client from "../clients/AmplifyDataClient";
 import toast from "react-hot-toast";
 import { Schema } from "@/amplify/data/resource";
 
@@ -138,7 +138,7 @@ export default function Page() {
   useEffect(() => {
     async function fetchReports() {
       try {
-        const response = await reportClient.models.Elements.list();
+        const response = await client.models.Elements.list();
 
         if (response.data) {
           setElementIds(response.data.map((e) => e.id));
@@ -153,7 +153,7 @@ export default function Page() {
   async function seedData() {
     try {
       const tasks = seedElementData.map(async (element) => {
-        const response = await reportClient.models.Elements.create(element);
+        const response = await client.models.Elements.create(element);
 
         if (response.data) {
           setElementIds((prev) => [...prev, response!.data!.id]);
@@ -171,7 +171,7 @@ export default function Page() {
 
   async function removeData() {
     const tasks = elementIds.map(async (elementId) => {
-      const response = await reportClient.models.Elements.delete({ id: elementId });
+      const response = await client.models.Elements.delete({ id: elementId });
       if (response.data) {
         setElementIds((prev) => prev.filter((e) => e !== elementId));
       } else {

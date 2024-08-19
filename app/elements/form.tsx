@@ -5,7 +5,7 @@ import Input from "@/app/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
-import reportClient from "@/app/clients/ReportsClient";
+import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect } from "react";
 import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "../components/Input/ComboBox";

@@ -1,9 +1,7 @@
 "use client";
 
-import reportClient from "@/app/clients/ReportsClient";
-import Image from "next/image";
+import reportClient from "@/app/clients/AmplifyDataClient";
 import { NewEditor } from "@/app/components/Input/BlockEditor";
-import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 
 import { Previewer } from "pagedjs";
 import React, { useCallback, useEffect, useMemo } from "react";

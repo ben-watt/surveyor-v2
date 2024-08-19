@@ -28,7 +28,7 @@ import InputImage from "../../components/Input/InputImage";
 import InputDate from "../../components/Input/InputDate";
 import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
-import reportClient from "@/app/clients/ReportsClient";
+import reportClient from "@/app/clients/AmplifyDataClient";
 import { successToast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
