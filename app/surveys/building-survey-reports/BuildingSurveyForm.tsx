@@ -50,7 +50,7 @@ import { SelectTrigger } from "@radix-ui/react-select";
 import toast from "react-hot-toast";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection } from "@/app/components/FormSection";
-import { InputImageUppy } from "@/app/components/Input/UppyInputImage";
+import { input } from "@/app/components/Input/UppyInputImage";
 
 function mapToInputType<T, K extends FieldValues>(
   input: InputT<T>,
@@ -87,8 +87,8 @@ function mapToInputType<T, K extends FieldValues>(
       return (
         <InputCheckbox
           labelText={input.label}
-          rhfName={registerName}
-          controllerProps={{
+          rhfProps={{
+            name: registerName,
             rules: { required: input.required, validate: input.validate },
           }}
         />
@@ -474,17 +474,15 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   />
                 </div>
                 <div>
-                  <InputImage
-                    labelTitle="Elevation Images"
-                    register={() => register("frontElevationImagesUri")}
+                  <input.rhfImage
+                    rhfProps={{
+                      name: "frontElevationImagesUri",
+                      control: control,
+                      rules: { required: true },
+                    }}
                     path={`report-images/${defaultValues.id}/frontElevationImages/`}
                   />
                 </div>
-                {/* <div>
-                  <InputImageUppy
-                    path={`report-images/${defaultValues.id}/frontElevationImages/`}
-                  />
-                </div> */}
               </div>
               <FormSection title="Property Description">
                 {Object.keys(defaultValues.propertyDescription)?.map((key) => {

@@ -2,13 +2,15 @@
 
 import React from 'react'
 import { NavContainer } from './components/Navbar';
-import Lottie from 'react-lottie-player';
-import animationData from './lottie/report-inspector.json';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { redirect } from 'next/navigation';
-import { useMounted } from './hooks/useMounted';
+
+import animationData from './lottie/report-inspector.json';
+const Lottie = dynamic(import('react-lottie-player'), { ssr: false });
+
 
 function FrontPage() {
   return (
@@ -25,7 +27,7 @@ function FrontPage() {
           </Link>
         </div>
         <div className="-z-10 relative bottom-20 right-10 h-[350px]">
-          {/* <Lottie animationData={animationData} play speed={1} style={{ width: 400, height: 400 }} /> */}
+          <Lottie animationData={animationData} play speed={1} style={{ width: 400, height: 400 }} />
         </div>
         <h2 className='hidden'>Features</h2>
       </div>

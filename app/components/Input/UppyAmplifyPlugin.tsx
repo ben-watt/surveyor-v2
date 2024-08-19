@@ -1,6 +1,6 @@
 "use client";
 
-import { Meta, Uppy, UppyFile, BasePlugin } from "@uppy/core";
+import { Meta, Uppy, UppyFile, BasePlugin, Body } from "@uppy/core";
 import { PluginOpts } from "@uppy/core/lib/BasePlugin";
 import { TransferProgressEvent, uploadData } from "aws-amplify/storage";
 
@@ -8,13 +8,13 @@ interface UppyAmplifyPluginOptions extends PluginOpts {
     path: string;
 }
 
-export default class UppyAmplifyPlugin extends BasePlugin<UppyAmplifyPluginOptions, Meta, Record<string, never>, Record<string, unknown>> {
+export default class UppyAmplifyPlugin extends BasePlugin<UppyAmplifyPluginOptions, Meta, Body, Record<string, unknown>> {
   type: string;
   id: string;
   title: string;
   path: string;
 
-  constructor(uppy : Uppy<Meta, Record<string, never>>, opts: UppyAmplifyPluginOptions) {
+  constructor(uppy : Uppy<Meta, Body>, opts: UppyAmplifyPluginOptions) {
     super(uppy, opts);
     this.type = "uploader";
     this.id = "AmplifyPlugin";
@@ -23,7 +23,7 @@ export default class UppyAmplifyPlugin extends BasePlugin<UppyAmplifyPluginOptio
     this.path = opts.path;
   }
 
-  onProgress = (progress: TransferProgressEvent, file : UppyFile<Meta, Record<string, never>>) => {
+  onProgress = (progress: TransferProgressEvent, file : UppyFile<Meta, Body>) => {
     console.log("[AwsAmplify] Progress:", progress, file);
     this.uppy.emit("upload-progress", file,
       {
@@ -34,7 +34,7 @@ export default class UppyAmplifyPlugin extends BasePlugin<UppyAmplifyPluginOptio
       });
   }
 
-  uploadFile = async (file: UppyFile<Meta, Record<string, never>>) : Promise<any> => {
+  uploadFile = async (file: UppyFile<Meta, Body>) : Promise<any> => {
     console.log("[AwsAmplify] Uploading file:", file);
     const uploadedFile = await uploadData({
         path: this.path,
@@ -44,7 +44,9 @@ export default class UppyAmplifyPlugin extends BasePlugin<UppyAmplifyPluginOptio
         }
     }).result;
 
-    this.uppy.emit("upload-success", file, { status: 100  });
+    console.log("[AwsAmplify] File uploaded:", uploadedFile);
+
+    this.uppy.emit("upload-success", file, { status: 100, uploadURL: uploadedFile.path });
     return Promise.resolve(uploadedFile);
   };
 
