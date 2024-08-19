@@ -2,17 +2,18 @@
 
 import React, { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import Uppy, { Meta, Body, UppyFile } from "@uppy/core";
-import Webcam from "@uppy/webcam";
 import { useUppyState } from "@uppy/react";
+import Webcam from "@uppy/webcam";
 import ImageEditor from "@uppy/image-editor";
 import GoldenRetriever from "@uppy/golden-retriever";
+import UppyAmplifyPlugin from "./UppyAmplifyPlugin";
 
 import "@uppy/core/dist/style.min.css";
 import "@uppy/dashboard/dist/style.min.css";
 import "@uppy/webcam/dist/style.min.css";
 import "@uppy/image-editor/dist/style.min.css";
 
-import UppyAmplifyPlugin from "./UppyAmplifyPlugin";
+
 import dynamic from "next/dynamic";
 import {
   FieldPath,
@@ -50,19 +51,35 @@ function InputImageUppy({
         allowedFileTypes: ["image/*"],
       }
     })
-      .use(Webcam)
-      .use(ImageEditor)
-      .use(GoldenRetriever)
-      .use(UppyAmplifyPlugin, { path })
+    .use(Webcam)
+    .use(ImageEditor)
+    .use(GoldenRetriever)
+    .use(UppyAmplifyPlugin, { path })
   );
+
+  useEffect(() => {
+    uppy.setOptions({
+      onBeforeFileAdded: (file, files) => {
+        return Object.getOwnPropertyNames(files)
+          .map(k => {
+            const isDuplicate = files[k].name == file.name;
+            if(isDuplicate) {
+              uppy.info(`Can't add file '${file.name}'. File with the same name already exists`);
+            }
+  
+            return isDuplicate;
+          })
+          .every((m) => m == false);
+      }
+    })
+  }, [uppy]);
 
   const fileCount = useUppyState(
     uppy,
     (state) => Object.keys(state.files).length
   );
 
-  const totalProgress = useUppyState(uppy, (state) => state.totalProgress);
-  const [showEdit, setShowEdit] = useState(true);
+  const [showEdit, setShowEdit] = useState(false);
 
   const metaFields = [
     {
@@ -81,12 +98,16 @@ function InputImageUppy({
       initFiles.map((fileName) => {
         const exists = uppy.getFiles().find((f) => f.name === fileName);
         if (!exists) {
-          uppy.addFile({
-            name: fileName,
-            type: "image/*",
-            data: new Blob(),
-            isRemote: true,
-          });
+          try {
+            uppy.addFile({
+              name: fileName,
+              type: "image/*",
+              data: new Blob(),
+              isRemote: true,
+            });
+          } catch(e) {
+            console.warn("Failed to add file", fileName, e);
+          }
         } else {
             uppy.setFileState(exists.id, {
               progress: {
@@ -162,6 +183,7 @@ function InputImageUppy({
   return (
     <div className="relative">
       <Dashboard
+        showLinkToFileUploadResult={true}
         singleFileFullScreen={false}
         showNativePhotoCameraButton={false}
         showRemoveButtonAfterComplete={true}
@@ -170,10 +192,11 @@ function InputImageUppy({
         height={fileCount > 0 ? 500 : 150}
         uppy={uppy}
         showProgressDetails={true}
+        proudlyDisplayPoweredByUppy={false}
         metaFields={metaFields}
       />
       <div className="absolute bottom-1 left-1 text-sm">
-        {fileCount} files, {totalProgress}%
+        {fileCount} files
       </div>
       {showEdit &&  (
         <div className="absolute top-4 left-4 z-[1005]">
