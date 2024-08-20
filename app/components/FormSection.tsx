@@ -9,9 +9,10 @@ interface FormSectionProps {
 
 export const FormSection = ({
   title,
+  collapsible,
   children,
 }: PropsWithChildren<FormSectionProps>) => {
-  const [collapsed, setCollapsed] = React.useState(true);
+  const [collapsed, setCollapsed] = React.useState(collapsible ? true : false);
   const variants = {
     open: { rotate: 90 },
     closed: { rotate: 0 },

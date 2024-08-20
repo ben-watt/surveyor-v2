@@ -17,6 +17,7 @@ import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { Button } from "@/components/ui/button";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
+import { FormSection } from "../components/FormSection";
 
 type ComponentData = Schema["Components"]["type"];
 type ComponentDataUpdate = Omit<
@@ -183,38 +184,40 @@ const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
       </div>
 
       {fields.map((defect, defectIndex) => (
-        <div key={defectIndex} className="grid gap-4 m-4">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <Input
-                key={defect.id}
-                labelTitle="Defect Name"
-                register={() =>
-                  register(`materials.${index}.defects.${defectIndex}.name`, {
-                    required: true,
-                  })
-                }
-              />
-            </div>
+        <FormSection key={defectIndex}>
+          <div className="grid gap-4 m-4">
+            <div className="flex gap-4 items-end">
+              <div className="flex-1">
+                <Input
+                  key={defect.id}
+                  labelTitle="Defect Name"
+                  register={() =>
+                    register(`materials.${index}.defects.${defectIndex}.name`, {
+                      required: true,
+                    })
+                  }
+                />
+              </div>
 
-            <Button
-              variant="destructive"
-              onClick={() => removeDefect(defectIndex)}
-            >
-              Remove
-            </Button>
+              <Button
+                variant="destructive"
+                onClick={() => removeDefect(defectIndex)}
+              >
+                Remove
+              </Button>
+            </div>
+            <TextAreaInput
+              key={defect.id}
+              labelTitle="Defect Description"
+              register={() =>
+                register(
+                  `materials.${index}.defects.${defectIndex}.description`,
+                  { required: true }
+                )
+              }
+            />
           </div>
-          <TextAreaInput
-            key={defect.id}
-            labelTitle="Defect Description"
-            register={() =>
-              register(
-                `materials.${index}.defects.${defectIndex}.description`,
-                { required: true }
-              )
-            }
-          />
-        </div>
+        </FormSection>
       ))}
     </div>
   );
