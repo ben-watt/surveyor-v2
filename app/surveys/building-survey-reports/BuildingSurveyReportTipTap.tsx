@@ -257,7 +257,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h2>Location Plan</h2>
-        <p>
+        <p style={{ textAlign: "justify" }}>
           Red line demarcations do not represent the legal boundary of the
           property and are to indicate the approximate areas of the property
           subject to inspection.
@@ -290,7 +290,7 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <h1>Issues for your Legal Advisor</h1>
         <h2>Planning & Building Regulations</h2>
-        <p>
+        <p style={{ textAlign: "justify" }}>
           As mentioned within the body of this report, we strongly recommend
           that you obtain certificates and warranties from the Vendor relating
           to the electrical and gas installations, extensions, etc. to confirm
@@ -361,7 +361,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h2>Thermal Insulation & Energy Efficiency</h2>
-        <p>
+        <p style={{ textAlign: "justify" }}>
           As part of the marketing process, current regulations require the
           provision of an Energy Performance Certificate. Legal enquiries are
           advised to confirm that such a Certificate has been obtained. This
