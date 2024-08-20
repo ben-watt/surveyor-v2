@@ -17,6 +17,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
+      allow.authenticated().to(["create", "read", "update", "delete"]),
     ]),
   Elements: a.model({
     id: a.id().required(),
@@ -27,6 +28,7 @@ const schema = a.schema({
     components: a.hasMany("Components", "id"),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
+    allow.authenticated().to(["create", "read", "update", "delete"]),
   ]),
   Defect: a.customType({
     name: a.string().required(),
@@ -47,6 +49,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
+      allow.authenticated().to(["create", "read", "update", "delete"]),
     ]),
 });
 
