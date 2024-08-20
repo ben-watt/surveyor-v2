@@ -7,7 +7,6 @@ import {
   Menu,
   NotebookPen,
   Settings,
-  Squircle,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,10 +20,13 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useNetworkState } from "@uidotdev/usehooks";
+import dynamic from "next/dynamic";
+
+const NetworkStatus = dynamic(() => import("./NetworkStatus").then((mod) => mod.NetworkStatus), { ssr: false});
+
 
 export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
   return (
@@ -172,14 +174,3 @@ const CommandBar = ({ onSelected, onBlur } : CommandBarProps) => {
   );
 };
 
-const NetworkStatus = () => {
-  const status = useNetworkState();
-
-  const cssColour = status.online ? "fill-green-300" : "fill-red-300";
-
-  return (
-    <div className="">
-      <Squircle className={cssColour} strokeWidth={1} size={16} />
-    </div>
-  );
-};
