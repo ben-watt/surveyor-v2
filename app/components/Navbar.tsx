@@ -20,10 +20,11 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
+import { ForwardRefComponent } from "framer-motion";
 
 const NetworkStatus = dynamic(() => import("./NetworkStatus").then((mod) => mod.NetworkStatus), { ssr: false});
 
@@ -43,6 +44,14 @@ export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
 
 export default function SecureNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const cmdBarRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if(isOpen && cmdBarRef.current) {
+      cmdBarRef.current.focus();
+    }
+
+  }, [isOpen]);
 
   return (
     <div>
@@ -78,7 +87,7 @@ export default function SecureNav() {
       {isOpen && (
         <div className="bg-color-white z-10">
           <div className="md:hidden w-full p-2">
-            <CommandBar onSelected={() => setIsOpen(false)} onBlur={() => setIsOpen(false)} />
+            <CommandBar ref={cmdBarRef} onSelected={() => setIsOpen(false)} onBlur={() => setIsOpen(false)} />
           </div>
         </div>
       )}
@@ -91,7 +100,8 @@ interface CommandBarProps {
   onBlur?: () => void
 }
 
-const CommandBar = ({ onSelected, onBlur } : CommandBarProps) => {
+
+const CommandBar = forwardRef(function CommandBar({ onSelected, onBlur } : CommandBarProps, ref) {
   const { user, signOut } = useAuthenticator((context) => [context.user]);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -123,6 +133,7 @@ const CommandBar = ({ onSelected, onBlur } : CommandBarProps) => {
       className="border border-grey-800"
     >
       <CommandInput
+        ref={ref}
         className="border-none focus:ring-0 h-8"
         placeholder="Type a command or search..."
       />
@@ -172,5 +183,5 @@ const CommandBar = ({ onSelected, onBlur } : CommandBarProps) => {
       </div>
     </Command>
   );
-};
+});
 

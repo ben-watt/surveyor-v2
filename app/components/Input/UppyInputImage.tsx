@@ -193,7 +193,7 @@ function InputImageUppy({
         showRemoveButtonAfterComplete={true}
         doneButtonHandler={() => {}}
         hideCancelButton={true}
-        height={fileCount > 0 ? 500 : 150}
+        height={fileCount > 0 ? 500 : 200}
         uppy={uppy}
         showProgressDetails={true}
         proudlyDisplayPoweredByUppy={false}
