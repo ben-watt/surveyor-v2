@@ -1,7 +1,6 @@
 "use client";
 
 import { CopyMarkupBtn } from "@/app/components/Buttons";
-import client from "@/app/clients/AmplifyDataClient";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
@@ -22,32 +21,29 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
+import { db } from "@/app/clients/Database";
+
+
+type TableData = BuildingSurveyFormData & { status?: string };
 
 function HomePage() {
-  const [surveys, setSurveys] = useState<BuildingSurveyFormData[]>([]);
+  const surveys = db.surveys.useList();
+  const data = surveys.map(x => {
+    const formData = JSON.parse(x.content as string) as BuildingSurveyFormData; 
+    return {
+      ...formData,
+      status: x.status || "draft",
+    }
+  });
+  const [createId, setCreateId] = useState<string>("");
 
   useEffect(() => {
-    async function fetchSurveys() {
-      try {
-        const response = await client.models.Surveys.list();
-        const reports = response.data.map((i) =>
-          JSON.parse(i.content as string)
-        );
-        setSurveys(reports);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    fetchSurveys();
+    setCreateId(v4());
   }, []);
 
   const deleteSurvey = async (id: string) => {
     try {
-      const response = await client.models.Surveys.delete({ id });
-      if (!response.errors && response.data != null) {
-        setSurveys(surveys.filter((r) => r.id !== id));
-      }
+      db.surveys.delete(id);
     } catch (error) {
       console.error(error);
     }
@@ -60,7 +56,7 @@ function HomePage() {
           <h1 className="text-3xl dark:text-white">Surveys</h1>
         </div>
         <div>
-          <Link href={`/surveys/create?id=${v4()}`}>
+          <Link href={`/surveys/create?id=${createId}`}>
             <CopyMarkupBtn>Create</CopyMarkupBtn>
           </Link>
         </div>
@@ -72,7 +68,7 @@ function HomePage() {
   );
 
   function RenderTable() {
-    const columns: ColumnDef<BuildingSurveyFormData>[] = [
+    const columns: ColumnDef<TableData>[] = [
       {
         header: "Id",
         accessorFn: (v) => "#" + v?.id?.split("-")[0] || "N/A",
@@ -86,15 +82,20 @@ function HomePage() {
         accessorKey: "address",
       },
       {
+        header: "Status",
+        accessorKey: "status",
+      },
+      {
         id: "created",
         header: ({ column }) => <SortableHeader column={column} header="Created" />,
         accessorFn: (v) => new Date(v.reportDate).toDateString(),
-        sortingFn: (a, b) => a.original.reportDate < b.original.reportDate ? 1 : 0,
+        sortingFn: (a, b) => new Date(a.original.reportDate) < new Date(b.original.reportDate) ? 0 : 1,
       },
       {
         id: "actions",
         cell: (props) => {
           const reportId = props.row.original.id;
+          const showGenerate = props.row.original.status === "created";
 
           return (
             <DropdownMenu>
@@ -117,11 +118,11 @@ function HomePage() {
                     Edit survey
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                {showGenerate && (<DropdownMenuItem>
                   <Link href={`/surveys/${reportId}/reportv2`}>
                     Generate report
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem>)}
                 <DropdownMenuItem className="text-red-500"
                   onClick={() => deleteSurvey(reportId)}
                 >
@@ -134,7 +135,7 @@ function HomePage() {
       },
     ];
 
-    return <DataTable initialState={{ sorting: [{ id: "created", desc: false }]}} columns={columns} data={surveys} />
+    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={data} />
   }
 }
 

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 
 import {
   ElementSection,
@@ -24,7 +23,6 @@ import { ErrorMessage } from "@hookform/error-message";
 import { InputToggle } from "../../components/Input/InputToggle";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "../../components/Input/InputText";
-import InputImage from "../../components/Input/InputImage";
 import InputDate from "../../components/Input/InputDate";
 import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
@@ -51,7 +49,8 @@ import toast from "react-hot-toast";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
-import { db } from "@/app/clients/Dexie";
+import { db } from "@/app/clients/Database";
+import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 
 const ImageInput = dynamic(
   () =>
@@ -165,6 +164,7 @@ const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
 export default function Report({ id }: BuildingSurveyFormProps) {
   const searchParams = useSearchParams();
   const newFormId = searchParams.get("id");
+  const isNewForm = newFormId != null;
 
   let defaultValues: BuildingSurveyForm = {
     id: newFormId || "",
@@ -305,7 +305,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const router = useRouter();
 
   const sections = watch("sections") as BuildingSurveyForm["sections"];
-  const changes = watch();
+  const allFields = watch();
 
   const createDefaultElementSection = (
     element: ElementData
@@ -317,20 +317,29 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     materialComponents: [],
   });
 
+  useDebouncedEffect(() => {
+    const saveFormDataLocally = async () => {
+      if(isNewForm) {
+        await db.surveys.update({ id: defaultValues.id, status: "draft", content: JSON.stringify(allFields) }, { localOnly: true });
+        console.debug("Saved locally");
+      }
+    };
+
+    saveFormDataLocally();
+  }, [allFields], 1000)
+
   useEffect(() => {
     const fetchReport = async (existingReportId: string) => {
-      const report = await reportClient.models.Surveys.get({
-        id: existingReportId,
-      });
+      const report = await db.surveys.get(existingReportId);
 
-      if (report.data) {
+      if (report) {
         const formData = JSON.parse(
-          report.data.content as string
+          report.content as string
         ) as BuildingSurveyForm;
         reset(formData);
         console.log("reset from fetchReport", formData);
       } else {
-        console.error("Failed to fetch report", report.errors);
+        console.error("Failed to fetch report");
       }
     };
 
@@ -373,43 +382,25 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     }
   }, [id, reset, watch]);
 
-  useEffect(() => {
-    const saveFormData = async () => {
-      const formData = await db.surveys
-        .filter((x) => x.id === defaultValues.id)
-        .toArray();
-      if (formData.length > 0) {
-        db.surveys.update(formData[0], { content: JSON.stringify(changes) });
-      } else {
-        db.surveys.add({
-          id: defaultValues.id,
-          content: JSON.stringify(changes),
-        });
-      }
-
-      const surveys = db.surveys.toArray();
-      console.log(surveys);
-    };
-
-    saveFormData();
-  }, [defaultValues.id, changes, watch]);
 
   const onSubmit = async () => {
     try {
       let form = watch();
 
       if (!id) {
-        let _ = await reportClient.models.Surveys.create({
+        let _ = await db.surveys.add({
           id: form.id,
+          status: "created",
           content: JSON.stringify(form),
-        });
+        })
 
         successToast("Created Survey");
       } else {
-        let _ = await reportClient.models.Surveys.update({
+        let _ = db.surveys.update({
           id: form.id,
+          status: "created",
           content: JSON.stringify(form),
-        });
+        })
 
         successToast("Updated Survey");
       }
@@ -421,11 +412,15 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     }
   };
 
+  const onError = (errors: any) => {
+    console.error(errors);
+  }
+
   return (
     <div className="md:grid md:grid-cols-4 mb-4">
       <div className="col-start-2 col-span-2">
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit, onError)}>
             <div>
               <div className="space-y-4">
                 <div>
@@ -514,6 +509,12 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                       rules: { required: true },
                     }}
                     path={`report-images/${defaultValues.id}/frontElevationImages/`}
+                  />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"frontElevationImagesUri"}
+                    message="At least one image is required"
+                    render={({ message }) => InputError({ message })}
                   />
                 </div>
               </div>

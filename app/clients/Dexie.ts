@@ -1,15 +1,23 @@
 import Dexie, { type EntityTable } from 'dexie';
 import { type Schema } from "@/amplify/data/resource";
 
-type SurveyType = Omit<Schema['Surveys']['type'], "createdAt" | "updatedAt">;
+export type Survey = Omit<Schema['Surveys']['type'], "createdAt" | "updatedAt" | "owner"> & { "createdAt"?: string, "updatedAt"?: string };
+
+interface DexieData<T> {
+    updatedAt: Date;
+    lastSyncAt?: Date;
+    data: T;
+    id: string;
+}
+
+export type SurveyData = DexieData<Survey>;
 
 const db = new Dexie('Surveys') as Dexie & {
-  surveys: EntityTable<SurveyType>;
+  surveys: EntityTable<SurveyData>;
 };
 
-// Schema declaration:
 db.version(1).stores({
-  surveys: '&id'
+  surveys: 'id'
 });
 
 export { db };
