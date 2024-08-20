@@ -7,6 +7,7 @@ interface InputTextProps {
   type?: string;
   defaultValue?: string | number;
   placeholder?: string;
+  className?: string;
   register: () => UseFormRegisterReturn<string>;
 }
 
@@ -15,19 +16,20 @@ function Input({
   defaultValue,
   placeholder,
   type = "text",
+  className = "",
   register,
 }: InputTextProps) {
   return (
-    <>
+    <div>
       {labelTitle && <Label text={labelTitle} /> }
       <ShadInput
-        className="focus:ring-0 focus:border-none"
+        className="focus:ring-0 focus:border-none h-auto"
         type={type}
         defaultValue={defaultValue}
         placeholder={placeholder}
         {...register()}
       />
-    </>
+    </div>
   );
 }
 

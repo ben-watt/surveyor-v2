@@ -576,7 +576,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                                   name:  `sections.${sectionIndex}.elementSections.${i}.images`,
                                   rules: { required: true },
                                 }}
-                                path={`report-images/${defaultValues.id}/elementSections/${i}/images`}
+                                path={`report-images/${defaultValues.id}/elementSections/${i}/images/`}
                               />
                             </div>
                             <ComponentPicker
