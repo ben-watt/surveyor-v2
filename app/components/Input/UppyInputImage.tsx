@@ -53,7 +53,7 @@ function InputImageUppy({
     })
     .use(Webcam, {
       mobileNativeCamera: true,
-      modes: ["picture"]
+      modes: ["picture"],
     })
     .use(ImageEditor)
     .use(GoldenRetriever)
@@ -186,6 +186,7 @@ function InputImageUppy({
   return (
     <div className="relative">
       <Dashboard
+        showNativePhotoCameraButton={true}
         nativeCameraFacingMode={"environment"}
         showLinkToFileUploadResult={true}
         singleFileFullScreen={false}        
