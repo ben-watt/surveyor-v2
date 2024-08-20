@@ -49,7 +49,7 @@ function InputImageUppy({
       autoProceed: true,
       restrictions: {
         allowedFileTypes: ["image/*"],
-      }
+      },
     })
     .use(Webcam, {
       mobileNativeCamera: true,

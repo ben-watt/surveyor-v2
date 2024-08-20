@@ -24,7 +24,6 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
-import { ForwardRefComponent } from "framer-motion";
 
 const NetworkStatus = dynamic(() => import("./NetworkStatus").then((mod) => mod.NetworkStatus), { ssr: false});
 
@@ -44,7 +43,7 @@ export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
 
 export default function SecureNav() {
   const [isOpen, setIsOpen] = useState(false);
-  const cmdBarRef = useRef<HTMLElement>(null);
+  const cmdBarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if(isOpen && cmdBarRef.current) {
@@ -101,7 +100,7 @@ interface CommandBarProps {
 }
 
 
-const CommandBar = forwardRef(function CommandBar({ onSelected, onBlur } : CommandBarProps, ref) {
+const CommandBar = forwardRef<HTMLInputElement, CommandBarProps>(function CommandBar({ onSelected, onBlur } : CommandBarProps, ref) {
   const { user, signOut } = useAuthenticator((context) => [context.user]);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
