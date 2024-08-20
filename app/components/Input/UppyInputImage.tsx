@@ -51,7 +51,10 @@ function InputImageUppy({
         allowedFileTypes: ["image/*"],
       }
     })
-    .use(Webcam)
+    .use(Webcam, {
+      mobileNativeCamera: true,
+      modes: ["picture"]
+    })
     .use(ImageEditor)
     .use(GoldenRetriever)
     .use(UppyAmplifyPlugin, { path })
@@ -183,9 +186,9 @@ function InputImageUppy({
   return (
     <div className="relative">
       <Dashboard
+        nativeCameraFacingMode={"environment"}
         showLinkToFileUploadResult={true}
-        singleFileFullScreen={false}
-        showNativePhotoCameraButton={false}
+        singleFileFullScreen={false}        
         showRemoveButtonAfterComplete={true}
         doneButtonHandler={() => {}}
         hideCancelButton={true}
