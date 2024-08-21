@@ -17,40 +17,23 @@ import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
 import { SelectionSet } from "aws-amplify/api";
 
-const selectionSet = [
-  "id",
-  "name",
-  "createdAt",
-  "elementId",
-  "element.*",
-  "elementId",
-  "materials.name",
-  "materials.defects.*"
-] as const;
-type ComponentDataForPage = SelectionSet<
-  Schema["Components"]["type"],
-  typeof selectionSet
->;
-
-const selectionSetElement = ["id", "name"] as const;
-type ElementData = SelectionSet<
-  Schema["Elements"]["type"],
-  typeof selectionSetElement
->;
+const selectionSet = ["id", "name", "elementId", "materials.*", "createdAt", "element.name"] as const;
+type ComponentData = Omit<SelectionSet<Schema["Components"]["type"], typeof selectionSet>, "materials">;
+type Material = Schema["Material"]["type"];
+type ComponentDataWithChild = ComponentData & { materials: Material[] };
 
 export default function Page() {
-  const [data, setData] = useState<ComponentDataForPage[]>([]);
-  const [elements, setElements] = useState<ElementData[]>([]);
+  const [data, setData] = useState<ComponentDataWithChild[]>([]);
   const [search, setSearch] = useState<string>("");
 
-  const columns: ColumnDef<ComponentDataForPage>[] = [
+  const columns: ColumnDef<ComponentDataWithChild>[] = [
     {
       header: "Name",
       accessorKey: "name",
     },
     {
       header: "Element",
-      accessorFn: (v) => elements.find((x) => x.id == v.elementId)?.name || "",
+      accessorFn: (v) => v.element.name,
     },
     {
       header: "Materials Count",
@@ -58,7 +41,7 @@ export default function Page() {
     },
     {
       header: "Defect Count",
-      accessorFn: (v) => 0,
+      accessorFn: (v) => v.materials.reduce((acc, m) => acc + m.defects.length, 0),
     },
     {
       id: "created",
@@ -105,7 +88,7 @@ export default function Page() {
         });
 
         if (response.data) {
-          setData(response.data);
+          setData(response.data as ComponentDataWithChild[]);
         }
       } catch (error) {
         console.log(error);
@@ -114,24 +97,6 @@ export default function Page() {
 
     fetchData();
   }, [search]);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await client.models.Elements.list({
-          selectionSet: selectionSetElement,
-        });
-
-        if (response.data) {
-          setElements(response.data);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    fetchData();
-  }, []);
 
   function deleteDefect(id: string): void {
     async function deleteDefect() {

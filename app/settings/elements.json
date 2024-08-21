@@ -1,0 +1,123 @@
+[
+    
+  {
+    "name": "Foundations and Substructure",
+    "description": "",
+    "order": 1,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Roof Coverings",
+    "description": "",
+    "order": 2,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Chimneys",
+    "description": "",
+    "order": 3,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Rainwater Disposal System",
+    "description": "",
+    "order": 4,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Sofits and Fascias",
+    "description": "",
+    "order": 5,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Main Walls",
+    "description": "",
+    "order": 6,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Windows and Doors",
+    "description": "",
+    "order": 7,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Roof Structure",
+    "description": "",
+    "order": 8,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Ceilings",
+    "description": "",
+    "order": 9,
+    "section": "External Condition of Property"
+  },
+  {
+    "name": "Walls and Partitions",
+    "description": "",
+    "order": 10,
+    "section": "Internal Condition of Property"
+  },
+  {
+    "name": "Floors",
+    "description": "",
+    "order": 11,
+    "section": "Internal Condition of Property"
+  },
+  {
+    "name": "Internal Joinery",
+    "description": "",
+    "order": 12,
+    "section": "Internal Condition of Property"
+  },
+  {
+    "name": "Sanitaryware & Kitchen",
+    "description": "",
+    "order": 13,
+    "section": "Internal Condition of Property"
+  },
+  {
+    "name": "Fireplaces",
+    "description": "",
+    "order": 14,
+    "section": "Internal Condition of Property"
+  },
+  {
+    "name": "Electrical Installation",
+    "description": "",
+    "order": 15,
+    "section": "Services"
+  },
+  {
+    "name": "Gas Installations",
+    "description": "",
+    "order": 16,
+    "section": "Services"
+  },
+  {
+    "name": "Cold Water Supply",
+    "description": "",
+    "order": 17,
+    "section": "Services"
+  },
+  {
+    "name": "Hot Water Supply / Heating Installations",
+    "description": "",
+    "order": 18,
+    "section": "Services"
+  },
+  {
+    "name": "Surface water & Soil drainage",
+    "description": "",
+    "order": 19,
+    "section": "Services"
+  },
+  {
+    "name": "Boundaries, Fencing, Drives, Lawn, etc",
+    "description": "",
+    "order": 20,
+    "section": "Grounds (External Areas)"
+  }
+]

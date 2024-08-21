@@ -19,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
+import { Label } from "./Label";
 
 interface ComboboxProps {
   data: { value: string; label: string }[];
@@ -35,7 +36,7 @@ export function Combobox(props: ComboboxProps) {
 
   return (
     <div>
-      <label>{props.labelTitle}</label>
+      <Label text={props.labelTitle} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -52,7 +53,7 @@ export function Combobox(props: ComboboxProps) {
         </PopoverTrigger>
         <PopoverContent className="p-0" align="start">
           <Command>
-            <CommandInput
+            <CommandInput 
               placeholder="Search..."
               className="h-9 border-none focus:ring-0"
             />
@@ -62,11 +63,11 @@ export function Combobox(props: ComboboxProps) {
                 {props.data.map((d) => (
                   <CommandItem
                     key={d.value}
-                    value={d.value}
-                    onSelect={(selectedValue) => {
+                    value={d.label}
+                    onSelect={() => {
                       setValue(
                         reg.name,
-                        selectedValue === value ? "" : selectedValue
+                        d.value === value ? "" : d.value
                       );
                       setOpen(false);
                     }}

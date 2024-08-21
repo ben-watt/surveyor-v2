@@ -1,0 +1,1404 @@
+[
+  {
+    "elementName": "FOUNDATIONS & SUBSTRUCTURE",
+    "defects": [
+      {
+        "type": "Stepped Brick",
+        "specification": "Brickwork ",
+        "condition": "Green",
+        "defect": "No signs of movement",
+        "level2Wording": "No evidence was observed to suggest that significant foundation movement has occurred at the property.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Stepped Brick",
+        "specification": "Brickwork ",
+        "condition": "Yellow",
+        "defect": "Very slight cracking",
+        "level2Wording": "No evidence was observed to suggest that significant foundation movement has occurred at the property. Notwithstanding, we identified very slight stepped and vertical cracks to the rear and left elevations between the ground and first floor windows deemed to be resulting from historic settlement. In accordance with BRE Digest 251, any cracks should be filled and monitored for reoccurrence. Should cracks reappear and widen, we recommend consulting a suitably qualified structural engineer to review. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Stepped Brick",
+        "specification": "Brickwork ",
+        "condition": "Red",
+        "defect": "Signs of movement cracking ",
+        "level2Wording": "We observed evidence to suggest that foundation movement has occurred at the property. We identified moderate cracking to the right elevation. We believe this could be related to substructure movement. We recommend allocating an allowance to undertake localised underpinning works following consulting a suitably qualified structural engineer to review. In accordance with BRE Digest 251, any cracks should be filled and monitored for reoccurence. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Concrete Strip",
+        "specification": "Concrete strip",
+        "condition": "Green",
+        "defect": "No signs of movement",
+        "level2Wording": "No evidence was observed to suggest that significant foundation movement has occurred at the property.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Concrete Strip",
+        "specification": "Concrete strip",
+        "condition": "Yellow",
+        "defect": "Very slight cracking",
+        "level2Wording": "",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "ROOF",
+    "defects": [
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Yellow",
+        "defect": "Minor undulations",
+        "level2Wording": "Where visible, the roof is generally in reasonable condition with no evidence of significant structural defects. ",
+        "level3Wording": "Where visible, the roof is generally in reasonable condition with no evidence of significant structural defects. Minor undulations were noted but these are considered commensurate with the age of the property. "
+      },
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Yellow",
+        "defect": "Loose ridge tiles",
+        "level2Wording": "We identified that ridge tiles appeared loose during the inspection. When ridge tiles are loose, gaps and openings can form between the tiles and the roof structure. This creates an opportunity for water ingression. It is recommended that the ridge tiles are removed, cleaned and re-bedded using appropriate fixing methods to secure the tiles in line with the manufacturer’s guidelines. ",
+        "level3Wording": "We identified that ridge tiles appeared loose during the inspection. When ridge tiles are loose, gaps and openings can form between the tiles and the roof structure. This creates an opportunity for water ingression, thus consequential damage to the underlying roof structure. Additionally, if ridge tiles remain loose for a number of years, this can severely impact the structural integrity of the roof. It is recommended that the ridge tiles are removed, cleaned and re-bedded using appropriate fixing methods to secure the tiles in line with the manufacturer’s guidelines. "
+      },
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Yellow",
+        "defect": "Slipped or damaged slates",
+        "level2Wording": "Slipped or damaged slates were identified across the surface of the roof coverings. Slipped or damaged slates create openings through which rainwater can infiltrate the roof structure. It is recommended that areas of slipped or damaged slates are addressed in the immediate term. ",
+        "level3Wording": "Slipped or damaged slates were identified across the surface of the roof coverings. Slipped or damaged slates create openings through which rainwater can infiltrate the roof structure. This can lead to moisture damage within the building, including weakened timber framing, rot, and mould growth. It is recommended that areas of slipped or damaged slates are addressed in the immediate term. Ensure that like-for-like slates are installed in conjunction with the manufacturer’s guidelines."
+      },
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Red",
+        "defect": "Lead tingle repairs",
+        "level2Wording": "",
+        "level3Wording": "We identified instances of lead tingle repairs to the rear pitch which suggests previous slipped or damaged slates have been addressed. We note that with the expansion and contraction of the slate due to temperature changes, this can create stress on the lead tingle, leading to eventual failure of the repair. Lead tingles suggest that some of the nails holdings the slates have failed and likely corroded. This could be an early warning sign that further slipped slates will start to occur as additional nails start to corrode further. "
+      },
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Red",
+        "defect": "Significant sagging",
+        "level2Wording": "We note that the roof appears to be sagging particularly around the area whereby lead tingle repairs are undertaken. This suggests that timber roof structure elements could be decayed or subject to structural movement. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Red",
+        "defect": "Recovering required",
+        "level2Wording": "Given the poor condition of the roof coverings generally, we recommend allocating a budget to recover the roof as part of a long-term maintenance plan. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Yellow",
+        "defect": "Spalled cement verge",
+        "level2Wording": "The roof comprises cement verge details. The cement verge to the roof is in poor condition with significant spalling noted. This area should be resealed in the immediate term to prevent internal dampness.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Pitched",
+        "specification": "Slate",
+        "condition": "Yellow",
+        "defect": "End of serviceable life in the long term",
+        "level2Wording": "",
+        "level3Wording": "Given the current condition, we anticipate that the roof coverings are approaching the end of serviceable life and we recommend allocating a budget to recover the roof as part of a long-term maintenance plan at a budget cost of circa £9,000, including for a new breathable membrane and replacing timber structure elements that are unsuitable for reuse"
+      },
+      {
+        "type": "Pitched",
+        "specification": "Rosemary",
+        "condition": "Red",
+        "defect": "Bay Window Roof",
+        "level2Wording": "We noted instances of lifting tiles suggest that clay tiles are inadequately fixed or have been subject to differential movement due to temperature fluctuations. In any case, this provides an opportunity for water ingress and indeed we identified evidence of damp staining to the surface finishes of the ceiling soffit below the bay roof. We recommend addressing the lifting tiles and refixing to ensure they are flush across the surface.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Pitched",
+        "specification": "Rosemary",
+        "condition": "Yellow",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Pitched",
+        "specification": "Rosemary",
+        "condition": "Green",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Pitched",
+        "specification": " ",
+        "condition": "Green",
+        "defect": "Minor undulations",
+        "level2Wording": "Where visible, the roof is generally in reasonable condition with no evidence of significant structural defects. ",
+        "level3Wording": "Where visible, the roof is generally in reasonable condition with no evidence of significant structural defects. Minor undulations were noted but these are considered commensurate with the age of the property. "
+      },
+      {
+        "type": "Pitched",
+        "specification": " ",
+        "condition": "Yellow",
+        "defect": "Recovered roof \n(slate to concrete)",
+        "level2Wording": "The main roof has been re-covered using concrete tiles. Caution should be taken with the concrete tiles, as the original timber roof structure would have been designed for the loads of slates which are lighter than concrete tiles. We recommend monitoring this area for signs of roof spread and movement and appointing a suitably qualified structural engineer should any issues begin to manifest. ",
+        "level3Wording": "We believe the main roof would have originally been covered with slates and has been re-covered using concrete tiles. Caution should be taken with the concrete tiles, as the original timber roof structure would have been designed for the loads of slates which are lighter than concrete tiles. As such, an engineer should have undertaken calculations before proceeding with their installation. We have not been instructed to assess the load capacity of the roof, but we recommend monitoring this area for signs of roof spread and movement and appointing a suitably qualified structural engineer should any issues begin to manifest. Albeit, we identified the sag to the ridge tiles towards the eaves and some dark staining to the timber roof structure.\n"
+      },
+      {
+        "type": "Pitched",
+        "specification": " ",
+        "condition": "Yellow",
+        "defect": "Light moss growth",
+        "level2Wording": "There was a slight build-up of moss growth noted to the roof coverings. Moss can hold moisture against the surface of the coverings, creating a damp environment that promotes water retention and impedes rainwater drainage. Moss should be cleaned in the short term to prevent potential decaying of the roof structure.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Pitched",
+        "specification": " ",
+        "condition": "Yellow",
+        "defect": "Significant moss growth",
+        "level2Wording": "There was a significant build-up of moss growth noted to the roof coverings. Moss can hold moisture against the surface of the coverings, creating a damp environment that promotes water retention and impedes rainwater drainage. Moss should be cleaned in the short term to prevent potential decaying of the roof structure. Due to the significant build up of moss, it is likely that you will need to replace localised areas of roof coverings that become cracked or loose due to the cleaning process. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Flat",
+        "specification": "Mineral Felt",
+        "condition": "Yellow",
+        "defect": "",
+        "level2Wording": "The felt coverings installed to the flat roof serving the garage is in reasonable condition. We identified areas of soiling towards the parapet walls. The felt appeared to be adequately lapped at the time of inspection with no evidence of lifting, bubbling or undulations across the surface, notwithstanding, our inspection was limited to drone imagery and further high-level investigations should be undertaken to confirm this. The roof coverings should remain serviceable with an allowance to clean and address and required repairs as part of a long-term maintenance plan.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Flat",
+        "specification": "EPDM",
+        "condition": "Green",
+        "defect": "",
+        "level2Wording": "We identified slight staining suggesting historic ponding to the flat roof which suggests the drainage fall is insufficient. We recommend monitoring the water ponding and installing a firring detail to improve drainage should water ponding remain apparent as this can wear the finish over time. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Flat",
+        "specification": "EPDM",
+        "condition": "Yellow",
+        "defect": "Moss growth and bird guano",
+        "level2Wording": "There is moss growth and bird guano evident to the coverings, this promotes moisture retention which can impede proper rainwater drainage and potentially lead to water ingress. The uric acid in the guano can also cause premature deterioration of the roof covering. We recommend cleaning the coverings in the short term and on a cyclical basis thereafter. You should obtain warranties from the Vendor for the roof installation and ensure that this can be transferred into your name. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Flat",
+        "specification": "EPDM",
+        "condition": "Green",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "The Vendor reported that the roof was recently installed. The roof is in reasonable condition, however, we noted a loose section of the coverings to the flashing detail to the right-hand side of the doors. This is a passage for water to track which could result in dampness internally. We recommend that you obtain copies of guarantees or warranties relating to the roof replacement works and confirm that these are transferable. The loose section should be refixed in the immediate term."
+      },
+      {
+        "type": "Flat",
+        "specification": "GRP",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Flat",
+        "specification": "GRP",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Leadwork",
+        "specification": "Flashings",
+        "condition": "Red",
+        "defect": "Aged",
+        "level2Wording": "An allowance should also be made to replace lead flashings in the short term as areas appear to be stained and aged. Ensure that a 150mm upstand is achieved for flashings installed to wall abutments to achieve compliance with Building Regulations.",
+        "level3Wording": "An allowance should also be made to replace lead flashings in the short term as areas appear to be stained and aged. Ensure that a 150mm upstand is achieved for flashings installed to wall abutments to achieve compliance with Building Regulations, with a flexible mastic sealant to the joint where it is wedged into the brickwork."
+      },
+      {
+        "type": "Leadwork",
+        "specification": "Flashings",
+        "condition": "Red",
+        "defect": "None Present",
+        "level2Wording": "There is no weatherproofing detail present to the wall abutment. An allowance should be made to install a new code 4 lead flashing detail with an upstand of 150mm to ensure compliance with Building Regulations and to prevent water ingress at this juncture. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Leadwork",
+        "specification": "Intersections",
+        "condition": "Red",
+        "defect": "Staining and aging",
+        "level2Wording": "The lead-lined roof intersection appears aged with white staining evident. We recommend treating with patination oil in the immediate term to extend the longevity of the lead and prevent moisture ingress internally. ",
+        "level3Wording": "The lead-lined valleys to the roof intersections appear aged with white staining and soiling evident. White staining on lead typically indicates the presence of lead carbonate. This compound forms when lead reacts with carbon dioxide and moisture, indicating weathering. The lead can be treated with a patination oil which seals the surface, limiting exposure to oxygen, thereby reducing oxidisation and the formation of lead carbonate. We recommend treating with patination oil in the immediate term to extend the longevity of the lead and prevent moisture ingress internally."
+      },
+      {
+        "type": "Leadwork",
+        "specification": "Valleys",
+        "condition": "Red",
+        "defect": "Soiling and Ponding",
+        "level2Wording": "The central valley between the rear extensions is significantly soiled and blocked. The valley is lead-lined. Due to the blockages, it is likely that valleys could be overflowing with water causing internal dampness. Clearing is recommended in the immediate term with an allowance to improve drainage. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Flashband",
+        "specification": "Flashband",
+        "condition": "Red",
+        "defect": "Poor solution",
+        "level2Wording": "Flash band has been installed to the wall abutment with the neighbouring property. This is typically installed as a temporary solution as in conjunction with temperature fluctuations flash band can crack, leading to opportunity for water ingress. We recommend replacing the flash band with a new code 4 lead flashing at this juncture to ensure the juncture remains watertight in the long term.",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "CHIMNEYS",
+    "defects": [
+      {
+        "type": "Brickwork",
+        "specification": "Brickwork ",
+        "condition": "Yellow",
+        "defect": "Structural - Sound",
+        "level2Wording": "The chimney stack to the main roof appears to be in sound structural condition, with no significant defects noted. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Brickwork ",
+        "condition": "Yellow",
+        "defect": "Weathered pointing",
+        "level2Wording": "There was evidence of localised weathered pointing which could lead to spalling of brickwork.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Brickwork ",
+        "condition": "Yellow",
+        "defect": "Spalled brickwork",
+        "level2Wording": "the lead flashings are in aged condition with low upstands encouraging moisture ingress internally.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Lime flaunching",
+        "condition": "Yellow",
+        "defect": "Cracked",
+        "level2Wording": "The lime flaunching is cracked which can lead to water ingress. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Lime flaunching",
+        "condition": "Yellow",
+        "defect": "Vegetation growth",
+        "level2Wording": "We noted vegetation growth to the lime flauching suggesting fractured flaunching and moisture retention. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Clay flues",
+        "condition": "Yellow",
+        "defect": "Soiled",
+        "level2Wording": "The clay flues are soiled and would benefit from being cleaned to extend the longevity. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Clay flues",
+        "condition": "Red",
+        "defect": "No flue capping",
+        "level2Wording": "We noted a lack of flue capping which should be installed in the immediate term to prevent nesting birds, debris and rainwater from entering the flue. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Clay flues",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Generally poor",
+        "condition": "Yellow",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "The chimney stacks are in reasonable condition, with no significant structural defects noted. There was evidence of localised weathered pointing and spalled brickwork, particularly to the rear chimney stack. All spalled bricks should be cut out and replaced and weathered pointing raked out and renewed. We have been unable to ascertain the condition of all areas of the lead flashings, but where visible these are generally aged with loose and displaced sections noted and generally substandard installation not in accordance with industry standards. Although there were no obvious signs of water ingress at these locations when we inspected the roof voids, we recommend replacing the lead in the short term. Likewise, the condition of the flaunching should be investigated further as fractures can cause clay flues to become unsupported and present a source for moisture to penetrate internally.  "
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Generally poor",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "RAINWATER DISPOSAL SYSTEM",
+    "defects": [
+      {
+        "type": "Gutters and downpipes",
+        "specification": "UPVC",
+        "condition": "Yellow",
+        "defect": "Limitation",
+        "level2Wording": "An inspection of the high-level gutters was not possible from ground level. The presence of leaking gutters is difficult to ascertain as there was no rain at the time of our inspection. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "UPVC",
+        "condition": "Yellow",
+        "defect": "Soiled and UV degraded",
+        "level2Wording": "Areas of the guttering and downpipes were also soiled and UV degraded. The system would benefit from being cleaned and redecorated in the short term to extend the longevity of the system.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "UPVC",
+        "condition": "Red",
+        "defect": "Overhaul",
+        "level2Wording": "The UPVC gutters and downpipes are in poor condition and beyond economic repair. We recommend allocating a budget to replace the existing system with new. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Cast-iron",
+        "condition": "Yellow",
+        "defect": "Paint blown and metal oxidised",
+        "level2Wording": "The cast-iron gutters and downpipes have been decorated. The paint is blown and peeling in places, thus exposing the metal which is corroded in a number of locations. We recommend removing the paintwork and treating the cast-iron with a rust-inhibiter prior to redecorating.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Cast-iron",
+        "condition": "Red",
+        "defect": "Overhaul",
+        "level2Wording": "The cast-iron gutters and downpipes are in poor condition and beyond economic repair. We recommend allocating a budget to replace the existing system with new. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Lead box section",
+        "condition": "Yellow",
+        "defect": "Cracking and splitting",
+        "level2Wording": "Over time, lead can become brittle, particularly in colder climates. Thermal expansion and contraction can cause lead to crack or split, particularly at joints or corners. We recommend an allowance to overlay the channel with new lead to prevent water ingress internally. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Lead box section",
+        "condition": "Yellow",
+        "defect": "Corrosion ",
+        "level2Wording": "Lead can corrode, especially if exposed to acidic rain or pollutants. This can cause the gutter to weaken and develop holes or leaks. We recommend an allowance to treat the lead to prevent rust build-up. The lead is likely to require replacement as part of a long-term maintenance plan. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Lead box section",
+        "condition": "Red",
+        "defect": "Sagging",
+        "level2Wording": "Lead is a heavy material, and if not properly supported, gutters can sag or bow. This can lead to improper drainage and water pooling. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "Yellow",
+        "defect": "Blocked",
+        "level2Wording": "Ground-level gulleys should be cleared of leaves and debris and grilles installed to prevent blockages.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "REMEDIES",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "The rainwater goods should be cleaned annually as part of cyclical maintenance to prevent blockages from occurring.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "SOFFITS & FASCIAS",
+    "defects": [
+      {
+        "type": "Soffits & Fascias",
+        "specification": "Timber",
+        "condition": "Green",
+        "defect": "No signs of defects",
+        "level2Wording": "The timber soffits and fascias are in reasonable condition with no signs of significant defects. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Soffits & Fascias",
+        "specification": "Timber",
+        "condition": "Yellow",
+        "defect": "Paint finishes",
+        "level2Wording": "The timber has paint finishes which appear to be a modern acrylic-based paint which is blown and peeling in places. This paint traps moisture and should be removed in the short term to allow the application of linseed oil paint or a similar breathable product",
+        "level3Wording": ""
+      },
+      {
+        "type": "Soffits & Fascias",
+        "specification": "Timber",
+        "condition": "Yellow",
+        "defect": "Air vents",
+        "level2Wording": "We also recommend installing air vents into the soffits. Although not a requirement from Building Regulations, this will aid circulation of airflow in the roof void and timber elements",
+        "level3Wording": ""
+      },
+      {
+        "type": "Soffits & Fascias",
+        "specification": "Timber",
+        "condition": "Red",
+        "defect": "Decayed timber",
+        "level2Wording": "The timber has paint finishes which appear to be a modern acrylic-based paint which is blown and peeling in places, revealing signs of decayed timber. This paint traps moisture and should be removed in the short term. It is likely that on removal of the paint, further instances of decay will become apparent and, therefore, we recommend an allowance to part replace timber and to treat with linseed oil paint or a similar breathable product. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Soffits & Fascias",
+        "specification": "Timber",
+        "condition": "Red",
+        "defect": "None present",
+        "level2Wording": "We recommend installing soffits and fascias to the elevations. Soffits and fascias aid the collection of rainwater and prevent moisture from infiltrating the roof and walls of the property. Although not a requirement by Building Regulations, we recommend installing air vents to allow for airflow circulation into the roof void. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Soffits & Fascias",
+        "specification": "UPVC",
+        "condition": "Green",
+        "defect": "No signs of defects",
+        "level2Wording": "The UPVC soffits and fascias are in reasonable condition with no signs of significant defects. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Soffits & Fascias",
+        "specification": "UPVC",
+        "condition": "Yellow",
+        "defect": "Soiling",
+        "level2Wording": "We noted signs of soiling which should be cleaned in the short term to extend the longevity. ",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "EXTERNAL WALLS",
+    "defects": [
+      {
+        "type": "Cavity construction",
+        "specification": "Brickwork",
+        "condition": "Yellow",
+        "defect": "Structural ",
+        "level2Wording": "Brickwork is generally in reasonable condition with no evidence of significant structural defects noted at the time of inspection. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Cavity construction",
+        "specification": "Brickwork",
+        "condition": "Yellow",
+        "defect": "Decorated brickwork",
+        "level2Wording": "To the right elevation, brickwork has been decorated with what appears to be a modern acrylic-based paint. This paint is not breathable and will trap moisture within the walls, potentially leading to spalled brickwork and internal dampness. We recommend removal of the paint finishes and undertaking localised brick repairs as necessary in the short term.  ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Cavity construction",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Retro Cavity Wall Insulation",
+        "level2Wording": "We noted mortar snots generally throughout suggesting retrospective cavity wall insulation has been installed. We recommend confirming this with the Vendor as the retrospective installation is often done inadequately, leaving cold spots and potentially leading to internal dampness. Should retrospective installation be confirmed, we recommend obtaining the Cavity Insulation Guarantee Agency (CIGA) Certificate relating to the works.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Cavity construction",
+        "specification": "Brickwork",
+        "condition": "Yellow",
+        "defect": "Bricking up previous opening",
+        "level2Wording": "",
+        "level3Wording": "We noted loose brickwork to the rear elevation, particularly around the new brickwork installed to block a previous opening. Likewise, the concrete lintel that served the previous opening is spalled. Loose brickwork should be re-bedded and monitored as they may be linked to issues as noted with the spalled lintel. Workmanship to brick-up the previous opening is poor, with non-uniform mortar joints and lack of tying in brickwork to surrounding areas. We recommend removing the existing concrete lintel and bricking-up. The area of brickwork filling a previous opening would benefit from being replaced with new brickwork, that matches the surrounding areas, tied-in to brickwork and includes uniformed mortar joints.   \n"
+      },
+      {
+        "type": "Cavity construction",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Cement render",
+        "level2Wording": "The render to the rear elevation is cement-based (grey in appearance). In narrow cavity construction, lime render should always be used as it is porous, allowing the property to breathe and dry out trapped moisture to alleviate the risk of dampness and condensation internally. Cement render is non-porous and can prevent the building from breathing as originally designed, which can subsequently cause dampness internally. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Cavity construction",
+        "specification": "Wall tiles",
+        "condition": "Yellow",
+        "defect": "Slipped or damaged tiles and poor  flashing detail",
+        "level2Wording": "Wall tiles are present to the rear elevation bay between the ground and first floor windows. We noted instances of slipped or damaged tiles and evidence of deteriorated flashing to the perimeter. This provides an opportunity for water ingress and could lead to decaying of the presumed timber frame to which the wall tiles are installed. We recommend addressing areas of slipped or damaged tiles and replacing with new in conjunction with a new flashing detail.  ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Cavity construction",
+        "specification": "Lead flashings",
+        "condition": "Yellow",
+        "defect": "Lead joint",
+        "level2Wording": "The mortar joint at the juncture of the lead flashing detail should be raked out and a flexible lime-based mortar should be installed. Lime-based mortar is the most appropriate type of pointing to be used at lead flashing details due to the flexibility. We recommend this is undertaken in the short term.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Solid construction",
+        "specification": "Brickwork",
+        "condition": "Yellow",
+        "defect": "Structural ",
+        "level2Wording": "Brickwork is generally in reasonable condition with no evidence of significant structural defects noted at the time of inspection. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Solid construction",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Cement-based mortar",
+        "level2Wording": "",
+        "level3Wording": "Large areas of the pointing appear to be cement-based mortar (grey in appearance). In solid masonry construction, lime mortar should always be used as it is porous, allowing the property to breathe and dry out trapped moisture to alleviate the risk of dampness and condensation internally. Cement mortar is non-porous and can prevent the building from breathing as originally designed, which can subsequently cause dampness internally. The other issue with the use of cement mortar on period properties is that cement is much stronger than lime mortar. As a result, you will often see spalled bricks with the surrounding mortar intact, due to the cement being stronger than the clay bricks. We observed several instances where this is occurring, particularly to the front elevation. We strongly recommend that all cement-based and weathered mortar be raked out and renewed using lime mortar.  "
+      },
+      {
+        "type": "Solid construction",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Brickwork encapsulated in paint",
+        "level2Wording": "We could not fully ascertain the condition due to the decoration on the right and rear elevations. Brickwork at low level has been painted, which appears to be a modern-acrylic based paint thus prohibiting moisture from escaping the brickwork walls. Paintwork is blown and peeling generally. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Timber frame",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Decay",
+        "level2Wording": "",
+        "level3Wording": "We observed several concerning issues with the timber frame where repairs and maintenance have been undertaken using ill-conceived methods and modern materials. Firstly, the frame has been decorated using a gloss paint, a significant issue that will lead to rot and decay of the frame. Modern gloss paints are impervious, trapping moisture in the frame leading to rot, decay and eventual structural failure of the frame. Several historic filler repairs were noted to the frame indicating previous rot and decay which have been inappropriately repaired with cement, sealant and wood filler, all of which will trap moisture causing further decay where they are in contact with the oak. "
+      },
+      {
+        "type": "Timber frame",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Structural Plinth Detail",
+        "level2Wording": "",
+        "level3Wording": "It is also likely that upon removal of the low-level plinth detail, deteriorating and rotting timber will be evident. Significant structural works will likely be required in the form of replacing the low-level timber plinth detail throughout. Further intrusive investigations are recommended to establish the extent of repairs to the timber frame. Alongside the repairs to the low-level plinth, it is also noted that the external ground level will need to be lowered as it is currently too high, particularly around the original timber frame area. We also noted shrubbery and trees adjacent to the timber frame that could also impact the structure and recommend these are removed.\n"
+      },
+      {
+        "type": "Timber frame",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Encapsulation",
+        "level2Wording": "",
+        "level3Wording": "We noted several sections to the front and right elevations where a smooth render finish has been applied with timber upstand locations painted to give the impression of a frame. This indicates that sections of timber have either been removed, with sections reconstructed in brickwork, rendered and painted to look like timber or the timber elements have been encapsulated in what is presumed to be a cement render. Both solutions are inappropriate and will be trapping moisture leading to decay of the frame and dampness internally. We also noted several areas where the pattern in the timber suggests that it is planed timber processed through a band saw indicating planks have been fixed to the original frame likely to conceal deteriorated sections of the original frame. As such, it is unclear the extent of original timber frame and therefore the primary load bearing elements that remain. Whoever undertook these repairs clearly lacked the necessary knowledge of traditional construction techniques, and the methods employed will have catastrophic consequences for the frame."
+      },
+      {
+        "type": "Timber frame",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "General comment on damage and poor repair methods with recommendations",
+        "level2Wording": "",
+        "level3Wording": "The extent of damage to the frame is difficult to ascertain without undertaking further intrusive investigations. Our recommendation is to firstly remove all paint, cement render and mastic sealants to fully expose the frame. Given the extent of inappropriate historic repairs, we anticipate that considerable sections of the timber frame will need to be replaced, however, this cannot be confirmed until the above is actioned. The timber frame should be free from paints, tars and other modern materials that are impervious and non-porous to ensure that the timber can breathe and remain dry. This will allow the frame to naturally silver as it weathers ensuring that it remains free from rot, damp and insect infestation. Old buildings were designed to breathe, and it is critical that modern materials like mastic sealants are avoided and instead oakum and lime putty used for joints to abutments and window perimeters, etc. Likewise, there should absolutely be no gypsum cement products in contact with the timber frame or windows. Plants and vegetation growth are present to the perimeter of the property which should be removed as these will promote water retention increasing the risk of the frame rotting.."
+      },
+      {
+        "type": "Timber frame",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Infill Panels (likely cement, originally should have been lime)",
+        "level2Wording": "",
+        "level3Wording": "The original infill panels were likely lath and lime plaster. The infill panels appear to have a modern acrylic based paint applied to the render and we also noted a modern mastic sealant applied to the perimeter where the panels abut the frame. It is unclear whether the render to the infill panels are cement or lime, however, given the use of inappropriate materials elsewhere in the property, there is a likelihood that they are cement. Additionally, original deteriorated panels may have been replaced with brick and rendered. In any case, the paint and sealants should be removed to allow this to be confirmed. If cement, the panels will need to be removed and we recommend reinstating with a breathable sheep wool insulation, lime render and caulked with lime putty or oakum, not mastic or silicone. This will ensure that the property breathes as originally designed to prevent rot to the frame and dampness internally. Should brick infills be discovered, you should consult a suitably qualified structural engineer to inspect as the increased weight may over-stress the frame leading to distortion and structural failure."
+      },
+      {
+        "type": "Timber frame",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Stone plinth detail - general comment ",
+        "level2Wording": "",
+        "level3Wording": "A stone plinth course features at the internal finished floor height transferring loads from the timber frameinto the brick footings. The original plinth was likely a natural sandstone, however, it is unclear whether this has been reformed in cement as the profiles are neat and sharp to the edges and surfaces have a gloss paint finish. The plinth is a critical detail for protecting the cill beam from ground water. We recommend removal of the paint in the first instance to expose the plinth as the gloss paint will be trapping moisture causing damage to the stone and rotting the cill beam. If cement has been used, it must be removed from contact with the timber which may result in expensive repairs to the plinth."
+      },
+      {
+        "type": "Extensions",
+        "specification": "Brickwork",
+        "condition": "Yellow",
+        "defect": "Final Certificates",
+        "level2Wording": "We recommend obtaining Final Certificates from Building Control relating to the rear extension to confirm that construction was undertaken in compliance with Building Regulations.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Extensions",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Not matching",
+        "level2Wording": "We recommend obtaining Final Certificates from Building Control relating to the side extension to confirm that construction was undertaken in compliance with Building Regulations. We note that clay bricks used to the extension do not match the bricks used for the original parts. Although not a significant risk to the structure, this raised slight concerns with the builder’s competency in obtaining and using correct materials.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Extensions",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Brickwork not toothed in",
+        "level2Wording": "The extensions appear in reasonable condition with no evidence of significant structural defects. We noted that brickwork has not been toothed-in to the original parts in some areas. Likewise, the walls exhibited signs of very slight cracking where the extensions meet the original parts, such as to the right-hand gable where a vertical separation crack was noted. Typically, brickwork should be toothed-in or otherwise, a wall starter kit used to maintain structural integrity. We recommend that you obtain Final Certificates from the Vendor to confirm that all conservatories and extensions have been constructed in compliance with the Building Regulations. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Air Vents",
+        "specification": "Sub floor void",
+        "condition": "Green",
+        "defect": "Good condition",
+        "level2Wording": "Air vents are installed to the front elevation providing passive ventilation to the subfloor void. These are generally clear and unobstructed. You should ensure that these remain clear of obstructions as ventilation to the subfloor void is critical for ensuring that the timber joists remain dry to mitigate the risk of rot and decay.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Air Vents",
+        "specification": "Sub floor void",
+        "condition": "Yellow",
+        "defect": "Not to NHBC standards",
+        "level2Wording": "",
+        "level3Wording": "Air vents are installed to all elevations providing passive ventilation to the subfloor void. These are generally clear and unobstructed. You should ensure that these remain clear of obstructions as ventilation to the subfloor void is critical for ensuring that the timber joists remain dry to mitigate the risk of rot and decay. Modern NHBC standards stipulate that air bricks should have a gap of 75mm from subgrade level or, otherwise, external hardstandings laid to a gradient away from the property. This is to prevent moisture bridging into the void. This has not been achieved in some instances and we recommend cutting back external hardstandings and infilling the gap with soil to direct rainwater away from the property."
+      },
+      {
+        "type": "Air Vents",
+        "specification": "Sub floor void",
+        "condition": "Yellow",
+        "defect": "Raised external levels and vegetation growth",
+        "level2Wording": "",
+        "level3Wording": "Air vents serving the subfloor voids are blocked as external surfaces are too high. We recommend reducing the height of external levels to ensure that air vents remain unobstructed. Likewise, vegetation growth was noted to the juncture between the hardstandings and external walls. Therefore, we recommend removing and allowing a gap with subgrade present to enhance drainage and direct rainwater away from the property"
+      },
+      {
+        "type": "Air Vents",
+        "specification": "Walls",
+        "condition": "Red",
+        "defect": "Blocked",
+        "level2Wording": "Air vents serving the cavity walls are blocked. We recommend clearing the vents in the immediate term to ensure they are unobstructed, allowing for passive ventilation to the cavity walls which enables prevention of internal dampness.",
+        "level3Wording": ""
+      },
+      {
+        "type": "DPCs",
+        "specification": "Chemical Injection",
+        "condition": "Red",
+        "defect": "Retro chemical DPC",
+        "level2Wording": "",
+        "level3Wording": "A chemical DPC injection has been retrospectively installed to the front elevation suggesting historic dampness. We do not tend to recommend the installation of these types of DPCs as if poorly installed this can lead to deficiencies. Chemical damp proof courses are generally silicone-based and as such prevent moisture from drying out of the brickwork and can lead to brickwork spalling. A more effective means of preventing dampness internally is to ensure that all materials are breathable, maintain good heating and ventilation internally and ensure that external levels are 150mm below the internal finished floor level."
+      },
+      {
+        "type": "DPCs",
+        "specification": "Physical",
+        "condition": "Yellow",
+        "defect": "Cut back external surfaces",
+        "level2Wording": "",
+        "level3Wording": "We noted the presence of a bitumen DPC to the property. Importantly, DPCs should be a minimum of 150mm (2No) brick courses above subgrade level to prevent moisture bridging into the property. This has not been achieved to the flank elevation. We did not identify evidence of any internal dampness at the time of inspection, notwithstanding, we could not inspect all parts of the internal finishes due to the presence of furniture, fittings and fixtures. We recommend cutting back external surfaces where this has not been achieved and infilling the gap with soil to ensure proper drainage and direct rainwater away from the property."
+      },
+      {
+        "type": "DPCs",
+        "specification": "Concrete fillet detail",
+        "condition": "Red",
+        "defect": "Remove the fillet detail",
+        "level2Wording": "",
+        "level3Wording": "We identified the installation of a concrete fillet detail to the rear extension. This is typically installed retrospectively as a damp proofing measure to prevent moisture bridging into the property. As concrete is non-porous, this can trap moisture in the substrate and prevent from migrating away from the brickwork. We recommend removing the plinth detail in the immediate term and undertaking localised brick repairs as required, to ensure breathability and to direct any moisture away from the property.\n"
+      },
+      {
+        "type": "DPCs",
+        "specification": "Blue Engineering Brickwork",
+        "condition": "Yellow",
+        "defect": "Reasonable condition",
+        "level2Wording": "",
+        "level3Wording": "Blue engineering brickwork acts as an effective damp proofing measure due to its high density, low water absorption, and resistance to frost and moisture. We recorded no information to suggest that the damp proofing measure is defective. All external levels should be a minimum of 150mm (2No. bricks) below to avoid moisture bridging above the brickwork, creating a barrier that prevents moisture from the ground from rising into the structure. We recommend an allowance to re-point the brickwork with a hydraulic lime-based mortar in the short term to ensure the brickwork remains breathable."
+      }
+    ]
+  },
+  {
+    "elementName": "WINDOWS & DOORS",
+    "defects": [
+      {
+        "type": "Timber",
+        "specification": "Single glazed",
+        "condition": "Yellow",
+        "defect": "Paint finishes",
+        "level2Wording": "The timber windows to all elevations have paint finishes. This appears to be a modern acrylic-based paint and is blown and peeling in places. This can prohibit the timber from drying out trapped moisture and we, therefore, recommend the removal of paint finishes to these locations as this can lead to timber decay and application of a linseed oil-based paint.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Timber",
+        "specification": "Single glazed",
+        "condition": "Yellow",
+        "defect": "Replace for UPVC",
+        "level2Wording": "A feasibility exercise is necessary to determine whether repair or replacement will be more cost effective, however, we believe that replacement will provide greater benefits with regard to reduced maintenance, extended longevity and enhanced thermal performance. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Timber",
+        "specification": "Single glazed",
+        "condition": "Yellow",
+        "defect": "Deteriorated perimeter seals ",
+        "level2Wording": "We identified slightly deteriorated perimeter seals such as to the living room window which can lead to condensation and internal dampness. We recommend allowing to renew perimeter seals and install end caps in the short term to ensure the condition does not worsen. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Timber",
+        "specification": "Single glazed",
+        "condition": "Red",
+        "defect": "Decayed timber",
+        "level2Wording": "We noted isolated instances of rot and decay to the cills and frames which should be spliced repaired. The paint finishes to the windows appear to be a modern acrylic-based paint which traps moisture from escaping causing the timber to decay. Likewise, some of the beading to the windows is loose and deteriorated which will encourage failure of the panes as moisture is able to enter.  We recommend removing all paint finishes and redecorating using a linseed oil paint or similar breathable product. Preparation of surfaces may reveal further instances of decay, and therefore suggest setting aside funds to undertake filler and splice repairs as necessary. We recommend ensuring that the perimeter of all frames and cills remain sealed to prevent moisture ingress internally. So long as they are maintained in the correct way using suitable paint, they should remain in fair condition for the foreseeable future.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Timber",
+        "specification": "Single glazed",
+        "condition": "Red",
+        "defect": "Timber sash windows - painted and poor",
+        "level2Wording": "The timber windows and doors to all elevations have paint finishes. This appears to be a modern acrylic-based paint and is blown and peeling in places generally throughout. This can prohibit the timber from drying out trapped moisture leading to rot and decay. We noted instances where the paint is blistered and suspect that localised decay may be present to these areas. We recommend the removal of paint finishes and application of linseed oil paint. You should set aside funds for localised splice repairs where timber is found to be decayed and to ease and adjust openings including pull cords and weights to ensure smooth operation.  ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Timber",
+        "specification": "Single glazed",
+        "condition": "Red",
+        "defect": "Painted shut to listed building",
+        "level2Wording": "Timber framed windows are generally in reasonable condition, however, may have been painted shut and were inoperable at the time of our inspection. A modern acrylic-based paint has been applied to surfaces generally which will trap moisture leading to eventual rot and decay and should be removed.. This may reveal rotten timber requiring splice repairs. All windows should be eased and adjusted and if necessary putty beading renewed with lime and perimeter seals renewed with caulked with oakum. You should consult the Conservation Officer as there may be requirements to ensure that the same species of timber is used for any repairs.",
+        "level3Wording": ""
+      },
+      {
+        "type": "UPVC",
+        "specification": "Double glazed",
+        "condition": "Yellow",
+        "defect": "FENSA Certs",
+        "level2Wording": "",
+        "level3Wording": "Our review of the Local Authority’s website found no records that the UPVC windows were installed by a FENSA-approved installer and as such comply with the Building Regulations. We recommend that you obtain copies of these certificates along with any warranties from the Vendor. "
+      },
+      {
+        "type": "UPVC",
+        "specification": "Double glazed",
+        "condition": "Yellow",
+        "defect": "Structural - change from original timber",
+        "level2Wording": "",
+        "level3Wording": "Localised very slight cracks were observed in the rear elevation adjacent to the window serving the bathroom. Timber casement windows, especially in older buildings, are often integrated into the structural design. They may serve as a form of lintel or provide support to the masonry around the window openings. When these original windows were replaced with UPVC double glazed units, the new windows may not provide the same level of structural support.\n\nThis change in the load distribution and support structure can lead to potential issues such as cracking in the walls. The absence of identified lintels, particularly on the left-hand side elevation, is a concern because lintels are crucial elements in supporting the load above window and door openings."
+      },
+      {
+        "type": "UPVC",
+        "specification": "Double glazed",
+        "condition": "Red",
+        "defect": "Inadequate lintels",
+        "level2Wording": "",
+        "level3Wording": "We identified possible re-pointing above the rear UPVC patio door suggesting the lintel may be inadequate. The lintel comprises a brickwork soldier course which is typically adequate, however, we could not identify the presence of a lintel detail supporting the door. The cracking suggests historic movement to the brickwork, further supporting the case that there are no lintels to these openings. Lintels are crucial for supporting the weight of the brickwork above the openings and should be present as this is a structural risk. We recommend further checks to confirm their presence, if absent, suitable lintels should be installed following consultation with an engineer in the immediate term."
+      },
+      {
+        "type": "UPVC",
+        "specification": "Double glazed",
+        "condition": "Red",
+        "defect": "Steel lintel corrosion",
+        "level2Wording": "",
+        "level3Wording": "There is a thin steel plate lintel installed to the window serving the kitchen. The lintel exhibits signs of surface corrosion and hairline cracking was noted to the brickwork, extending from the lintel, presumably caused by the steel expanding during the oxidation process. Localised brickwork should be removed to facilitate treatment of the lintel with a rust-inhibiting primer and a zinc coating to prevent further localised cracking and to preserve the lintel."
+      },
+      {
+        "type": "Cills and Lintels",
+        "specification": "Stone",
+        "condition": "Yellow",
+        "defect": "Painted",
+        "level2Wording": "",
+        "level3Wording": "Stone cills and lintels have been painted with what appears to be a modern acrylic based paint. This paint is unsuitable for use on external stone as it forms an impervious film around the stone which will trap moisture in the stone causing the stone to spall. The decoration has blown significantly to the rear elevation. The paint should be removed to prevent further deterioration of the stone elements."
+      },
+      {
+        "type": "Cills and Lintels",
+        "specification": "Concrete",
+        "condition": "Red",
+        "defect": "Cracking / no bearing either side",
+        "level2Wording": "",
+        "level3Wording": "We identified stepped cracking above the window serving the living room. Modern NHBC standards stipulate that lintels should be installed with a 150mm bearing to either side of the opening which has not been achieved. We recommend filling the cracks in the immediate term. Should cracks reappear and widen following filling, we recommend consulting a suitably qualified structural engineer to review."
+      }
+    ]
+  },
+  {
+    "elementName": "ROOF STRUCTURE",
+    "defects": [
+      {
+        "type": "Roof Structure",
+        "specification": "Timber",
+        "condition": "Green",
+        "defect": "Structural ",
+        "level2Wording": "The timber elements appear to be in reasonable structural condition with no signs of significant defects noted at the time of inspection. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Roof Structure",
+        "specification": "Timber",
+        "condition": "Yellow",
+        "defect": "White staining",
+        "level2Wording": "White staining was noted to timber indicating condensation resulting from a lack of ventilation within the roof void. Ventilated ridge tiles should be installed to improve air circulation to allow timbers to dry out. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Roof Structure",
+        "specification": "Timber",
+        "condition": "Yellow",
+        "defect": "Dark staining",
+        "level2Wording": "Localised dark staining was noted to the rafters indicating a prolonged moisture exposure, likely resulting from defective roof coverings. External repairs are necessary to ensure the roof is watertight. Further investigations are necessary to confirm whether the timbers are solid and free from decay which may reveal additional costs to replace decayed timber. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Roof Structure",
+        "specification": "Chimney Breast",
+        "condition": "Yellow",
+        "defect": "Cement Mortar covering",
+        "level2Wording": "The chimney stack has been covered with cement mortar which is non-porous and will trap moisture. As water staining was identified to the chimney stack, we recommend removing the cement mortar, allowing for localised brickwork repairs and re-pointing. We recommended external repairs to prevent water ingress. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Roof Structure",
+        "specification": "Boarding",
+        "condition": "Yellow",
+        "defect": "No issues noted",
+        "level2Wording": "",
+        "level3Wording": "We could not inspect the timber elements due to the presence of boarding internally. We recommend removing sections of the boarding to ascertain the condition timbers. We did not exhibit signs of damp staining to the boarding at the time of inspection, however, further investigations are advised with moisture readings taken of the roof timbers to confirm that they are free from rot, decay and insect infestation. \n\nIt is unclear if what, if any, insulation is present between rafters or between the ceiling joists of the first floor. Given the presence of mould growth, we have concerns that poorly installed insulation may be present with inadequate provisions for ventilation to mitigate the risk of condensation and decay of the timbers. This risk is increased further given the lack of ventilation to the soffits and ridge tiles.\n\nYou should fully consider this unknown risk before proceeding with the purchase of the property as subject to further investigations, there could be a considerable expense to repair, treat or replace the roof structure. \n"
+      },
+      {
+        "type": "Roof Structure",
+        "specification": "Boarding",
+        "condition": "Red",
+        "defect": "Staining evident",
+        "level2Wording": "",
+        "level3Wording": "We could not inspect the timber elements due to the presence of boarding internally. We recommend removing sections of the boarding to ascertain the condition timbers as evidence of water staining and mould growth was noted to the boards indicating roof leaks. Further investigations are advised with moisture readings taken of the roof timbers to confirm that they are free from rot, decay and insect infestation. \n\nIt is unclear if what, if any, insulation is present between rafters or between the ceiling joists of the first floor. Given the presence of mould growth, we have concerns that poorly installed insulation may be present with inadequate provisions for ventilation to mitigate the risk of condensation and decay of the timbers. This risk is increased further given the lack of ventilation to the soffits and ridge tiles. \n\nYou should fully consider this unknown risk before proceeding with the purchase of the property as subject to further investigations, there could be a considerable expense to repair, treat or replace the roof structure. \n"
+      },
+      {
+        "type": "Membrane",
+        "specification": "Felt",
+        "condition": "Green",
+        "defect": "None",
+        "level2Wording": "A waterproof membrane is present on the underside of the tiles. This prevents the effects of wind uplift and acts as a secondary barrier to water ingress.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Membrane",
+        "specification": "Bitumen",
+        "condition": "Yellow",
+        "defect": "Not breathable",
+        "level2Wording": "A waterproof membrane is present on the underside of the tiles. This prevents the effects of wind uplift and acts as a secondary barrier to water ingress. The membrane appears to be an older bitumen underlay, which is not breathable. The membrane will be suitable to remain as it is in serviceable condition so long as external repairs are undertaken, such as introducing ventilated ridge tiles to ensure the roof void remains well ventilated. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Insulation",
+        "specification": "Quilt",
+        "condition": "Yellow",
+        "defect": "No gap at eaves",
+        "level2Wording": "The roof void has been insulated with a reasonable level of quilt insulation having been loosely laid between the ceiling joists. The insulation should be a minimum of 150mm from the eaves to ensure the roof void is appropriately ventilated. We recommend that this is checked to the perimeter of the roof. If the insulation is too close to the eaves, it will restrict air circulation potentially leading to condensation and subsequent deterioration of the roof structure.\n",
+        "level3Wording": ""
+      },
+      {
+        "type": "Insulation",
+        "specification": "Quilt",
+        "condition": "Yellow",
+        "defect": "Aged",
+        "level2Wording": "We note that the insulation appears to be beyond its serviceable life and will benefit from being replaced with new to achieve compliance with Part L of the Building Regulations.\n",
+        "level3Wording": ""
+      },
+      {
+        "type": "Insulation",
+        "specification": "Quilt",
+        "condition": "Red",
+        "defect": "Underside of rafters",
+        "level2Wording": "Insulation appears to have been installed retrospectively to the underside of the timber rafters, ridge beams and valley beams. The insulation appears to be a rockwool foil faced type which has presumably been taped against or nailed into the timber structure. Installing insulation directly to the underside of the timber rafters and beams is not recommended as this can cause a build-up of condensation within the timbers. This can lead to white staining, as noted in section 4.1.1, which can decay the timber elements. We recommend removal of the insulation in these locations.\n",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "ROOF STRUCTURE",
+    "defects": [
+      {
+        "type": "Ceiling",
+        "specification": "Painted plaster",
+        "condition": "Yellow",
+        "defect": "None significant",
+        "level2Wording": "The ceilings are generally in a reasonable condition throughout the property with no significant defects identified. We identified instances of hairline cracking deemed commensurate with the age of the property. Any cracks should be filled, redecorated and monitored for reoccurrence.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Ceiling",
+        "specification": "Textured surfaces",
+        "condition": "Yellow",
+        "defect": "Artex - asbestos",
+        "level2Wording": "Due to the age of the property textured ceilings may comprise Artex surface coating that can contain asbestos. Prior to undertaking any refurbishment works that will disturb any finishes an asbestos refurbishment and demolition survey will be required.",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "WALLS & PARTITIONS",
+    "defects": [
+      {
+        "type": "Walls & partitions",
+        "specification": "Painted plaster",
+        "condition": "Yellow",
+        "defect": "None significant",
+        "level2Wording": "Generally, internal walls appear to be in reasonable condition with no severe deflection, bowing or other significant structural defects noted. We identified localised hairline cracks which are deemed a result of shrinkage and thermal movement. All areas should be filled, redecorated and monitored. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Walls & partitions",
+        "specification": "Painted plaster",
+        "condition": "Yellow",
+        "defect": "None significant - including extensions",
+        "level2Wording": "Generally, internal walls appear to be in reasonable condition with no severe deflection, bowing or other significant structural defects noted. We identified localised hairline cracks which are deemed a result of shrinkage and thermal movement. All areas should be filled, redecorated and monitored. Given the structural alterations internally to facilitate the extensions, we recommend that you obtain all Final Certificates and engineer’s calculations to confirm that all was designed and constructed in compliance with Building Regulations. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Walls & partitions",
+        "specification": "Painted plaster",
+        "condition": "Red",
+        "defect": "Damp",
+        "level2Wording": "Given the issues noted with the external walls, such as inoperable windows, it is likely that ongoing damp issues could occur to the property. We did not identify any significant damp during the inspection that would be considered cause for concern. However, we recommend undertaking external repairs, increasing natural ventilation to internal areas and managing the heating within the rooms so moisture control is managed.  ",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "FLOORS",
+    "defects": [
+      {
+        "type": "Suspended timber ",
+        "specification": "Ground floor joists",
+        "condition": "Yellow",
+        "defect": "None significant",
+        "level2Wording": "",
+        "level3Wording": "Generally, the floors appear to be in sound structural condition with no significant undulations or notable bounce that would suggest structural defects at the time of inspection. \n\nThe ground floor joists in particular should be assessed to ensure that they have suitable measures in place to prevent moisture transfer to the timber where they bear on brickwork such as a polyethene membrane. Likewise, it is imperative that a gap is provided for ventilation to alleviate the risk of condensation and decay of the timber.\n"
+      },
+      {
+        "type": "Suspended timber ",
+        "specification": "Ground floor joists",
+        "condition": "Red",
+        "defect": "Spray foam insulation",
+        "level2Wording": "",
+        "level3Wording": "Spray-applied foam insulation is present between the floor joists. We strongly recommend against the use of foam insulation as it is non-porous, causing moisture to be trapped leading to potential rot and decay of the timber. This is subject to the type of insulation used, however, you should be aware that many mortgage companies will refuse to lend on properties with this type of insulation. Removal of the insulation is an option, however, this presents a risk of damaging timber and surrounding surfaces as a result. This is a significant risk and you should fully consider the cost implications before proceeding with the purchase of the property. In the first instance, it would be best to obtain all relevant information pertaining to the insulation so that the risk can be fully considered. The greatest risk is with what is known as closed cell insulation, however, even if it is the open cell type of insulation, there is still a risk of interstitial condensation that can lead to the decay of timber elements.\n"
+      },
+      {
+        "type": "Suspended timber ",
+        "specification": "Ground floor joists",
+        "condition": "Red",
+        "defect": "Sagging in bathroom",
+        "level2Wording": "",
+        "level3Wording": "We also noted a significant sag around the bath within the main bathroom. This could be linked to loose floorboards, however, due to the location this could be related to a historic leak causing decaying of the floor joists. We recommend further intrusive investigations to remove the floor coverings and expose the joists to fully ascertain the condition. "
+      },
+      {
+        "type": "Suspended timber ",
+        "specification": "Ground floor joists",
+        "condition": "Red",
+        "defect": "Staining / Boarded to cellar ",
+        "level2Wording": "",
+        "level3Wording": "Joists were found to be stained in some locations, particularly where they bear on the external brickwork walls. Likewise, many of the joists have been boarded over. We recommend sections of plaster are removed to determine the presence of insulation between the joists. Should insulation be present, this can lead to interstitial condensation to the timber due to a build-up of condensation. You should consider installing damp proof membranes around the joists where they bear on the brickwork to prevent moisture transfer."
+      },
+      {
+        "type": "Suspended timber ",
+        "specification": "Ground floor joists",
+        "condition": "Red",
+        "defect": "Dark staining / beetle infestation and paintwork",
+        "level2Wording": "",
+        "level3Wording": "Joists were found to be stained in other locations, particularly where they bear on the external brickwork walls. Further checks should be made to these timbers also as we noted evidence of flight holes suggesting beetle infestation. Likewise, many of the joists have been painted. It is unclear what type of paint this is, but as noted elsewhere in the report, certain paints can prohibit elements from drying out due to their impervious nature. As such, we recommend removal of the paint and you should consider installing damp proof membranes around the joists where they bear on the brickwork to prevent moisture transfer. The impervious materials installed to the brickwork may also be contributing to the moisture noted."
+      },
+      {
+        "type": "Suspended timber ",
+        "specification": "Ground floor joists",
+        "condition": "Yellow",
+        "defect": "First floor joists- General",
+        "level2Wording": "",
+        "level3Wording": "The floors generally felt in sound condition with no evidence of noticeable bounce or other indications that they were rotten, however, a lack of ventilation to the floor void will inevitably lead to rot, decay and insect infestation. The first-floor joists were not inspected, and we recommend undertaking localised checks, particularly within the bathrooms where moisture exposure is more likely. Air circulation is critical for ensuring that the timber remains free from rot and decay.  This is a risk that you should fully consider as the cost implications could be significant if rot is discovered. "
+      }
+    ]
+  },
+  {
+    "elementName": "INTERNAL JOINERY",
+    "defects": [
+      {
+        "type": "Doors, Architraves and Skirting Boards",
+        "specification": "Generally",
+        "condition": "Green",
+        "defect": "General",
+        "level2Wording": "Generally, internal joinery is in fair condition with instances of redecoration required and replacement of some ironmongery. ",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "SANITARYWARE & KITCHEN",
+    "defects": [
+      {
+        "type": "Bathroom ",
+        "specification": "Sanitaryware",
+        "condition": "Yellow",
+        "defect": "None significant",
+        "level2Wording": "The sanitaryware is in reasonable condition to the bathrooms generally. No evidence was noted to suggest the presence of any active leaks.  All were operational and should remain in serviceable condition with periodic maintenance such as replacing mastic seals.",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "FIREPLACES",
+    "defects": [
+      {
+        "type": "Chimney breast",
+        "specification": "Boarded",
+        "condition": "Yellow",
+        "defect": "Boarding",
+        "level2Wording": "We noted that the chimney breast to the rear has been boarded over with no air vent present. Lack of ventilation will lead to condensation and subsequent damp. Therefore, we recommend installing air vents to increase passive ventilation to the flue.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Electric Heater",
+        "specification": "Electric heater",
+        "condition": "Yellow",
+        "defect": "Testing",
+        "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Solid fuel burner",
+        "specification": "Solid fuel burner",
+        "condition": "Yellow",
+        "defect": "Testing",
+        "level2Wording": "A solid fuel burner is present and you should obtain HETAS certificates from the Vendor to confirm it was installed in compliance with the Building Regulations. \n",
+        "level3Wording": ""
+      }
+    ]
+  },
+  { "elementName": "CELLAR", "defects": [] },
+  {
+    "elementName": "ELECTRICAL INSTALLATIONS",
+    "defects": [
+      {
+        "type": "Electrical Installations",
+        "specification": "Meter and supply",
+        "condition": "Yellow",
+        "defect": "None noted",
+        "level2Wording": "The consumer unit and associated wiring appears to be in reasonable condition. We have not undertaken any specialist testing. We recommend that you obtain the commissioning and testing certificates from the Vendor to confirm that this was undertaken by a suitably qualified electrician (NICEIC or similar). If unavailable, it is advised that you commission a qualified electrician to undertake an Electrical Installation Condition Report (EICR). ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Electrical Installations",
+        "specification": "Meter and supply",
+        "condition": "Red",
+        "defect": "Aged - Re-wire",
+        "level2Wording": "The consumer unit and associated wiring appears to be in aged condition. We have not undertaken any specialist testing. We recommend that you obtain the commissioning and testing certificates from the Vendor to confirm that this was undertaken by a suitably qualified electrician (NICEIC or similar). If unavailable, it is advised that you commission a qualified electrician to undertake an Electrical Installation Condition Report (EICR). Given the signs of loose cabling and evidence of aged fittings, we anticipate that a full re-wire of the property may be required. ",
+        "level3Wording": ""
+      }
+    ]
+  },
+  { "elementName": "GAS INSTALLATIONS", "defects": [] },
+  { "elementName": "COLD WATER SUPPLY", "defects": [] },
+  {
+    "elementName": "HOT WATER SUPPLY / HEATING",
+    "defects": [
+      {
+        "type": "System generally",
+        "specification": "Boiler",
+        "condition": "Yellow",
+        "defect": "None noted",
+        "level2Wording": "The system was not subject to any specialist testing; however, the boiler appears to be in reasonable condition. Our search of the Local Authority’s planning portal found no record of the installation. We recommend that you obtain Gas Safe certification from the Vendor to confirm that it was installed in compliance with the Building Regulations. ",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "SURFACE WATER & SOIL DRAINAGE",
+    "defects": [
+      {
+        "type": "Surface and Soil Drainage",
+        "specification": "Underground system",
+        "condition": "Yellow",
+        "defect": "None noted",
+        "level2Wording": "No inspection of the underground drainage systems was undertaken, and we can therefore provide no comment on their condition or confirm that they are free from defects. Given the presence of cracks to the rear brickwork, we recommend that you commission a CCTV drainage survey by a competent person to determine the condition of all underground drainage systems.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Surface and Soil Drainage",
+        "specification": "SVP",
+        "condition": "Yelow",
+        "defect": "No issues",
+        "level2Wording": "The SVP is in reasonable condition. We recommend redecorating on a cyclical basis. The vent terminal must remain to the head of the stack to prevent nesting birds and debris from entering. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Surface and Soil Drainage",
+        "specification": "SVP",
+        "condition": "Yellow",
+        "defect": "No vent terminal ",
+        "level2Wording": "A vent terminal should be installed to the head of the stack to prevent nesting birds and debris from entering. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Surface and Soil Drainage",
+        "specification": "SVP",
+        "condition": "Yellow",
+        "defect": "Non-compliant",
+        "level2Wording": "As per Approved Document H of the Building Regulations, soil and vent pipes should be located at least 900mm away from any openable window, door, or other ventilation openings. This distance helps prevent any unpleasant odours or harmful gases from entering the building.",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "OUTBUILDINGS, BOUNDARIES, FENCING, DRIVES, LAWN, ETC.",
+    "defects": [
+      {
+        "type": "External Areas",
+        "specification": "Hardstandings",
+        "condition": "Yellow",
+        "defect": "General ",
+        "level2Wording": "Jet washing should be undertaken on a cyclical basis to all external hardstandings. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "External Areas",
+        "specification": "Hardstandings",
+        "condition": "Yellow",
+        "defect": "Abutting external walls",
+        "level2Wording": "We recommend excavating hardstandings that are abutting the external walls to allow for a 150mm gap and to infill with soil. This will enable any moisture to drain into the subgrade and direct the moisture away from the property. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "External Areas",
+        "specification": "Hardstandings",
+        "condition": "Yellow",
+        "defect": "Cracked and undulating",
+        "level2Wording": "We noted that external hardstandings are generally cracked and undulating which presents a risk of slips, trips and falls. We recommend replacing damaged areas and re-beddding to ensure a level finish. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Boundaries",
+        "specification": "Brick Walls",
+        "condition": "Yellow",
+        "defect": "Soiled",
+        "level2Wording": "We recommend cleaning the brickwork boundary wall to prevent deterioation of brick surfaces. An allowance should be made to re-point as part of a long-term maintenance plan. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Boundaries",
+        "specification": "Brick Walls",
+        "condition": "Red",
+        "defect": "Cracked significantly",
+        "level2Wording": "The brickwork boundary wall is in poor condition generally with evidence of cracking that may necessiatate Heli beam repairs. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Boundaries",
+        "specification": "Timber fencing",
+        "condition": "Yellow",
+        "defect": "Deteriorated",
+        "level2Wording": "There is evidence of damaged and deteriorated timber throughout the fencing which should be replaced. External timber should be treated every 3-5 years. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Boundaries",
+        "specification": "Retaining Wall",
+        "condition": "Yellow",
+        "defect": "Cracked etc",
+        "level2Wording": "Retaining walls installed to the raised patio has localised cracks and evidence of movement throughout. The wall has not been constructed correctly and we question the adequacy of the wall thickness and depth of the footings. There are no weepholes present to allow moisture to drain from the retained soil, exerting pressure on the wall, this is causing efflorescence, or salt crystal deposits on the brickwork. Localised repairs may be possible, however, we recommend that you appoint a suitably qualified engineer to review and advise on the most cost effective repair. Part or total reconstruction is likely required to provide durability and avoid future failure which may be expensive. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Outbuilding",
+        "specification": "External envelope",
+        "condition": "Yellow",
+        "defect": "Impact damage",
+        "level2Wording": "The external envelopes feature areas of impact damage and spalled decoration surfaces which will all require addressing. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Outbuilding",
+        "specification": "External envelope",
+        "condition": "Yellow",
+        "defect": "Timber windows and doors",
+        "level2Wording": "The single leaf timber doors that provide access into the outbuilding are in poor condition with decay noted to the surfaces. Due to the poor condition, they are considered beyond economic repair and should be replaced. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Outbuilding",
+        "specification": "External envelope",
+        "condition": "Yellow",
+        "defect": "Concrete floor slab worn",
+        "level2Wording": "The concrete floor slab appeared to be spalled in places and will need to be screeded to provide a level finish. A new surface coat will be required as the existing finish is worn. ",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "RISKS TO THE BUILDING, PEOPLE AND GROUNDS",
+    "defects": [
+      {
+        "type": "Risks to the building",
+        "specification": "Timber rot and insect damage",
+        "condition": "Red",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "We have been unable to assess the condition of all timber elements and walls of the property due to furniture and building fabric obstructing our view and we are therefore unable to confirm that these areas are free from damp, rot, or insect infestation.\n\nWe have concerns with the ground floor joists as flight holes were noted. "
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Timber rot and insect damage",
+        "condition": "Yellow",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "We have been unable to assess the condition of all timber elements and walls of the property due to furniture and building fabric obstructing our view and we are therefore unable to confirm that these areas are free from damp, rot, or insect infestation."
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Timber rot and insect damage",
+        "condition": "Green",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "We have been unable to assess the condition of all timber elements and walls of the property due to furniture and building fabric obstructing our view and we are therefore unable to confirm that these areas are free from damp, rot, or insect infestation."
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Tree proximity",
+        "condition": "Yellow",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "The presence of mature trees near a building can cause structural damage to foundations by directly displacing them, decreasing, or indeed increasing, the amount of moisture to be drawn from the certain types of soil causing it to shrink and expand, as well as negatively affecting drainage causing subsidence. The risk posed is subject to the following: \n* Proximity of the tree * the height, age and species of the tree *the design and depth of the building’s foundations *the type of sub-soil\nWe notde the presence of mature trees that could impact the property. "
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Tree proximity",
+        "condition": "Green",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "The presence of mature trees near a building can cause structural damage to foundations by directly displacing them, decreasing, or indeed increasing, the amount of moisture to be drawn from the certain types of soil causing it to shrink and expand, as well as negatively affecting drainage causing subsidence. The risk posed is subject to the following: \n* Proximity of the tree * the height, age and species of the tree *the design and depth of the building’s foundations *the type of sub-soil\nWe did not note the presence of any mature trees that could impact the property. "
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Flood risk",
+        "condition": "Red",
+        "defect": "High risk of surface water",
+        "level2Wording": "",
+        "level3Wording": "We have not undertaken detailed investigations into the potential for flooding of the land on which the property lies. However, we have consulted the Environmental Agency website at www.environment-agency.gov.uk and their information regarding the potential for flooding identifies the site as being at medium risk from surface water and very-low flood risk from rivers or the sea. For more information, please visit https://check-long-term-flood-risk.service.gov.uk/risk\n  \nThe property is at a high risk of surface water flooding. It may be a result of compacted soil, hindering proper drainage. Compacted soil restricts the movement of water and air, making it challenging for the soil to absorb and distribute water effectively. To remedy this, consider aerating the external area. This involves perforating the soil with small holes using a lawn aerator machine or manual tool with spikes or cores. The aeration process helps alleviate soil compaction, facilitating improved water absorption and root development. External surfaces should have a gradient directing rain and surface water away from the property. \n\nFurthermore, the property owner should stay informed about local flood alerts, maintain regular communication with relevant authorities, and consider investing in flood insurance to provide financial protection in case of any unforeseen events.\n"
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Flood risk",
+        "condition": "Yellow",
+        "defect": "Medium risk of surface water",
+        "level2Wording": "",
+        "level3Wording": "We have not undertaken detailed investigations into the potential for flooding of the land on which the property lies. However, we have consulted the Environmental Agency website at www.environment-agency.gov.uk and their information regarding the potential for flooding identifies the site as being at medium risk from surface water and very-low flood risk from rivers or the sea. For more information, please visit https://check-long-term-flood-risk.service.gov.uk/risk\n  \nThe property is at a medium risk of surface water flooding. It may be a result of compacted soil, hindering proper drainage. Compacted soil restricts the movement of water and air, making it challenging for the soil to absorb and distribute water effectively. To remedy this, consider aerating the external area. External surfaces should have a gradient directing rain and surface water away from the property. \n\nFurthermore, the property owner should stay informed about local flood alerts, maintain regular communication with relevant authorities, and consider investing in flood insurance to provide financial protection in case of any unforeseen events.\n"
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Flood risk",
+        "condition": "Green",
+        "defect": "Low / very low risk",
+        "level2Wording": "",
+        "level3Wording": "We have not undertaken detailed investigations into the potential for flooding of the land on which the property lies. However, we have consulted the Environmental Agency website at www.environment-agency.gov.uk and their information regarding the potential for flooding identifies the site as being at low risk from surface water and very-low flood risk from rivers or the sea. For more information, please visit https://check-long-term-flood-risk.service.gov.uk/risk"
+      },
+      {
+        "type": "Risks to the building",
+        "specification": "Ground stability",
+        "condition": "Red",
+        "defect": "Rebuilt wall",
+        "level2Wording": "",
+        "level3Wording": "As noted in section 3.1.1, we noted the property has been subject to rebuilding of the gable wall. Through undertaking local searches, we noted that the property is located in an area that may be affected by surface or sub-surface coal mining. Mining may cause ground stability problems such as subsidence, surface collapses, mass movement and landslides, depending on the style of mining used. Therefore, we recommend a suitably qualified structural engineer undertakes a review of the property, with an allowance for further localised underpinning."
+      },
+      {
+        "type": "Risks to the grounds",
+        "specification": "Invasive species",
+        "condition": "Red",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "A waterway was noted to the side of the property. Railways and waterways are common areas where Japanese Knotweed (JKW) is found and spread. Although we observed no evidence of JKW, we recommend that you commission a suitably qualified person to inspect the property more thoroughly including a review around the waterway as its presence can result in damage and costly repairs to the property. "
+      },
+      {
+        "type": "Risks to the grounds",
+        "specification": "Invasive species",
+        "condition": "Green",
+        "defect": "",
+        "level2Wording": "",
+        "level3Wording": "None noted at the time of inspection. "
+      },
+      {
+        "type": "Risks to the people",
+        "specification": "Asbestos ",
+        "condition": "Red",
+        "defect": "ACMs present",
+        "level2Wording": "",
+        "level3Wording": "Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition (R&D) Asbestos survey before commencing any refurbishment works.\n\nWe have concerns with the textured surface finishes. "
+      },
+      {
+        "type": "Risks to the people",
+        "specification": "Asbestos ",
+        "condition": "Yellow",
+        "defect": "ACMS likely present",
+        "level2Wording": "",
+        "level3Wording": "Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition (R&D) Asbestos survey before commencing any refurbishment works."
+      },
+      {
+        "type": "Risks to the people",
+        "specification": "Asbestos ",
+        "condition": "Green",
+        "defect": "No ACMs",
+        "level2Wording": "",
+        "level3Wording": "Given the age of the property, there should be no ACMs present. "
+      },
+      {
+        "type": "Risks to the people",
+        "specification": "Radon",
+        "condition": "Red",
+        "defect": "10-30%",
+        "level2Wording": "",
+        "level3Wording": "From the Building Research Establishment Radon Maps, the site has been identified as being within an area with a maximum radon potential of 10-30% (elevated risk). We recommend that you install a radon detector to confirm actual limits at the property. Radon presents a risk to human health and has been associated with cases of lung cancer. You should consult a radon specialist  to review the results and provide recommendations on any mitigation measures."
+      },
+      {
+        "type": "Risks to the people",
+        "specification": "Radon",
+        "condition": "Yellow",
+        "defect": "3-5%",
+        "level2Wording": "",
+        "level3Wording": "From the Building Research Establishment Radon Maps, the site has been identified as being within an area with a maximum radon potential of 3-5% (medium risk). We recommend that you install a radon detector to confirm actual limits at the property. Radon presents a risk to human health and has been associated with cases of lung cancer. You should consult a radon specialist  to review the results and provide recommendations on any mitigation measures."
+      },
+      {
+        "type": "Risks to the people",
+        "specification": "Radon",
+        "condition": "Green",
+        "defect": 0.01,
+        "level2Wording": "",
+        "level3Wording": "From the Building Research Establishment Radon Maps, the site has been identified as being within an area with a maximum radon potential of 1% (lowest risk). "
+      }
+    ]
+  }
+]

@@ -1,5 +1,6 @@
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormRegisterReturn } from "react-hook-form";
+import { Label } from "./Label";
 
 interface TextAreaInputProps {
     labelTitle?: string;
@@ -12,9 +13,7 @@ export default function TextAreaInput({ register, labelTitle = "", defaultValue 
     const props = register();
     return(
         <div>
-            <label htmlFor={props.name}>
-                <span className="text-sm">{labelTitle}</span>
-            </label>
+            {labelTitle && <Label text={labelTitle} /> }
             <Textarea {...props} placeholder={placeholder} defaultValue={defaultValue} />
         </div>
     )

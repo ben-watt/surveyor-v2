@@ -25,7 +25,7 @@ const schema = a.schema({
     order: a.float(),
     section: a.string().required(),
     description: a.string(),
-    components: a.hasMany("Components", "id"),
+    components: a.hasMany("Components", "elementId"),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),
@@ -36,16 +36,15 @@ const schema = a.schema({
   }),
   Material: a.customType({
     name: a.string().required(),
-    defects: a.ref("Defect")
-    .array().required(),
+    defects: a.ref("Defect").required().array().required(),
   }),
   Components: a
     .model({
       id: a.id().required(),
       name: a.string().required(),
-      materials: a.ref("Material").array().required(),
+      materials: a.ref("Material").required().array().required(),
       elementId: a.id().required(),
-      element: a.belongsTo("Elements", "id"),
+      element: a.belongsTo("Elements", "elementId"),
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),

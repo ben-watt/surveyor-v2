@@ -6,134 +6,65 @@ import client from "../clients/AmplifyDataClient";
 import toast from "react-hot-toast";
 import { Schema } from "@/amplify/data/resource";
 
-const selectionSet = ["id"] as const;
-type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section">;
+import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
+import 'react-json-view-lite/dist/index.css';
 
-const seedElementData: ElementData[] = [
-  {
-    name: "Foundations and Substructure",
-    description: "",
-    order: 1,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Roof Coverings",
-    description: "",
-    order: 2,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Chimneys",
-    description: "",
-    order: 3,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Rainwater Disposal System",
-    description: "",
-    order: 4,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Sofits and Fascias",
-    description: "",
-    order: 5,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Main Walls",
-    description: "",
-    order: 6,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Windows and Doors",
-    description: "",
-    order: 7,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Roof Structure",
-    description: "",
-    order: 8,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Ceilings",
-    description: "",
-    order: 9,
-    section: "External Condition of Property",
-  },
-  {
-    name: "Walls and Partitions",
-    description: "",
-    order: 10,
-    section: "Internal Condition of Property",
-  },
-  {
-    name: "Floors",
-    description: "",
-    order: 11,
-    section: "Internal Condition of Property",
-  },
-  {
-    name: "Internal Joinery",
-    description: "",
-    order: 12,
-    section: "Internal Condition of Property",
-  },
-  {
-    name: "Sanitaryware & Kitchen",
-    description: "",
-    order: 13,
-    section: "Internal Condition of Property",
-  },
-  {
-    name: "Fireplaces",
-    description: "",
-    order: 14,
-    section: "Internal Condition of Property",
-  },
-  {
-    name: "Electrical Installation",
-    description: "",
-    order: 15,
-    section: "Services",
-  },
-  {
-    name: "Gas Installations",
-    description: "",
-    order: 16,
-    section: "Services",
-  },
-  {
-    name: "Cold Water Supply",
-    description: "",
-    order: 17,
-    section: "Services",
-  },
-  {
-    name: "Hot Water Supply / Heating Installations",
-    description: "",
-    order: 18,
-    section: "Services",
-  },
-  {
-    name: "Surface water & Soil drainage",
-    description: "",
-    order: 19,
-    section: "Services",
-  },
-  {
-    name: "Boundaries, Fencing, Drives, Lawn, etc",
-    description: "",
-    order: 20,
-    section: "Grounds (External Areas)",
-  }
-]
+import {matchSorter} from 'match-sorter';
+
+import bankOfDefects from "./defects.json";
+import elements from "./elements.json";
+
+type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section"> & { id?: string };
+const seedElementData: ElementData[] = elements;
+
+type ComponentData = Omit<Schema["Components"]["type"], "owner" | "createdAt" | "updatedAt" | "element" | "id">;
+type ComponentDataView = ComponentData;
 
 export default function Page() {
   const [elementIds, setElementIds] = useState<string[]>([]);
+  const [elements, setElements] = useState<ElementData[]>([]);
+  const [componentData, setComponentData] = useState<ComponentData[]>([]);
+
+  useEffect(() => {
+    const componentData = mapBodToComponentData(bankOfDefects, elements);
+    setComponentData(componentData);
+  }, [elements])
+
+
+  function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[]): ComponentDataView[] {
+    let componentData: ComponentDataView[] = [];
+  
+    bod.forEach((sheet) => {
+      sheet.defects.forEach(d => {
+        const existingComponent = componentData.find(c => c.name === d.type);
+        if(existingComponent) {
+          const existingMaterial = existingComponent.materials.find(m => m.name === d.specification);
+          if(existingMaterial) {
+            existingMaterial.defects.push({ name: d.defect.toString(), description: d.level2Wording});
+          } else {
+            existingComponent.materials.push({
+              name: d.specification,
+              defects: [{ name: d.defect.toString(), description: d.level2Wording}]
+            })
+          }
+        }
+        else {
+          const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
+          componentData.push({
+            elementId: matchingElement?.id || "",
+            //elementName: matchingElement?.name || sheet.elementName,
+            name: d.type,
+            materials: [{
+              name: d.specification,
+              defects: [{ name: d.defect.toString(), description: d.level2Wording}]
+            }]
+          })
+        }
+      })
+    });
+  
+    return componentData;
+  }
 
   useEffect(() => {
     async function fetchReports() {
@@ -142,6 +73,7 @@ export default function Page() {
 
         if (response.data) {
           setElementIds(response.data.map((e) => e.id));
+          setElements(response.data);
         }
       } catch (error) {
         console.error("Failed to fetch elements", error);
@@ -183,6 +115,26 @@ export default function Page() {
     await Promise.all(tasks);
   }
 
+  async function seedComponentData() {
+    try {
+      const tasks = componentData.map(async (component) => {
+        const response = await client.models.Components.create(component);
+
+        if (response.data) {
+          console.log("Created component", component);
+        } else {
+          console.error("Failed to seed component", component);
+          toast.error("Failed to seed component");
+        }
+      });
+
+      await Promise.all(tasks);
+    } catch (error) {
+      console.error("Failed to seed components", error);
+      toast.error("Failed to seed components");
+    }
+  }
+
   return (
     <>
       <div>
@@ -218,6 +170,9 @@ export default function Page() {
             Remove Data
           </Button>
         </div>
+        <h2>Component Data</h2>
+        <JsonView data={componentData} shouldExpandNode={allExpanded} style={defaultStyles} clickToExpandNode={true} />
+        <Button onClick={() => seedComponentData()}>Seed Component Data</Button>
       </div>
     </>
   );
