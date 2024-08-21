@@ -51,6 +51,7 @@ import { FormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
 import { db } from "@/app/clients/Database";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
+import { useFormState } from "react-dom";
 
 const ImageInput = dynamic(
   () =>
@@ -318,16 +319,27 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     materialComponents: [],
   });
 
-  useDebouncedEffect(() => {
-    const saveFormDataLocally = async () => {
-      if(isNewForm) {
-        await db.surveys.update({ id: defaultValues.id, status: "draft", content: JSON.stringify(allFields) }, { localOnly: true });
-        console.debug("Saved locally");
-      }
-    };
+  useDebouncedEffect(
+    () => {
+      const saveFormDataLocally = async () => {
+        if (isNewForm) {
+          await db.surveys.update(
+            {
+              id: defaultValues.id,
+              status: "draft",
+              content: JSON.stringify(allFields),
+            },
+            { localOnly: true }
+          );
+          console.debug("Saved locally");
+        }
+      };
 
-    saveFormDataLocally();
-  }, [allFields], 1000)
+      saveFormDataLocally();
+    },
+    [allFields],
+    1000
+  );
 
   useEffect(() => {
     const fetchReport = async (existingReportId: string) => {
@@ -361,7 +373,11 @@ export default function Report({ id }: BuildingSurveyFormProps) {
             })
             .map((element) => {
               currentForm.sections.forEach((section) => {
-                if (section.name === element.section && section.elementSections.filter((es) => es.id === element.id).length === 0) {
+                if (
+                  section.name === element.section &&
+                  section.elementSections.filter((es) => es.id === element.id)
+                    .length === 0
+                ) {
                   section.elementSections.push(
                     createDefaultElementSection(element)
                   );
@@ -383,7 +399,6 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     }
   }, [id, reset, watch]);
 
-
   const onSubmit = async () => {
     try {
       let form = watch();
@@ -393,7 +408,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
           id: form.id,
           status: "created",
           content: JSON.stringify(form),
-        })
+        });
 
         successToast("Created Survey");
       } else {
@@ -401,7 +416,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
           id: form.id,
           status: "created",
           content: JSON.stringify(form),
-        })
+        });
 
         successToast("Updated Survey");
       }
@@ -415,7 +430,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
 
   const onError = (errors: any) => {
     console.error(errors);
-  }
+  };
 
   return (
     <div className="md:grid md:grid-cols-4 mb-4">
@@ -507,7 +522,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                   <ImageInput
                     rhfProps={{
                       name: "frontElevationImagesUri",
-                      rules: { required: true },
+                      rules: { required: true, validate: (v) => v.length > 0 },
                     }}
                     path={`report-images/${defaultValues.id}/frontElevationImages/`}
                   />
@@ -574,11 +589,16 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                             <div>
                               <ImageInput
                                 rhfProps={{
-                                  name:  `sections.${sectionIndex}.elementSections.${i}.images`,
-                                  rules: { required: true },
+                                  name: `sections.${sectionIndex}.elementSections.${i}.images`,
+                                  rules: { required: true, validate: (v) => v.length > 0 },
                                 }}
                                 path={`report-images/${defaultValues.id}/elementSections/${i}/images/`}
                               />
+                              <ErrorMessage
+                                errors={formState.errors}
+                                name={`sections.${sectionIndex}.elementSections.${i}.images`}
+                                message="At least one image is required"
+                                render={({ message }) => InputError({ message })} />
                             </div>
                             <ComponentPicker
                               elementId={elementSection.id}
@@ -630,25 +650,38 @@ interface ComponentPickerProps {
   elementId: string;
 }
 
-const componentDataSelectList = ["id", "name", "materials.*", "elementId"] as const;
+const componentDataSelectList = [
+  "id",
+  "name",
+  "materials.*",
+  "elementId",
+] as const;
 type ComponentData = SelectionSet<
   Schema["Components"]["type"],
   typeof componentDataSelectList
 >;
-type ComponentDataWithChild = ComponentData & { readonly materials: { readonly defects: Schema["Defect"]["type"][] }[] };
+type ComponentDataWithChild = ComponentData & {
+  readonly materials: { readonly defects: Schema["Defect"]["type"][] }[];
+};
 
 const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`;
-  const { control, register, watch, setValue, getValues } = useFormContext();
+  const { control, register, watch, setValue, getValues, formState } = useFormContext();
   const { fields, remove, append } = useFieldArray({
     name: typedName,
     control: control,
   });
-  const [comboBoxProps, setComboBoxProps] = useState<{ label: string; value: string }[]>([]);
+
+  const [comboBoxProps, setComboBoxProps] = useState<
+    { label: string; value: string }[]
+  >([]);
+
   const [components, setComponents] = useState<ComponentDataWithChild[]>([]);
-  
+
   useEffect(() => {
-    const props = mapToComboBoxProps(components.filter(c => c.elementId === elementId));
+    const props = mapToComboBoxProps(
+      components.filter((c) => c.elementId === elementId)
+    );
     setComboBoxProps(props);
   }, [components, elementId]);
 
@@ -703,7 +736,9 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
       return [];
     }
 
-    const material = component.materials.find((m) => m!.name == materialName) as Schema["Material"]["type"];
+    const material = component.materials.find(
+      (m) => m!.name == materialName
+    ) as Schema["Material"]["type"];
 
     if (!material) {
       return [];
@@ -714,11 +749,7 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
 
   if (components.length === 0) {
     return (
-      <Button
-        className="w-full"
-        variant="secondary"
-        disabled
-      >
+      <Button className="w-full" variant="secondary" disabled>
         Loading Material Components...
       </Button>
     );
@@ -733,24 +764,40 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
               <div className="flex space-x-2">
                 <div className="flex-grow overflow-hidden">
                   {!watch(`${typedName}.${index}.useNameOveride` as const) && (
-                    <Combobox
-                      key={field.id}
-                      data={comboBoxProps}
-                      register={() =>
-                        register(`${typedName}.${index}.id` as const, {
-                          required: true,
-                        })
-                      }
-                    />
+                    <>
+                      <Combobox
+                        key={field.id}
+                        data={comboBoxProps}
+                        register={() =>
+                          register(`${typedName}.${index}.id` as const, {
+                            required: true,
+                          })
+                        }
+                      />
+                      <ErrorMessage
+                        errors={formState.errors}
+                        name={`${typedName}.${index}.id`}
+                        message="This field is required"
+                        render={({ message }) => InputError({ message })}
+                      />
+                    </>
                   )}
                   {watch(`${typedName}.${index}.useNameOveride` as const) && (
-                    <Input
-                      register={() =>
-                        register(`${typedName}.${index}.name` as const, {
-                          required: true,
-                        })
-                      }
-                    />
+                    <>
+                      <Input
+                        register={() =>
+                          register(`${typedName}.${index}.name` as const, {
+                            required: true,
+                          })
+                        }
+                      />
+                      <ErrorMessage
+                        errors={formState.errors}
+                        name={`${typedName}.${index}.name`}
+                        message="This field is required"
+                        render={({ message }) => InputError({ message })}
+                      />
+                    </>
                   )}
                 </div>
                 {watch(`${typedName}.${index}.id` as const) && (
@@ -835,7 +882,11 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
           );
         })}
       </div>
-      <Button className="w-full" variant="secondary" onClick={addMaterialComponent}>
+      <Button
+        className="w-full"
+        variant="secondary"
+        onClick={addMaterialComponent}
+      >
         Add Material Component
       </Button>
     </div>

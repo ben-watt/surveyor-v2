@@ -1,9 +1,10 @@
 interface InputErrorProps {
-    message: string | undefined;
+    message?: string;
 }
 
 const InputError = ({ message } : InputErrorProps) => {
-    return (message && <span role="alert" className="text-red-700 text-sm">{message}</span>)
+    const m = message || "This field is required";
+    return <span role="alert" className="text-red-700 text-sm">{m}</span>
 }
 
 export default InputError;
