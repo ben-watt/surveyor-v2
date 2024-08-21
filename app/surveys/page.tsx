@@ -22,6 +22,7 @@ import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
 import { db } from "@/app/clients/Database";
+import { Badge } from "@/components/ui/badge";
 
 
 type TableData = BuildingSurveyFormData & { status?: string };
@@ -84,6 +85,11 @@ function HomePage() {
       {
         header: "Status",
         accessorKey: "status",
+        cell: (props) => {
+          return (
+            <Badge>{props.getValue() as string}</Badge>
+          )
+        }
       },
       {
         id: "created",
