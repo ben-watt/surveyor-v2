@@ -310,6 +310,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const createDefaultElementSection = (
     element: ElementData
   ): ElementSection => ({
+    id: element.id,
     name: element.name,
     isPartOfSurvey: false,
     description: "",
@@ -360,7 +361,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
             })
             .map((element) => {
               currentForm.sections.forEach((section) => {
-                if (section.name === element.section) {
+                if (section.name === element.section && section.elementSections.filter((es) => es.id === element.id).length === 0) {
                   section.elementSections.push(
                     createDefaultElementSection(element)
                   );
@@ -580,6 +581,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                               />
                             </div>
                             <ComponentPicker
+                              elementId={elementSection.id}
                               name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
                             />
                           </div>
@@ -625,23 +627,42 @@ export default function Report({ id }: BuildingSurveyFormProps) {
 
 interface ComponentPickerProps {
   name: string;
+  elementId: string;
 }
 
-const componentDataSelectList = ["id", "name", "materials.*"] as const;
+const componentDataSelectList = ["id", "name", "materials.*", "elementId"] as const;
 type ComponentData = SelectionSet<
   Schema["Components"]["type"],
   typeof componentDataSelectList
 >;
 
-const ComponentPicker = ({ name }: ComponentPickerProps) => {
+const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`;
   const { control, register, watch, setValue, getValues } = useFormContext();
   const { fields, remove, append } = useFieldArray({
     name: typedName,
     control: control,
   });
-
+  const [comboBoxProps, setComboBoxProps] = useState<{ label: string; value: string }[]>([]);
   const [components, setComponents] = useState<ComponentData[]>([]);
+  
+  useEffect(() => {
+    const props = mapToComboBoxProps(components.filter(c => c.elementId === elementId));
+    setComboBoxProps(props);
+  }, [components, elementId]);
+
+  function mapToComboBoxProps(
+    data: ComponentData[]
+  ): { label: string; value: string }[] {
+    return data.flatMap((c) =>
+      c.materials
+        .map((m) => ({
+          label: `${c.name} • ${m!.name}`,
+          value: `${c.name}_${m!.name}`,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+    );
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -656,10 +677,6 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
 
     fetchData();
   }, []);
-
-  if (components.length === 0) {
-    return null;
-  }
 
   function addMaterialComponent(
     ev: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -694,30 +711,30 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
     return material.defects;
   }
 
-  const mapToComboBoxProps = (
-    components: ComponentData[]
-  ): { label: string; value: string }[] =>
-    components.flatMap((c) =>
-      c.materials
-        .map((m) => ({
-          label: `${c.name} • ${m!.name}`,
-          value: `${c.name}_${m!.name}`,
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label))
+  if (components.length === 0) {
+    return (
+      <Button
+        className="w-full"
+        variant="secondary"
+        disabled
+      >
+        Loading Material Components...
+      </Button>
     );
+  }
 
   return (
-    <div className="grid gap-2">
-      <div className="grid gap-2">
+    <div className="space-y-2">
+      <div className="space-y-2">
         {fields.map((field, index) => {
           return (
             <div key={field.id} className="border border-grey-600 rounded p-4">
-              <div className="flex gap-2">
-                <div className="flex-grow">
+              <div className="flex space-x-2">
+                <div className="flex-grow overflow-hidden">
                   {!watch(`${typedName}.${index}.useNameOveride` as const) && (
                     <Combobox
                       key={field.id}
-                      data={mapToComboBoxProps(components)}
+                      data={comboBoxProps}
                       register={() =>
                         register(`${typedName}.${index}.id` as const, {
                           required: true,
@@ -817,7 +834,7 @@ const ComponentPicker = ({ name }: ComponentPickerProps) => {
           );
         })}
       </div>
-      <Button variant="secondary" onClick={addMaterialComponent}>
+      <Button className="w-full" variant="secondary" onClick={addMaterialComponent}>
         Add Material Component
       </Button>
     </div>

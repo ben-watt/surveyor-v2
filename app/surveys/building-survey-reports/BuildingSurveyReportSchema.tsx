@@ -49,6 +49,7 @@ export type SurveySection = {
 }
 
 export type ElementSection = {
+    id: string,
     name: string,
     isPartOfSurvey: boolean,
     description: string,
