@@ -43,7 +43,7 @@ export function Combobox(props: ComboboxProps) {
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="justify-start w-full text-ellipsis overflow-hidden"
+            className="justify-between w-full text-ellipsis overflow-hidden"
           >
             {value
               ? props.data.find((d) => d.value === value)?.label

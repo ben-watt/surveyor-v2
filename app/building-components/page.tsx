@@ -32,7 +32,10 @@ export default function Page() {
       accessorKey: "name",
     },
     {
-      header: "Element",
+      id: "element",
+      header: ({ column }) => (
+        <SortableHeader column={column} header="Element" />
+      ),
       accessorFn: (v) => v.element.name,
     },
     {

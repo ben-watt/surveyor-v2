@@ -124,7 +124,7 @@ export default function Page() {
           console.log("Created component", component);
         } else {
           console.error("Failed to seed component", component);
-          toast.error("Failed to seed component");
+          toast.error(`Failed to seed component ${component.name}`);
         }
       });
 

@@ -635,6 +635,7 @@ type ComponentData = SelectionSet<
   Schema["Components"]["type"],
   typeof componentDataSelectList
 >;
+type ComponentDataWithChild = ComponentData & { readonly materials: { readonly defects: Schema["Defect"]["type"][] }[] };
 
 const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`;
@@ -644,7 +645,7 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     control: control,
   });
   const [comboBoxProps, setComboBoxProps] = useState<{ label: string; value: string }[]>([]);
-  const [components, setComponents] = useState<ComponentData[]>([]);
+  const [components, setComponents] = useState<ComponentDataWithChild[]>([]);
   
   useEffect(() => {
     const props = mapToComboBoxProps(components.filter(c => c.elementId === elementId));
@@ -652,7 +653,7 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   }, [components, elementId]);
 
   function mapToComboBoxProps(
-    data: ComponentData[]
+    data: ComponentDataWithChild[]
   ): { label: string; value: string }[] {
     return data.flatMap((c) =>
       c.materials
@@ -671,7 +672,7 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
       });
 
       if (availableComponents.data) {
-        setComponents(availableComponents.data);
+        setComponents(availableComponents.data as ComponentDataWithChild[]);
       }
     }
 
@@ -702,13 +703,13 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
       return [];
     }
 
-    const material = component.materials.find((m) => m!.name == materialName);
+    const material = component.materials.find((m) => m!.name == materialName) as Schema["Material"]["type"];
 
     if (!material) {
       return [];
     }
 
-    return material.defects;
+    return material.defects as Defect[];
   }
 
   if (components.length === 0) {
