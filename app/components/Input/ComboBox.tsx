@@ -63,13 +63,11 @@ export function Combobox(props: ComboboxProps) {
                 {props.data.map((d) => (
                   <CommandItem
                     key={d.value}
-                    value={d.value}
-                    onSelect={(sv) => {
-                      console.log(sv, d.label, value, d.value)
-                      console.log(reg.name)
+                    value={d.label}
+                    onSelect={() => {
                       setValue(
                         reg.name,
-                        sv === value ? "" : sv
+                        d.value === value ? "" : d.value
                       );
                       setOpen(false);
                     }}

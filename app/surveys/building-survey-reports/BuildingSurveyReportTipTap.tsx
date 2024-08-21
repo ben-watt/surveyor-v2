@@ -280,9 +280,7 @@ export default function PDF({ form }: PdfProps) {
           <div key={s.name}>
             <h1>{s.name}</h1>
             {s.elementSections.map((cs, j) => (
-              <>
                 <ConditionSection key={`${i}.${j}`} elementSection={cs} />
-              </>
             ))}
           </div>
         ))}
@@ -410,7 +408,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
   let tableRows = [];
   for (let i = 0; i < es.images.length; i = i + 2) {
     tableRows.push(
-      <tr>
+      <tr key={elementSection.id + "." + i}>
         <td>
           <Image
             key={i}
