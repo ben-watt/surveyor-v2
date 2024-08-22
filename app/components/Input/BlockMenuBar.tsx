@@ -159,7 +159,7 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
   ];
 
   return (
-    <div className="editor__header flex justify-around">
+    <div className="editor__header flex justify-around sticky top-0 bg-white z-10 p-2 shadow-sm">
       {items.map((item, index) => (
         <Fragment key={index}>
           {item.type === "divider" ? (
