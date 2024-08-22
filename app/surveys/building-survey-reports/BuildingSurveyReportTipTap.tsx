@@ -7,7 +7,6 @@ import type {
   ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
-import { child } from "../[id]/reportv2/pagedjs-types/src/utils/dom";
 
 const TableBlock = ({
   children,
@@ -284,7 +283,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <h2 style={{ fontWeight: "bold" }}>Location Plan</h2>
+        <h3 style={{ fontWeight: "bold" }}>Location Plan</h3>
         <p style={{ textAlign: "justify" }}>
           Red line demarcations do not represent the legal boundary of the
           property and are to indicate the approximate areas of the property
