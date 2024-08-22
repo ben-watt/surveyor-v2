@@ -17,6 +17,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
 import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
+import FileHandler from "@tiptap-pro/extension-file-handler";
 import BlockMenuBar from "./BlockMenuBar";
 import {
   getHierarchicalIndexes,
@@ -139,6 +140,46 @@ export const NewEditor = ({
     React.useState<TableOfContentsDataItemWithHierarchy[]>();
 
   const extensions = [
+    FileHandler.configure({
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+      onDrop: (currentEditor, files, pos) => {
+        files.forEach(file => {
+          const fileReader = new FileReader()
+
+          fileReader.readAsDataURL(file)
+          fileReader.onload = () => {
+            currentEditor.chain().insertContentAt(pos, {
+              type: 'image',
+              attrs: {
+                src: fileReader.result,
+              },
+            }).focus().run()
+          }
+        })
+      },
+      onPaste: (currentEditor, files, htmlContent) => {
+        files.forEach(file => {
+          if (htmlContent) {
+            // if there is htmlContent, stop manual insertion & let other extensions handle insertion via inputRule
+            // you could extract the pasted file from this url string and upload it to a server for example
+            console.log(htmlContent) // eslint-disable-line no-console
+            return false
+          }
+
+          const fileReader = new FileReader()
+
+          fileReader.readAsDataURL(file)
+          fileReader.onload = () => {
+            currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
+              type: 'image',
+              attrs: {
+                src: fileReader.result,
+              },
+            }).focus().run()
+          }
+        })
+      },
+    }),
     Section,
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
     TextStyle,
