@@ -1,5 +1,11 @@
 export type BuildingSurveyFormData = {
     id: string,
+    owner: {
+        id: string,
+        name: string,
+        email: string,
+        signaturePath: string[],
+    }
     address: string,
     clientName: string,
     reportDate: Date,

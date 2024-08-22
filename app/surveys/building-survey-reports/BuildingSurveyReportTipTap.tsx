@@ -7,6 +7,7 @@ import type {
   ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
+import { report } from "process";
 
 const TableBlock = ({
   children,
@@ -135,18 +136,18 @@ export default function PDF({ form }: PdfProps) {
             <p style={{ textAlign: "right" }}>Manchester</p>
             <p style={{ textAlign: "right" }}>M2 4DN</p>
             <p style={{ textAlign: "right" }}></p>
-            <p style={{ textAlign: "right" }}>Email: admin@cwbc.co.uk</p>
+            <p style={{ textAlign: "right" }}>Email: {form.owner.email}</p>
             <p style={{ textAlign: "right" }}>
               Date: {reportDate.toDateString()}
             </p>
-            <p style={{ textAlign: "right" }}>Ref: Unknown</p>
+            <p style={{ textAlign: "right" }}>Ref: #{form.id[8]}</p>
           </div>
         </TableBlock>
       </Page>
       <Page>
         <TableBlock widths={[40, 60]}>
           <p>Prepared by:</p>
-          <p>Samuel Watt BSc (Hons)</p>
+          <p>{form.owner.name}</p>
         </TableBlock>
         <p>
           This document has been prepared and checked in accordance with the
@@ -155,14 +156,10 @@ export default function PDF({ form }: PdfProps) {
         <p></p>
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
-          <div>
-            {/* <Image src="/sw-sig.png" alt="signature" fill={true} /> */}
-            <p>Samuel Watt BSc (Hons) </p>
-          </div>
-          <div>
-            {/* <Image src="/jc-sig.png" alt="signature" fill={true} /> */}
-            <p>Jordan Clarke BSc (Hons) MRICS</p>
-          </div>
+          <Image style={{ width: "80mm" }} src={form.owner.signaturePath[0]} alt="signature" width={400} height={200} />
+          <Image style={{ width: "80mm" }} src="https://placehold.co/600x400" alt="signature" width={400} height={200}  />
+          <p>{form.owner.name}</p>
+          <p>Jordan Clarke BSc (Hons) MRICS</p>
         </TableBlock>
         <p></p>
         <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>

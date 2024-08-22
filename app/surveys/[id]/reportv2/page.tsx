@@ -34,8 +34,14 @@ export default function Page({ params }: { params: { id: string } }) {
     getReport();
   }, [params.id]);
 
-  const renderHeaderFooter = useCallback(() => renderToStaticMarkup(<HeaderFooterHtml editorData={editorData} />), [editorData])
-  const mapToEditorContent = useCallback(() => mapFormDataToHtml(editorData).then((html) => setEditorContent(html)), [editorData]);
+  const renderHeaderFooter = useCallback(
+    () => renderToStaticMarkup(<HeaderFooterHtml editorData={editorData} />),
+    [editorData]
+  );
+  const mapToEditorContent = useCallback(
+    () => mapFormDataToHtml(editorData).then((html) => setEditorContent(html)),
+    [editorData]
+  );
 
   useEffect(() => {
     mapToEditorContent();
@@ -138,29 +144,43 @@ const HeaderFooterHtml = ({ editorData }: HeaderFooterHtmlProps) => {
 async function mapFormDataToHtml(
   formData: BuildingSurveyFormData | undefined
 ): Promise<string> {
-  if(!formData)
-    return "";
+  if (!formData) return "";
 
-  let newFormData = { ...formData };
-  newFormData.frontElevationImagesUri = await getImagesHref(
-    formData.frontElevationImagesUri
-  );
+  const newFormData = { ...formData };
 
-  newFormData.moneyShot = await getImagesHref(formData.moneyShot);
+  const topLevelImages = await Promise.all([
+    getImagesHref(formData.frontElevationImagesUri ?? []),
+    getImagesHref(formData.moneyShot ?? []),
+    getImagesHref(formData.owner.signaturePath ?? []),
+  ]);
 
-  let preSignedUrlTasks = formData.sections.flatMap((section, si) => {
+  newFormData.frontElevationImagesUri = topLevelImages[0];
+  newFormData.moneyShot = topLevelImages[1];
+  newFormData.owner.signaturePath = topLevelImages[2];
+
+  const preSignedUrlTasks = formData.sections.flatMap((section, si) => {
     return section.elementSections.map(async (es, i) => {
-      const preSignedUrl = await getImagesHref(es.images);
+      const preSignedUrl = await getImagesHref(es.images ?? []);
       newFormData.sections[si].elementSections[i].images = preSignedUrl;
       return Promise.resolve();
     });
   });
 
-  await Promise.all(preSignedUrlTasks);
+  await Promise.all([
+    ...preSignedUrlTasks,
+    getImagesHref(formData.frontElevationImagesUri ?? []),
+    getImagesHref(formData.moneyShot ?? []),
+    getImagesHref(formData.owner.signaturePath ?? []),
+  ]);
+
   return renderToStaticMarkup(<BuildingSurveyReport form={newFormData} />);
 }
 
 async function getImagesHref(imagesUri: string[]): Promise<string[]> {
+  if(imagesUri.length === 0) 
+    return Promise.resolve([]);
+
+  console.log(imagesUri);
   const tasks = imagesUri.map(async (imageUri) => {
     return await getImageHref(imageUri);
   });

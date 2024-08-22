@@ -90,9 +90,9 @@ function Page() {
             value: value,
           },
         });
+
         handleUpdateUserAttributeNextSteps(output);
         setEnableForm(true);
-        setFormSubmitted(true);
       } catch (error) {
         console.log(error);
       }
@@ -123,7 +123,6 @@ function Page() {
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(handleUpdateUserAttribute, () => {})}>
           <div className="space-y-2 max-w-72 m-auto">
-            <ImageUploadWithPreview path={`profile/${userAttributes?.sub}/profilePicture/`} initImage={userAttributes?.profile} rhfProps={{name: "profile"}} labelText="Profile Picture" />
             <InputText
               labelTitle="Email"
               placeholder="Email Address"
@@ -142,10 +141,11 @@ function Page() {
               placeholder="Enter you signed name"
               defaultValue={userAttributes?.nickname}
             />
+            <ImageUploadWithPreview path={`profile/${userAttributes?.sub}/profilePicture/`} initImage={userAttributes?.profile} rhfProps={{name: "profile"}} labelText="Profile Picture" />
             <ImageUploadWithPreview path={`profile/${userAttributes?.sub}/signatureImage/`} initImage={userAttributes?.picture} rhfProps={{name: "picture"}} labelText="Signature Image" />
             <Button
               role="submit"
-              disabled={typeof window !== "undefined" ? !enableForm : false}
+              disabled={!enableForm}
             >
               Update
             </Button>

@@ -51,6 +51,7 @@ import { FormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
 import { db } from "@/app/clients/Database";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
+import { fetchUserAttributes, FetchUserAttributesOutput } from "aws-amplify/auth";
 
 const ImageInput = dynamic(
   () =>
@@ -165,10 +166,17 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const searchParams = useSearchParams();
   const newFormId = searchParams.get("id");
   const isNewForm = newFormId != null;
+  const [user, setUser] = useState<FetchUserAttributesOutput>();
 
   let defaultValues: BuildingSurveyForm = {
     id: newFormId || id || "",
     reportDate: new Date(),
+    owner: {
+      id: "",
+      name: "",
+      email: "",
+      signaturePath: [],
+    },
     address: "",
     clientName: "",
     inspectionDate: new Date(),
@@ -343,13 +351,40 @@ export default function Report({ id }: BuildingSurveyFormProps) {
 
   useEffect(() => {
     const fetchReport = async (existingReportId: string) => {
-      const report = await db.surveys.get(existingReportId);
+      const reportTask = db.surveys.get(existingReportId);
+      const userTask = fetchUserAttributes();
+
+      const [report, user] = await Promise.all([reportTask, userTask])
+
+      // Set the register of owners initially... to be honest I think we only want to do this if
+      // it's a new form. However, we still garentee that if it's already been set we won't overwrite it.
+      // So that's probably ok for now.
+      register("owner.id", {
+        value: user.sub,
+        required: true,
+        shouldUnregister: false,
+      });
+      register("owner.email", {
+        value: user.email,
+        required: true,
+        shouldUnregister: false,
+      });
+      register("owner.name", {
+        value: user.name,
+        required: true,
+        shouldUnregister: false,
+      });
+      register("owner.signaturePath", {
+        value: user?.picture ? [user.picture] : [],
+        shouldUnregister: false,
+      });
 
       if (report) {
         const formData = JSON.parse(
           report.content as string
         ) as BuildingSurveyForm;
         reset(formData);
+
         console.log("reset from fetchReport", formData);
       } else {
         console.error("Failed to fetch report");
