@@ -4,7 +4,7 @@ import reportClient from "@/app/clients/AmplifyDataClient";
 import { NewEditor } from "@/app/components/Input/BlockEditor";
 
 import { Previewer } from "pagedjs";
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useRef, useState } from "react";
 import { BuildingSurveyFormData } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import BuildingSurveyReport from "../../building-survey-reports/BuildingSurveyReportTipTap";
@@ -167,6 +167,7 @@ async function getImagesHref(imagesUri: string[]): Promise<string[]> {
 }
 
 async function getImageHref(imageUri: string): Promise<string> {
+  console.log("Getting image href for", imageUri);
   const path = await getUrl({
     path: imageUri,
   });

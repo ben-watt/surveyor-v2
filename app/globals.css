@@ -273,3 +273,7 @@
 .tiptap #toc li {
   list-style: none;
 }
+
+.tiptap {
+  font-family: Arial, sans-serif;
+}

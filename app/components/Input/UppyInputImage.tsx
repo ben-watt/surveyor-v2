@@ -43,6 +43,10 @@ function InputImageUppy({
   onUploaded,
   onDeleted,
 }: InputImageUppyProps) {
+  if(!path.endsWith("/")) {
+    console.warn("Path should end with a '/'");
+  }
+
   // IMPORTANT: passing an initializer function to prevent Uppy from being reinstantiated on every render.
   const [uppy] = useState(() =>
     new Uppy<Meta, Body>({

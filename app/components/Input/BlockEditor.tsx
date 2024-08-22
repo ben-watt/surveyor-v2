@@ -12,7 +12,6 @@ import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
 
-import Image from "@tiptap/extension-image";
 import React, { useEffect } from "react";
 import Paragraph from "@tiptap/extension-paragraph";
 import Heading from "@tiptap/extension-heading";
@@ -32,12 +31,12 @@ import { Node } from "@tiptap/core";
 /*
   Will allow the node to have the attributes mentioned in the array
 */
-function allowAttributes<T>(node: Node<T>, attrs: string[]) {
+function extendAttributes<T>(node: Node<T>, attrs: string[], attrDefault?: string) {
   return node.extend({
       addAttributes() {
           return attrs.reduce((acc: Record<string, any>, attr) => {
               acc[attr] = {
-                  default: null,
+                  default: attrDefault ?? null,
                   renderHTML: (attributes : Record<string, any>) => {
                       if (attributes[attr]) {
                           return {
@@ -50,7 +49,32 @@ function allowAttributes<T>(node: Node<T>, attrs: string[]) {
               }
   
               return acc;
-          }, {});
+          }, this.parent?.() ?? {});
+      }
+  })
+}
+
+
+function extendAttributesWithDefaults<T>(node: Node<T>, attrs: { [key: string]: string }, attrDefault?: string) {
+  return node.extend({
+      addAttributes() {
+          const keys = Object.keys(attrs);
+          return keys.reduce((acc: Record<string, any>, key) => {
+              acc[key] = {
+                  default: attrs[key] ?? null,
+                  renderHTML: (attributes : Record<string, any>) => {
+                      if (attributes[key]) {
+                          return {
+                              [key]: attributes[key],
+                          };
+                      }
+  
+                      return {};
+                  },
+              }
+  
+              return acc;
+          }, this.parent?.() ?? {});
       }
   })
 }
@@ -63,10 +87,11 @@ interface NewEditorProps {
 }
 
 function parseDataHierarchy(data: TableOfContentData) {
-  let stack = [];
+  let stack: number[] = [];
 
   return data.map((item, i, array) => {
     const previousItem = array[i - 1];
+    // Down the hierarchy
     if (previousItem && previousItem.originalLevel < item.originalLevel) {
       const levelsToPush = item.originalLevel - previousItem.originalLevel;
       for (let i = 0; i < levelsToPush; i++) {
@@ -78,6 +103,7 @@ function parseDataHierarchy(data: TableOfContentData) {
       }
     }
 
+    // Up the hierarchy
     if (previousItem && previousItem.originalLevel > item.originalLevel) {
       const levelsToPop = previousItem.originalLevel - item.originalLevel;
       for (let i = 0; i < levelsToPop; i++) {
@@ -87,6 +113,7 @@ function parseDataHierarchy(data: TableOfContentData) {
 
     stack.push(item.itemIndex);
     const text = stack.join(".");
+    console.log("[Table Of Contents]", text);
     stack.pop();
     return {
       item,
@@ -99,6 +126,8 @@ interface TableOfContentsDataItemWithHierarchy {
   item: TableOfContentDataItem;
   hierarchyText: string;
 }
+
+const ImageResizeWithAttributes = extendAttributesWithDefaults(ImageResize, { "style" : "width: 100%; height: auto; cursor: pointer;"});
 
 export const NewEditor = ({
   onPrint,
@@ -113,7 +142,7 @@ export const NewEditor = ({
     Section,
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
     TextStyle,
-    ImageResize.configure({
+    ImageResizeWithAttributes.configure({
       allowBase64: true
     }),
     Table.configure({
@@ -125,8 +154,8 @@ export const NewEditor = ({
     TextAlign.configure({
       types: ["paragraph", "heading"],
     }),
-    allowAttributes(Paragraph, ["id", "style", "data-toc-id-selector"]),
-    allowAttributes(Heading, ["data-add-toc-here-id"]),
+    extendAttributes(Paragraph, ["id", "style", "data-toc-id-selector"]),
+    extendAttributes(Heading, ["data-add-toc-here-id"]),
     StarterKit.configure({
       listItem: {},
       bulletList: {

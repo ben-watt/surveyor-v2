@@ -35,16 +35,16 @@ export default class UppyAmplifyPlugin extends BasePlugin<UppyAmplifyPluginOptio
   }
 
   uploadFile = async (file: UppyFile<Meta, Body>) : Promise<any> => {
-    console.log("[AwsAmplify] Uploading file:", file);
+    console.debug("[AwsAmplify] Uploading file:", file);
     const uploadedFile = await uploadData({
-        path: this.path,
+        path: this.path + file.name,
         data: file.data,
         options: {
             onProgress: (progress) => this.onProgress(progress, file)
         }
     }).result;
 
-    console.log("[AwsAmplify] File uploaded:", uploadedFile);
+    console.debug("[AwsAmplify] File uploaded:", uploadedFile);
 
     this.uppy.emit("upload-success", file, { status: 100, uploadURL: uploadedFile.path });
     return Promise.resolve(uploadedFile);

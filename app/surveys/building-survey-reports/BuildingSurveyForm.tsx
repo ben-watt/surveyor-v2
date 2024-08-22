@@ -169,7 +169,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const isNewForm = newFormId != null;
 
   let defaultValues: BuildingSurveyForm = {
-    id: newFormId || "",
+    id: newFormId || id || "",
     reportDate: new Date(),
     address: "",
     clientName: "",
@@ -635,7 +635,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
               })}
             </FormSection>
             <div>
-              {Object.values(formState.errors).length > 0 && (<InputError message="Please fix the errors above before saving." />)}
+              {Object.values(formState.errors).length > 0 && (<InputError message="Please fix the errors above before saving" />)}
             </div>
             <div>
               <PrimaryBtn className="w-full flex justify-center" type="submit">
