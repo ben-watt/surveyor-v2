@@ -7,6 +7,7 @@ import type {
   ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
+import { child } from "../[id]/reportv2/pagedjs-types/src/utils/dom";
 
 const TableBlock = ({
   children,
@@ -63,6 +64,26 @@ const Page = (props: React.PropsWithChildren<any>) => (
 interface PdfProps {
   form: BuildingSurveyFormData;
 }
+
+
+interface H2Props {
+  id: string;
+}
+
+const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
+  return (
+    <TableBlock widths={[6, 88, 6]}>
+      <p id={id}></p>
+      <h2
+        data-add-toc-here-id={id}
+        style={{ fontWeight: "bold", textAlign: "center" }}
+      >
+        {children}
+      </h2>
+      <p></p>
+    </TableBlock>
+  );
+};
 
 /// This must be a sync function
 /// It needs to be rendered to a basic string rather than a react component
@@ -169,7 +190,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={{ fontWeight: "bold" }}>Definitions</h1>
-        <h2 style={{ fontWeight: "bold" }}>Key</h2>
+        <H2 id="key">Key</H2>      
         <TableBlock widths={[94, 6]}>
           <ul>
             <li>
@@ -664,7 +685,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
 
   return (
     <Page>
-      <h2 style={{ fontWeight: "bold" }}>{es.name}</h2>
+      <H2 id={es.id}>{es.name}</H2>
       <TableBlock widths={[10, 20, 70]}>
         <p></p>
         <p>

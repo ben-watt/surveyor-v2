@@ -603,10 +603,15 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                               placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
                               register={() =>
                                 register(
-                                  `sections.${sectionIndex}.elementSections.${i}.description`
+                                  `sections.${sectionIndex}.elementSections.${i}.description`,
+                                  { required: true }
                                 )
                               }
                             />
+                             <ErrorMessage
+                                errors={formState.errors}
+                                name={`sections.${sectionIndex}.elementSections.${i}.description`}
+                                render={({ message }) => InputError({ message })} />
                             <div>
                               <ImageInput
                                 rhfProps={{
