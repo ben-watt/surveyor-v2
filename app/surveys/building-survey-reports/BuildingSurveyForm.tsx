@@ -52,6 +52,7 @@ import dynamic from "next/dynamic";
 import { db } from "@/app/clients/Database";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 import { useFormState } from "react-dom";
+import Error from "next/error";
 
 const ImageInput = dynamic(
   () =>
@@ -633,6 +634,9 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                 );
               })}
             </FormSection>
+            <div>
+              {Object.values(formState.errors).length > 0 && (<InputError message="Please fix the errors above before saving." />)}
+            </div>
             <div>
               <PrimaryBtn className="w-full flex justify-center" type="submit">
                 Save
