@@ -7,7 +7,6 @@ import type {
   ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
-import { Table } from "lucide-react";
 
 const TableBlock = ({
   children,
@@ -82,8 +81,8 @@ export default function PDF({ form }: PdfProps) {
           <div>
             <Image
               style={{ margin: "0 auto" }}
-              src="/typical-house.webp"
-              alt="typical house"
+              src={form.moneyShot[0]}
+              alt="main page image"
               width="700"
               height="480"
             />
@@ -582,7 +581,7 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <p>Important Note:</p>
         <p></p>
-        <p>
+        <p style={{ textAlign: "justify" }}>
           We carry out a desk-top study and make oral enquiries for information
           about matters affecting the property. We carefully and thoroughly
           inspect the property using our best endeavours to see as much of it as

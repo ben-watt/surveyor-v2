@@ -9,6 +9,7 @@ export type BuildingSurveyFormData = {
     situation: string,
     propertyDescription: PropertyDescription,
     frontElevationImagesUri: string[]
+    moneyShot: string[],
     sections: SurveySection[],
     checklist: Array<Input<boolean>>,
 }

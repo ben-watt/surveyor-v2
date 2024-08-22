@@ -177,6 +177,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     weather: "",
     orientation: "",
     situation: "",
+    moneyShot: [],
     propertyDescription: {
       propertyType: {
         type: "text",
@@ -521,6 +522,25 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                 </div>
                 <div>
                   <ImageInput
+                    labelText="Money Shot"
+                    rhfProps={{
+                      name: "moneyShot",
+                      rules: { required: true, validate: (v) => v.length == 1},
+                    }}
+                    minNumberOfFiles={1}
+                    maxNumberOfFiles={1}
+                    path={`report-images/${defaultValues.id}/moneyShot/`}
+                  />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"moneyShot"}
+                    message="An image is required"
+                    render={({ message }) => InputError({ message })}
+                  />
+                </div>
+                <div>
+                  <ImageInput
+                    labelText="Front Elevation Images"
                     rhfProps={{
                       name: "frontElevationImagesUri",
                       rules: { required: true, validate: (v) => v.length > 0 },

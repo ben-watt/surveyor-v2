@@ -146,6 +146,8 @@ async function mapFormDataToHtml(
     formData.frontElevationImagesUri
   );
 
+  newFormData.moneyShot = await getImagesHref(formData.moneyShot);
+
   let preSignedUrlTasks = formData.sections.flatMap((section, si) => {
     return section.elementSections.map(async (es, i) => {
       const preSignedUrl = await getImagesHref(es.images);

@@ -22,12 +22,15 @@ import {
   useController,
   UseControllerProps,
 } from "react-hook-form";
+import { Label } from "./Label";
 
 interface InputImageUppyProps {
   path: string;
   initFiles?: string[];
   onUploaded?: (file: UppyFile<Meta, Body>) => void;
   onDeleted?: (file: UppyFile<Meta, Body>) => void;
+  minNumberOfFiles?: number;
+  maxNumberOfFiles?: number;
 }
 
 const Dashboard = dynamic(
@@ -42,6 +45,8 @@ function InputImageUppy({
   initFiles,
   onUploaded,
   onDeleted,
+  minNumberOfFiles,
+  maxNumberOfFiles
 }: InputImageUppyProps) {
   if(!path.endsWith("/")) {
     console.warn("Path should end with a '/'");
@@ -53,6 +58,8 @@ function InputImageUppy({
       autoProceed: true,
       restrictions: {
         allowedFileTypes: ["image/*"],
+        minNumberOfFiles: minNumberOfFiles,
+        maxNumberOfFiles: maxNumberOfFiles,
       },
     })
     .use(Webcam, {
@@ -93,7 +100,7 @@ function InputImageUppy({
       id: "altText",
       name: "Label",
       placeholder: "a description of the image",
-    },
+    }
   ];
 
   useEffect(() => {
@@ -250,18 +257,24 @@ interface InputImageUppyPropsWithRegister<
   TName extends FieldPath<TFieldValues>
 > extends InputImageUppyProps {
   rhfProps: UseControllerProps<TFieldValues, TName>;
+  labelText?: string;
 }
 
 /// fk = FileKey = path + file.name
 function RhfInputImage<TFieldValues extends FieldValues>({
   path,
   rhfProps,
+  labelText,
 }: InputImageUppyPropsWithRegister<TFieldValues, FieldPath<TFieldValues>>) {
   const { field } = useController(rhfProps);
-  const fileNames = field.value.map((f: string) => f.split("/").reverse()[0]);
+  const fileNames = field.value?.map((f: string) => f.split("/").reverse()[0]) || [];
 
   const onUploaded = (file: UppyFile<Meta, Body>) => {
-    field.onChange([...field.value, path + file.name]);
+    if(field.value) {
+      field.onChange([...field.value, path + file.name]);
+    } else {
+      field.onChange([path + file.name]);
+    }
   };
 
   const onDeleted = (file: UppyFile<Meta, Body>) => {
@@ -270,6 +283,7 @@ function RhfInputImage<TFieldValues extends FieldValues>({
 
   return (
     <div {...field}>
+      {labelText && <Label text={labelText} />}
       <InputImageUppy
         path={path}
         initFiles={fileNames}
