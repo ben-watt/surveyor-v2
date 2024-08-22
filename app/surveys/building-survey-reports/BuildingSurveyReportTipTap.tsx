@@ -72,7 +72,7 @@ interface H2Props {
 const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
   return (
     <TableBlock widths={[6, 88, 6]}>
-      <p id={id}></p>
+      <p id={id} style={{ fontWeight: "bold" }}></p>
       <h2
         data-add-toc-here-id={id}
         style={{ fontWeight: "bold", textAlign: "center" }}
@@ -647,6 +647,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
       <tr key={elementSection.id + "." + i}>
         <td>
           <Image
+            style={{ width: "500mm" }}
             key={i}
             src={es.images[i]}
             alt={elementSection.name + ".image." + i}
@@ -657,6 +658,7 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
         <td>
           {es.images.at(i + 1) && (
             <Image
+              style={{ width: "500mm" }}
               key={i + 1}
               src={es.images[i + 1]}
               alt={elementSection.name + ".image." + i}

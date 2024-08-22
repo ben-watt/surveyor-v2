@@ -210,9 +210,9 @@ function InputImageUppy({
         proudlyDisplayPoweredByUppy={false}
         metaFields={metaFields}
       />
-      <div className="absolute bottom-1 left-1 text-sm">
+      {/* <div className="absolute bottom-1 left-1 text-sm">
         {fileCount} files
-      </div>
+      </div> */}
       {showEdit &&  (
         <div className="absolute top-4 left-4 z-[1005]">
           <button onClick={handleEdit}>Edit</button>
@@ -278,7 +278,7 @@ function RhfInputImage<TFieldValues extends FieldValues>({
   };
 
   const onDeleted = (file: UppyFile<Meta, Body>) => {
-    field.onChange(field.value.filter((fk: string) => fk == file.name));
+    field.onChange(field.value?.filter((fk: string) => fk == file.name) || []);
   };
 
   return (

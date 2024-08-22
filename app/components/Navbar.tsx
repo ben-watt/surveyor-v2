@@ -24,6 +24,8 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
+import { fetchUserAttributes, FetchUserAttributesOutput } from "aws-amplify/auth";
+import { getUrl } from "aws-amplify/storage";
 
 const NetworkStatus = dynamic(() => import("./NetworkStatus").then((mod) => mod.NetworkStatus), { ssr: false});
 
@@ -43,14 +45,30 @@ export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
 
 export default function SecureNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const [profileHref, setProfileHref] = useState<string | undefined>();
   const cmdBarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if(isOpen && cmdBarRef.current) {
       cmdBarRef.current.focus();
     }
-
   }, [isOpen]);
+
+  useEffect(() => {
+    async function getProfilePic() {
+      const userAttributes = await fetchUserAttributes();
+      const pPic = userAttributes?.profile;
+      if (pPic) {
+        const presignedUrl = await getUrl({
+          path: pPic,
+        })
+        
+        setProfileHref(presignedUrl.url.href);
+      }
+    }
+
+    getProfilePic();
+  }, []);
 
   return (
     <div>
@@ -74,13 +92,15 @@ export default function SecureNav() {
           )}
         </div>
         <div className="relative w-10">
-          <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-          <div className="absolute -top-1 -right-1">
-            <NetworkStatus />
-          </div>
+          <Link href="/profile">
+            <Avatar>
+              <AvatarImage src={profileHref} />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+            <div className="absolute -top-1 -right-1">
+              <NetworkStatus />
+            </div>
+          </Link>
         </div>
       </NavContainer>
       {isOpen && (

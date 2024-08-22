@@ -8,7 +8,8 @@ interface InputTextProps {
   defaultValue?: string | number;
   placeholder?: string;
   className?: string;
-  register: () => UseFormRegisterReturn<string>;
+  disabled?: boolean;
+  register?: () => UseFormRegisterReturn<string>;
 }
 
 function Input({
@@ -17,8 +18,10 @@ function Input({
   placeholder,
   type = "text",
   className = "",
+  disabled = false,
   register,
 }: InputTextProps) {
+  const reg = register ? register() : {};
   return (
     <div>
       {labelTitle && <Label text={labelTitle} /> }
@@ -27,7 +30,8 @@ function Input({
         type={type}
         defaultValue={defaultValue}
         placeholder={placeholder}
-        {...register()}
+        disabled={disabled}
+        {...reg}
       />
     </div>
   );

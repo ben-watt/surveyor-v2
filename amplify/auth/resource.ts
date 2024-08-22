@@ -23,7 +23,15 @@ export const auth = defineAuth({
   // },
   userAttributes: {
     /** request additional attributes for your app's users */
+    // email: {
+    //   mutable: false,
+    //   required: true,
+    // },
     // profilePicture: {
+    //   mutable: true,
+    //   required: false,
+    // },
+    // fullname: {
     //   mutable: true,
     //   required: false,
     // },

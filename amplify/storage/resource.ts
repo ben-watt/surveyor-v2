@@ -5,6 +5,9 @@ export const storage = defineStorage({
   access: (allow) => ({
     'report-images/*' : [
         allow.authenticated.to(['read', 'write', 'delete'])
+    ],
+    'profile/*' : [
+        allow.authenticated.to(['read', 'write', 'delete'])
     ]
   })
 });
