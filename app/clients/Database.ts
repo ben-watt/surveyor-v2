@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import client from "./AmplifyDataClient";
 import { db as dexieDb, Survey, SurveyData } from "./Dexie";
 import { EntityTable } from "dexie";
+import toast from "react-hot-toast";
 
-const updateLocalDbIfNewer = async (table: EntityTable<SurveyData>, remote: Survey) : Promise<boolean> => {
-  if(remote.id === undefined) {
+const updateLocalDbIfNewer = async (
+  table: EntityTable<SurveyData>,
+  remote: Survey
+): Promise<boolean> => {
+  if (remote.id === undefined) {
     return false;
   }
 
   const localData = await table.get(remote.id as never);
-  if(remote.updatedAt === undefined) {
+  if (remote.updatedAt === undefined) {
     return false;
   }
 
@@ -40,19 +44,19 @@ const useListSurveys = () => {
 
   useEffect(() => {
     dexieDb.surveys.hook("creating", (ctx, survey) => {
-        setData((prev) => [...prev, survey]);
+      setData((prev) => [...prev, survey]);
     });
 
     dexieDb.surveys.hook("deleting", (pk, obj, transaction) => {
-        setData((prev) => {
-            return prev.filter((s) => s.id !== pk as string)
-        });
+      setData((prev) => {
+        return prev.filter((s) => s.id !== (pk as string));
+      });
     });
 
     dexieDb.surveys.hook("updating", (mod, pk, obj, transaction) => {
-        setData((prev) => prev.map((s) => (s.id === obj.id ? obj : s)));
+      setData((prev) => prev.map((s) => (s.id === obj.id ? obj : s)));
     });
-  }, [])
+  }, []);
 
   useEffect(() => {
     const fetchLocalSurveys = async (): Promise<void> => {
@@ -67,7 +71,9 @@ const useListSurveys = () => {
       const response = await client.models.Surveys.list();
 
       console.debug("[useListSurveys] Fetching remote surveys", response);
-      const newRecordsOnServer = response.data.map(async d => await updateLocalDbIfNewer(dexieDb.surveys, d));
+      const newRecordsOnServer = response.data.map(
+        async (d) => await updateLocalDbIfNewer(dexieDb.surveys, d)
+      );
 
       const result = await Promise.all(newRecordsOnServer);
       if (result.some((r) => r)) {
@@ -82,35 +88,47 @@ const useListSurveys = () => {
   return data.map((s) => s.data);
 };
 
-const getSurvey = async (id: string) : Promise<Survey | undefined> => {
-    const remote = await client.models.Surveys.get({ id });
-    if(remote.data) {
-        await updateLocalDbIfNewer(dexieDb.surveys, remote.data);
-    }
+const getSurvey = async (id: string): Promise<Survey | undefined> => {
+  const remote = await client.models.Surveys.get({ id });
+  if (remote.data) {
+    await updateLocalDbIfNewer(dexieDb.surveys, remote.data);
+  }
 
-    const data = await dexieDb.surveys.get(id as never);
-    return data?.data;
-}
+  const data = await dexieDb.surveys.get(id as never);
+  return data?.data;
+};
 
 const addSurvey = async (survey: Survey) => {
-    try {
-      await client.models.Surveys.create(survey);
-      await dexieDb.surveys.put({
-        id: survey.id,
-        updatedAt: new Date(),
-        data: survey,
-      });
-    } catch (e) {
-      console.error(e);
-      // Figure out if this was due to a network failure
-      // If it was then put the request in an indexdb queue
-      // and try again later
+  try {
+    const res = await client.models.Surveys.create(survey);
+    if(res.errors) {
+      toast.error("Failed to create survey");
+      console.log("[Database]", res.errors);
+      return;
     }
+
+    await dexieDb.surveys.put({
+      id: survey.id,
+      updatedAt: new Date(),
+      data: survey,
+    });
+  } catch (e) {
+    console.error(e);
+    // Figure out if this was due to a network failure
+    // If it was then put the request in an indexdb queue
+    // and try again later
+  }
 };
 
 const deleteSurvey = async (id: string) => {
   try {
-    await client.models.Surveys.delete({ id })
+    const res = await client.models.Surveys.delete({ id });
+    if(res.errors) {
+      toast.error("Failed to create survey");
+      console.log("[Database]", res.errors);
+      return;
+    }
+
     await dexieDb.table("surveys").delete(id);
   } catch (e) {
     console.error(e);
@@ -120,16 +138,18 @@ const deleteSurvey = async (id: string) => {
   }
 };
 
-
 type UpdateOptions = {
-    localOnly: boolean;
-}
+  localOnly: boolean;
+};
 
 const defaultUpdateOpts = {
-    localOnly: false
-}
+  localOnly: false,
+};
 
-const updateSurvey = async (survey: Survey, opts: UpdateOptions = defaultUpdateOpts) => {
+const updateSurvey = async (
+  survey: Survey,
+  opts: UpdateOptions = defaultUpdateOpts
+) => {
   await dexieDb.surveys.put({
     id: survey.id,
     updatedAt: new Date(),
@@ -137,7 +157,7 @@ const updateSurvey = async (survey: Survey, opts: UpdateOptions = defaultUpdateO
     data: survey,
   });
 
-  if(opts.localOnly) {
+  if (opts.localOnly) {
     return;
   }
 
