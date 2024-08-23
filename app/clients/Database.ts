@@ -124,7 +124,7 @@ const deleteSurvey = async (id: string) => {
   try {
     const res = await client.models.Surveys.delete({ id });
     if(res.errors) {
-      toast.error("Failed to create survey");
+      toast.error("Failed to delete survey");
       console.log("[Database]", res.errors);
       return;
     }
