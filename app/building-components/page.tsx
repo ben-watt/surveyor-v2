@@ -51,8 +51,11 @@ export default function Page() {
       header: ({ column }) => (
         <SortableHeader column={column} header="Created" />
       ),
-      accessorFn: (v) => new Date(v.createdAt).toDateString(),
-      sortingFn: (a, b) => a.original.createdAt < b.original.createdAt ? 1 : 0,
+      accessorFn: (v) => new Date(v.createdAt),
+      cell: (props) => {
+        const date = props.getValue() as Date;
+        return date.toLocaleDateString();
+      },
     },
     {
       id: "actions",

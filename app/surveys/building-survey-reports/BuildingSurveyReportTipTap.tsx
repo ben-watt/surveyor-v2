@@ -7,7 +7,6 @@ import type {
   ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
-import { table } from "console";
 
 const TableBlock = ({
   children,
@@ -523,14 +522,131 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <h1 style={{ fontWeight: "bold" }}>Risks</h1>
         <h2 style={{ fontWeight: "bold" }}>Risks to the building</h2>
-        <p>Unknown</p>
+        <RiskRow
+          id={"timber-rot"}
+          risk={"Timber rot and insect damage"}
+          description={`We have been unable to assess the condition of all timber elements
+            and walls of the property due to furniture and building fabric
+            obstructing our view and we are therefore unable to confirm that
+            these areas are free from damp, rot, or insect infestation. Given
+            the lack of and obstructed air vents serving the subfloor void,
+            there is a risk that concealed areas are decayed and should be
+            investigated further.`}
+        />
+        <RiskRow
+          id={"tree-proximity"}
+          risk={"Tree proximity"}
+          description={`The presence of mature trees near a building can cause structural damage to foundations by directly displacing them,
+decreasing, or indeed increasing, the amount of moisture to be drawn from the certain types of soil causing it to shrink and
+expand, as well as negatively affecting drainage causing subsidence. The risk posed is subject to the following:
+* Proximity of the tree * the height, age and species of the tree *the design and depth of the building’s foundations *the type
+of sub-soil
+A mature tree is present in the rear garden, located close to the raised patio. The tree could be contrubiting to the movement
+observed to the wall. However, there was no evidence to suggest that this is causing any structural issues to the property.`}
+        />
+        <RiskRow
+          id={"flood-risk"}
+          risk={"Flood Risk"}
+          description={`We have not undertaken detailed investigations into the potential for flooding of the land on which the property lies. However,
+we have consulted the Environmental Agency website at www.environment-agency.gov.uk and their information regarding
+the potential for flooding identifies the site as being at very low flood risk from surface water and very-low flood risk from rivers
+or the sea. For more information, please visit https://check-long-term-flood-risk.service.gov.uk/risk.
+The property owner should stay informed about local flood alerts and maintain regular communication with relevant authorities.
+Given the high risk of surface water flooding, you should ensure that your insurance policy covers for flood damage and expect
+to pay higher premiums in light of this information.`}
+        />
         <h2 style={{ fontWeight: "bold" }}>Risks to the grounds</h2>
-        <p>Unknown</p>
+        <RiskRow
+          id={"invasive-species"}
+          risk={"Invasive species"}
+          description={`None noted at the time of inspection.`}
+        />
         <h2 style={{ fontWeight: "bold" }}>Risks to the people</h2>
-        <p>Unknown</p>
+        <RiskRow
+          id={"asbestoss"}
+          risk={"Asbestoss"}
+          description={`Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been
+concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition
+(R&D) Asbestos survey before commencing any refurbishment works.`}
+        />
+        <RiskRow
+          id={"radon-risk"}
+          risk={"Radon risk"}
+          description={`Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been
+concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition
+(R&D) Asbestos survey before commencing any refurbishment works.`}
+        />
+        <RiskRow
+          id={"electromagnetic-fields"}
+          risk={"Electromagnetic fields"}
+          description={`During our inspection, we did not note the presence of any mobile phone transmission masts affixed to either the land or
+surrounding buildings. There is concern that electromagnetic fields from both natural and artificial sources can cause a wide
+range of illnesses such as blackouts, insomnia and headaches to depression, allergies and cancer. Artificial sources
+commonly comprise overhead or subterranean high voltage electrical power cables. It is suggested that the electrical
+discharges from these high voltage cables upset the balance of minute electrical impulses employed by the human body to
+regulate itself in much the same way as television and radio signals can be disrupted. This subject is still largely controversial
+with further scientific research required. Further information on this matter can be found on the National Radiological Protection
+Board’s website. We have not undertaken any separate inquiries with the relevant statutory authority.`}
+        />
       </Page>
       <Page>
         <h1 style={{ fontWeight: "bold" }}>Conclusion</h1>
+        <TableBlock widths={[10, 90]}>
+          <h3>&nbsp;</h3>
+          <p style={{ textAlign: "justify" }}>
+            The property is in sound structural condition with no significant
+            structural defects noted.
+          </p>
+          <h3>&nbsp;</h3>
+          <p style={{ textAlign: "justify" }}>
+            External repairs were identified which have generally resulted from
+            a lack of maintenance and ill-conceived repairs. These include
+            slipped and damaged roof tiles, aged and poorly installed lead
+            flashings, cement render to presumed solid masonry walls and a lack
+            of air vents to the original subfloor void.. These issues need to be
+            addressed to ensure the longevity of the property and to prevent
+            more costly repairs in the long term.
+          </p>
+          <p style={{ textAlign: "justify" }}>
+            Internally, the property exhibits reasonable condition. We noted
+            that chimney breasts would benefit from having air vents installed.
+          </p>
+          <h3>&nbsp;</h3>
+          <p style={{ textAlign: "justify" }}>
+            We recommend that you obtain all testing and commissioning
+            certificates relating to the electrical and gas installations etc.
+            and obtain Final Certificates and engineer’s calculations for the
+            structural alterations and extensions to confirm that they were
+            designed and installed in compliance with the Building Regulations.
+          </p>
+          <h3>&nbsp;</h3>
+          <p style={{ textAlign: "justify" }}>
+            Furthermore, we recommend a CCTV drainage survey to ascertain the
+            condition of the underground drainage pipework and the septic tank.
+          </p>
+
+          <p style={{ textAlign: "justify" }}>
+            The property should remain in reasonable condition should all
+            repairs recommended be undertaken, however, you should fully
+            consider the financial implications associated with the repairs
+            identified before proceeding with the purchase of the property.
+          </p>
+          <p style={{ textAlign: "justify" }}>
+            We recommend that your solicitor reviews legal information and
+            information returned from local searches to ascertain whether there
+            are any elements of concern.
+          </p>
+        </TableBlock>
+        <p>
+          We trust this Report is satisfactory for your present requirements and
+          if you wish to discuss matters further, please contact:
+        </p>
+        <p>
+          <strong>{form.owner.name}</strong>
+        </p>
+        <p>
+          <strong>E:{form.owner.email}</strong>
+        </p>
       </Page>
       <Page>
         <h1 style={{ fontWeight: "bold" }}>APPENDIX 1 - Limitations</h1>
@@ -771,3 +887,20 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
     </Page>
   );
 };
+
+interface RiskRowProps {
+  id: string;
+  risk: string;
+  description?: string;
+};
+
+const RiskRow = ({id, risk, description} : RiskRowProps) => {
+  return (
+    <TableBlock widths={[10, 20, 64, 6]}>
+      <p id={id}></p>
+      <h3 data-add-toc-here-id={id}>{risk}</h3>
+      <p>{description}</p>
+      <p></p>
+    </TableBlock>
+  );
+}
