@@ -65,6 +65,7 @@ const useListSurveys = () => {
     /// we update the local database with the new data.
     const fetchRemoteSurveys = async () => {
       const response = await client.models.Surveys.list();
+
       console.debug("[useListSurveys] Fetching remote surveys", response);
       const newRecordsOnServer = response.data.map(async d => await updateLocalDbIfNewer(dexieDb.surveys, d));
 

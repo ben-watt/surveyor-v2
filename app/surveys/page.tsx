@@ -83,6 +83,15 @@ function HomePage() {
         accessorKey: "address",
       },
       {
+        header: "Owner",
+        accessorKey: "owner.name",
+        cell: (props) => {
+          return (
+            <Badge>{props.getValue() as string || "unknown"}</Badge>
+          )
+        }
+      },
+      {
         header: "Status",
         accessorKey: "status",
         cell: (props) => {
@@ -94,8 +103,9 @@ function HomePage() {
       {
         id: "created",
         header: ({ column }) => <SortableHeader column={column} header="Created" />,
-        accessorFn: (v) => new Date(v.reportDate).toDateString(),
-        sortingFn: (a, b) => new Date(a.original.reportDate) < new Date(b.original.reportDate) ? 0 : 1,
+        accessorFn: (v) => new Date(v.reportDate),
+        cell: (props) => (props.getValue() as Date).toDateString(),
+        sortingFn: 'datetime',
       },
       {
         id: "actions",
