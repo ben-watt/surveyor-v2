@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import client from "@/app/clients/AmplifyDataClient";
 import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";

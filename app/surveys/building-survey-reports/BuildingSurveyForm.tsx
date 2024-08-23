@@ -51,7 +51,12 @@ import { FormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
 import { db } from "@/app/clients/Database";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
-import { fetchUserAttributes, FetchUserAttributesOutput } from "aws-amplify/auth";
+import {
+  fetchUserAttributes,
+  FetchUserAttributesOutput,
+} from "aws-amplify/auth";
+import { Combo } from "next/font/google";
+import { useReactNodeView } from "@tiptap/react";
 
 const ImageInput = dynamic(
   () =>
@@ -166,10 +171,10 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const searchParams = useSearchParams();
   const newFormId = searchParams.get("id");
   const isNewForm = newFormId != null;
-  const [user, setUser] = useState<FetchUserAttributesOutput>();
 
   let defaultValues: BuildingSurveyForm = {
     id: newFormId || id || "",
+    level: "2",
     reportDate: new Date(),
     owner: {
       id: "",
@@ -310,7 +315,26 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   };
 
   const methods = useForm<BuildingSurveyForm>({ defaultValues });
-  const { register, handleSubmit, watch, formState, reset, control } = methods;
+  const { register, handleSubmit, watch, formState, reset, control, setValue } =
+    methods;
+  const fieldArray0 = useFieldArray({
+    name: "sections.0.elementSections",
+    control: control,
+  });
+  const fieldArray1 = useFieldArray({
+    name: "sections.1.elementSections",
+    control: control,
+  });
+  const fieldArray2 = useFieldArray({
+    name: "sections.2.elementSections",
+    control: control,
+  });
+  const fieldArray3 = useFieldArray({
+    name: "sections.3.elementSections",
+    control: control,
+  });
+  const fieldArrays = [fieldArray0, fieldArray1, fieldArray2, fieldArray3];
+
   const router = useRouter();
 
   const sections = watch("sections") as BuildingSurveyForm["sections"];
@@ -349,35 +373,12 @@ export default function Report({ id }: BuildingSurveyFormProps) {
     1000
   );
 
+  // if creating the form set the owner
+  // if editing the form do not.
+
   useEffect(() => {
-    const fetchReport = async (existingReportId: string) => {
-      const reportTask = db.surveys.get(existingReportId);
-      const userTask = fetchUserAttributes();
-
-      const [report, user] = await Promise.all([reportTask, userTask])
-
-      // Set the register of owners initially... to be honest I think we only want to do this if
-      // it's a new form. However, we still garentee that if it's already been set we won't overwrite it.
-      // So that's probably ok for now.
-      register("owner.id", {
-        value: user.sub,
-        required: true,
-        shouldUnregister: false,
-      });
-      register("owner.email", {
-        value: user.email,
-        required: true,
-        shouldUnregister: false,
-      });
-      register("owner.name", {
-        value: user.name,
-        required: true,
-        shouldUnregister: false,
-      });
-      register("owner.signaturePath", {
-        value: user?.picture ? [user.picture] : [],
-        shouldUnregister: false,
-      });
+    const fetchExistingReport = async (existingReportId: string) => {
+      const report = await db.surveys.get(existingReportId);
 
       if (report) {
         const formData = JSON.parse(
@@ -397,8 +398,6 @@ export default function Report({ id }: BuildingSurveyFormProps) {
           selectionSet: selectionSetElement,
         });
 
-        const currentForm = watch();
-
         if (response.data) {
           response.data
             .sort((x, y) => {
@@ -407,32 +406,68 @@ export default function Report({ id }: BuildingSurveyFormProps) {
               return a - b;
             })
             .map((element) => {
-              currentForm.sections.forEach((section) => {
+              defaultValues.sections.forEach((section, i) => {
                 if (
                   section.name === element.section &&
                   section.elementSections.filter((es) => es.id === element.id)
                     .length === 0
                 ) {
-                  section.elementSections.push(
-                    createDefaultElementSection(element)
-                  );
+                  fieldArrays[i].append(createDefaultElementSection(element));
                 }
               });
             });
         }
-
-        reset(currentForm);
       } catch (error) {
         console.error("Failed to fetch elements", error);
       }
     };
 
+    const fetchUser = async () => {
+      try {
+        const user = await fetchUserAttributes();
+        // Set the register of owners initially... to be honest I think we only want to do this if
+        // it's a new form. However, we still garentee that if it's already been set we won't overwrite it.
+        // So that's probably ok for now.
+
+        const owner = register("owner.id", {
+          value: user.sub,
+          required: true,
+        });
+        const email = register("owner.email", {
+          value: user.email,
+          required: true,
+        });
+        const name = register("owner.name", {
+          value: user.name,
+          required: true,
+        });
+        const sig = register("owner.signaturePath", {
+          value: user?.picture ? [user.picture] : [],
+        });
+
+        if (!(user.sub || user.email || user.name || user.picture)) {
+          toast.error(
+            "Please update your user profile with your name, email and signature before creating a form."
+          );
+        } else {
+          setValue("owner.id", user.sub || "");
+          setValue("owner.email", user.email || "");
+          setValue("owner.name", user.name || "");
+          setValue("owner.signaturePath", user.picture ? [user.picture] : []);
+        }
+        console.debug("[FetchUser]", "set values against form", user);
+      } catch (e) {
+        console.error("Failed to fetch user attributes", e);
+      }
+    };
+
     if (id) {
-      fetchReport(id);
+      fetchExistingReport(id);
     } else {
       fetchElements();
+      fetchUser();
     }
-  }, [id, reset, watch]);
+  }, []);
 
   const onSubmit = async () => {
     try {
@@ -474,6 +509,22 @@ export default function Report({ id }: BuildingSurveyFormProps) {
           <form onSubmit={handleSubmit(onSubmit, onError)}>
             <div>
               <div className="space-y-4">
+                <div>
+                  <Combobox
+                    labelTitle="Level"
+                    data={[
+                      { label: "Level 2", value: "2" },
+                      { label: "Level 3", value: "3" },
+                    ]}
+                    register={() => register("level", { required: true })}
+                  />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={"level"}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
+                  />
+                </div>
                 <div>
                   <Input
                     labelTitle="Address"
@@ -558,7 +609,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     labelText="Money Shot"
                     rhfProps={{
                       name: "moneyShot",
-                      rules: { required: true, validate: (v) => v.length == 1},
+                      rules: { required: true, validate: (v) => v.length == 1 },
                     }}
                     minNumberOfFiles={1}
                     maxNumberOfFiles={1}
@@ -637,19 +688,24 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                               register={() =>
                                 register(
                                   `sections.${sectionIndex}.elementSections.${i}.description`,
-                                  { required: true }
+                                  { required: true, shouldUnregister: true }
                                 )
                               }
                             />
-                             <ErrorMessage
-                                errors={formState.errors}
-                                name={`sections.${sectionIndex}.elementSections.${i}.description`}
-                                render={({ message }) => InputError({ message })} />
+                            <ErrorMessage
+                              errors={formState.errors}
+                              name={`sections.${sectionIndex}.elementSections.${i}.description`}
+                              render={({ message }) => InputError({ message })}
+                            />
                             <div>
                               <ImageInput
                                 rhfProps={{
                                   name: `sections.${sectionIndex}.elementSections.${i}.images`,
-                                  rules: { required: true, validate: (v) => v.length > 0 },
+                                  rules: {
+                                    required: true,
+                                    validate: (v) => v.length > 0,
+                                    shouldUnregister: true,
+                                  },
                                 }}
                                 path={`report-images/${defaultValues.id}/elementSections/${i}/images/`}
                               />
@@ -657,7 +713,10 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                                 errors={formState.errors}
                                 name={`sections.${sectionIndex}.elementSections.${i}.images`}
                                 message="At least one image is required"
-                                render={({ message }) => InputError({ message })} />
+                                render={({ message }) =>
+                                  InputError({ message })
+                                }
+                              />
                             </div>
                             <ComponentPicker
                               elementId={elementSection.id}
@@ -693,7 +752,9 @@ export default function Report({ id }: BuildingSurveyFormProps) {
               })}
             </FormSection>
             <div>
-              {Object.values(formState.errors).length > 0 && (<InputError message="Please fix the errors above before saving" />)}
+              {Object.values(formState.errors).length > 0 && (
+                <InputError message="Please fix the errors above before saving" />
+              )}
             </div>
             <div>
               <PrimaryBtn className="w-full flex justify-center" type="submit">
@@ -728,10 +789,16 @@ type ComponentDataWithChild = ComponentData & {
 
 const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`;
-  const { control, register, watch, setValue, getValues, formState } = useFormContext();
+  const { control, register, watch, setValue, getValues, formState } =
+    useFormContext();
   const { fields, remove, append } = useFieldArray({
     name: typedName,
     control: control,
+    shouldUnregister: true,
+    rules: {
+      required: true,
+      validate: (v) => v.length > 0,
+    },
   });
 
   const [comboBoxProps, setComboBoxProps] = useState<
@@ -811,9 +878,11 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
 
   if (components.length === 0) {
     return (
-      <Button className="w-full" variant="secondary" disabled>
-        Loading Material Components...
-      </Button>
+      <>
+        <Button className="w-full" variant="secondary" disabled>
+          Loading Material Components...
+        </Button>
+      </>
     );
   }
 
@@ -822,12 +891,23 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
       <div className="space-y-2">
         {fields.map((field, index) => {
           return (
-            <div key={field.id} className="border border-grey-600 rounded p-4">
-              <div className="flex space-x-2">
+            <div
+              key={field.id}
+              className="border border-grey-600 rounded p-4 relative space-y-2"
+            >
+              <Button
+                className="p-0 absolute -top-1 right-0 hover:bg-transparent"
+                variant="ghost"
+                onClick={(ev) => remove(index)}
+              >
+                <X className="w-8 text-red-400" />
+              </Button>
+              <div className="flex space-x-2 items-end">
                 <div className="flex-grow overflow-hidden">
                   {!watch(`${typedName}.${index}.useNameOveride` as const) && (
                     <>
                       <Combobox
+                        labelTitle="Material Component"
                         key={field.id}
                         data={comboBoxProps}
                         register={() =>
@@ -919,14 +999,25 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                     );
                   }}
                 />
-                <Button
-                  className="p-2"
-                  variant="ghost"
-                  onClick={(ev) => remove(index)}
-                >
-                  <X className="w-8 text-red-400" />
-                </Button>
               </div>
+              {watch("level") === "3" && (
+                <div>
+                  <Input
+                    labelTitle="Budget Cost"
+                    type="number"
+                    placeholder="£1000"
+                    register={() =>
+                      register(`${typedName}.${index}.budgetCost` as const)
+                    }
+                  />
+                  <ErrorMessage
+                    errors={formState.errors}
+                    name={`${typedName}.${index}.budgetCost`}
+                    message="This field is required"
+                    render={({ message }) => InputError({ message })}
+                  />
+                </div>
+              )}
               {watch(`${typedName}.${index}.id` as const) && (
                 <div className="p-4">
                   {getDefectsFor(
@@ -951,6 +1042,12 @@ const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
       >
         Add Material Component
       </Button>
+      <ErrorMessage
+        name={name}
+        errors={formState.errors}
+        message="You must add at least one Material Component"
+        render={({ message }) => InputError({ message })}
+      />
     </div>
   );
 };
@@ -988,19 +1085,21 @@ const DefectCheckbox = ({ defect, name }: DefectCheckboxProps) => {
             </Label>
           </div>
           {isChecked && (
-            <div className="ml-5 p-2">
+            <div className="p-2">
               <input
                 type="hidden"
-                {...register(`${typedName}.name` as const)}
+                {...register(`${typedName}.name` as const, {
+                  shouldUnregister: true,
+                })}
                 value={defect.name}
               />
               <TextAreaInput
-                labelTitle={defect.name}
                 defaultValue={defect.description}
                 placeholder={"Defect text..."}
                 register={() =>
                   register(`${typedName}.description` as const, {
                     required: true,
+                    shouldUnregister: true,
                   })
                 }
               />

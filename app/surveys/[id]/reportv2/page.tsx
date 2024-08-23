@@ -10,6 +10,7 @@ import { BuildingSurveyFormData } from "../../building-survey-reports/BuildingSu
 import BuildingSurveyReport from "../../building-survey-reports/BuildingSurveyReportTipTap";
 import { renderToStaticMarkup } from "react-dom/server";
 import { getUrl } from "aws-amplify/storage";
+import toast from "react-hot-toast";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [editorContent, setEditorContent] = useState<string>("");
@@ -20,17 +21,28 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const getReport = async () => {
-      let result = await reportClient.models.Surveys.get({ id: params.id });
+      try {
+        let result = await reportClient.models.Surveys.get({ id: params.id });
 
-      if (!result.errors && result.data != null) {
-        const formData = JSON.parse(
-          result.data.content.toString()
-        ) as BuildingSurveyFormData;
-
-        setEditorData(formData);
+        if (!result.errors && result.data != null) {
+          const formData = JSON.parse(
+            result.data.content.toString()
+          ) as BuildingSurveyFormData;
+  
+          console.debug("[BuildingSurveyReport]", "Fetched form data", formData);
+          setEditorData(formData);
+        } else {
+          console.error("[BuildingSurveyReport]", "Error fetching report", result);
+          toast.error("Error fetching report data");
+        }
+      } catch(e) {
+        toast.error("Error fetching report data");
+        console.error("[BuildingSurveyReport]", "Error fetching report", e);
       }
+      
     };
 
+    console.debug("[BuildingSurveyReport]", "Getting report data", params.id);
     getReport();
   }, [params.id]);
 

@@ -1,6 +1,6 @@
 import { Key, MouseEvent, useState } from "react";
 import ToogleInput from "./ToggleInput";
-import { UseFormRegisterReturn, useFormContext } from 'react-hook-form';
+import { UseFormRegisterReturn } from 'react-hook-form';
 
 interface ToggleSectionProps {
     label: string;

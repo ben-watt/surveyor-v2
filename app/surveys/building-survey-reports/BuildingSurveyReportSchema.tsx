@@ -1,5 +1,6 @@
 export type BuildingSurveyFormData = {
     id: string,
+    level: "2" | "3"
     owner: {
         id: string,
         name: string,
@@ -70,6 +71,7 @@ export type MaterialComponent = {
     defects: Defect[],
     ragStatus: RagStatus,
     useNameOveride: boolean,
+    budgetCost?: number,
 }
 
 export type Defect = {

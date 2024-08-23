@@ -12,7 +12,7 @@ function Home({ params }: { params: { id: string } }) {
             Building Survey Report
           </h1>
         </div>
-        <Suspense>
+        <Suspense fallback={<div>Loading...</div>}>
           <BuildingSurveyForm id={params.id} />
         </Suspense>
       </div>
