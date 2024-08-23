@@ -24,11 +24,16 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
-import { fetchUserAttributes, FetchUserAttributesOutput } from "aws-amplify/auth";
+import {
+  fetchUserAttributes,
+  FetchUserAttributesOutput,
+} from "aws-amplify/auth";
 import { getUrl } from "aws-amplify/storage";
 
-const NetworkStatus = dynamic(() => import("./NetworkStatus").then((mod) => mod.NetworkStatus), { ssr: false});
-
+const NetworkStatus = dynamic(
+  () => import("./NetworkStatus").then((mod) => mod.NetworkStatus),
+  { ssr: false }
+);
 
 export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
   return (
@@ -49,7 +54,7 @@ export default function SecureNav() {
   const cmdBarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if(isOpen && cmdBarRef.current) {
+    if (isOpen && cmdBarRef.current) {
       cmdBarRef.current.focus();
     }
   }, [isOpen]);
@@ -61,8 +66,8 @@ export default function SecureNav() {
       if (pPic) {
         const presignedUrl = await getUrl({
           path: pPic,
-        })
-        
+        });
+
         setProfileHref(presignedUrl.url.href);
       }
     }
@@ -106,7 +111,11 @@ export default function SecureNav() {
       {isOpen && (
         <div className="bg-color-white z-10">
           <div className="md:hidden w-full p-2">
-            <CommandBar ref={cmdBarRef} onSelected={() => setIsOpen(false)} onBlur={() => setIsOpen(false)} />
+            <CommandBar
+              ref={cmdBarRef}
+              onSelected={() => setIsOpen(false)}
+              onBlur={() => setIsOpen(false)}
+            />
           </div>
         </div>
       )}
@@ -115,92 +124,96 @@ export default function SecureNav() {
 }
 
 interface CommandBarProps {
-  onSelected?: (href: string) => void
-  onBlur?: () => void
+  onSelected?: (href: string) => void;
+  onBlur?: () => void;
 }
 
+const CommandBar = forwardRef<HTMLInputElement, CommandBarProps>(
+  function CommandBar({ onSelected, onBlur }: CommandBarProps, ref) {
+    const { user, signOut } = useAuthenticator((context) => [context.user]);
+    const router = useRouter();
+    const [isOpen, setIsOpen] = useState(false);
 
-const CommandBar = forwardRef<HTMLInputElement, CommandBarProps>(function CommandBar({ onSelected, onBlur } : CommandBarProps, ref) {
-  const { user, signOut } = useAuthenticator((context) => [context.user]);
-  const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  
-  function logout(): void {
-    setIsOpen(false);
-    signOut();
-    router.push("/");
-  }
-
-  function handleBlur(event: any) {
-    if (!event.currentTarget.contains(event.relatedTarget)) {
+    function logout(): void {
       setIsOpen(false);
-      onBlur && onBlur();
+      signOut();
+      router.push("/");
     }
+
+    function handleBlur(event: any) {
+      if (!event.currentTarget.contains(event.relatedTarget)) {
+        setIsOpen(false);
+        onBlur && onBlur();
+      }
+    }
+
+    function handleNaviate(href: string) {
+      router.push(href);
+      setIsOpen(false);
+      onSelected && onSelected(href);
+    }
+
+    if (!user) return null;
+    return (
+      <Command
+        onBlur={handleBlur}
+        onFocus={() => setIsOpen(true)}
+        className="border border-grey-800"
+      >
+        <CommandInput
+          ref={ref}
+          className="border-none focus:ring-0 h-8"
+          placeholder="Type a command or search..."
+        />
+        <div className={`relative bg-white ${!isOpen && "hidden"}`}>
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup heading="Suggestions">
+              <CommandItem onSelect={() => handleNaviate("/surveys/create")}>
+                <NotebookPen className="mr-2 h-4 w-4" />
+                <span>Create Survey</span>
+              </CommandItem>
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup heading="Nav">
+              <CommandItem onSelect={() => handleNaviate("/surveys")}>
+                <span>Surveys</span>
+                <CommandShortcut>⌘S</CommandShortcut>
+              </CommandItem>
+            </CommandGroup>
+            <CommandGroup heading="Config">
+              <CommandItem onSelect={() => handleNaviate("/elements")}>
+                <span>Elements</span>
+                <CommandShortcut>⌘E</CommandShortcut>
+              </CommandItem>
+              <CommandItem
+                onSelect={() => handleNaviate("/building-components")}
+              >
+                <span>Components</span>
+                <CommandShortcut>⌘C</CommandShortcut>
+              </CommandItem>
+            </CommandGroup>
+            <CommandGroup heading="Settings">
+              <CommandItem onSelect={() => handleNaviate("/profile")}>
+                <CircleUserRound className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+                <CommandShortcut>⌘P</CommandShortcut>
+              </CommandItem>
+              <CommandItem onSelect={() => handleNaviate("/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+                <CommandShortcut>⌘S</CommandShortcut>
+              </CommandItem>
+            </CommandGroup>
+            <CommandGroup heading="Actions">
+              <CommandItem onSelect={() => logout()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>SignOut</span>
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </div>
+      </Command>
+    );
   }
-
-  function handleNaviate(href: string) {
-    router.push(href);
-    setIsOpen(false);
-    onSelected && onSelected(href);
-  }
-
-  if (!user) return null;
-  return (
-    <Command
-      onBlur={handleBlur}
-      onFocus={() => setIsOpen(true)}
-      className="border border-grey-800"
-    >
-      <CommandInput
-        ref={ref}
-        className="border-none focus:ring-0 h-8"
-        placeholder="Type a command or search..."
-      />
-      <div className={`relative bg-white ${!isOpen && "hidden"}`}>
-        <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Suggestions">
-            <CommandItem onSelect={() => handleNaviate("/surveys/create")}>
-              <NotebookPen className="mr-2 h-4 w-4" />
-              <span>Create Survey</span>
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading="Nav">
-            <CommandItem onSelect={() => handleNaviate("/surveys")}>
-              <span>Surveys</span>
-              <CommandShortcut>⌘S</CommandShortcut>
-            </CommandItem>
-            <CommandItem onSelect={() => handleNaviate("/elements")}>
-              <span>Elements</span>
-              <CommandShortcut>⌘E</CommandShortcut>
-            </CommandItem>
-            <CommandItem onSelect={() => handleNaviate("/building-components")}>
-              <span>Components</span>
-              <CommandShortcut>⌘C</CommandShortcut>
-            </CommandItem>
-          </CommandGroup>
-          <CommandGroup heading="Settings">
-            <CommandItem onSelect={() => handleNaviate("/profile")}>
-              <CircleUserRound className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-              <CommandShortcut>⌘P</CommandShortcut>
-            </CommandItem>
-            <CommandItem onSelect={() => handleNaviate("/settings")}>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-              <CommandShortcut>⌘S</CommandShortcut>
-            </CommandItem>
-          </CommandGroup>
-          <CommandGroup heading="Actions">
-            <CommandItem onSelect={() => logout()}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>SignOut</span>
-            </CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </div>
-    </Command>
-  );
-});
-
+);
