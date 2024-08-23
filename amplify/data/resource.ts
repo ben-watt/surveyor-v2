@@ -18,7 +18,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
-      allow.authenticated().to(["create", "read", "update", "delete"]),
+      allow.authenticated().to(["create", "read", "update"]),
     ]),
   Elements: a.model({
     id: a.id().required(),
