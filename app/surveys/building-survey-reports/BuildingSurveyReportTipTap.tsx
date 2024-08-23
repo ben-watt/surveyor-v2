@@ -1,13 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 
-import React from "react";
+import React, { Fragment, isValidElement } from "react";
 import Image from "next/image";
 import type {
   BuildingSurveyFormData,
   ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
-import { report } from "process";
+import { table } from "console";
 
 const TableBlock = ({
   children,
@@ -20,36 +20,48 @@ const TableBlock = ({
     throw new Error("Widths must add up to 100");
 
   if (children === null || children === undefined)
-    throw new Error("Children must not be null or undefined");
+    throw new Error("Children must not be null or undefined or invalid");
 
-  const childrenArray = React.Children.toArray(children);
-  if (childrenArray.length % widths.length !== 0)
-    console.warn("Number of children should be a multiple of widths");
+  const createTableRows = (elements : React.ReactNode) : React.JSX.Element[]  => {
+    const elementsArr = React.Children.toArray(elements);
+  
+    if (elementsArr.length % widths.length !== 0)
+      console.warn("[Table Block]", "Number of children should be a multiple of widths", elementsArr.length, widths.length);
 
-  const landscapeWidth = 948; // Width of the page in landscape
-
-  let tableRows = [];
-  for (let i = 0; i < childrenArray.length; i = i + widths.length) {
-    let row = [];
-    for (let j = 0; j < widths.length; j++) {
-      const childElement = childrenArray[i + j];
-
-      if (j === widths.length - 1) {
-        row.push(<td key={j}>{childElement}</td>);
-      } else {
-        row.push(
-          <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
-            {childElement}
-          </td>
-        );
+    const landscapeWidth = 948; // Width of the page in landscape
+    let tableRows = [];
+    for (let i = 0; i < elementsArr.length; i = i + widths.length) {
+      const firstChildInRow = elementsArr[i];
+      if (
+        isValidElement<any>(firstChildInRow) &&
+        firstChildInRow.type === Fragment
+      ) {
+        tableRows.push(...createTableRows(firstChildInRow.props.children));
+        i = i - widths.length + 1;
+        continue;
       }
+
+      let rows = widths.map((w, j) => {
+        if (j === widths.length - 1) {
+          return <td key={j}>{elementsArr[i + j]}</td>;
+        } else {
+          return (
+            <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
+              {elementsArr[i + j]}
+            </td>
+          );
+        }
+      });
+
+      tableRows.push(<tr key={i}>{rows}</tr>);
     }
-    tableRows.push(<tr key={i}>{row}</tr>);
+
+    return tableRows;
   }
 
   return (
     <table style={{ margin: "0" }}>
-      <tbody>{tableRows}</tbody>
+      <tbody>{createTableRows(children)}</tbody>
     </table>
   );
 };
@@ -64,7 +76,6 @@ const Page = (props: React.PropsWithChildren<any>) => (
 interface PdfProps {
   form: BuildingSurveyFormData;
 }
-
 
 interface H2Props {
   id: string;
@@ -110,7 +121,7 @@ export default function PDF({ form }: PdfProps) {
           </div>
           <div>
             <p style={{ textAlign: "right", fontSize: "1.5em" }}>
-              Level 3 Building Survey Report
+              Level {form.level} Building Survey Report
             </p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>Of the premises known as</p>
@@ -156,8 +167,20 @@ export default function PDF({ form }: PdfProps) {
         <p></p>
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
-          <Image style={{ width: "80mm" }} src={form.owner.signaturePath[0]} alt="signature" width={400} height={200} />
-          <Image style={{ width: "80mm" }} src="https://placehold.co/600x400" alt="signature" width={400} height={200}  />
+          <Image
+            style={{ width: "80mm" }}
+            src={form.owner.signaturePath[0]}
+            alt="signature"
+            width={400}
+            height={200}
+          />
+          <Image
+            style={{ width: "80mm" }}
+            src="https://placehold.co/600x400"
+            alt="signature"
+            width={400}
+            height={200}
+          />
           <p>{form.owner.name}</p>
           <p>Jordan Clarke BSc (Hons) MRICS</p>
         </TableBlock>
@@ -186,7 +209,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={{ fontWeight: "bold" }}>Definitions</h1>
-        <H2 id="key">Key</H2>      
+        <H2 id="key">Key</H2>
         <TableBlock widths={[94, 6]}>
           <ul>
             <li>
@@ -311,7 +334,11 @@ export default function PDF({ form }: PdfProps) {
           <div key={s.name}>
             <h1 style={{ fontWeight: "bold" }}>{s.name}</h1>
             {s.elementSections.map((cs, j) => (
-              <ConditionSection key={`${i}.${j}`} elementSection={cs} />
+              <ConditionSection
+                key={`${i}.${j}`}
+                elementSection={cs}
+                form={form}
+              />
             ))}
           </div>
         ))}
@@ -366,7 +393,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 Any responsibilities to maintain access roads and driveways,
                 which may not be adopted by the Local Authority, should be
                 established.
@@ -378,7 +405,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 Obtain any certificates or guarantees, accompanying reports and
                 plans for works that may have been carried out on the property.
                 The guarantees should be formally assigned to you and preferably
@@ -392,7 +419,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 Investigate if any fire, public health or other requirements or
                 regulations are satisfied and that up-to-date certificates are
                 available.
@@ -404,7 +431,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 Investigate any proposed use of adjoining land and clarify the
                 likelihood of any future type of development, which could
                 adversely affect this property.
@@ -416,7 +443,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 Where there are trees in the adjacent gardens, which are growing
                 sufficiently close to the property to cause possible damage, we
                 would suggest that the owners are notified of the situation.
@@ -428,7 +455,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 Whilst there were clearly defined physical boundaries to the
                 site, these may not necessarily lie on the legal boundaries.
                 These matters should be checked through your Solicitors.
@@ -440,7 +467,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 The tenure is assumed to be Freehold, or Long Leasehold subject
                 to nil or nominal Chief or Ground Rent. Your legal adviser
                 should confirm all details.
@@ -452,7 +479,7 @@ export default function PDF({ form }: PdfProps) {
           <p></p>
           <ul>
             <li>
-            <p style={{ textAlign: "justify" }}>
+              <p style={{ textAlign: "justify" }}>
                 Confirmation should be obtained that all main services are
                 indeed connected. Confirmation should be obtained by the
                 provision of service documentation, of when the electric and gas
@@ -631,9 +658,10 @@ export default function PDF({ form }: PdfProps) {
 type ConditionSectionProps = {
   key: string;
   elementSection: ElementSection;
+  form: BuildingSurveyFormData;
 };
 
-const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
+const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   const es = elementSection;
 
   if (!es.isPartOfSurvey) return <></>;
@@ -716,10 +744,21 @@ const ConditionSection = ({ elementSection }: ConditionSectionProps) => {
               </p>
               <div>
                 {mc.defects.map((d) => (
-                  <p style={{ textAlign: "justify" }} key={d.name}>{d.description}</p>
+                  <p style={{ textAlign: "justify" }} key={d.name}>
+                    {d.description}
+                  </p>
                 ))}
               </div>
               <p></p>
+
+              {form.level === "3" && (
+                <>
+                  <p></p>
+                  <p style={{ "fontWeight" : "bold" }}>Budget Cost</p>
+                  <p>£{mc.budgetCost}</p>
+                  <p></p>
+                </>
+              )}
             </TableBlock>
           </>
         ))}
