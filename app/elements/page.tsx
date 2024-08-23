@@ -6,30 +6,37 @@ import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
 import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { ColumnDef } from "@tanstack/react-table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
+import { useAsyncArrayState } from "../hooks/useAsyncState";
 
 type ElementData = Schema["Elements"]["type"];
 
 export default function Page() {
-  const [elementData, setElementData] = useState<ElementData[]>([]);
+  const [isLoading, elementData, setElementData] = useAsyncArrayState(fetchReports);
 
   const columns: ColumnDef<ElementData>[] = [
     {
       header: "Name",
-      accessorKey: "name"
+      accessorKey: "name",
     },
     {
       id: "order",
       header: ({ column }) => <SortableHeader column={column} header="Order" />,
-      accessorFn: (v) => v.order ? v.order : 0,
+      accessorFn: (v) => (v.order ? v.order : 0),
     },
     {
       id: "created",
-      header: ({ column }) => <SortableHeader column={column} header="Created" />,
+      header: ({ column }) => (
+        <SortableHeader column={column} header="Created" />
+      ),
       accessorFn: (v) => new Date(v.createdAt).toDateString(),
     },
     {
@@ -49,7 +56,8 @@ export default function Page() {
               <Link href={`/elements/${rowId}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
-              <DropdownMenuItem className="text-red-500"
+              <DropdownMenuItem
+                className="text-red-500"
                 onClick={() => deleteFn(rowId)}
               >
                 <span className="text-red-500">Delete</span>
@@ -58,24 +66,20 @@ export default function Page() {
           </DropdownMenu>
         );
       },
-    }
+    },
   ];
 
-  useEffect(() => {
-    async function fetchReports() {
-      try {
-        const response = await client.models.Elements.list();
-
-        if (response.data) {
-          setElementData(response.data);
-        }
-      } catch (error) {
-        console.log(error);
+  async function fetchReports() {
+    try {
+      const response = await client.models.Elements.list();
+      if (response.data) {
+        return response.data;
       }
+      return [];
+    } catch (error) {
+      console.log(error);
     }
-
-    fetchReports();
-  }, []);
+  }
 
   function deleteFn(id: string): void {
     async function deleteAsync() {
@@ -102,7 +106,12 @@ export default function Page() {
           <CopyMarkupBtn>Create</CopyMarkupBtn>
         </Link>
       </div>
-      <DataTable initialState={{ sorting: [{ id: "order", desc: false }] }} columns={columns} data={elementData} />
+      <DataTable
+        initialState={{ sorting: [{ id: "order", desc: false }] }}
+        columns={columns}
+        data={elementData}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

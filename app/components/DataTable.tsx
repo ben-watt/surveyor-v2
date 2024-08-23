@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -32,14 +32,23 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type DataTableProps<TData> = {
   initialState?: InitialTableState;
   columns: ColumnDef<TData>[];
   data: TData[];
+  asyncData?: Promise<TData[]>;
+  isLoading?: boolean;
 };
 
-export function DataTable<TData>({ initialState, columns, data }: DataTableProps<TData>) {
+export function DataTable<TData>({
+  initialState,
+  columns,
+  data,
+  asyncData,
+  isLoading,
+}: DataTableProps<TData>) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -66,34 +75,33 @@ export function DataTable<TData>({ initialState, columns, data }: DataTableProps
     <div>
       <div className="mb-3">
         <div className="flex items-center py-4">
-            <Input disabled
-            placeholder="Filter..."
-            className="max-w-sm"
-            />
-            <DropdownMenu>
+          <Input disabled placeholder="Filter..." className="max-w-sm" />
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
+              <Button variant="outline" className="ml-auto">
                 Columns
-                </Button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                {table
+              {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
                 .map((column) => {
-                    return (
+                  return (
                     <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
                     >
-                        {column.id}
+                      {column.id}
                     </DropdownMenuCheckboxItem>
-                    );
+                  );
                 })}
             </DropdownMenuContent>
-            </DropdownMenu>
+          </DropdownMenu>
         </div>
       </div>
       <div className="rounded-md border">
@@ -124,10 +132,13 @@ export function DataTable<TData>({ initialState, columns, data }: DataTableProps
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={cell.column.columnDef.meta?.tw.cellClassName}>
+                    <TableCell
+                      key={cell.id}
+                      className={cell.column.columnDef.meta?.tw.cellClassName}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}
@@ -139,7 +150,11 @@ export function DataTable<TData>({ initialState, columns, data }: DataTableProps
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  <div className="flex space-x-2">
+                    {columns.map((c) => (
+                      <Skeleton key={c.id} className="h-4 w-full" />
+                    ))}
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -178,10 +193,7 @@ export function SortableHeader<TData>({
   header,
 }: SortableHeaderProps<TData>) {
   return (
-    <Button
-      variant="ghost"
-      onClick={() => column.toggleSorting()}
-    >
+    <Button variant="ghost" onClick={() => column.toggleSorting()}>
       {header}
       <ArrowUpDown className="ml-2 h-4 w-4" />
     </Button>
