@@ -754,7 +754,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               {form.level === "3" && (
                 <>
                   <p></p>
-                  <p style={{ "fontWeight" : "bold" }}>Budget Cost</p>
+                  <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
                   <p>£{mc.budgetCost}</p>
                   <p></p>
                 </>
