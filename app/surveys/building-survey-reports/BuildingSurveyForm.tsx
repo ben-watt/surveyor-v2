@@ -363,14 +363,15 @@ export default function Report({ id }: BuildingSurveyFormProps) {
             },
             { localOnly: true }
           );
-          console.debug("Saved locally");
+
+          toast.success("Autosaved")
         }
       };
 
       saveFormDataLocally();
     },
     [allFields],
-    1000
+    5000
   );
 
   // if creating the form set the owner
