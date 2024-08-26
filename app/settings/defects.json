@@ -1,6 +1,6 @@
 [
   {
-    "elementName": "FOUNDATIONS & SUBSTRUCTURE",
+    "elementName": "Foundations and Substructure",
     "defects": [
       {
         "type": "Stepped Brick",
@@ -45,7 +45,7 @@
     ]
   },
   {
-    "elementName": "ROOF",
+    "elementName": "Roof Coverings",
     "defects": [
       {
         "type": "Pitched",
@@ -258,7 +258,7 @@
     ]
   },
   {
-    "elementName": "CHIMNEYS",
+    "elementName": "Chimneys",
     "defects": [
       {
         "type": "Brickwork",
@@ -343,7 +343,7 @@
     ]
   },
   {
-    "elementName": "RAINWATER DISPOSAL SYSTEM",
+    "elementName": "Rainwater Disposal System",
     "defects": [
       {
         "type": "Gutters and downpipes",
@@ -468,7 +468,7 @@
     ]
   },
   {
-    "elementName": "SOFFITS & FASCIAS",
+    "elementName": "Sofits and Fascias",
     "defects": [
       {
         "type": "Soffits & Fascias",
@@ -529,7 +529,7 @@
     ]
   },
   {
-    "elementName": "EXTERNAL WALLS",
+    "elementName": "Main Walls",
     "defects": [
       {
         "type": "Cavity construction",
@@ -750,7 +750,7 @@
     ]
   },
   {
-    "elementName": "WINDOWS & DOORS",
+    "elementName": "Windows and Doors",
     "defects": [
       {
         "type": "Timber",
@@ -851,7 +851,7 @@
     ]
   },
   {
-    "elementName": "ROOF STRUCTURE",
+    "elementName": "Roof Structure",
     "defects": [
       {
         "type": "Roof Structure",
@@ -944,7 +944,7 @@
     ]
   },
   {
-    "elementName": "ROOF STRUCTURE",
+    "elementName": "Ceilings",
     "defects": [
       {
         "type": "Ceiling",
@@ -965,7 +965,7 @@
     ]
   },
   {
-    "elementName": "WALLS & PARTITIONS",
+    "elementName": "Walls and Partitions",
     "defects": [
       {
         "type": "Walls & partitions",
@@ -994,7 +994,7 @@
     ]
   },
   {
-    "elementName": "FLOORS",
+    "elementName": "Floors",
     "defects": [
       {
         "type": "Suspended timber ",
@@ -1047,7 +1047,7 @@
     ]
   },
   {
-    "elementName": "INTERNAL JOINERY",
+    "elementName": "Internal Joinery",
     "defects": [
       {
         "type": "Doors, Architraves and Skirting Boards",
@@ -1060,7 +1060,7 @@
     ]
   },
   {
-    "elementName": "SANITARYWARE & KITCHEN",
+    "elementName": "Sanitaryware & Kitchen",
     "defects": [
       {
         "type": "Bathroom ",
@@ -1073,7 +1073,7 @@
     ]
   },
   {
-    "elementName": "FIREPLACES",
+    "elementName": "Fireplaces",
     "defects": [
       {
         "type": "Chimney breast",
@@ -1103,7 +1103,7 @@
   },
   { "elementName": "CELLAR", "defects": [] },
   {
-    "elementName": "ELECTRICAL INSTALLATIONS",
+    "elementName": "Electrical Installations",
     "defects": [
       {
         "type": "Electrical Installations",
@@ -1123,10 +1123,10 @@
       }
     ]
   },
-  { "elementName": "GAS INSTALLATIONS", "defects": [] },
-  { "elementName": "COLD WATER SUPPLY", "defects": [] },
+  { "elementName": "Gas Installations", "defects": [] },
+  { "elementName": "Cold Water Supply", "defects": [] },
   {
-    "elementName": "HOT WATER SUPPLY / HEATING",
+    "elementName": "Hot Water Supply / Heating Installations",
     "defects": [
       {
         "type": "System generally",
@@ -1139,7 +1139,7 @@
     ]
   },
   {
-    "elementName": "SURFACE WATER & SOIL DRAINAGE",
+    "elementName": "Surface water & Soil drainage",
     "defects": [
       {
         "type": "Surface and Soil Drainage",
@@ -1176,7 +1176,7 @@
     ]
   },
   {
-    "elementName": "OUTBUILDINGS, BOUNDARIES, FENCING, DRIVES, LAWN, ETC.",
+    "elementName": "Boundaries, Fencing, Drives, Lawn, etc",
     "defects": [
       {
         "type": "External Areas",
