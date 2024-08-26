@@ -52,7 +52,7 @@
     "name": "Ceilings",
     "description": "",
     "order": 9,
-    "section": "External Condition of Property"
+    "section": "Internal Condition of Property"
   },
   {
     "name": "Walls and Partitions",
@@ -85,39 +85,45 @@
     "section": "Internal Condition of Property"
   },
   {
-    "name": "Electrical Installation",
+    "name": "Cellar",
     "description": "",
     "order": 15,
-    "section": "Services"
+    "section": "Internal Condition of Property"
   },
   {
-    "name": "Gas Installations",
+    "name": "Electrical Installation",
     "description": "",
     "order": 16,
     "section": "Services"
   },
   {
-    "name": "Cold Water Supply",
+    "name": "Gas Installations",
     "description": "",
     "order": 17,
     "section": "Services"
   },
   {
-    "name": "Hot Water Supply / Heating Installations",
+    "name": "Cold Water Supply",
     "description": "",
     "order": 18,
     "section": "Services"
   },
   {
-    "name": "Surface water & Soil drainage",
+    "name": "Hot Water Supply / Heating Installations",
     "description": "",
     "order": 19,
     "section": "Services"
   },
   {
-    "name": "Boundaries, Fencing, Drives, Lawn, etc",
+    "name": "Surface water & Soil drainage",
     "description": "",
     "order": 20,
+    "section": "Services"
+  },
+  {
+    "name": "Boundaries, Fencing, Drives, Lawn, etc",
+    "description": "",
+    "order": 21,
     "section": "Grounds (External Areas)"
   }
 ]
