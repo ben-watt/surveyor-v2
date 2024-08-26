@@ -7,6 +7,7 @@ import {
   Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
   InputType,
+  SurveySection,
 } from "./BuildingSurveyReportSchema";
 
 import {
@@ -28,7 +29,7 @@ import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { successToast } from "@/app/components/Toasts";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, X } from "lucide-react";
 import { Label } from "@aws-amplify/ui-react";
@@ -53,10 +54,7 @@ import { db } from "@/app/clients/Database";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 import {
   fetchUserAttributes,
-  FetchUserAttributesOutput,
 } from "aws-amplify/auth";
-import { Combo } from "next/font/google";
-import { useReactNodeView } from "@tiptap/react";
 
 const ImageInput = dynamic(
   () =>
@@ -143,7 +141,7 @@ function mapToInputType<T, K extends FieldValues>(
 }
 
 interface BuildingSurveyFormProps {
-  id?: string;
+  id: string;
 }
 
 const selectionSetElement = [
@@ -167,21 +165,88 @@ const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
   validate: (value: boolean) => value === true,
 });
 
-export default function Report({ id }: BuildingSurveyFormProps) {
-  const searchParams = useSearchParams();
-  const newFormId = searchParams.get("id");
-  const isNewForm = newFormId != null;
 
-  let defaultValues: BuildingSurveyForm = {
-    id: newFormId || id || "",
+const createDefaultFormValues = async (id: string): Promise<BuildingSurveyForm> => {
+  const fetchElements = async () : Promise<SurveySection[]> => {
+    let initialSections : SurveySection[] = [
+      {
+        name: "External Condition of Property",
+        elementSections: [],
+      },
+      {
+        name: "Internal Condition of Property",
+        elementSections: [],
+      },
+      {
+        name: "Services",
+        elementSections: [],
+      },
+      {
+        name: "Grounds (External Areas)",
+        elementSections: [],
+      },
+    ];
+
+    const createDefaultElementSection = (
+      element: ElementData
+    ): ElementSection => ({
+      id: element.id,
+      name: element.name,
+      isPartOfSurvey: false,
+      description: "",
+      images: [],
+      materialComponents: [],
+    });
+
+    try {
+      const response = await reportClient.models.Elements.list({
+        selectionSet: selectionSetElement,
+      });
+
+      if (response.data) {
+        response.data
+          .sort((x, y) => {
+            let a = x.order ? x.order : 0;
+            let b = y.order ? y.order : 0;
+            return a - b;
+          })
+          .map((element) => {
+            const elementSection = createDefaultElementSection(element);
+            const section = initialSections.find((section) => section.name === element.section)
+            if(section) {
+              section.elementSections.push(elementSection);
+            }
+            else {
+              console.error("Failed to find section for element", element);
+            }
+          });
+      }
+    } catch (error) {
+      console.error("Failed to fetch elements", error);
+    }
+
+    return initialSections;
+  };
+
+  const surveySections = await fetchElements();
+  const user = await fetchUserAttributes();
+  if(!user.sub || !user.name || !user.email || !user.picture) {
+    console.error("Unable to verify user.", user);
+    throw new Error("Unable to verify user.");
+  }
+    
+
+  return {
+    id: id,
     level: "2",
     reportDate: new Date(),
     owner: {
-      id: "",
-      name: "",
-      email: "",
-      signaturePath: [],
+      id: user.sub,
+      name: user.name,
+      email: user.email,
+      signaturePath: [user.picture],
     },
+    status: "draft",
     address: "",
     clientName: "",
     inspectionDate: new Date(),
@@ -271,24 +336,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
       },
     },
     frontElevationImagesUri: [],
-    sections: [
-      {
-        name: "External Condition of Property",
-        elementSections: [],
-      },
-      {
-        name: "Internal Condition of Property",
-        elementSections: [],
-      },
-      {
-        name: "Services",
-        elementSections: [],
-      },
-      {
-        name: "Grounds (External Areas)",
-        elementSections: [],
-      },
-    ],
+    sections: surveySections,
     checklist: [
       shouldBeTrueCheckBox("Have you checked for asbestos?"),
       shouldBeTrueCheckBox("Have you lifted manhole covers to drains?"),
@@ -313,8 +361,51 @@ export default function Report({ id }: BuildingSurveyFormProps) {
       ),
     ],
   };
+}
 
-  const methods = useForm<BuildingSurveyForm>({ defaultValues });
+
+export default function ReportWrapper ({ id }: BuildingSurveyFormProps) {
+  const [isLoading, report] = db.surveys.useGet(id);
+  const [formData, setFormData] = useState<BuildingSurveyForm | undefined>(undefined);
+
+  useEffect(() => {
+    async function createNewForm() {
+      setFormData(await createDefaultFormValues(id));
+    }
+
+    function parseExistingFormContent(content : string) {
+      const formData = JSON.parse(content) as BuildingSurveyForm;
+      setFormData(formData);
+    }
+
+    if(isLoading) {
+      return;
+    }
+
+    if(report) {
+      parseExistingFormContent(report.content as string);
+    }
+    else {
+      createNewForm()
+    }
+  }, [id, isLoading, report])
+
+  return (
+    <div className="md:grid md:grid-cols-4 mb-4">
+    <div className="col-start-2 col-span-2">
+      {formData ? <Report initFormValues={formData} /> : <div>Loading...</div>}
+    </div>
+  </div>
+  )
+
+}
+
+interface ReportProps {
+  initFormValues: BuildingSurveyForm;
+}
+
+function Report({ initFormValues }: ReportProps) {
+  const methods = useForm<BuildingSurveyForm>({ defaultValues: initFormValues });
   const { register, handleSubmit, watch, formState, reset, control, setValue } =
     methods;
   const fieldArray0 = useFieldArray({
@@ -340,157 +431,60 @@ export default function Report({ id }: BuildingSurveyFormProps) {
   const sections = watch("sections") as BuildingSurveyForm["sections"];
   const allFields = watch();
 
-  const createDefaultElementSection = (
-    element: ElementData
-  ): ElementSection => ({
-    id: element.id,
-    name: element.name,
-    isPartOfSurvey: false,
-    description: "",
-    images: [],
-    materialComponents: [],
-  });
-
   useDebouncedEffect(
     () => {
-      const saveFormDataLocally = async () => {
-        if (isNewForm) {
+      const autoSave = async () => {
           await db.surveys.update(
             {
-              id: defaultValues.id,
-              status: "draft",
+              id: initFormValues.id,
+              status: initFormValues.status,
               content: JSON.stringify(allFields),
-            },
-            { localOnly: true }
+            }
           );
 
           toast.success("Autosaved")
-        }
       };
 
-      saveFormDataLocally();
+      autoSave();
     },
     [allFields],
-    5000
+    10000
   );
 
   // if creating the form set the owner
   // if editing the form do not.
 
-  useEffect(() => {
-    const fetchExistingReport = async (existingReportId: string) => {
-      const report = await db.surveys.get(existingReportId);
+  const saveAsDraft = async () => {
+    try {
+      let form = watch();
 
-      if (report) {
-        const formData = JSON.parse(
-          report.content as string
-        ) as BuildingSurveyForm;
-        reset(formData);
+      await db.surveys.update({
+        id: form.id,
+        status: "draft",
+        content: JSON.stringify(form),
+      });
 
-        console.log("reset from fetchReport", formData);
-      } else {
-        console.error("Failed to fetch report");
-      }
-    };
+      successToast("Saved as Draft");
 
-    const fetchElements = async () => {
-      try {
-        const response = await reportClient.models.Elements.list({
-          selectionSet: selectionSetElement,
-        });
-
-        if (response.data) {
-          response.data
-            .sort((x, y) => {
-              let a = x.order ? x.order : 0;
-              let b = y.order ? y.order : 0;
-              return a - b;
-            })
-            .map((element) => {
-              defaultValues.sections.forEach((section, i) => {
-                if (
-                  section.name === element.section &&
-                  section.elementSections.filter((es) => es.id === element.id)
-                    .length === 0
-                ) {
-                  fieldArrays[i].append(createDefaultElementSection(element));
-                }
-              });
-            });
-        }
-      } catch (error) {
-        console.error("Failed to fetch elements", error);
-      }
-    };
-
-    const fetchUser = async () => {
-      try {
-        const user = await fetchUserAttributes();
-        // Set the register of owners initially... to be honest I think we only want to do this if
-        // it's a new form. However, we still garentee that if it's already been set we won't overwrite it.
-        // So that's probably ok for now.
-
-        const owner = register("owner.id", {
-          value: user.sub,
-          required: true,
-        });
-        const email = register("owner.email", {
-          value: user.email,
-          required: true,
-        });
-        const name = register("owner.name", {
-          value: user.name,
-          required: true,
-        });
-        const sig = register("owner.signaturePath", {
-          value: user?.picture ? [user.picture] : [],
-        });
-
-        if (!(user.sub || user.email || user.name || user.picture)) {
-          toast.error(
-            "Please update your user profile with your name, email and signature before creating a form."
-          );
-        } else {
-          setValue("owner.id", user.sub || "");
-          setValue("owner.email", user.email || "");
-          setValue("owner.name", user.name || "");
-          setValue("owner.signaturePath", user.picture ? [user.picture] : []);
-        }
-        console.debug("[FetchUser]", "set values against form", user);
-      } catch (e) {
-        console.error("Failed to fetch user attributes", e);
-      }
-    };
-
-    if (id) {
-      fetchExistingReport(id);
-    } else {
-      fetchElements();
-      fetchUser();
+      router.push("/surveys");
+    } catch (error) {
+      toast.error("Failed to save report");
+      console.error(error);
     }
-  }, []);
+  }
+
 
   const onSubmit = async () => {
     try {
       let form = watch();
 
-      if (!id) {
-        let _ = await db.surveys.add({
-          id: form.id,
-          status: "created",
-          content: JSON.stringify(form),
-        });
+      let _ = db.surveys.update({
+        id: form.id,
+        status: "created",
+        content: JSON.stringify(form),
+      });
 
-        successToast("Created Survey");
-      } else {
-        let _ = db.surveys.update({
-          id: form.id,
-          status: "created",
-          content: JSON.stringify(form),
-        });
-
-        successToast("Updated Survey");
-      }
+      successToast("Updated Survey");
 
       router.push("/surveys");
     } catch (error) {
@@ -614,7 +608,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                     }}
                     minNumberOfFiles={1}
                     maxNumberOfFiles={1}
-                    path={`report-images/${defaultValues.id}/moneyShot/`}
+                    path={`report-images/${initFormValues.id}/moneyShot/`}
                   />
                   <ErrorMessage
                     errors={formState.errors}
@@ -630,7 +624,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                       name: "frontElevationImagesUri",
                       rules: { required: true, validate: (v) => v.length > 0 },
                     }}
-                    path={`report-images/${defaultValues.id}/frontElevationImages/`}
+                    path={`report-images/${initFormValues.id}/frontElevationImages/`}
                   />
                   <ErrorMessage
                     errors={formState.errors}
@@ -641,10 +635,10 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                 </div>
               </div>
               <FormSection title="Property Description">
-                {Object.keys(defaultValues.propertyDescription)?.map((key) => {
+                {Object.keys(initFormValues.propertyDescription)?.map((key) => {
                   const propKey =
-                    key as keyof typeof defaultValues.propertyDescription;
-                  const property = defaultValues.propertyDescription[
+                    key as keyof typeof initFormValues.propertyDescription;
+                  const property = initFormValues.propertyDescription[
                     propKey
                   ] as InputT<InputType>;
                   const reqName =
@@ -708,7 +702,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                                     shouldUnregister: true,
                                   },
                                 }}
-                                path={`report-images/${defaultValues.id}/elementSections/${i}/images/`}
+                                path={`report-images/${initFormValues.id}/elementSections/${i}/images/`}
                               />
                               <ErrorMessage
                                 errors={formState.errors}
@@ -732,7 +726,7 @@ export default function Report({ id }: BuildingSurveyFormProps) {
               })}
             </div>
             <FormSection title="Checklist">
-              {defaultValues.checklist.map((checklist, index) => {
+              {initFormValues.checklist.map((checklist, index) => {
                 return (
                   <div className="mt-4 mb-4" key={index}>
                     <div>
@@ -757,10 +751,17 @@ export default function Report({ id }: BuildingSurveyFormProps) {
                 <InputError message="Please fix the errors above before saving" />
               )}
             </div>
-            <div>
+            <div className="space-y-2">
               <PrimaryBtn className="w-full flex justify-center" type="submit">
                 Save
               </PrimaryBtn>
+              <Button
+                className="w-full flex justify-center"
+                variant="secondary"
+                onClick={saveAsDraft}
+              >
+                Save As Draft
+              </Button>
             </div>
           </form>
         </FormProvider>

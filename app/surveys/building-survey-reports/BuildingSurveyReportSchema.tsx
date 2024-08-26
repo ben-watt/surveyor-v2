@@ -7,6 +7,7 @@ export type BuildingSurveyFormData = {
         email: string,
         signaturePath: string[],
     }
+    status: "draft" | "created",
     address: string,
     clientName: string,
     reportDate: Date,

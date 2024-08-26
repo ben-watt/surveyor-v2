@@ -25,16 +25,12 @@ import { db } from "@/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
 
 
-type TableData = BuildingSurveyFormData & { status?: string };
+type TableData = BuildingSurveyFormData;
 
 function HomePage() {
-  const surveys = db.surveys.useList();
+  const [isLoading, surveys] = db.surveys.useList();
   const data = surveys.map(x => {
-    const formData = JSON.parse(x.content as string) as BuildingSurveyFormData; 
-    return {
-      ...formData,
-      status: x.status || "draft",
-    }
+    return JSON.parse(x.content as string) as BuildingSurveyFormData;
   });
   const [createId, setCreateId] = useState<string>("");
 
