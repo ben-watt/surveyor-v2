@@ -41,6 +41,14 @@
         "defect": "Very slight cracking",
         "level2Wording": "",
         "level3Wording": ""
+      },
+      {
+        "type": "Concrete Strip",
+        "specification": "Concrete strip",
+        "condition": "Red",
+        "defect": "Signs of movement cracking ",
+        "level2Wording": "",
+        "level3Wording": ""
       }
     ]
   },
@@ -254,6 +262,14 @@
         "defect": "Poor solution",
         "level2Wording": "Flash band has been installed to the wall abutment with the neighbouring property. This is typically installed as a temporary solution as in conjunction with temperature fluctuations flash band can crack, leading to opportunity for water ingress. We recommend replacing the flash band with a new code 4 lead flashing at this juncture to ensure the juncture remains watertight in the long term.",
         "level3Wording": ""
+      },
+      {
+        "type": "Velux Skylights",
+        "specification": "Velux Skylights",
+        "condition": "Yellow",
+        "defect": "Inadequate",
+        "level2Wording": "Velux skylight windows are installed to the front and rear roof pitch. We were unable to confirm the adequacy of the flashing kit installed and we recommend obtaining any related guarantees/warranties from the Vendor.",
+        "level3Wording": ""
       }
     ]
   },
@@ -338,6 +354,14 @@
         "condition": "",
         "defect": "",
         "level2Wording": "",
+        "level3Wording": ""
+      },
+      {
+        "type": "Brickwork",
+        "specification": "Generally poor",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "REMEDIES",
         "level3Wording": ""
       }
     ]
@@ -464,6 +488,14 @@
         "defect": "",
         "level2Wording": "",
         "level3Wording": ""
+      },
+      {
+        "type": "Gutters and downpipes",
+        "specification": "Gullies",
+        "condition": "",
+        "defect": "",
+        "level2Wording": "NOTE* - All condition sections should now finish with \"all works should be completed in the immediate/short/medium/long term.\" ",
+        "level3Wording": ""
       }
     ]
   },
@@ -524,6 +556,14 @@
         "condition": "Yellow",
         "defect": "Soiling",
         "level2Wording": "We noted signs of soiling which should be cleaned in the short term to extend the longevity. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Soffits & Fascias",
+        "specification": "UPVC",
+        "condition": "Red",
+        "defect": "Damage",
+        "level2Wording": "UPVC soffits and fascias are in poor condition with evidence of signicant soiling and sections that are undulating. We recommend allocating an allowance to replace sections of the soffits and fascias with new. Cleaning should be undertaken on a cyclical basis thereafter. ",
         "level3Wording": ""
       }
     ]
@@ -746,6 +786,14 @@
         "defect": "Reasonable condition",
         "level2Wording": "",
         "level3Wording": "Blue engineering brickwork acts as an effective damp proofing measure due to its high density, low water absorption, and resistance to frost and moisture. We recorded no information to suggest that the damp proofing measure is defective. All external levels should be a minimum of 150mm (2No. bricks) below to avoid moisture bridging above the brickwork, creating a barrier that prevents moisture from the ground from rising into the structure. We recommend an allowance to re-point the brickwork with a hydraulic lime-based mortar in the short term to ensure the brickwork remains breathable."
+      },
+      {
+        "type": "DPCs",
+        "specification": "None present",
+        "condition": "Yellow",
+        "defect": "No DPC present",
+        "level2Wording": "We could not identify the presence of a DPC to the property. Given the age of the property, a bitumen DPC is likely present, although we recommend further investigations (raking out mortar) to determine this. We note that an effective means of preventing dampness internally is to ensure that all materials are breathable, maintain good heating and ventilation internally and ensure that external levels are 150mm below the internal finished floor level.\nWe did not identify any internal dampness to suggest that a DPC is failing, notwithstanding, building fabric and furniture obstructed our view. \n",
+        "level3Wording": ""
       }
     ]
   },
@@ -847,6 +895,14 @@
         "defect": "Cracking / no bearing either side",
         "level2Wording": "",
         "level3Wording": "We identified stepped cracking above the window serving the living room. Modern NHBC standards stipulate that lintels should be installed with a 150mm bearing to either side of the opening which has not been achieved. We recommend filling the cracks in the immediate term. Should cracks reappear and widen following filling, we recommend consulting a suitably qualified structural engineer to review."
+      },
+      {
+        "type": "Cills and Lintels",
+        "specification": "Timber",
+        "condition": "Red",
+        "defect": "Painted and deflection",
+        "level2Wording": "",
+        "level3Wording": "There is a timber lintel present to the double leaf UVPC Frech door set serving the lounge on the rear elevation. The lintel has been painted with what appears to be a modern acrylic-based paint and is blown and peeling in places. This can prohibit the timber from drying out trapped moisture and we, therefore, recommend the removal of paint finishes to these locations as this can lead to timber decay and application of a linseed oil-based paint. Likewise, the lintel appears to be subject to deflection and is slightly decayed. We recommend consulting a suitably qualified structural engineer to provide recommendations as to the required lintel and setting aside a budget for the replacement. "
       }
     ]
   },
@@ -940,6 +996,14 @@
         "defect": "Underside of rafters",
         "level2Wording": "Insulation appears to have been installed retrospectively to the underside of the timber rafters, ridge beams and valley beams. The insulation appears to be a rockwool foil faced type which has presumably been taped against or nailed into the timber structure. Installing insulation directly to the underside of the timber rafters and beams is not recommended as this can cause a build-up of condensation within the timbers. This can lead to white staining, as noted in section 4.1.1, which can decay the timber elements. We recommend removal of the insulation in these locations.\n",
         "level3Wording": ""
+      },
+      {
+        "type": "Party Wall",
+        "specification": "Brickwork",
+        "condition": "Red",
+        "defect": "Gaps noted",
+        "level2Wording": "The Party Wall exhibits signs of loose brickwork and gaps adjacent to the position of the timber purlins. Appropriate firestopping should be undertaken to these areas in the immediate term to prevent the spread of fire. \n",
+        "level3Wording": ""
       }
     ]
   },
@@ -960,6 +1024,14 @@
         "condition": "Yellow",
         "defect": "Artex - asbestos",
         "level2Wording": "Due to the age of the property textured ceilings may comprise Artex surface coating that can contain asbestos. Prior to undertaking any refurbishment works that will disturb any finishes an asbestos refurbishment and demolition survey will be required.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Ceiling",
+        "specification": "Exposed timber beams",
+        "condition": "Yellow",
+        "defect": "Very slight cracks",
+        "level2Wording": "The ceilings are generally in a fair condition throughout the property with no significant defects identified. The exposed timber beams to the original parts of the property are structural and appear to be in reasonable condition; however, very slight cracks were identified, such as to bedroom 2, which is deemed to be caused by thermal movement and does not pose an imminent risk to the property. \n\nIt is worth noting that exposed timber beams can typically exhibit several common defects. These include wood decay due to moisture ingress or insect infestations, leading to structural weakening. Cracking and splitting caused by age, changes in humidity, or improper installation can compromise stability. Sagging or bowing beams may result from inadequate support or excessive loads. Historical damage or inappropriate repairs can also affect the beams integrity. It is recommended that an allowance is made to prepare timber surfaces by filling any cracks and treating appropriately.",
         "level3Wording": ""
       }
     ]
@@ -989,6 +1061,14 @@
         "condition": "Red",
         "defect": "Damp",
         "level2Wording": "Given the issues noted with the external walls, such as inoperable windows, it is likely that ongoing damp issues could occur to the property. We did not identify any significant damp during the inspection that would be considered cause for concern. However, we recommend undertaking external repairs, increasing natural ventilation to internal areas and managing the heating within the rooms so moisture control is managed.  ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Walls & partitions",
+        "specification": "Painted plaster",
+        "condition": "Red",
+        "defect": "Blown plaster / bulging / damp",
+        "level2Wording": "We identified an area of blown plaster – which could be linked to an instance of slight bulging – at low level to the wall shared with the hallway and front sitting room. We recommend hacking off plaster in this area to investigate further and determine the condition of the substrate. Alternatively, it may be simply due to moisture transfer to the plaster due to the impervious materials applied to the external walls. ",
         "level3Wording": ""
       }
     ]
@@ -1043,6 +1123,14 @@
         "defect": "First floor joists- General",
         "level2Wording": "",
         "level3Wording": "The floors generally felt in sound condition with no evidence of noticeable bounce or other indications that they were rotten, however, a lack of ventilation to the floor void will inevitably lead to rot, decay and insect infestation. The first-floor joists were not inspected, and we recommend undertaking localised checks, particularly within the bathrooms where moisture exposure is more likely. Air circulation is critical for ensuring that the timber remains free from rot and decay.  This is a risk that you should fully consider as the cost implications could be significant if rot is discovered. "
+      },
+      {
+        "type": "Concrete slab",
+        "specification": "Solid floor",
+        "condition": "Yellow",
+        "defect": "None significant",
+        "level2Wording": "Solid floors are in reasonable condition with no significant changes in levels or other obvious defects",
+        "level3Wording": ""
       }
     ]
   },
@@ -1056,6 +1144,14 @@
         "defect": "General",
         "level2Wording": "Generally, internal joinery is in fair condition with instances of redecoration required and replacement of some ironmongery. ",
         "level3Wording": ""
+      },
+      {
+        "type": "Staircase",
+        "specification": "Generally",
+        "condition": "Green",
+        "defect": "General",
+        "level2Wording": "The timber staircase felt to be in sound structural condition at the time of inspection. ",
+        "level3Wording": ""
       }
     ]
   },
@@ -1068,6 +1164,14 @@
         "condition": "Yellow",
         "defect": "None significant",
         "level2Wording": "The sanitaryware is in reasonable condition to the bathrooms generally. No evidence was noted to suggest the presence of any active leaks.  All were operational and should remain in serviceable condition with periodic maintenance such as replacing mastic seals.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Kithen ",
+        "specification": "Timber fittings",
+        "condition": "Red",
+        "defect": "Evidence of leaks",
+        "level2Wording": "The worktops and units are in reasonable condition with no significant defects to report. Evidence of leaks to the pipework serving the sink was noted and should be checked by a qualified plumber in the short term to prevent damage to the units. Rubber seals likely require replacing. ",
         "level3Wording": ""
       }
     ]
@@ -1098,12 +1202,32 @@
         "defect": "Testing",
         "level2Wording": "A solid fuel burner is present and you should obtain HETAS certificates from the Vendor to confirm it was installed in compliance with the Building Regulations. \n",
         "level3Wording": ""
+      },
+      {
+        "type": "Gas heater",
+        "specification": "Gas heater",
+        "condition": "Yellow",
+        "defect": "Testing",
+        "level2Wording": "The gas heater should be validated by a competent person to provide Gas Safe certification. ",
+        "level3Wording": ""
       }
     ]
   },
-  { "elementName": "CELLAR", "defects": [] },
   {
-    "elementName": "Electrical Installations",
+    "elementName": "CELLAR",
+    "defects": [
+      {
+        "type": "Cellar",
+        "specification": "Exposed finishes",
+        "condition": "Yellow",
+        "defect": "Exposed surfaces ",
+        "level2Wording": "The cellar is currently fit-for-purpose as storage. There is no waterproofing or tanking to the walls, with evidence of damp staining resulting from water exerting through the brickwork through hydrostatic pressures. This is an inherent risk for a property of this age and type of construction. A paint finish has been applied to the walls generally, which, as noted elsewhere in this report, are hindering the brickwork from drying out. Subject to budget, a cavity backed membrane or similar waterproofing system would help to alleviate this, however, you should proceed with caution and ensure that the installer is suitably qualified. This solution is expensive. \nAlternatively, a more cost effective solution would be to remove all paint from the walls, ensure pointing is lime and improve air circulation and heating to allow any moisture to dry out. \n",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "Electrical Installation",
     "defects": [
       {
         "type": "Electrical Installations",
@@ -1120,11 +1244,43 @@
         "defect": "Aged - Re-wire",
         "level2Wording": "The consumer unit and associated wiring appears to be in aged condition. We have not undertaken any specialist testing. We recommend that you obtain the commissioning and testing certificates from the Vendor to confirm that this was undertaken by a suitably qualified electrician (NICEIC or similar). If unavailable, it is advised that you commission a qualified electrician to undertake an Electrical Installation Condition Report (EICR). Given the signs of loose cabling and evidence of aged fittings, we anticipate that a full re-wire of the property may be required. ",
         "level3Wording": ""
+      },
+      {
+        "type": "Solar Panels",
+        "specification": "Meter and supply",
+        "condition": "Yellow",
+        "defect": "",
+        "level2Wording": "The systems were not subject to specialist testing but appeared in reasonable condition. You should obtain all warranties and installation and servicing records from the Vendor to confirm that they are in certified working order. Planning permission may have been necessary for the installation, however, there was no record of this found on the planning portal. You should consult your legal advisor to confirm any ownership or lease agreements are in place for the systems and the implications of these to you regarding any liabilities. ",
+        "level3Wording": ""
       }
     ]
   },
-  { "elementName": "Gas Installations", "defects": [] },
-  { "elementName": "Cold Water Supply", "defects": [] },
+  {
+    "elementName": "Gas Installations",
+    "defects": [
+      {
+        "type": "Gas installations",
+        "specification": "Meter and supply",
+        "condition": "Yellow",
+        "defect": "None noted",
+        "level2Wording": "No specialist testing of the systems was undertaken at the time of our inspection, the testing certificates should be obtained from the Vendor for review",
+        "level3Wording": ""
+      }
+    ]
+  },
+  {
+    "elementName": "Cold Water Supply",
+    "defects": [
+      {
+        "type": "Cold water supply",
+        "specification": "supply",
+        "condition": "Green",
+        "defect": "No issues",
+        "level2Wording": "No issues with the cold-water installations were evident or reported. You should contact the utility provider to confirm any associated costs for your supply.",
+        "level3Wording": ""
+      }
+    ]
+  },
   {
     "elementName": "Hot Water Supply / Heating Installations",
     "defects": [
@@ -1134,6 +1290,14 @@
         "condition": "Yellow",
         "defect": "None noted",
         "level2Wording": "The system was not subject to any specialist testing; however, the boiler appears to be in reasonable condition. Our search of the Local Authority’s planning portal found no record of the installation. We recommend that you obtain Gas Safe certification from the Vendor to confirm that it was installed in compliance with the Building Regulations. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "System generally",
+        "specification": "Boiler",
+        "condition": "Red",
+        "defect": "Aged - no boxing in",
+        "level2Wording": "The system was not subject to any specialist testing; however, the boiler appears to be in aged condition. Our search of the Local Authority’s planning portal found no record of the installation. We recommend that you obtain Gas Safe certification from the Vendor to confirm that it was installed in compliance with the Building Regulations. We noted that pipework remains exposed and should be boxed-in to the buyer’s preference to prevent any damages. We also identified lack of pressure to the boiler at the time of inspection. We anticipate that you will need to replace the boiler in the short term. ",
         "level3Wording": ""
       }
     ]
@@ -1171,6 +1335,14 @@
         "condition": "Yellow",
         "defect": "Non-compliant",
         "level2Wording": "As per Approved Document H of the Building Regulations, soil and vent pipes should be located at least 900mm away from any openable window, door, or other ventilation openings. This distance helps prevent any unpleasant odours or harmful gases from entering the building.",
+        "level3Wording": ""
+      },
+      {
+        "type": "Surface and Soil Drainage",
+        "specification": "Cast-iron SVP",
+        "condition": "Yellow",
+        "defect": "Blown paint - corroded metal ",
+        "level2Wording": "The cast-iron SVP have been decorated. The paint is blown and peeling in places, thus exposing the metal which is corroded in a number of locations. We recommend removing the paintwork and treating the cast-iron with a rust-inhibiter prior to redecorating.",
         "level3Wording": ""
       }
     ]
@@ -1256,6 +1428,14 @@
         "condition": "Yellow",
         "defect": "Concrete floor slab worn",
         "level2Wording": "The concrete floor slab appeared to be spalled in places and will need to be screeded to provide a level finish. A new surface coat will be required as the existing finish is worn. ",
+        "level3Wording": ""
+      },
+      {
+        "type": "Outbuilding",
+        "specification": "Roof sheets",
+        "condition": "Red",
+        "defect": "Asbestos",
+        "level2Wording": "The roof sheets appear to contain asbestos. This will necessitate licenced removal. ",
         "level3Wording": ""
       }
     ]
@@ -1398,6 +1578,14 @@
         "defect": 0.01,
         "level2Wording": "",
         "level3Wording": "From the Building Research Establishment Radon Maps, the site has been identified as being within an area with a maximum radon potential of 1% (lowest risk). "
+      },
+      {
+        "type": "Risks to the people",
+        "specification": "Electromagnetic fields",
+        "condition": "Green",
+        "defect": "None noted",
+        "level2Wording": "",
+        "level3Wording": "During our inspection, we did not note the presence of any mobile phone transmission masts affixed to either the land or surrounding buildings. There is concern that electromagnetic fields from both natural and artificial sources can cause a wide range of illnesses such as blackouts, insomnia and headaches to depression, allergies and cancer. Artificial sources commonly comprise overhead or subterranean high voltage electrical power cables. It is suggested that the electrical discharges from these high voltage cables upset the balance of minute electrical impulses employed by the human body to regulate itself in much the same way as television and radio signals can be disrupted. This subject is still largely controversial with further scientific research required. Further information on this matter can be found on the National Radiological Protection Board’s website. We have not undertaken any separate inquiries with the relevant statutory authority."
       }
     ]
   }
