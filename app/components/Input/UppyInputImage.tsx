@@ -3,7 +3,6 @@
 import React, { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import Uppy, { Meta, Body, UppyFile } from "@uppy/core";
 import { useUppyState } from "@uppy/react";
-import Webcam from "@uppy/webcam";
 import ImageEditor from "@uppy/image-editor";
 import GoldenRetriever from "@uppy/golden-retriever";
 import UppyAmplifyPlugin from "./UppyAmplifyPlugin";
@@ -61,10 +60,6 @@ function InputImageUppy({
         minNumberOfFiles: minNumberOfFiles,
         maxNumberOfFiles: maxNumberOfFiles,
       },
-    })
-    .use(Webcam, {
-      mobileNativeCamera: true,
-      modes: ["picture"],
     })
     .use(ImageEditor)
     .use(GoldenRetriever)
@@ -197,14 +192,12 @@ function InputImageUppy({
   return (
     <div className="relative">
       <Dashboard
-        showNativePhotoCameraButton={true}
-        nativeCameraFacingMode={"environment"}
         showLinkToFileUploadResult={true}
         singleFileFullScreen={false}        
         showRemoveButtonAfterComplete={true}
         doneButtonHandler={() => {}}
         hideCancelButton={true}
-        height={fileCount > 0 ? 500 : 200}
+        height={fileCount > 0 ? 500 : 100}
         uppy={uppy}
         showProgressDetails={true}
         proudlyDisplayPoweredByUppy={false}

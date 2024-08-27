@@ -13,12 +13,11 @@ const schema = a.schema({
     .model({
       id: a.id().required(),
       status: a.string().default("draft"),
-      owner: a.string(),
       content: a.json().required(),
     })
     .authorization((allow) => [
-      allow.owner().to(["create", "read", "update", "delete"]),
       allow.authenticated().to(["create", "read", "update"]),
+      allow.owner().to(["create", "read", "update", "delete"]),
     ]),
   Elements: a.model({
     id: a.id().required(),

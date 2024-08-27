@@ -140,6 +140,19 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     return material.defects as Defect[];
   }
 
+  const mapValueToColor = (value: RagStatus) => {
+    switch (value) {
+      case "Red":
+        return "bg-red-400";
+      case "Amber":
+        return "bg-yellow-400";
+      case "Green":
+        return "bg-green-400";
+      default:
+        return "bg-gray-400";
+    }
+  };
+
   if (components.length === 0) {
     return (
       <>
@@ -231,19 +244,6 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                 <Controller
                   name={`${typedName}.${index}.ragStatus`}
                   render={({ field }) => {
-                    const mapValueToColor = (value: RagStatus) => {
-                      switch (value) {
-                        case "Red":
-                          return "bg-red-400";
-                        case "Amber":
-                          return "bg-yellow-400";
-                        case "Green":
-                          return "bg-green-400";
-                        default:
-                          return "bg-gray-400";
-                      }
-                    };
-
                     return (
                       <div {...field}>
                         <Select>
@@ -255,7 +255,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                             <SelectValue placeholder="RAG" hidden />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="N/I">N.I</SelectItem>
+                            <SelectItem value="N/I"><div className="flex justify-between items-center w-full"><div>N.I</div><div className="w-4 h-4 rounded-lg bg-slate-400"></div></div></SelectItem>
                             <SelectItem value="Red">Red</SelectItem>
                             <SelectItem value="Amber">Amber</SelectItem>
                             <SelectItem value="Green">Green</SelectItem>

@@ -29,6 +29,7 @@ import {
   FetchUserAttributesOutput,
 } from "aws-amplify/auth";
 import { getUrl } from "aws-amplify/storage";
+import { v4 } from "uuid";
 
 const NetworkStatus = dynamic(
   () => import("./NetworkStatus").then((mod) => mod.NetworkStatus),
@@ -169,7 +170,7 @@ const CommandBar = forwardRef<HTMLInputElement, CommandBarProps>(
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup heading="Suggestions">
-              <CommandItem onSelect={() => handleNaviate("/surveys/create")}>
+              <CommandItem onSelect={() => handleNaviate(`/surveys/create?id=${v4()}`)}>
                 <NotebookPen className="mr-2 h-4 w-4" />
                 <span>Create Survey</span>
               </CommandItem>

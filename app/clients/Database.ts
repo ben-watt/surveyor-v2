@@ -127,6 +127,12 @@ const addSurvey = async (survey: Survey) => {
 };
 
 const deleteSurvey = async (id: string) => {
+  const survey = await dexieDb.table("surveys").get(id);
+  if(survey?.data.status === "draft") {
+    await dexieDb.table("surveys").delete(id);
+    return;
+  }
+
   const result = await client.models.Surveys.delete({ id });
   if(result.data) {
     await dexieDb.table("surveys").delete(id);
