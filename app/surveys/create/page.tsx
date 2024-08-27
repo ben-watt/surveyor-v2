@@ -19,9 +19,7 @@ function Home() {
         <div className="flex justify-center">
           <h1 className="text-3xl dark:text-white mb-8 mt-8">Building Survey Report</h1>
         </div>
-        <Suspense>
-          <BuildingSurveyForm id={newFormId} />
-        </Suspense>
+        <BuildingSurveyForm id={newFormId} />
       </div>
     </>
   )

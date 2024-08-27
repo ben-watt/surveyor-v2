@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import "./globals.css";
 import ConfigureAmplifyClientSide from "./components/ConfigureAmplify";
@@ -7,6 +7,7 @@ import "instantsearch.css/themes/satellite.css";
 import { Authenticator } from "@aws-amplify/ui-react";
 import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -15,18 +16,18 @@ export default function RootLayout({
 }) {
   return (
     <>
-        <ConfigureAmplifyClientSide />
-        <Authenticator.Provider>
-          <div className="print:hidden">
-            <SecureNav />
-            <Toaster position="top-right" />
+      <ConfigureAmplifyClientSide />
+      <Authenticator.Provider>
+        <div className="print:hidden">
+          <SecureNav />
+          <Toaster position="top-right" />
+        </div>
+        <div className="m-auto max-w-[85rem] print:max-w-max">
+          <div className="m-2 md:m-10 print:m-0">
+            <Suspense>{children}</Suspense>
           </div>
-          <div className="m-auto max-w-[85rem] print:max-w-max">
-            <div className="m-2 md:m-10 print:m-0">
-              {children}
-            </div>
-          </div>
-        </Authenticator.Provider>
+        </div>
+      </Authenticator.Provider>
     </>
   );
 }

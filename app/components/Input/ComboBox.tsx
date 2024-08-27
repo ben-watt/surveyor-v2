@@ -24,6 +24,7 @@ import { Label } from "./Label";
 interface ComboboxProps {
   data: { value: string; label: string }[];
   labelTitle?: string;
+  onAddNew?: () => void;
   register: () => UseFormRegisterReturn<string>;
 }
 
@@ -83,7 +84,18 @@ export function Combobox(props: ComboboxProps) {
                   </CommandItem>
                 ))}
               </CommandGroup>
+           
             </CommandList>
+            {props.onAddNew && (
+            <CommandGroup>
+                <CommandItem
+                  value="Create new..."
+                  onSelect={() => props.onAddNew && props.onAddNew()}
+                >
+                  Create new...
+                </CommandItem>
+            </CommandGroup>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
