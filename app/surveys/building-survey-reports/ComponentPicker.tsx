@@ -67,7 +67,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     { label: string; value: string }[]
   >([]);
 
-  const [addNew, setAddNew] = useState(true);
+  const [addNew, setAddNew] = useState(false);
 
   const [components, setComponents] = useState<ComponentDataWithChild[]>([]);
 
