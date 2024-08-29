@@ -1,5 +1,4 @@
 import { AwsRum, AwsRumConfig } from "aws-rum-web";
-import { useEffect } from "react";
 
 try {
   const config: AwsRumConfig = {

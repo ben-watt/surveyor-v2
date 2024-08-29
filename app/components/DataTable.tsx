@@ -46,14 +46,14 @@ export function DataTable<TData>({
   initialState,
   columns,
   data,
-  isLoading
+  isLoading,
 }: DataTableProps<TData>) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-  const [globalFilter, setGlobalFilter] = React.useState('')
+  const [globalFilter, setGlobalFilter] = React.useState("");
 
   const table = useReactTable({
     initialState,
@@ -78,8 +78,8 @@ export function DataTable<TData>({
       <div className="mb-3">
         <div className="flex items-center py-4">
           <DebouncedInput
-            value={globalFilter ?? ''}
-            onChange={value => setGlobalFilter(String(value))}
+            value={globalFilter ?? ""}
+            onChange={(value) => setGlobalFilter(String(value))}
             className="max-w-sm"
             placeholder="Filter..."
           />
@@ -157,7 +157,15 @@ export function DataTable<TData>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                    {isLoading ? <div className="flex space-x-2">{columns.map((c) => (<Skeleton key={c.id} className="h-4 w-full" />))}</div> : "Empty"}
+                  {isLoading ? (
+                    <div className="flex space-x-2">
+                      {columns.map((c, i) => (
+                        <Skeleton key={i} className="h-4 w-full" />
+                      ))}
+                    </div>
+                  ) : (
+                    "Empty"
+                  )}
                 </TableCell>
               </TableRow>
             )}
@@ -203,32 +211,35 @@ export function SortableHeader<TData>({
   );
 }
 
-
 function DebouncedInput({
   value: initialValue,
   onChange,
   debounce = 500,
   ...props
 }: {
-  value: string | number
-  onChange: (value: string | number) => void
-  debounce?: number
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
-  const [value, setValue] = React.useState(initialValue)
+  value: string | number;
+  onChange: (value: string | number) => void;
+  debounce?: number;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+  const [value, setValue] = React.useState(initialValue);
 
   React.useEffect(() => {
-    setValue(initialValue)
-  }, [initialValue])
+    setValue(initialValue);
+  }, [initialValue]);
 
   React.useEffect(() => {
     const timeout = setTimeout(() => {
-      onChange(value)
-    }, debounce)
+      onChange(value);
+    }, debounce);
 
-    return () => clearTimeout(timeout)
-  }, [value])
+    return () => clearTimeout(timeout);
+  }, [value]);
 
   return (
-    <Input  {...props} value={value} onChange={e => setValue(e.target.value)} />
-  )
+    <Input
+      {...props}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
+  );
 }

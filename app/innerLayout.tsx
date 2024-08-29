@@ -9,7 +9,7 @@ import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
 import { Suspense } from "react";
 import { DynamicDrawerProvider } from "./components/Drawer";
-import { ConfigureAwsRum } from "./AwsRum";
+import { ConfigureAwsRum } from "./components/ConfigureAwsRum";
 
 
 
