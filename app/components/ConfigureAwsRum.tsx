@@ -20,7 +20,7 @@ try {
     APPLICATION_REGION,
     config
   );
-
+  
   console.log("[AWS Rum] AWS RUM initialized successfully");
 
 } catch (error) {

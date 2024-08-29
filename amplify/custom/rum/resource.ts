@@ -20,6 +20,7 @@ export class CloudwatchRum extends Construct {
     const { guestRole, identityPoolId, domain } = props;
 
     // Create CloudWatch RUM AppMonitor
+    const appMonitorPrefix = process.env.APP_MONITOR_NAME;
     const appMonitorName = `app-monitor-${Stack.of(this).stackName}`;
     const appmonitorArn = `arn:aws:rum:${Stack.of(this).region}:${Stack.of(this).account}:appmonitor/${appMonitorName}`;
     const appMonitor = new CfnAppMonitor(this, "AppMonitor", {
@@ -36,9 +37,10 @@ export class CloudwatchRum extends Construct {
       cwLogEnabled: false,
     });
 
+   
     // Create custom function to get AppMonitorId
-    const functionName = "CustomGetAppMonitorFn";
-    const logGroup = new LogGroup(this, "CustomGetAppMonitorFnLogGroup", {
+    const functionName = `${appMonitorPrefix}Fn`;
+    const logGroup = new LogGroup(this, `${functionName}LogGroup`, {
       logGroupName: `/aws/lambda/${functionName}`,
       removalPolicy: RemovalPolicy.DESTROY,
       retention: RetentionDays.ONE_DAY,
@@ -56,7 +58,7 @@ export class CloudwatchRum extends Construct {
         resources: [appmonitorArn],
       }),
     );
-    const customResource = new CustomResource(this, "CustomResource", {
+    const customResource = new CustomResource(this, `${appMonitorPrefix}CustomResource`, {
       serviceToken: customGetAppMonitorFn.functionArn,
       properties: {
         appMonitorName,
@@ -65,7 +67,7 @@ export class CloudwatchRum extends Construct {
     customResource.node.addDependency(appMonitor);
 
     // Attach an inline policy to the guest role to allow it to send events to the AppMonitor
-    const guestRoleResource = Role.fromRoleArn(this, "GuestRole", guestRole.roleArn);
+    const guestRoleResource = Role.fromRoleArn(this, `${appMonitorPrefix}GuestRole`, guestRole.roleArn);
     guestRoleResource.attachInlinePolicy(
       new Policy(this, "CwRumPolicy", {
         policyName: "CwRumPolicy",
