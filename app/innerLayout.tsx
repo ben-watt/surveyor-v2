@@ -9,6 +9,9 @@ import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
 import { Suspense } from "react";
 import { DynamicDrawerProvider } from "./components/Drawer";
+import { ConfigureAwsRum } from "./AwsRum";
+
+
 
 export default function RootLayout({
   children,
@@ -18,6 +21,7 @@ export default function RootLayout({
   return (
     <>
       <ConfigureAmplifyClientSide />
+      <ConfigureAwsRum />
       <Authenticator.Provider>
       <DynamicDrawerProvider>
         <div className="print:hidden">
