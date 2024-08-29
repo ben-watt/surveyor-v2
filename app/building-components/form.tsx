@@ -32,6 +32,7 @@ interface DataFormProps {
 export function DataForm({ id }: DataFormProps) {
   const methods = useForm<ComponentDataUpdate>({});
   const { register, handleSubmit } = methods;
+  const [isLoading, setIsLoading] = useState(true);
 
   const [elements, setElements] = useState<Schema["Elements"]["type"][]>([]);
   const router = useRouter();
@@ -43,6 +44,7 @@ export function DataForm({ id }: DataFormProps) {
           const response = await reportClient.models.Components.get({ id });
           console.log(response.data);
           methods.reset(response.data as ComponentDataUpdate);
+          setIsLoading(false);
         } catch (error) {
           console.error("Failed to fetch data", error);
         }
@@ -57,6 +59,10 @@ export function DataForm({ id }: DataFormProps) {
       try {
         const response = await reportClient.models.Elements.list();
         setElements(response.data);
+
+        if(!id) {
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("Failed to fetch elements", error);
       }
@@ -89,6 +95,10 @@ export function DataForm({ id }: DataFormProps) {
 
     saveData();
   };
+
+  if(isLoading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <FormProvider {...methods}>

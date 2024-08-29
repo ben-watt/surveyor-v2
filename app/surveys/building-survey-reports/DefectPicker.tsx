@@ -10,6 +10,7 @@ import {
 } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@aws-amplify/ui-react";
+import { Label as InputLabel } from "@/app/components/Input/Label";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 
 interface DefectCheckboxProps {

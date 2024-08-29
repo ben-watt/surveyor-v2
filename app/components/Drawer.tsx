@@ -1,8 +1,8 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
-import { useMediaQuery } from 'usehooks-ts'
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { useMediaQuery } from "usehooks-ts";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -20,54 +20,92 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/drawer";
 
-interface DynamicDrawerProps {
-
+interface DynamicDrawerOpenArgs {
+  title: string;
+  description?: string;
+  content?: React.ReactNode;
 }
 
-export function DynamicDrawer({ children } : React.PropsWithChildren<DynamicDrawerProps>) {
-  const [open, setOpen] = React.useState(false)
-  const isDesktop = useMediaQuery("(min-width: 768px)")
-  const title = "Edit profile"
-  const buttonLabel = "Edit profile"
-  const description = "Make changes to your profile here. Click save when you're done."
-  const trigger = <Button variant="outline">{buttonLabel}</Button>
+interface DynamicDrawerContextType {
+  openDrawer: (props: DynamicDrawerOpenArgs) => void;
+}
 
-  if (isDesktop) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {trigger}
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>
-              {description}
-            </DialogDescription>
-          </DialogHeader>
-          {children}
-        </DialogContent>
-      </Dialog>
-    )
+const DynamicDrawerContext = React.createContext<DynamicDrawerContextType>({
+  openDrawer: (props: DynamicDrawerOpenArgs) => {},
+});
+
+export function useDynamicDrawer() {
+  const context = React.useContext(DynamicDrawerContext);
+  if (!context) {
+    throw new Error("useDynamicDrawer must be used within a DynamicDrawerProvider");
+  }
+  return context;
+}
+
+export function DynamicDrawerProvider({
+  children,
+}: React.PropsWithChildren<{}>) {
+  const [state, setState] = React.useState(
+    {
+      isOpen: false,
+      props: {} as DynamicDrawerOpenArgs,
+    });
+
+  function handleOpenDrawer(props: DynamicDrawerOpenArgs) {
+    setState({ isOpen: true, props });
+  }
+
+  function handleCloseDrawer() {
+    setState({ isOpen: false, props: {} as DynamicDrawerOpenArgs });
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        <Button variant="outline">{buttonLabel}</Button>
-      </DrawerTrigger>
+    <DynamicDrawerContext.Provider value={{ openDrawer: handleOpenDrawer }}>
+      {children}
+      <DynamicDrawer isOpen={state.isOpen} handleClose={handleCloseDrawer} {...state.props} />
+    </DynamicDrawerContext.Provider>
+  );
+}
+
+
+interface DynamicDrawerProps extends DynamicDrawerOpenArgs {
+  isOpen: boolean;
+  handleClose: () => void;
+}
+
+export function DynamicDrawer({
+  title,
+  description,
+  content,
+  isOpen,
+  handleClose
+}: DynamicDrawerProps) {
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  if (isDesktop) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+        <DialogContent className="sm:max-w-[425px] max-h-full overflow-scroll">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
+          {content}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={isOpen}>
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>
-            {description}
-          </DrawerDescription>
+          <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        {children}
+        {content}
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
@@ -75,5 +113,5 @@ export function DynamicDrawer({ children } : React.PropsWithChildren<DynamicDraw
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
-  )
+  );
 }

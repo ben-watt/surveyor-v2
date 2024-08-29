@@ -14,7 +14,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import Input from "../../components/Input/InputText";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/AmplifyDataClient";
-import { Pencil, X } from "lucide-react";
+import { Pencil, TextCursor, X } from "lucide-react";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { Button } from "@/components/ui/button";
 import { Schema } from "@/amplify/data/resource";
@@ -27,8 +27,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
-import { DynamicDrawer } from "@/app/components/Drawer";
+import { DynamicDrawer, useDynamicDrawer } from "@/app/components/Drawer";
 import { DefectCheckbox } from "./DefectPicker";
+import { Label } from "@/app/components/Input/Label";
+
+import { DataForm as BuildingComponentsForm } from "@/app/building-components/form";
 
 interface ComponentPickerProps {
   name: string;
@@ -66,8 +69,6 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   const [comboBoxProps, setComboBoxProps] = useState<
     { label: string; value: string }[]
   >([]);
-
-  const [addNew, setAddNew] = useState(false);
 
   const [components, setComponents] = useState<ComponentDataWithChild[]>([]);
 
@@ -140,6 +141,11 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     return material.defects as Defect[];
   }
 
+  function getComponentIdFor(materialComponentName: string): string | undefined {
+    const [componentName, materialName] = materialComponentName.split("_");
+    return components.find((c) => c.name === componentName)?.id;
+  }
+
   const mapValueToColor = (value: RagStatus) => {
     switch (value) {
       case "Red":
@@ -152,6 +158,25 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
         return "bg-gray-400";
     }
   };
+
+
+  const { openDrawer } = useDynamicDrawer();
+
+  function handleEdit(componentName: string) {
+
+    const componentId = getComponentIdFor(componentName);
+
+    console.log("[ComponentPicker] handleEdit", componentName, componentId);
+    if (!componentId) {
+      return;
+    }
+
+    openDrawer({
+      title: "Edit Component",
+      description: "Edit the component",
+      content: <BuildingComponentsForm id={componentId} />,
+    });
+  }
 
   if (components.length === 0) {
     return (
@@ -166,28 +191,29 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   return (
     <div className="space-y-2">
       <div className="space-y-2">
-        {addNew && <DynamicDrawer />}
         {fields.map((field, index) => {
+
+          const useNameOveride = watch(`${typedName}.${index}.useNameOveride` as const);
+          const id = watch(`${typedName}.${index}.id` as const);
+
           return (
             <div
               key={field.id}
               className="border border-grey-600 rounded p-4 relative space-y-2"
             >
-              <Button
-                className="p-0 absolute -top-1 right-0 hover:bg-transparent"
-                variant="ghost"
-                onClick={(ev) => remove(index)}
-              >
-                <X className="w-8 text-red-400" />
-              </Button>
+              <div className="flex items-center justify-end space-x-2 h-2">
+                {id && (<Pencil className="hover:cursor-pointer"  size={15} onClick={ev => handleEdit(id)}/>)}
+                <X className="text-red-400 hover:cursor-pointer" size={20} onClick={ev => remove(id)} />
+              </div>
               <div className="flex space-x-2 items-end">
                 <div className="flex-grow overflow-hidden">
-                  {!watch(`${typedName}.${index}.useNameOveride` as const) && (
+                  {!useNameOveride && (
                     <>
                       <Combobox
                         labelTitle="Material Component"
                         key={field.id}
                         data={comboBoxProps}
+                        addNewComponent={<BuildingComponentsForm />}
                         register={() =>
                           register(`${typedName}.${index}.id` as const, {
                             required: true,
@@ -202,7 +228,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                       />
                     </>
                   )}
-                  {watch(`${typedName}.${index}.useNameOveride` as const) && (
+                  {useNameOveride && (
                     <>
                       <Input
                         labelTitle="Material Component - Name Overide"
@@ -221,22 +247,19 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                     </>
                   )}
                 </div>
-                {watch(`${typedName}.${index}.id` as const) && (
+                {id && (
                   <Controller
                     name={`${typedName}.${index}.useNameOveride` as const}
                     render={({ field }) => (
                       <Toggle
                         {...field}
                         onPressedChange={(v) => {
-                          const id = getValues(
-                            `${typedName}.${index}.id` as const
-                          );
                           setValue(`${typedName}.${index}.name`, id);
                           setValue(`${typedName}.${index}.useNameOveride`, v);
                         }}
                         variant="outline"
                       >
-                        <Pencil className="w-4" />
+                        <TextCursor className="w-4" />
                       </Toggle>
                     )}
                   />
@@ -255,7 +278,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                             <SelectValue placeholder="RAG" hidden />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="N/I"><div className="flex justify-between items-center w-full"><div>N.I</div><div className="w-4 h-4 rounded-lg bg-slate-400"></div></div></SelectItem>
+                            <SelectItem value="N/I">N/I</SelectItem>
                             <SelectItem value="Red">Red</SelectItem>
                             <SelectItem value="Amber">Amber</SelectItem>
                             <SelectItem value="Green">Green</SelectItem>
@@ -284,11 +307,10 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                   />
                 </div>
               )}
-              {watch(`${typedName}.${index}.id` as const) && (
+              {id && (
                 <div className="p-4">
-                  {getDefectsFor(
-                    watch(`${typedName}.${index}.id` as const)
-                  ).map((defect, defectIndex) => (
+                  <Label key={`${typedName}.${index}.id`} text={"Defects"} />
+                  {getDefectsFor(id).map((defect, defectIndex) => (
                     <DefectCheckbox
                       key={defectIndex.toString()}
                       defect={defect}

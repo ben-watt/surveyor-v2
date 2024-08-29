@@ -20,20 +20,32 @@ import {
 } from "@/components/ui/popover";
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
 import { Label } from "./Label";
+import { useDynamicDrawer } from "../Drawer";
 
 interface ComboboxProps {
   data: { value: string; label: string }[];
   labelTitle?: string;
-  onAddNew?: () => void;
+  addNewComponent?: React.ReactNode;
   register: () => UseFormRegisterReturn<string>;
 }
 
 export function Combobox(props: ComboboxProps) {
   const { setValue, getValues } = useFormContext();
+  const { openDrawer } = useDynamicDrawer();
   const reg = props.register();
   const value = getValues(reg.name);
 
   const [open, setOpen] = React.useState(false);
+
+  function handleAddNew(): void {
+    if(props.addNewComponent) {
+      openDrawer({
+        title: "Create new component",
+        content: props.addNewComponent,
+      });
+    }
+    
+  }
 
   return (
     <div>
@@ -54,7 +66,7 @@ export function Combobox(props: ComboboxProps) {
         </PopoverTrigger>
         <PopoverContent className="p-0" align="start">
           <Command>
-            <CommandInput 
+            <CommandInput
               placeholder="Search..."
               className="h-9 border-none focus:ring-0"
             />
@@ -66,10 +78,7 @@ export function Combobox(props: ComboboxProps) {
                     key={d.value}
                     value={d.label}
                     onSelect={() => {
-                      setValue(
-                        reg.name,
-                        d.value === value ? "" : d.value
-                      );
+                      setValue(reg.name, d.value === value ? "" : d.value);
                       setOpen(false);
                     }}
                     {...reg}
@@ -84,17 +93,13 @@ export function Combobox(props: ComboboxProps) {
                   </CommandItem>
                 ))}
               </CommandGroup>
-           
             </CommandList>
-            {props.onAddNew && (
-            <CommandGroup>
-                <CommandItem
-                  value="Create new..."
-                  onSelect={() => props.onAddNew && props.onAddNew()}
-                >
+            {props.addNewComponent && (
+              <CommandGroup forceMount>
+                <CommandItem value="Create new..." onSelect={ev => handleAddNew()}>
                   Create new...
                 </CommandItem>
-            </CommandGroup>
+              </CommandGroup>
             )}
           </Command>
         </PopoverContent>

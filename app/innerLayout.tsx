@@ -8,6 +8,7 @@ import { Authenticator } from "@aws-amplify/ui-react";
 import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
 import { Suspense } from "react";
+import { DynamicDrawerProvider } from "./components/Drawer";
 
 export default function RootLayout({
   children,
@@ -18,6 +19,7 @@ export default function RootLayout({
     <>
       <ConfigureAmplifyClientSide />
       <Authenticator.Provider>
+      <DynamicDrawerProvider>
         <div className="print:hidden">
           <SecureNav />
           <Toaster position="top-right" />
@@ -27,6 +29,7 @@ export default function RootLayout({
             <Suspense>{children}</Suspense>
           </div>
         </div>
+        </DynamicDrawerProvider>
       </Authenticator.Provider>
     </>
   );
