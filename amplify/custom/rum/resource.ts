@@ -45,7 +45,7 @@ export class CloudwatchRum extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       retention: RetentionDays.ONE_DAY,
     });
-    const customGetAppMonitorFn = new NodejsFunction(this, "CustomGetAppMonitorFn", {
+    const customGetAppMonitorFn = new NodejsFunction(this, functionName, {
       functionName,
       entry: url.fileURLToPath(new URL("index.ts", import.meta.url)),
       runtime: Runtime.NODEJS_20_X,
