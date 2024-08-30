@@ -447,13 +447,14 @@ function Report({ initFormValues }: ReportProps) {
     try {
       let form = watch();
 
+      form.status = "created";
+      
       let _ = db.surveys.update({
         id: form.id,
-        status: "created",
         content: JSON.stringify(form),
       });
 
-      successToast("Updated Survey");
+      successToast("Survey Saved");
 
       router.push("/surveys");
     } catch (error) {

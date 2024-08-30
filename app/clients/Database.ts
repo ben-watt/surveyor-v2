@@ -61,6 +61,8 @@ const useListSurveys = () : [boolean, Survey[]] => {
   useEffect(() => {
     const fetchLocalSurveys = async (): Promise<void> => {
       const surveys = await dexieDb.surveys.toArray();
+      console.debug("[useListSurveys] Fetched local surveys", surveys);
+      
       setData(surveys);
       setIsLoading(false);
     };
@@ -71,7 +73,7 @@ const useListSurveys = () : [boolean, Survey[]] => {
     const fetchRemoteSurveys = async () => {
       const response = await client.models.Surveys.list();
 
-      console.debug("[useListSurveys] Fetching remote surveys", response);
+      console.debug("[useListSurveys] Fetched remote surveys", response);
       const newRecordsOnServer = response.data.map(
         async (d) => await updateLocalDbIfNewer(dexieDb.surveys, d)
       );
