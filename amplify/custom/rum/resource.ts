@@ -20,7 +20,7 @@ export class CloudwatchRum extends Construct {
     const { guestRole, identityPoolId, domain } = props;
 
     // Create CloudWatch RUM AppMonitor
-    const appMonitorPrefix = process.env.APP_MONITOR_NAME;
+    const appMonitorPrefix = process.env.CLOUDWATCH_RUM_APP_MONITOR_NAME;
     const appMonitorName = `app-monitor-${Stack.of(this).stackName}`;
     const appmonitorArn = `arn:aws:rum:${Stack.of(this).region}:${Stack.of(this).account}:appmonitor/${appMonitorName}`;
     const appMonitor = new CfnAppMonitor(this, "AppMonitor", {

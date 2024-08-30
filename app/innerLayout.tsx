@@ -13,8 +13,6 @@ import { ConfigureAwsRum } from "./components/ConfigureAwsRum";
 import { getCurrentUser } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
 
-
-
 export default function RootLayout({
   children,
 }: {
