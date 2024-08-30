@@ -53,6 +53,7 @@ export default function SecureNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [profileHref, setProfileHref] = useState<string | undefined>();
   const cmdBarRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen && cmdBarRef.current) {
@@ -62,14 +63,18 @@ export default function SecureNav() {
 
   useEffect(() => {
     async function getProfilePic() {
-      const userAttributes = await fetchUserAttributes();
-      const pPic = userAttributes?.profile;
-      if (pPic) {
-        const presignedUrl = await getUrl({
-          path: pPic,
-        });
+      try {
+        const userAttributes = await fetchUserAttributes();
+        const pPic = userAttributes?.profile;
+        if (pPic) {
+          const presignedUrl = await getUrl({
+            path: pPic,
+          });
 
-        setProfileHref(presignedUrl.url.href);
+          setProfileHref(presignedUrl.url.href);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile picture", error);
       }
     }
 

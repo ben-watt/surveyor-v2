@@ -7,9 +7,11 @@ import "instantsearch.css/themes/satellite.css";
 import { Authenticator } from "@aws-amplify/ui-react";
 import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { DynamicDrawerProvider } from "./components/Drawer";
 import { ConfigureAwsRum } from "./components/ConfigureAwsRum";
+import { getCurrentUser } from "aws-amplify/auth";
+import { useRouter } from "next/navigation";
 
 
 
@@ -18,6 +20,25 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
+  
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        // You must be authenticated to make this request so it'll failed if you're not
+        const user = await getCurrentUser();
+        console.log("[RootLayout] User: ", user);
+        setIsAuthenticated(true);
+      } catch (err) {
+        console.warn("[RootLayout] Error fetching user: ", err);
+        router.push("/login");
+      }
+    }
+
+    fetchUser();
+  }, [router]);
+
   return (
     <>
       <ConfigureAmplifyClientSide />
@@ -25,7 +46,7 @@ export default function RootLayout({
       <Authenticator.Provider>
       <DynamicDrawerProvider>
         <div className="print:hidden">
-          <SecureNav />
+          { isAuthenticated && <SecureNav /> }
           <Toaster position="top-right" />
         </div>
         <div className="m-auto max-w-[85rem] print:max-w-max">
