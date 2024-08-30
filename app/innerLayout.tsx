@@ -11,7 +11,7 @@ import { Suspense, useEffect, useState } from "react";
 import { DynamicDrawerProvider } from "./components/Drawer";
 import { ConfigureAwsRum } from "./components/ConfigureAwsRum";
 import { getCurrentUser } from "aws-amplify/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function RootLayout({
   children,
@@ -20,6 +20,7 @@ export default function RootLayout({
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
+  const path = usePathname();
   
   useEffect(() => {
     async function fetchUser() {
@@ -35,7 +36,7 @@ export default function RootLayout({
     }
 
     fetchUser();
-  }, [router]);
+  }, [router, path]);
 
   return (
     <>
