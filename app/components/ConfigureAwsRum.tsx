@@ -1,16 +1,26 @@
 import { AwsRum, AwsRumConfig } from "aws-rum-web";
 
+
+function env(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Environment variable ${name} is not set`);
+  }
+  return value;
+}
+
 try {
+  
   const config: AwsRumConfig = {
     sessionSampleRate: 1,
-    identityPoolId: "eu-west-1:adde7228-3eb3-48d6-9640-7ca39ffd2b1c",
+    identityPoolId: env("CLOUDWATCH_RUM_IDENTITY_POOL_ID"),
     endpoint: "https://dataplane.rum.eu-west-1.amazonaws.com",
     telemetries: ["errors","http","performance"],
     allowCookies: true,
     enableXRay: true
   };
 
-  const APPLICATION_ID: string = '0b254f14-f7e2-47bb-988e-957faac09bc6';
+  const APPLICATION_ID: string = env("CLOUDWATCH_RUM_APPLICATOIN_ID");
   const APPLICATION_VERSION: string = '1.0.0';
   const APPLICATION_REGION: string = 'eu-west-1';
 
