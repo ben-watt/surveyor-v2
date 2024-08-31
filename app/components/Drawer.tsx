@@ -84,6 +84,8 @@ export function DynamicDrawer({
 }: DynamicDrawerProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
+  console.log("[DynamicDrawer] isDesktop", isOpen);
+
   if (isDesktop) {
     return (
       <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
@@ -92,20 +94,24 @@ export function DynamicDrawer({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          {content}
+          <div className="p-4">
+            {content}
+          </div>
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer open={isOpen}>
+    <Drawer open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        {content}
+        <div className="p-4">
+            {content}
+          </div>
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>

@@ -268,7 +268,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                   name={`${typedName}.${index}.ragStatus`}
                   render={({ field }) => {
                     return (
-                      <div {...field}>
+                      <div {...field} className="w-10 h-10">
                         <Select>
                           <SelectTrigger
                             className={`text-white rounded w-10 h-10 ${mapValueToColor(
