@@ -19,21 +19,23 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 
 interface DynamicDrawerOpenArgs {
   title: string;
   description?: string;
   content?: React.ReactNode;
+  contentFn?: () => React.ReactNode;
 }
 
 interface DynamicDrawerContextType {
   openDrawer: (props: DynamicDrawerOpenArgs) => void;
+  closeDrawer: () => void;
 }
 
 const DynamicDrawerContext = React.createContext<DynamicDrawerContextType>({
   openDrawer: (props: DynamicDrawerOpenArgs) => {},
+  closeDrawer: () => {},
 });
 
 export function useDynamicDrawer() {
@@ -62,7 +64,7 @@ export function DynamicDrawerProvider({
   }
 
   return (
-    <DynamicDrawerContext.Provider value={{ openDrawer: handleOpenDrawer }}>
+    <DynamicDrawerContext.Provider value={{ openDrawer: handleOpenDrawer, closeDrawer: handleCloseDrawer }}>
       {children}
       <DynamicDrawer isOpen={state.isOpen} handleClose={handleCloseDrawer} {...state.props} />
     </DynamicDrawerContext.Provider>
@@ -94,7 +96,7 @@ export function DynamicDrawer({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <div className="p-4">
+          <div className="p-2">
             {content}
           </div>
         </DialogContent>

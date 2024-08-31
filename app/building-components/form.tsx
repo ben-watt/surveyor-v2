@@ -27,10 +27,12 @@ type ComponentDataUpdate = Omit<
 
 interface DataFormProps {
   id?: string;
+  defaultValues?: ComponentDataUpdate;
+  onSave?: () => void;
 }
 
-export function DataForm({ id }: DataFormProps) {
-  const methods = useForm<ComponentDataUpdate>({});
+export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
+  const methods = useForm<ComponentDataUpdate>({ defaultValues: defaultValues });
   const { register, handleSubmit } = methods;
   const [isLoading, setIsLoading] = useState(true);
 
@@ -86,11 +88,12 @@ export function DataForm({ id }: DataFormProps) {
         }
 
         successToast("Saved");
-        router.push("/building-components");
       } catch (error) {
         console.error("Failed to save data", error);
         basicToast(`Error unable to save data.`);
       }
+
+      onSave && onSave();
     };
 
     saveData();

@@ -20,32 +20,20 @@ import {
 } from "@/components/ui/popover";
 import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
 import { Label } from "./Label";
-import { useDynamicDrawer } from "../Drawer";
 
 interface ComboboxProps {
   data: { value: string; label: string }[];
   labelTitle?: string;
-  addNewComponent?: React.ReactNode;
+  onCreateNew?: () => any | void;
   register: () => UseFormRegisterReturn<string>;
 }
 
 export function Combobox(props: ComboboxProps) {
   const { setValue, getValues } = useFormContext();
-  const { openDrawer } = useDynamicDrawer();
   const reg = props.register();
   const value = getValues(reg.name);
 
   const [open, setOpen] = React.useState(false);
-
-  function handleAddNew(): void {
-    if(props.addNewComponent) {
-      openDrawer({
-        title: "Create new component",
-        content: props.addNewComponent,
-      });
-    }
-    
-  }
 
   return (
     <div>
@@ -94,9 +82,9 @@ export function Combobox(props: ComboboxProps) {
                 ))}
               </CommandGroup>
             </CommandList>
-            {props.addNewComponent && (
+            {props.onCreateNew && (
               <CommandGroup forceMount>
-                <CommandItem value="Create new..." onSelect={ev => handleAddNew()}>
+                <CommandItem value="Create new..." onSelect={ev => props.onCreateNew && props.onCreateNew()}>
                   Create new...
                 </CommandItem>
               </CommandGroup>

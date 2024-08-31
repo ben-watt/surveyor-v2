@@ -32,6 +32,7 @@ import { DefectCheckbox } from "./DefectPicker";
 import { Label } from "@/app/components/Input/Label";
 
 import { DataForm as BuildingComponentsForm } from "@/app/building-components/form";
+import { v4 } from "uuid";
 
 interface ComponentPickerProps {
   name: string;
@@ -54,7 +55,7 @@ type ComponentDataWithChild = ComponentData & {
 
 export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`;
-  const { control, register, watch, setValue, getValues, formState } =
+  const { control, register, watch, setValue, formState } =
     useFormContext();
   const { fields, remove, append } = useFieldArray({
     name: typedName,
@@ -160,7 +161,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   };
 
 
-  const { openDrawer } = useDynamicDrawer();
+  const { openDrawer, closeDrawer } = useDynamicDrawer();
 
   function handleEdit(componentName: string) {
 
@@ -174,7 +175,25 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     openDrawer({
       title: "Edit Component",
       description: "Edit the component",
-      content: <BuildingComponentsForm id={componentId} />,
+      content: <BuildingComponentsForm id={componentId} onSave={() => closeDrawer()} />,
+    });
+  }
+
+  function handleCreateNew(newComponentElementId: string) {
+    openDrawer({
+      title: "Create new component",
+      description: "Create a new component",
+      content: (
+        <BuildingComponentsForm
+          onSave={() => closeDrawer()}
+          defaultValues={{
+            id: v4(),
+            elementId: newComponentElementId,
+            name: "",
+            materials: [],
+          }}
+        />
+      ),
     });
   }
 
@@ -213,7 +232,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                         labelTitle="Material Component"
                         key={field.id}
                         data={comboBoxProps}
-                        addNewComponent={<BuildingComponentsForm />}
+                        onCreateNew={() => handleCreateNew(elementId)}
                         register={() =>
                           register(`${typedName}.${index}.id` as const, {
                             required: true,
