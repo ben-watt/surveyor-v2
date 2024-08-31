@@ -95,6 +95,20 @@ const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
   );
 };
 
+const fallback = (value: any, fallbackValue: any) => {
+  if(value === undefined || value === null) 
+    return fallbackValue;
+  
+  switch (typeof value) {
+    case "string":
+      return value.length > 0 ? value : fallbackValue;
+    case "number":
+      return value === 0 ? value : fallbackValue;
+    default:
+      return fallbackValue;
+  }
+}
+
 /// This must be a sync function
 /// It needs to be rendered to a basic string rather than a react component
 export default function PDF({ form }: PdfProps) {
@@ -283,8 +297,10 @@ export default function PDF({ form }: PdfProps) {
           <p>{form.propertyDescription.constructionDetails.value}</p>
           <h3>Year of Construction</h3>
           <p>{form.propertyDescription.yearOfConstruction.value}</p>
-          <h3>Year of Refurbishment</h3>
-          <p>{form.propertyDescription.yearOfRefurbishment.value}</p>
+          <h3>Year of Extensions</h3>
+          <p>{fallback(form.propertyDescription.yearOfExtensions.value, "N/A")}</p>
+          <h3>Year of Conversions</h3>
+          <p>{fallback(form.propertyDescription.yearOfConversions.value, "N/A")}</p>
           <h3>Grounds</h3>
           <p>{form.propertyDescription.grounds.value}</p>
           <h3>Services</h3>

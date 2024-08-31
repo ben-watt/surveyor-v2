@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
 import { useMediaQuery } from "usehooks-ts";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -85,8 +83,6 @@ export function DynamicDrawer({
   handleClose
 }: DynamicDrawerProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  console.log("[DynamicDrawer] isDesktop", isOpen);
 
   if (isDesktop) {
     return (

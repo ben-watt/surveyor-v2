@@ -11,13 +11,10 @@ import {
 import {
   useForm,
   FormProvider,
-  Controller,
-  useFieldArray,
   UseFormRegister,
   FieldValues,
   Path,
 } from "react-hook-form";
-import { ErrorMessage } from "@hookform/error-message";
 import { InputToggle } from "../../components/Input/InputToggle";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "../../components/Input/InputText";
@@ -257,11 +254,18 @@ const createDefaultFormValues = async (id: string): Promise<BuildingSurveyForm> 
         placeholder: "Year of Construction",
         required: true,
       },
-      yearOfRefurbishment: {
+      yearOfExtensions: {
         type: "number",
         value: 0,
-        label: "Year of Refurbishment",
-        placeholder: "Year of Refurbishment",
+        label: "Year of Extensinons",
+        placeholder: "2012",
+        required: false,
+      },
+      yearOfConversions: {
+        type: "number",
+        value: 0,
+        label: "Year of Conversions",
+        placeholder: "2004",
         required: false,
       },
       constructionDetails: {
@@ -468,270 +472,197 @@ function Report({ initFormValues }: ReportProps) {
   };
 
   return (
-        <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit, onError)}>
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit, onError)}>
+        <div>
+          <div className="space-y-4">
             <div>
-              <div className="space-y-4">
-                <div>
-                  <Combobox
-                    labelTitle="Level"
-                    data={[
-                      { label: "Level 2", value: "2" },
-                      { label: "Level 3", value: "3" },
-                    ]}
-                    register={() => register("level", { required: true })}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"level"}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <Input
-                    labelTitle="Address"
-                    placeholder="123 Main St, London, UK"
-                    register={() => register("address", { required: true })}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"address"}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <Input
-                    labelTitle="Client"
-                    placeholder="Mr John Doe"
-                    register={() => register("clientName", { required: true })}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"clientName"}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <Controller
-                    name="inspectionDate"
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field }) => (
-                      <InputDate labelTitle="Inspection Date" {...field} />
-                    )}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"inspectionDate"}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <Input
-                    labelTitle="Weather"
-                    placeholder="Sunny, clear, 20°C"
-                    register={() => register("weather", { required: true })}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"weather"}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <TextAreaInput
-                    labelTitle="Orientation"
-                    register={() => register("orientation", { required: true })}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"orientation"}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <TextAreaInput
-                    labelTitle="Situation"
-                    register={() => register("situation", { required: true })}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"situation"}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <ImageInput
-                    labelText="Money Shot"
-                    rhfProps={{
-                      name: "moneyShot",
-                      rules: { required: true, validate: (v) => v.length == 1 },
-                    }}
-                    minNumberOfFiles={1}
-                    maxNumberOfFiles={1}
-                    path={`report-images/${initFormValues.id}/moneyShot/`}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"moneyShot"}
-                    message="An image is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-                <div>
-                  <ImageInput
-                    labelText="Front Elevation Images"
-                    rhfProps={{
-                      name: "frontElevationImagesUri",
-                      rules: { required: true, validate: (v) => v.length > 0 },
-                    }}
-                    path={`report-images/${initFormValues.id}/frontElevationImages/`}
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={"frontElevationImagesUri"}
-                    message="At least one image is required"
-                    render={({ message }) => InputError({ message })}
-                  />
-                </div>
-              </div>
-              <FormSection title="Property Description">
-                {Object.keys(initFormValues.propertyDescription)?.map((key) => {
-                  const propKey =
-                    key as keyof typeof initFormValues.propertyDescription;
-                  const property = initFormValues.propertyDescription[
-                    propKey
-                  ] as InputT<InputType>;
-                  const reqName =
-                    `propertyDescription.${propKey}.value` as const;
+              <Combobox
+                labelTitle="Level"
+                data={[
+                  { label: "Level 2", value: "2" },
+                  { label: "Level 3", value: "3" },
+                ]}
+                register={() => register("level", { required: true })}
+              />
+            </div>
+            <div>
+              <Input
+                labelTitle="Address"
+                placeholder="123 Main St, London, UK"
+                register={() => register("address", { required: true })}
+              />
+            </div>
+            <div>
+              <Input
+                labelTitle="Client"
+                placeholder="Mr John Doe"
+                register={() => register("clientName", { required: true })}
+              />
+            </div>
+            <div>
+              <InputDate
+                labelTitle="Inspection Date"
+                controllerProps={{
+                  name: "inspectionDate",
+                  rules: {
+                    required: true,
+                    validate: (v) =>
+                      v < new Date() || "Date cannot be in the future",
+                  },
+                }}
+              />
+            </div>
+            <div>
+              <Input
+                labelTitle="Weather"
+                placeholder="Sunny, clear, 20°C"
+                register={() => register("weather", { required: true })}
+              />
+            </div>
+            <div>
+              <TextAreaInput
+                labelTitle="Orientation"
+                register={() => register("orientation", { required: true })}
+              />
+            </div>
+            <div>
+              <TextAreaInput
+                labelTitle="Situation"
+                register={() => register("situation", { required: true })}
+              />
+            </div>
+            <div>
+              <ImageInput
+                labelText="Money Shot"
+                rhfProps={{
+                  name: "moneyShot",
+                  rules: {
+                    validate: (v) =>
+                      v.length == 1 || "Only one image is required",
+                  },
+                }}
+                minNumberOfFiles={1}
+                maxNumberOfFiles={1}
+                path={`report-images/${initFormValues.id}/moneyShot/`}
+              />
+            </div>
+            <div>
+              <ImageInput
+                labelText="Front Elevation Images"
+                rhfProps={{
+                  name: "frontElevationImagesUri",
+                  rules: { validate: (v) => v.length > 0 || "At least one elevation image is required" },
+                }}
+                path={`report-images/${initFormValues.id}/frontElevationImages/`}
+              />
+            </div>
+          </div>
+          <FormSection title="Property Description">
+            {Object.keys(initFormValues.propertyDescription)?.map((key) => {
+              const propKey =
+                key as keyof typeof initFormValues.propertyDescription;
+              const property = initFormValues.propertyDescription[
+                propKey
+              ] as InputT<InputType>;
+              const reqName = `propertyDescription.${propKey}.value` as const;
 
-                  return (
-                    <div key={key} className="mt-1 mb-1">
-                      {mapToInputType(property, reqName, register)}
-                      <ErrorMessage
-                        errors={formState.errors}
-                        name={reqName}
-                        message="This field is required"
-                        render={({ message }) => InputError({ message })}
-                      />
-                    </div>
-                  );
-                })}
-              </FormSection>
-              {sections.map((section, sectionIndex) => {
-                return (
-                  <FormSection
-                    title={section.name}
-                    key={`${section}-${sectionIndex}`}
+              return (
+                <div key={key} className="mt-1 mb-1">
+                  {mapToInputType(property, reqName, register)}
+                </div>
+              );
+            })}
+          </FormSection>
+          {sections.map((section, sectionIndex) => {
+            return (
+              <FormSection
+                title={section.name}
+                key={`${section}-${sectionIndex}`}
+              >
+                {section.elementSections.map((elementSection, i) => (
+                  <section
+                    key={`${sectionIndex}.${i}`}
+                    className="border border-grey-600 p-2 m-2 rounded "
                   >
-                    {section.elementSections.map((elementSection, i) => (
-                      <section
-                        key={`${sectionIndex}.${i}`}
-                        className="border border-grey-600 p-2 m-2 rounded "
-                      >
-                        <InputToggle
-                          defaultValue={elementSection.isPartOfSurvey}
-                          label={elementSection.name}
+                    <InputToggle
+                      defaultValue={elementSection.isPartOfSurvey}
+                      label={elementSection.name}
+                      register={() =>
+                        register(
+                          `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`
+                        )
+                      }
+                    >
+                      <div className="flex-row space-y-2 p-2">
+                        <SmartTextArea
+                          placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
                           register={() =>
                             register(
-                              `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`
+                              `sections.${sectionIndex}.elementSections.${i}.description`,
+                              { required: true, shouldUnregister: true }
                             )
                           }
-                        >
-                          <div className="flex-row space-y-2 p-2">
-                            <SmartTextArea
-                              placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
-                              register={() =>
-                                register(
-                                  `sections.${sectionIndex}.elementSections.${i}.description`,
-                                  { required: true, shouldUnregister: true }
-                                )
-                              }
-                            />
-                            <ErrorMessage
-                              errors={formState.errors}
-                              name={`sections.${sectionIndex}.elementSections.${i}.description`}
-                              render={({ message }) => InputError({ message })}
-                            />
-                            <div>
-                              <ImageInput
-                                rhfProps={{
-                                  name: `sections.${sectionIndex}.elementSections.${i}.images`,
-                                  rules: {
-                                    required: true,
-                                    validate: (v) => v.length > 0,
-                                    shouldUnregister: true,
-                                  },
-                                }}
-                                path={`report-images/${initFormValues.id}/elementSections/${i}/images/`}
-                              />
-                              <ErrorMessage
-                                errors={formState.errors}
-                                name={`sections.${sectionIndex}.elementSections.${i}.images`}
-                                message="At least one image is required"
-                                render={({ message }) =>
-                                  InputError({ message })
-                                }
-                              />
-                            </div>
-                            <ComponentPicker
-                              elementId={elementSection.id}
-                              name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
-                            />
-                          </div>
-                        </InputToggle>
-                      </section>
-                    ))}
-                  </FormSection>
-                );
-              })}
-            </div>
-            <FormSection title="Checklist">
-              {initFormValues.checklist.map((checklist, index) => {
-                return (
-                  <div className="mt-4 mb-4" key={index}>
-                    <div>
-                      {mapToInputType(
-                        checklist,
-                        `checklist.${index}.value`,
-                        register
-                      )}
-                    </div>
-                    <ErrorMessage
-                      errors={formState.errors}
-                      name={`checklist.${index}.value`}
-                      message="This field is required and must be checked"
-                      render={({ message }) => InputError({ message })}
-                    />
-                  </div>
-                );
-              })}
-            </FormSection>
-            <div>
-              {Object.values(formState.errors).length > 0 && (
-                <InputError message="Please fix the errors above before saving" />
-              )}
-            </div>
-            <div className="space-y-2">
-              <PrimaryBtn className="w-full flex justify-center" type="submit">
-                Save
-              </PrimaryBtn>
-              <Button
-                className="w-full flex justify-center"
-                variant="secondary"
-                onClick={saveAsDraft}
-              >
-                Save As Draft
-              </Button>
-            </div>
-          </form>
-        </FormProvider>
+                        />
+                        <div>
+                          <ImageInput
+                            rhfProps={{
+                              name: `sections.${sectionIndex}.elementSections.${i}.images`,
+                              rules: {
+                                validate: (v) =>
+                                  v.length > 0 ||
+                                  "At least one image is required",
+                                shouldUnregister: true,
+                              },
+                            }}
+                            path={`report-images/${initFormValues.id}/elementSections/${i}/images/`}
+                          />
+                        </div>
+                        <ComponentPicker
+                          elementId={elementSection.id}
+                          name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
+                        />
+                      </div>
+                    </InputToggle>
+                  </section>
+                ))}
+              </FormSection>
+            );
+          })}
+        </div>
+        <FormSection title="Checklist">
+          {initFormValues.checklist.map((checklist, index) => {
+            return (
+              <div className="mt-4 mb-4" key={index}>
+                <div>
+                  {mapToInputType(
+                    checklist,
+                    `checklist.${index}.value`,
+                    register
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </FormSection>
+        <div>
+          {Object.values(formState.errors).length > 0 && (
+            <InputError message="Please fix the errors above before saving" />
+          )}
+        </div>
+        <div className="space-y-2">
+          <PrimaryBtn className="w-full flex justify-center" type="submit">
+            Save
+          </PrimaryBtn>
+          <Button
+            className="w-full flex justify-center"
+            variant="secondary"
+            onClick={saveAsDraft}
+          >
+            Save As Draft
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 }

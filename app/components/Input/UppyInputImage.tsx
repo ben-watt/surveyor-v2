@@ -17,11 +17,14 @@ import dynamic from "next/dynamic";
 import {
   FieldPath,
   FieldValues,
+  Form,
   Path,
   useController,
   UseControllerProps,
 } from "react-hook-form";
 import { Label } from "./Label";
+import { ErrorMessage } from "@hookform/error-message";
+import InputError from "../InputError";
 
 interface InputImageUppyProps {
   path: string;
@@ -190,27 +193,29 @@ function InputImageUppy({
   };
 
   return (
-    <div className="relative">
-      <Dashboard
-        showLinkToFileUploadResult={true}
-        singleFileFullScreen={false}        
-        showRemoveButtonAfterComplete={true}
-        doneButtonHandler={() => {}}
-        hideCancelButton={true}
-        height={fileCount > 0 ? 500 : 100}
-        uppy={uppy}
-        showProgressDetails={true}
-        proudlyDisplayPoweredByUppy={false}
-        metaFields={metaFields}
-      />
-      {/* <div className="absolute bottom-1 left-1 text-sm">
+    <div>
+      <div className="relative">
+        <Dashboard
+          showLinkToFileUploadResult={true}
+          singleFileFullScreen={false}
+          showRemoveButtonAfterComplete={true}
+          doneButtonHandler={() => {}}
+          hideCancelButton={true}
+          height={fileCount > 0 ? 500 : 100}
+          uppy={uppy}
+          showProgressDetails={true}
+          proudlyDisplayPoweredByUppy={false}
+          metaFields={metaFields}
+        />
+        {/* <div className="absolute bottom-1 left-1 text-sm">
         {fileCount} files
       </div> */}
-      {showEdit &&  (
-        <div className="absolute top-4 left-4 z-[1005]">
-          <button onClick={handleEdit}>Edit</button>
-        </div>
-      )}
+        {showEdit && (
+          <div className="absolute top-4 left-4 z-[1005]">
+            <button onClick={handleEdit}>Edit</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -245,21 +250,18 @@ type P = Path<OnlyInludeTypes<Test, string[]>>;
 //change FieldPath<TFieldValues> to Path<OnlyInludeTypes<TFieldValues, string[]>>
 // However it is not recursive and will only work for the first level of the object
 
-interface InputImageUppyPropsWithRegister<
-  TFieldValues extends FieldValues,
-  TName extends FieldPath<TFieldValues>
-> extends InputImageUppyProps {
-  rhfProps: UseControllerProps<TFieldValues, TName>;
+interface InputImageUppyPropsWithRegister extends InputImageUppyProps {
+  rhfProps: UseControllerProps<FieldValues>;
   labelText?: string;
 }
 
 /// fk = FileKey = path + file.name
-function RhfInputImage<TFieldValues extends FieldValues>({
+function RhfInputImage({
   path,
   rhfProps,
   labelText,
-}: InputImageUppyPropsWithRegister<TFieldValues, FieldPath<TFieldValues>>) {
-  const { field } = useController(rhfProps);
+}: InputImageUppyPropsWithRegister) {
+  const { field, formState } = useController(rhfProps);
   const fileNames = field.value?.map((f: string) => f.split("/").reverse()[0]) || [];
 
   const onUploaded = (file: UppyFile<Meta, Body>) => {
@@ -282,6 +284,11 @@ function RhfInputImage<TFieldValues extends FieldValues>({
         initFiles={fileNames}
         onUploaded={onUploaded}
         onDeleted={onDeleted}
+      />
+      <ErrorMessage
+        errors={formState.errors}
+        name={field.name}
+        render={({ message }) => InputError({ message })}
       />
     </div>
   );

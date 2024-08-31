@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectTrigger } from "@radix-ui/react-select";
-import { DynamicDrawer, useDynamicDrawer } from "@/app/components/Drawer";
+import { useDynamicDrawer } from "@/app/components/Drawer";
 import { DefectCheckbox } from "./DefectPicker";
 import { Label } from "@/app/components/Input/Label";
 
@@ -167,7 +167,6 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
 
     const componentId = getComponentIdFor(componentName);
 
-    console.log("[ComponentPicker] handleEdit", componentName, componentId);
     if (!componentId) {
       return;
     }
@@ -221,8 +220,18 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
               className="border border-grey-600 rounded p-4 relative space-y-2"
             >
               <div className="flex items-center justify-end space-x-2 h-2">
-                {id && (<Pencil className="hover:cursor-pointer"  size={15} onClick={ev => handleEdit(id)}/>)}
-                <X className="text-red-400 hover:cursor-pointer" size={20} onClick={ev => remove(id)} />
+                {id && (
+                  <Pencil
+                    className="hover:cursor-pointer"
+                    size={15}
+                    onClick={(ev) => handleEdit(id)}
+                  />
+                )}
+                <X
+                  className="text-red-400 hover:cursor-pointer"
+                  size={20}
+                  onClick={(ev) => remove(id)}
+                />
               </div>
               <div className="flex space-x-2 items-end">
                 <div className="flex-grow overflow-hidden">
@@ -239,29 +248,18 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                           })
                         }
                       />
-                      <ErrorMessage
-                        errors={formState.errors}
-                        name={`${typedName}.${index}.id`}
-                        message="This field is required"
-                        render={({ message }) => InputError({ message })}
-                      />
                     </>
                   )}
                   {useNameOveride && (
                     <>
                       <Input
                         labelTitle="Material Component - Name Overide"
+                        errors={formState.errors}
                         register={() =>
                           register(`${typedName}.${index}.name` as const, {
                             required: true,
                           })
                         }
-                      />
-                      <ErrorMessage
-                        errors={formState.errors}
-                        name={`${typedName}.${index}.name`}
-                        message="This field is required"
-                        render={({ message }) => InputError({ message })}
                       />
                     </>
                   )}
@@ -314,15 +312,10 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                     labelTitle="Budget Cost"
                     type="number"
                     placeholder="£1000"
+                    errors={formState.errors}
                     register={() =>
                       register(`${typedName}.${index}.budgetCost` as const)
                     }
-                  />
-                  <ErrorMessage
-                    errors={formState.errors}
-                    name={`${typedName}.${index}.budgetCost`}
-                    message="This field is required"
-                    render={({ message }) => InputError({ message })}
                   />
                 </div>
               )}

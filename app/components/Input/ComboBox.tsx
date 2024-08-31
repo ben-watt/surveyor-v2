@@ -18,14 +18,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { UseFormRegisterReturn, useFormContext } from "react-hook-form";
+import { FieldErrors, FieldValues, UseFormRegisterReturn, useFormContext } from "react-hook-form";
 import { Label } from "./Label";
+import { ErrorMessage } from "@hookform/error-message";
+import InputError from "../InputError";
 
 interface ComboboxProps {
   data: { value: string; label: string }[];
   labelTitle?: string;
   onCreateNew?: () => any | void;
   register: () => UseFormRegisterReturn<string>;
+  errors?: FieldErrors<FieldValues>;
 }
 
 export function Combobox(props: ComboboxProps) {
@@ -92,6 +95,10 @@ export function Combobox(props: ComboboxProps) {
           </Command>
         </PopoverContent>
       </Popover>
+      <ErrorMessage
+        name={reg.name}
+        errors={props.errors}
+        render={({ message }) => InputError({ message })} />
     </div>
   );
 }
