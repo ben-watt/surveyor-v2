@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 
 import {
+  BuildingSurveyFormData,
   Defect,
+  MaterialComponent,
   RagStatus,
 } from "./BuildingSurveyReportSchema";
 
@@ -9,6 +11,8 @@ import {
   Controller,
   useFormContext,
   useFieldArray,
+  useWatch,
+  useForm,
 } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 import Input from "../../components/Input/InputText";
@@ -37,6 +41,7 @@ import { v4 } from "uuid";
 interface ComponentPickerProps {
   name: string;
   elementId: string;
+  defaultValues: MaterialComponent[];
 }
 
 const componentDataSelectList = [
@@ -53,13 +58,16 @@ type ComponentDataWithChild = ComponentData & {
   readonly materials: { readonly defects: Schema["Defect"]["type"][] }[];
 };
 
-export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
+export const ComponentPicker = ({ name, elementId, defaultValues }: ComponentPickerProps) => {
   const typedName = name as `sections.0.elementSections.0.materialComponents`;
-  const { control, register, watch, setValue, formState } =
-    useFormContext();
+
+  console.log("[ComponentPicker] defaultValues", defaultValues);
+
+  const { control, register, watch, setValue, formState, resetField } = useFormContext();
   const { fields, remove, append } = useFieldArray({
     name: typedName,
     control: control,
+    keyName: "fieldId",
     shouldUnregister: true,
     rules: {
       required: true,
@@ -67,18 +75,21 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     },
   });
 
+  const w = useWatch({ control, name: typedName, defaultValue: fields });
+  const controlledFields = fields.map((f, i) => ({ ...f, ...w[i] }));
+
   const [comboBoxProps, setComboBoxProps] = useState<
     { label: string; value: string }[]
   >([]);
 
-  const [components, setComponents] = useState<ComponentDataWithChild[]>([]);
+  const [availableComponents, setAvailableComponents] = useState<ComponentDataWithChild[]>([]);
 
   useEffect(() => {
     const props = mapToComboBoxProps(
-      components.filter((c) => c.elementId === elementId)
+      availableComponents.filter((c) => c.elementId === elementId)
     );
     setComboBoxProps(props);
-  }, [components, elementId]);
+  }, [availableComponents, elementId]);
 
   function mapToComboBoxProps(
     data: ComponentDataWithChild[]
@@ -100,7 +111,10 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
       });
 
       if (availableComponents.data) {
-        setComponents(availableComponents.data as ComponentDataWithChild[]);
+        setAvailableComponents(availableComponents.data as ComponentDataWithChild[]);
+
+        // If we don't reset here we loose the values we had initially
+        resetField(typedName, { defaultValue: defaultValues});
       }
     }
 
@@ -124,8 +138,12 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
   }
 
   function getDefectsFor(materialComponentName: string): Defect[] {
+    if(!materialComponentName || typeof materialComponentName !== "string") {
+      return [];
+    }
+
     const [componentName, materialName] = materialComponentName.split("_");
-    const component = components.find((c) => c.name === componentName);
+    const component = availableComponents.find((c) => c.name === componentName);
 
     if (!component) {
       return [];
@@ -144,7 +162,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
 
   function getComponentIdFor(materialComponentName: string): string | undefined {
     const [componentName, materialName] = materialComponentName.split("_");
-    return components.find((c) => c.name === componentName)?.id;
+    return availableComponents.find((c) => c.name === componentName)?.id;
   }
 
   const mapValueToColor = (value: RagStatus) => {
@@ -196,7 +214,11 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     });
   }
 
-  if (components.length === 0) {
+  // This causes an issue whereby we no longer get access to the default values against the form
+  // I think we'd need to load then reset this section of the form to get them back 
+  // for now I've just commented it out.
+  //
+  if (availableComponents.length === 0) {
     return (
       <>
         <Button className="w-full" variant="secondary" disabled>
@@ -206,17 +228,18 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
     );
   }
 
+
   return (
     <div className="space-y-2">
       <div className="space-y-2">
-        {fields.map((field, index) => {
+        {controlledFields.map((field, index) => {
 
-          const useNameOveride = watch(`${typedName}.${index}.useNameOveride` as const);
-          const id = watch(`${typedName}.${index}.id` as const);
+          const useNameOveride = field.useNameOveride;
+          const id = field.id;
 
           return (
             <div
-              key={field.id}
+              key={field.fieldId}
               className="border border-grey-600 rounded p-4 relative space-y-2"
             >
               <div className="flex items-center justify-end space-x-2 h-2">
@@ -230,7 +253,7 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                 <X
                   className="text-red-400 hover:cursor-pointer"
                   size={20}
-                  onClick={(ev) => remove(id)}
+                  onClick={(ev) => remove(index )}
                 />
               </div>
               <div className="flex space-x-2 items-end">
@@ -239,14 +262,16 @@ export const ComponentPicker = ({ name, elementId }: ComponentPickerProps) => {
                     <>
                       <Combobox
                         labelTitle="Material Component"
-                        key={field.id}
                         data={comboBoxProps}
                         onCreateNew={() => handleCreateNew(elementId)}
-                        register={() =>
-                          register(`${typedName}.${index}.id` as const, {
-                            required: true,
-                          })
-                        }
+                        controllerProps={{
+                          name: `${typedName}.${index}.id` as const,
+                          control: control,
+                          rules: {
+                            required: true
+                          }
+
+                        }}
                       />
                     </>
                   )}

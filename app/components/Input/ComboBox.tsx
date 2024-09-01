@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { FieldErrors, FieldValues, UseFormRegisterReturn, useFormContext } from "react-hook-form";
+import { FieldErrors, FieldValues, UseControllerProps, UseFormRegisterReturn, useController, useFormContext } from "react-hook-form";
 import { Label } from "./Label";
 import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
@@ -27,15 +27,12 @@ interface ComboboxProps {
   data: { value: string; label: string }[];
   labelTitle?: string;
   onCreateNew?: () => any | void;
-  register: () => UseFormRegisterReturn<string>;
   errors?: FieldErrors<FieldValues>;
+  controllerProps: UseControllerProps<FieldValues, string>;
 }
 
 export function Combobox(props: ComboboxProps) {
-  const { setValue, getValues } = useFormContext();
-  const reg = props.register();
-  const value = getValues(reg.name);
-
+  const { field } = useController(props.controllerProps);
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -49,8 +46,8 @@ export function Combobox(props: ComboboxProps) {
             aria-expanded={open}
             className="justify-between w-full text-ellipsis overflow-hidden"
           >
-            {value
-              ? props.data.find((d) => d.value === value)?.label
+            {field.value
+              ? props.data.find((d) => d.value === field.value)?.label
               : "Select..."}
             <ArrowDownNarrowWide className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -69,16 +66,15 @@ export function Combobox(props: ComboboxProps) {
                     key={d.value}
                     value={d.label}
                     onSelect={() => {
-                      setValue(reg.name, d.value === value ? "" : d.value);
+                      field.onChange(d.value === field.value ? "" : d.value);
                       setOpen(false);
                     }}
-                    {...reg}
                   >
                     {d.label}
                     <CheckIcon
                       className={cn(
                         "ml-auto h-4 w-4",
-                        value === d.value ? "opacity-100" : "opacity-0"
+                        field.value === d.value ? "opacity-100" : "opacity-0"
                       )}
                     />
                   </CommandItem>
@@ -96,7 +92,7 @@ export function Combobox(props: ComboboxProps) {
         </PopoverContent>
       </Popover>
       <ErrorMessage
-        name={reg.name}
+        name={field.name}
         errors={props.errors}
         render={({ message }) => InputError({ message })} />
     </div>

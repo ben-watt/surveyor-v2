@@ -69,9 +69,7 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
     }
   };
 
-  const useList = (
-    remoteQuery: () => Promise<T[]>
-  ): [boolean, T[]] => {
+  const useList = (): [boolean, T[]] => {
     const [data, setData] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -94,8 +92,6 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
     useEffect(() => {
       const fetchLocal = async (): Promise<void> => {
         const data = await tbl.toArray();
-        console.debug(`[useListSurveys] Fetched local '${data}' data`, data);
-
         setData(data.map((d) => d.data));
         setIsLoading(false);
       };
@@ -106,7 +102,6 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
       const fetchRemote = async () => {
         const response = await remoteQuery();
 
-        console.debug(`[useListSurveys] Fetched '${data}' data`, response);
         const newRecordsOnServer = response.map(
           async (d) => await updateLocalDbIfNewer(d)
         );
@@ -125,8 +120,7 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
   };
 
   const useGet = (
-    id: string,
-    remoteGet: (id: string) => Promise<Result<T>>
+    id: string
   ): [boolean, T | undefined] => {
     const [data, setData] = useState<T>();
     const [isLoading, setIsLoading] = useState(true);
@@ -154,8 +148,7 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
   };
 
   const addData = async (
-    data: TCreate,
-    remoteAdd: (data: TCreate) => Promise<Result<T>>
+    data: TCreate
   ) => {
     const result = await remoteAdd(data);
     if (result.data) {
@@ -164,11 +157,10 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
   };
 
   const deleteData = async (
-    id: string,
-    remoteDelete: (id: string) => Promise<Result<T>>
+    id: string
   ) => {
     const data = await db.table<DexieData<T>>(tableName).get(id);
-    if (data?.syncState === "local") {
+    if (data?.syncState === "local" || data?.syncState === undefined) {
       await tbl.delete(id);
       return;
     }
@@ -185,23 +177,49 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
 
   const updateData = async (
     data: TUpdate,
-    remoteUpdate: (data: TUpdate) => Promise<Result<T>>,
     args?: UpdateArgs
   ) => {
-    if (args?.localOnly) {
-      await tbl.put({ id: data.id, syncState: "local", updatedAt: new Date(), data: data as unknown as T });
+    const localData = await tbl.get(data.id);
+    await tbl.put({
+      id: data.id,
+      syncState: localData?.syncState || "local",
+      updatedAt: new Date(),
+      data: data as unknown as T,
+    });
+
+    if(args?.localOnly) {
+      return;
+    }
+      
+    const result = await addOrUpdateRemote(data, localData?.syncState || "local");
+
+    if (result.data) {
+      await tbl.put({
+        id: data.id,
+        syncState: "synced",
+        updatedAt: new Date(),
+        data: data as unknown as T,
+      });
     } else {
-      await remoteUpdate(data);
-      await tbl.put({ id: data.id, syncState: "synced", updatedAt: new Date(), data: data as unknown as T });
+      console.error(result.errors);
+      throw new Error("Failed to update data");
+    }
+  }
+
+  async function addOrUpdateRemote(data: TUpdate, syncState: "local" | "synced") {
+    if (syncState === "local") {
+      return await remoteAdd(data as unknown as TCreate);
+    } else {
+      return await remoteUpdate(data);
     }
   };
 
   return {
-    useList: () => useList(remoteQuery),
-    useGet: (id: string) => useGet(id, remoteGet),
-    add: (data: TCreate) => addData(data, remoteAdd),
-    delete: (id: string) => deleteData(id, remoteDelete),
-    upsert: (data: TUpdate, args?: UpdateArgs) => updateData(data, remoteUpdate, args),
+    useList: () => useList(),
+    useGet: (id: string) => useGet(id),
+    add: (data: TCreate) => addData(data),
+    delete: (id: string) => deleteData(id),
+    upsert: (data: TUpdate, args?: UpdateArgs) => updateData(data, args),
   };
 }
 

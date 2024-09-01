@@ -623,6 +623,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
             addressed to ensure the longevity of the property and to prevent
             more costly repairs in the long term.
           </p>
+          <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
             Internally, the property exhibits reasonable condition. We noted
             that chimney breasts would benefit from having air vents installed.
@@ -640,13 +641,14 @@ Board’s website. We have not undertaken any separate inquiries with the releva
             Furthermore, we recommend a CCTV drainage survey to ascertain the
             condition of the underground drainage pipework and the septic tank.
           </p>
-
+          <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
             The property should remain in reasonable condition should all
             repairs recommended be undertaken, however, you should fully
             consider the financial implications associated with the repairs
             identified before proceeding with the purchase of the property.
           </p>
+          <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
             We recommend that your solicitor reviews legal information and
             information returned from local searches to ascertain whether there

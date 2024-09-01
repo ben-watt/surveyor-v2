@@ -26,7 +26,7 @@ export type InputType = "text" | "number" | "date" | "textarea" | "select" | "ch
 
 export type Input<T> = {
     type: InputType,
-    value: T,
+    value?: T,
     label: string,
     placeholder: string,
     required: boolean

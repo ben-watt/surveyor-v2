@@ -10,7 +10,6 @@ import {
 } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@aws-amplify/ui-react";
-import { Label as InputLabel } from "@/app/components/Input/Label";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 
 interface DefectCheckboxProps {
@@ -24,7 +23,7 @@ interface DefectCheckboxProps {
       name as `sections.0.elementSections.0.materialComponents.0.defects.0`;
     const { register, control, watch } = useFormContext();
   
-    const isChecked = watch(`${typedName}.isChecked`);
+    const isChecked = watch(`${typedName}.isChecked`, false);
   
     return (
       <Controller
@@ -49,9 +48,7 @@ interface DefectCheckboxProps {
               <div className="p-2">
                 <input
                   type="hidden"
-                  {...register(`${typedName}.name` as const, {
-                    shouldUnregister: true,
-                  })}
+                  {...register(`${typedName}.name` as const)}
                   value={defect.name}
                 />
                 <TextAreaInput

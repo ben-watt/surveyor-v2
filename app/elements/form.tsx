@@ -84,9 +84,10 @@ export function DataForm({ id }: DataFormProps) {
             { value: "Sevices", label: "Sevices" },
             { value: "Grounds (External Areas)", label: "Grounds (External Areas)" },
           ]}
-          register={() =>
-            register("section", { required: "Section is required" })
-          }
+          controllerProps={{
+            name: "section",
+            rules: { required: "Section is required" },
+          }}
         />
         <Input
           labelTitle="Order"

@@ -10,7 +10,6 @@ import {
   useFormContext,
 } from "react-hook-form";
 import { basicToast, successToast } from "@/app/components/Toasts";
-import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
@@ -37,7 +36,6 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   const [elements, setElements] = useState<Schema["Elements"]["type"][]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     if (id) {
@@ -112,7 +110,10 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         />
         <Combobox
           labelTitle="Element"
-          register={() => register("elementId", { required: true })}
+          controllerProps={{
+            name: "elementId",
+            rules: { required: true },
+          }}
           data={elements.map((x) => ({ label: x.name, value: x.id }))}
         />
         <AddMaterials />

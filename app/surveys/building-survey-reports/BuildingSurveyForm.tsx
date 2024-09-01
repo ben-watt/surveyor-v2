@@ -103,9 +103,10 @@ function mapToInputType<T, K extends FieldValues>(
               { label: "Other", value: "Other" },
               { label: "Unknown", value: "Unknown" },
             ]}
-            register={() =>
-              register(registerName, { required: input.required })
-            }
+            controllerProps={{
+              name: registerName,
+              rules: { required: input.required },
+            }}
           />
         </>
       );
@@ -249,21 +250,18 @@ const createDefaultFormValues = async (id: string): Promise<BuildingSurveyForm> 
       },
       yearOfConstruction: {
         type: "number",
-        value: 0,
         label: "Year of Construction",
         placeholder: "Year of Construction",
         required: true,
       },
       yearOfExtensions: {
         type: "number",
-        value: 0,
         label: "Year of Extensinons",
         placeholder: "2012",
         required: false,
       },
       yearOfConversions: {
         type: "number",
-        value: 0,
         label: "Year of Conversions",
         placeholder: "2004",
         required: false,
@@ -366,6 +364,7 @@ export default function ReportWrapper ({ id }: BuildingSurveyFormProps) {
 
     function parseExistingFormContent(content : string) {
       const formData = JSON.parse(content) as BuildingSurveyForm;
+      console.log("[BuildingSurveyForm]", "Loading Existing Form", formData);
       setFormData(formData);
     }
 
@@ -397,13 +396,16 @@ interface ReportProps {
 
 function Report({ initFormValues }: ReportProps) {
   const methods = useForm<BuildingSurveyForm>({ defaultValues: initFormValues });
-  const { register, handleSubmit, watch, formState, control } =
+
+  const { register, handleSubmit, watch, formState } =
     methods;
 
   const router = useRouter();
 
   const sections = watch("sections") as BuildingSurveyForm["sections"];
   const allFields = watch();
+
+  console.log("[BuildingSurveyForm]", "All Fields", allFields);
 
   useDebouncedEffect(
     () => {
@@ -430,9 +432,10 @@ function Report({ initFormValues }: ReportProps) {
     try {
       let form = watch();
 
+      form.status = "draft";
+
       await db.surveys.upsert({
         id: form.id,
-        status: "draft",
         content: JSON.stringify(form),
       }, { localOnly: true });
 
@@ -447,14 +450,16 @@ function Report({ initFormValues }: ReportProps) {
 
 
   const onSubmit = async () => {
+    
     try {
       let form = watch();
 
       form.status = "created";
       
-      let _ = db.surveys.upsert({
+      console.log("[BuildingSurveyForm]", "Submitting form", form);
+
+      let _ = await db.surveys.upsert({
         id: form.id,
-        status: "created",
         content: JSON.stringify(form),
       });
 
@@ -483,7 +488,10 @@ function Report({ initFormValues }: ReportProps) {
                   { label: "Level 2", value: "2" },
                   { label: "Level 3", value: "3" },
                 ]}
-                register={() => register("level", { required: true })}
+                controllerProps={{
+                  name: "level",
+                  rules: { required: true },
+                }}
               />
             </div>
             <div>
@@ -507,8 +515,11 @@ function Report({ initFormValues }: ReportProps) {
                   name: "inspectionDate",
                   rules: {
                     required: true,
-                    validate: (v) =>
-                      v < new Date() || "Date cannot be in the future",
+                    validate: (v) => {
+                      const endOfDay = new Date();
+                      endOfDay.setHours(23, 59, 59, 999);
+                      return new Date(v) < endOfDay || "Date cannot be in the future";
+                    },
                   },
                 }}
               />
@@ -586,11 +597,10 @@ function Report({ initFormValues }: ReportProps) {
                     className="border border-grey-600 p-2 m-2 rounded "
                   >
                     <InputToggle
-                      defaultValue={elementSection.isPartOfSurvey}
                       label={elementSection.name}
                       register={() =>
                         register(
-                          `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`
+                          `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`,
                         )
                       }
                     >
@@ -620,6 +630,7 @@ function Report({ initFormValues }: ReportProps) {
                         </div>
                         <ComponentPicker
                           elementId={elementSection.id}
+                          defaultValues={initFormValues.sections[sectionIndex].elementSections[i].materialComponents}
                           name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
                         />
                       </div>
