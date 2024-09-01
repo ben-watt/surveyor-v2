@@ -32,6 +32,7 @@ function HomePage() {
   const data = surveys.map(x => {
     return JSON.parse(x.content as string) as BuildingSurveyFormData;
   });
+  
   const [createId, setCreateId] = useState<string>("");
 
   useEffect(() => {

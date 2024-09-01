@@ -12,7 +12,7 @@ const schema = a.schema({
   Surveys: a
     .model({
       id: a.id().required(),
-      status: a.string().default("draft"),
+      status: a.string().default("draft").required(),
       content: a.json().required(),
     })
     .authorization((allow) => [
