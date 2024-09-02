@@ -22,14 +22,13 @@ import InputDate from "../../components/Input/InputDate";
 import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/AmplifyDataClient";
-import { successToast } from "@/app/components/Toasts";
+import { CustomToast, toast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { Button } from "@/components/ui/button";
 import { Schema } from "@/amplify/data/resource";
 import { SelectionSet } from "aws-amplify/api";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
-import toast from "react-hot-toast";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
@@ -39,6 +38,8 @@ import {
   fetchUserAttributes,
 } from "aws-amplify/auth";
 import { ComponentPicker } from "./ComponentPicker";
+import { Err, Ok, Result } from "ts-results";
+import { useAsyncError } from "@/app/hooks/useAsyncError";
 
 const ImageInput = dynamic(
   () =>
@@ -151,7 +152,7 @@ const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
 });
 
 
-const createDefaultFormValues = async (id: string): Promise<BuildingSurveyForm> => {
+const createDefaultFormValues = async (id: string): Promise<Result<BuildingSurveyForm, Error>> => {
   const fetchElements = async () : Promise<SurveySection[]> => {
     let initialSections : SurveySection[] = [
       {
@@ -183,31 +184,29 @@ const createDefaultFormValues = async (id: string): Promise<BuildingSurveyForm> 
       materialComponents: [],
     });
 
-    try {
-      const response = await reportClient.models.Elements.list({
-        selectionSet: selectionSetElement,
-      });
 
-      if (response.data) {
-        response.data
-          .sort((x, y) => {
-            let a = x.order ? x.order : 0;
-            let b = y.order ? y.order : 0;
-            return a - b;
-          })
-          .map((element) => {
-            const elementSection = createDefaultElementSection(element);
-            const section = initialSections.find((section) => section.name === element.section)
-            if(section) {
-              section.elementSections.push(elementSection);
-            }
-            else {
-              console.error("Failed to find section for element", element);
-            }
-          });
-      }
-    } catch (error) {
-      console.error("Failed to fetch elements", error);
+    const response = await reportClient.models.Elements.list({
+      selectionSet: selectionSetElement,
+    });
+
+    if (response.data) {
+      response.data
+        .sort((x, y) => {
+          let a = x.order ? x.order : 0;
+          let b = y.order ? y.order : 0;
+          return a - b;
+        })
+        .map((element) => {
+          const elementSection = createDefaultElementSection(element);
+          const section = initialSections.find(
+            (section) => section.name === element.section
+          );
+
+          section && section.elementSections.push(elementSection);
+        });
+    }
+    else {
+      Err(new Error("Failed to fetch elements required for the survey."));
     }
 
     return initialSections;
@@ -215,21 +214,20 @@ const createDefaultFormValues = async (id: string): Promise<BuildingSurveyForm> 
 
   const surveySections = await fetchElements();
   const user = await fetchUserAttributes();
-  if(!user.sub || !user.name || !user.email || !user.picture) {
-    console.error("Unable to verify user.", user);
-    throw new Error("Unable to verify user.");
-  }
-    
 
-  return {
+  if(!user.sub || !user.name || !user.email || !user.picture) {
+    toast.info("Some user information is missing. Please check you've added all your profile information.");
+  }
+
+  return Ok({
     id: id,
     level: "2",
     reportDate: new Date(),
     owner: {
-      id: user.sub,
-      name: user.name,
-      email: user.email,
-      signaturePath: [user.picture],
+      id: user.sub || "Unknown",
+      name: user.name || "Unknown",
+      email: user.email || "Unknown",
+      signaturePath: user.picture ? [user.picture] : [],
     },
     status: "draft",
     address: "",
@@ -349,17 +347,24 @@ const createDefaultFormValues = async (id: string): Promise<BuildingSurveyForm> 
         "I confirm that the information provided is accurate"
       ),
     ],
-  };
+  });
 }
 
 
 export default function ReportWrapper ({ id }: BuildingSurveyFormProps) {
   const [isLoading, report] = db.surveys.useGet(id);
   const [formData, setFormData] = useState<BuildingSurveyForm | undefined>(undefined);
+  const throwError = useAsyncError();
 
   useEffect(() => {
     async function createNewForm() {
-      setFormData(await createDefaultFormValues(id));
+      const formResult = await createDefaultFormValues(id);
+      if(formResult.ok) {
+        setFormData(formResult.val);
+      }
+      else {
+        throwError(formResult.val);
+      }
     }
 
     function parseExistingFormContent(content : string) {
@@ -438,7 +443,7 @@ function Report({ initFormValues }: ReportProps) {
         content: JSON.stringify(form),
       }, { localOnly: true });
 
-      successToast("Saved as Draft");
+      toast.success("Saved as Draft");
 
       router.push("/surveys");
     } catch (error) {
@@ -462,7 +467,7 @@ function Report({ initFormValues }: ReportProps) {
         content: JSON.stringify(form),
       });
 
-      successToast("Survey Saved");
+      toast.success("Survey Saved");
 
       router.push("/surveys");
     } catch (error) {

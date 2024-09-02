@@ -9,7 +9,7 @@ import {
   useForm,
   useFormContext,
 } from "react-hook-form";
-import { basicToast, successToast } from "@/app/components/Toasts";
+import { toast } from "@/app/components/Toasts";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
@@ -85,10 +85,10 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           });
         }
 
-        successToast("Saved");
+        toast.success("Saved");
       } catch (error) {
         console.error("Failed to save data", error);
-        basicToast(`Error unable to save data.`);
+        toast.basic(`Error unable to save data.`);
       }
 
       onSave && onSave();

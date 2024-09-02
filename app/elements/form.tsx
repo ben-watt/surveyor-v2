@@ -3,7 +3,7 @@
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "@/app/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
-import { basicToast, successToast } from "@/app/components/Toasts";
+import { toast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect } from "react";
@@ -43,7 +43,7 @@ export function DataForm({ id }: DataFormProps) {
       try {
         if (!data.id) {
           await reportClient.models.Elements.create(data);
-          successToast("Created Element");
+          toast.success("Created Element");
         } else {
           await reportClient.models.Elements.update({
             id: data.id,
@@ -52,12 +52,12 @@ export function DataForm({ id }: DataFormProps) {
             section: data.section,
             description: data.description,
           });
-          successToast("Updated Element");
+          toast.success("Updated Element");
         }
 
         router.push("/elements");
       } catch (error) {
-        basicToast("Error");
+        toast.error("Error");
         console.error("Failed to save", error);
       }
     };

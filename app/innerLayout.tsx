@@ -7,11 +7,13 @@ import "instantsearch.css/themes/satellite.css";
 import { Authenticator } from "@aws-amplify/ui-react";
 import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { DynamicDrawerProvider } from "./components/Drawer";
 import { ConfigureAwsRum } from "./components/ConfigureAwsRum";
 import { getCurrentUser } from "aws-amplify/auth";
 import { useRouter, usePathname } from "next/navigation";
+import Error from "./error";
 
 export default function RootLayout({
   children,
@@ -50,7 +52,9 @@ export default function RootLayout({
         </div>
         <div className="m-auto max-w-[85rem] print:max-w-max">
           <div className="m-2 md:m-10 print:m-0">
-            <Suspense>{children}</Suspense>
+            <ErrorBoundary fallbackRender={(props) => <Error error={props.error} reset={props.resetErrorBoundary}/>}>
+              {children}
+            </ErrorBoundary>
           </div>
         </div>
         </DynamicDrawerProvider>
