@@ -40,7 +40,7 @@ export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
   return (
     <header className="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white text-sm py-4 dark:bg-gray-800">
       <nav
-        className="max-w-[85rem] w-full mx-auto px-4 h-10 z-10 flex justify-between items-center"
+        className="max-w-[85rem] w-full mx-auto px-4 h-10 z-50 flex justify-between items-center"
         aria-label="Global"
       >
         {children}
