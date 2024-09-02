@@ -413,7 +413,6 @@ function Report({ initFormValues }: ReportProps) {
           await db.surveys.upsert(
             {
               id: initFormValues.id,
-              status: initFormValues.status,
               content: JSON.stringify(allFields),
             }, { localOnly: true });
 

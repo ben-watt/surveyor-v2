@@ -24,7 +24,7 @@ interface InputDateProps {
 
 const InputDate = ({ labelTitle, controllerProps }: InputDateProps, ref : React.LegacyRef<HTMLDivElement>) => {
   const { field, formState } = useController(controllerProps);
-  const date = field.value.toString();
+  const date = field?.value?.toString();
 
   const handleSelect = (d: Date | undefined) => {
     field.onChange(d);
