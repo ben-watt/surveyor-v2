@@ -7,7 +7,7 @@ import "instantsearch.css/themes/satellite.css";
 import { Authenticator } from "@aws-amplify/ui-react";
 import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { DynamicDrawerProvider } from "./components/Drawer";
 import { ConfigureAwsRum } from "./components/ConfigureAwsRum";
@@ -23,7 +23,7 @@ export default function RootLayout({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const path = usePathname();
-  
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -45,18 +45,22 @@ export default function RootLayout({
       <ConfigureAmplifyClientSide />
       <ConfigureAwsRum />
       <Authenticator.Provider>
-      <DynamicDrawerProvider>
-        <div className="print:hidden">
-          { isAuthenticated && <SecureNav /> }
-          <Toaster position="top-right" />
-        </div>
-        <div className="m-auto max-w-[85rem] print:max-w-max">
-          <div className="m-2 md:m-10 print:m-0">
-            <ErrorBoundary fallbackRender={(props) => <Error error={props.error} reset={props.resetErrorBoundary}/>}>
-              {children}
-            </ErrorBoundary>
+        <DynamicDrawerProvider>
+          <div className="print:hidden">
+            {isAuthenticated && <SecureNav />}
+            <Toaster position="top-right" />
           </div>
-        </div>
+          <div className="m-auto max-w-[85rem] print:max-w-max">
+            <div className="m-2 md:m-10 print:m-0">
+              <ErrorBoundary
+                fallbackRender={(props) => (
+                  <Error error={props.error} reset={props.resetErrorBoundary} />
+                )}
+              >
+                <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+              </ErrorBoundary>
+            </div>
+          </div>
         </DynamicDrawerProvider>
       </Authenticator.Provider>
     </>
