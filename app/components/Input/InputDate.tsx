@@ -15,6 +15,7 @@ import {
 import { FieldValues, useController, UseControllerProps } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
+import { useEffect } from "react";
 
 interface InputDateProps {
   labelTitle: string;
@@ -29,6 +30,13 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps, ref : React.
   const handleSelect = (d: Date | undefined) => {
     field.onChange(d);
   };
+
+  // Default value only set once.
+  useEffect(() => {
+    if(date) {
+      field.onChange(new Date(date));
+    }
+  }, []);
 
   return (
     <>
