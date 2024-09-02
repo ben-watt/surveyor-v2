@@ -102,14 +102,14 @@ export function DynamicDrawer({
 
   return (
     <Drawer open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DrawerContent>
+      <DrawerContent className="max-h-lvh">
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
-        <div className="p-4">
+        <div className="p-4 overflow-scroll">
             {content}
-          </div>
+        </div>
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Cancel</Button>
