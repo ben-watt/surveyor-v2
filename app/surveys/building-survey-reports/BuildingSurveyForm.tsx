@@ -247,9 +247,9 @@ const createDefaultFormValues = async (id: string): Promise<Result<BuildingSurve
         required: true,
       },
       yearOfConstruction: {
-        type: "number",
+        type: "text",
         label: "Year of Construction",
-        placeholder: "Year of Construction",
+        placeholder: "presumed 1990s - side extension",
         required: true,
       },
       yearOfExtensions: {
