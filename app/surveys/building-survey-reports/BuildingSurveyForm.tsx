@@ -383,7 +383,7 @@ export default function ReportWrapper ({ id }: BuildingSurveyFormProps) {
     else {
       createNewForm()
     }
-  }, [id, isLoading, report])
+  }, [id, isLoading, report, throwError])
 
   return (
     <div className="md:grid md:grid-cols-4 mb-4">
@@ -549,6 +549,7 @@ function Report({ initFormValues }: ReportProps) {
             </div>
             <div>
               <ImageInput
+                id={initFormValues.id + "-moneyShot"}
                 labelText="Money Shot"
                 rhfProps={{
                   name: "moneyShot",
@@ -564,6 +565,7 @@ function Report({ initFormValues }: ReportProps) {
             </div>
             <div>
               <ImageInput
+                id={initFormValues.id + "-front-elevation"}
                 labelText="Front Elevation Images"
                 rhfProps={{
                   name: "frontElevationImagesUri",
@@ -620,6 +622,7 @@ function Report({ initFormValues }: ReportProps) {
                         />
                         <div>
                           <ImageInput
+                            id={initFormValues.id + "-" + elementSection.id + "-images"}
                             rhfProps={{
                               name: `sections.${sectionIndex}.elementSections.${i}.images`,
                               rules: {
@@ -669,6 +672,8 @@ function Report({ initFormValues }: ReportProps) {
           <PrimaryBtn className="w-full flex justify-center" type="submit">
             Save
           </PrimaryBtn>
+          {
+          initFormValues.status === "draft" && (
           <Button
             className="w-full flex justify-center"
             variant="secondary"
@@ -676,6 +681,7 @@ function Report({ initFormValues }: ReportProps) {
           >
             Save As Draft
           </Button>
+          )}
         </div>
       </form>
     </FormProvider>

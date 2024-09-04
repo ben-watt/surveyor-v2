@@ -27,6 +27,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
 
 interface InputImageUppyProps {
+  id: string;
   path: string;
   initFiles?: string[];
   onUploaded?: (file: UppyFile<Meta, Body>) => void;
@@ -43,6 +44,7 @@ const Dashboard = dynamic(
 // Could be good to explore totally custom UI with
 // cropper js for editing
 function InputImageUppy({
+  id,
   path,
   initFiles,
   onUploaded,
@@ -57,6 +59,7 @@ function InputImageUppy({
   // IMPORTANT: passing an initializer function to prevent Uppy from being reinstantiated on every render.
   const [uppy] = useState(() =>
     new Uppy<Meta, Body>({
+      id: id,
       autoProceed: true,
       restrictions: {
         allowedFileTypes: ["image/*"],
@@ -196,6 +199,7 @@ function InputImageUppy({
     <div>
       <div className="relative">
         <Dashboard
+          id={id}
           showLinkToFileUploadResult={true}
           singleFileFullScreen={false}
           showRemoveButtonAfterComplete={true}
@@ -253,10 +257,12 @@ type P = Path<OnlyInludeTypes<Test, string[]>>;
 interface InputImageUppyPropsWithRegister extends InputImageUppyProps {
   rhfProps: UseControllerProps<FieldValues>;
   labelText?: string;
+  id: string;
 }
 
 /// fk = FileKey = path + file.name
 function RhfInputImage({
+  id,
   path,
   rhfProps,
   labelText,
@@ -280,6 +286,7 @@ function RhfInputImage({
     <div {...field}>
       {labelText && <Label text={labelText} />}
       <InputImageUppy
+        id={path}
         path={path}
         initFiles={fileNames}
         onUploaded={onUploaded}
