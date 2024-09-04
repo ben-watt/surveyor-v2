@@ -27,7 +27,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
 
 interface InputImageUppyProps {
-  id: string;
+  id?: string;
   path: string;
   initFiles?: string[];
   onUploaded?: (file: UppyFile<Meta, Body>) => void;
@@ -257,12 +257,10 @@ type P = Path<OnlyInludeTypes<Test, string[]>>;
 interface InputImageUppyPropsWithRegister extends InputImageUppyProps {
   rhfProps: UseControllerProps<FieldValues>;
   labelText?: string;
-  id: string;
 }
 
 /// fk = FileKey = path + file.name
 function RhfInputImage({
-  id,
   path,
   rhfProps,
   labelText,

@@ -549,7 +549,6 @@ function Report({ initFormValues }: ReportProps) {
             </div>
             <div>
               <ImageInput
-                id={initFormValues.id + "-moneyShot"}
                 labelText="Money Shot"
                 rhfProps={{
                   name: "moneyShot",
@@ -565,7 +564,6 @@ function Report({ initFormValues }: ReportProps) {
             </div>
             <div>
               <ImageInput
-                id={initFormValues.id + "-front-elevation"}
                 labelText="Front Elevation Images"
                 rhfProps={{
                   name: "frontElevationImagesUri",
@@ -622,7 +620,6 @@ function Report({ initFormValues }: ReportProps) {
                         />
                         <div>
                           <ImageInput
-                            id={initFormValues.id + "-" + elementSection.id + "-images"}
                             rhfProps={{
                               name: `sections.${sectionIndex}.elementSections.${i}.images`,
                               rules: {
