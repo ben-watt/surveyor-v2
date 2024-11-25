@@ -23,7 +23,7 @@
         "specification": "Brickwork ",
         "condition": "Red",
         "defect": "Signs of movement cracking ",
-        "level2Wording": "We observed evidence to suggest that foundation movement has occurred at the property. We identified moderate cracking to the right elevation. We believe this could be related to substructure movement. We recommend allocating an allowance to undertake localised underpinning works following consulting a suitably qualified structural engineer to review. In accordance with BRE Digest 251, any cracks should be filled and monitored for reoccurence. ",
+        "level2Wording": "We observed evidence to suggest that foundation movement has occurred at the property. We identified moderate cracking to the right elevation. We believe this could be related to substructure movement. We recommend allocating an allowance to undertake localised underpinning works following consulting a suitably qualified structural engineer to review. In accordance with BRE Digest 251, any cracks should be filled and monitored for reoccurrence. ",
         "level3Wording": ""
       },
       {
@@ -68,8 +68,8 @@
         "specification": "Slate",
         "condition": "Yellow",
         "defect": "Loose ridge tiles",
-        "level2Wording": "We identified that ridge tiles appeared loose during the inspection. When ridge tiles are loose, gaps and openings can form between the tiles and the roof structure. This creates an opportunity for water ingression. It is recommended that the ridge tiles are removed, cleaned and re-bedded using appropriate fixing methods to secure the tiles in line with the manufacturer’s guidelines. ",
-        "level3Wording": "We identified that ridge tiles appeared loose during the inspection. When ridge tiles are loose, gaps and openings can form between the tiles and the roof structure. This creates an opportunity for water ingression, thus consequential damage to the underlying roof structure. Additionally, if ridge tiles remain loose for a number of years, this can severely impact the structural integrity of the roof. It is recommended that the ridge tiles are removed, cleaned and re-bedded using appropriate fixing methods to secure the tiles in line with the manufacturer’s guidelines. "
+        "level2Wording": "We identified that ridge tiles appeared loose during the inspection. When ridge tiles are loose, gaps and openings can form between the tiles and the roof structure. This allows water ingress. It is recommended that the ridge tiles are removed, cleaned and rebedded using appropriate fixing methods to secure the tiles in line with the manufacturer’s guidelines. ",
+        "level3Wording": "We identified that ridge tiles appeared loose during the inspection. When ridge tiles are loose, gaps and openings can form between the tiles and the roof structure. This allows water ingress, thus consequential damage to the underlying roof structure. Additionally, if ridge tiles remain loose for a number of years, this can severely impact the structural integrity of the roof. It is recommended that the ridge tiles are removed, cleaned and rebedded using appropriate fixing methods to secure the tiles in line with the manufacturer’s guidelines. "
       },
       {
         "type": "Pitched",
@@ -563,7 +563,7 @@
         "specification": "UPVC",
         "condition": "Red",
         "defect": "Damage",
-        "level2Wording": "UPVC soffits and fascias are in poor condition with evidence of signicant soiling and sections that are undulating. We recommend allocating an allowance to replace sections of the soffits and fascias with new. Cleaning should be undertaken on a cyclical basis thereafter. ",
+        "level2Wording": "UPVC soffits and fascias are in poor condition with evidence of significant soiling and sections that are undulating. We recommend allocating an allowance to replace sections of the soffits and fascias with new. Cleaning should be undertaken on a cyclical basis thereafter. ",
         "level3Wording": ""
       }
     ]
@@ -601,7 +601,7 @@
         "condition": "Yellow",
         "defect": "Bricking up previous opening",
         "level2Wording": "",
-        "level3Wording": "We noted loose brickwork to the rear elevation, particularly around the new brickwork installed to block a previous opening. Likewise, the concrete lintel that served the previous opening is spalled. Loose brickwork should be re-bedded and monitored as they may be linked to issues as noted with the spalled lintel. Workmanship to brick-up the previous opening is poor, with non-uniform mortar joints and lack of tying in brickwork to surrounding areas. We recommend removing the existing concrete lintel and bricking-up. The area of brickwork filling a previous opening would benefit from being replaced with new brickwork, that matches the surrounding areas, tied-in to brickwork and includes uniformed mortar joints.   \n"
+        "level3Wording": "We noted loose brickwork to the rear elevation, particularly around the new brickwork installed to block a previous opening. Likewise, the concrete lintel that served the previous opening is spalled. Loose brickwork should be rebedded and monitored as they may be linked to issues as noted with the spalled lintel. Workmanship to brick-up the previous opening is poor, with non-uniform mortar joints and lack of tying in brickwork to surrounding areas. We recommend removing the existing concrete lintel and bricking-up. The area of brickwork filling a previous opening would benefit from being replaced with new brickwork, that matches the surrounding areas, tied-in to brickwork and includes uniformed mortar joints.   \n"
       },
       {
         "type": "Cavity construction",
@@ -1379,7 +1379,7 @@
         "specification": "Brick Walls",
         "condition": "Yellow",
         "defect": "Soiled",
-        "level2Wording": "We recommend cleaning the brickwork boundary wall to prevent deterioation of brick surfaces. An allowance should be made to re-point as part of a long-term maintenance plan. ",
+        "level2Wording": "We recommend cleaning the brickwork boundary wall to prevent deterioration of brick surfaces. An allowance should be made to re-point as part of a long-term maintenance plan. ",
         "level3Wording": ""
       },
       {
@@ -1387,7 +1387,7 @@
         "specification": "Brick Walls",
         "condition": "Red",
         "defect": "Cracked significantly",
-        "level2Wording": "The brickwork boundary wall is in poor condition generally with evidence of cracking that may necessiatate Heli beam repairs. ",
+        "level2Wording": "The brickwork boundary wall is in poor condition generally with evidence of cracking that may necessitate Heli beam repairs. ",
         "level3Wording": ""
       },
       {
@@ -1403,7 +1403,7 @@
         "specification": "Retaining Wall",
         "condition": "Yellow",
         "defect": "Cracked etc",
-        "level2Wording": "Retaining walls installed to the raised patio has localised cracks and evidence of movement throughout. The wall has not been constructed correctly and we question the adequacy of the wall thickness and depth of the footings. There are no weepholes present to allow moisture to drain from the retained soil, exerting pressure on the wall, this is causing efflorescence, or salt crystal deposits on the brickwork. Localised repairs may be possible, however, we recommend that you appoint a suitably qualified engineer to review and advise on the most cost effective repair. Part or total reconstruction is likely required to provide durability and avoid future failure which may be expensive. ",
+        "level2Wording": "Retaining walls installed to the raised patio has localised cracks and evidence of movement throughout. The wall has not been constructed correctly and we question the adequacy of the wall thickness and depth of the footings. There are no weep holes present to allow moisture to drain from the retained soil, exerting pressure on the wall, this is causing efflorescence, or salt crystal deposits on the brickwork. Localised repairs may be possible, however, we recommend that you appoint a suitably qualified engineer to review and advise on the most cost effective repair. Part or total reconstruction is likely required to provide durability and avoid future failure which may be expensive. ",
         "level3Wording": ""
       },
       {
@@ -1473,7 +1473,7 @@
         "condition": "Yellow",
         "defect": "",
         "level2Wording": "",
-        "level3Wording": "The presence of mature trees near a building can cause structural damage to foundations by directly displacing them, decreasing, or indeed increasing, the amount of moisture to be drawn from the certain types of soil causing it to shrink and expand, as well as negatively affecting drainage causing subsidence. The risk posed is subject to the following: \n* Proximity of the tree * the height, age and species of the tree *the design and depth of the building’s foundations *the type of sub-soil\nWe notde the presence of mature trees that could impact the property. "
+        "level3Wording": "The presence of mature trees near a building can cause structural damage to foundations by directly displacing them, decreasing, or indeed increasing, the amount of moisture to be drawn from the certain types of soil causing it to shrink and expand, as well as negatively affecting drainage causing subsidence. The risk posed is subject to the following: \n* Proximity of the tree * the height, age and species of the tree *the design and depth of the building’s foundations *the type of sub-soil\nWe noted the presence of mature trees that could impact the property. "
       },
       {
         "type": "Risks to the building",
