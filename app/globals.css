@@ -81,6 +81,7 @@
   --purple: #9635ff;
   --black: #000000;
   --white: #ffffff;
+  --grey-1: #676666;
   --gray-2: #e2e8f0;
   --gray-3: #cbd5e0;
 }
@@ -189,7 +190,7 @@
 
 .tiptap hr {
   border: none;
-  border-top: 1px solid var(--gray-2);
+  border-top: 2px solid var(--grey-1);
   margin: 2rem 0;
 }
 
