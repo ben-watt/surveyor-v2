@@ -298,9 +298,13 @@ export default function PDF({ form }: PdfProps) {
           <h3>Year of Construction</h3>
           <p>{form.propertyDescription.yearOfConstruction.value}</p>
           <h3>Year of Extensions</h3>
-          <p>{fallback(form.propertyDescription.yearOfExtensions.value, "N/A")}</p>
+          <p>
+            {fallback(form.propertyDescription.yearOfExtensions.value, "N/A")}
+          </p>
           <h3>Year of Conversions</h3>
-          <p>{fallback(form.propertyDescription.yearOfConversions.value, "N/A")}</p>
+          <p>
+            {fallback(form.propertyDescription.yearOfConversions.value, "N/A")}
+          </p>
           <h3>Grounds</h3>
           <p>{form.propertyDescription.grounds.value}</p>
           <h3>Services</h3>
@@ -579,8 +583,8 @@ to pay higher premiums in light of this information.`}
         />
         <h2 style={{ fontWeight: "bold" }}>Risks to the people</h2>
         <RiskRow
-          id={"asbestoss"}
-          risk={"Asbestoss"}
+          id={"asbestos"}
+          risk={"Asbestos"}
           description={`Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been
 concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition
 (R&D) Asbestos survey before commencing any refurbishment works.`}
@@ -764,25 +768,33 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           about matters affecting the property. We carefully and thoroughly
           inspect the property using our best endeavours to see as much of it as
           is physically accessible. Where this is not possible an explanation
-          will be provided. We visually inspect roofs, chimneys and other
-          surfaces on the outside of the building from ground level and, if
-          necessary, from neighbouring public property and with the help of
-          binoculars. Flat roofs no more than 3m above ground level are
-          inspected using a ladder where it is safe to do so. We inspect the
-          roof structure from inside the roof space if there is safe access. We
-          examine floor surfaces and under-floor spaces so far as there is safe
-          access and permission from the owner. We are not able to assess the
-          condition of the inside of any chimney, boiler or other flues. We do
-          not lift fitted carpets or coverings without the owner's consent.
+          will be provided.
+        </p>
+        <p style={{ textAlign: "justify" }}>
+          We visually inspect roofs, chimneys and other surfaces on the outside
+          of the building from ground level and, if necessary, from neighbouring
+          public property and with the help of binoculars. Flat roofs no more
+          than 3m above ground level are inspected using a ladder where it is
+          safe to do so. We inspect the roof structure from inside the roof
+          space if there is safe access.
+        </p>
+        <p style={{ textAlign: "justify" }}>
+          We examine floor surfaces and under-floor spaces so far as there is
+          safe access and permission from the owner. We are not able to assess
+          the condition of the inside of any chimney, boiler or other flues. We
+          do not lift fitted carpets or coverings without the owner's consent.
           Intermittent faults of services may not be apparent on the day of
-          inspection. If we are concerned about parts of the property that the
-          inspection cannot cover, the report will tell you about any further
+          inspection.
+        </p>
+        <p style={{ textAlign: "justify" }}>
+          If we are concerned about parts of the property that the inspection
+          cannot cover, the report will tell you about any further
           investigations that are needed. Where practicable and agreed we report
           on the cost of any work for identified repairs and make
           recommendations on how these repairs should be carried out. Some
           maintenance and repairs we suggest may be expensive. Purely cosmetic
           and minor maintenance defects that do not affect performance might not
-          be reported. The report that we provide is not a warranty
+          be reported. The report that we provide is not a warranty.
         </p>
       </Page>
     </>
