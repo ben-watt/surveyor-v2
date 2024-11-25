@@ -235,7 +235,6 @@
 }
 
 .tiptap table .selectedCell:after {
-  background: var(--gray-2);
   content: "";
   left: 0;
   right: 0;
