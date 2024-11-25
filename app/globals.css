@@ -221,7 +221,6 @@
   border: 1px solid var(--gray-3);
   box-sizing: border-box;
   min-width: 1em;
-  padding: 6px 8px;
   position: relative;
   vertical-align: top;
 }

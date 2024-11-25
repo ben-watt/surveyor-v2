@@ -280,12 +280,11 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h2 style={{ fontWeight: "bold" }}>Typical House Diagram</h2>
-        <Image
+        <img
           style={{ margin: "0 auto" }}
           src="/typical-house.webp"
           alt="typical house"
           width={800}
-          height={800}
         />
       </Page>
       <Page>
@@ -768,24 +767,27 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           about matters affecting the property. We carefully and thoroughly
           inspect the property using our best endeavours to see as much of it as
           is physically accessible. Where this is not possible an explanation
-          will be provided.<br />
+          will be provided.
         </p>
+        <p></p>
         <p style={{ textAlign: "justify" }}>
           We visually inspect roofs, chimneys and other surfaces on the outside
           of the building from ground level and, if necessary, from neighbouring
           public property and with the help of binoculars. Flat roofs no more
           than 3m above ground level are inspected using a ladder where it is
           safe to do so. We inspect the roof structure from inside the roof
-          space if there is safe access.<br />
+          space if there is safe access.
         </p>
+        <p></p>
         <p style={{ textAlign: "justify" }}>
           We examine floor surfaces and under-floor spaces so far as there is
           safe access and permission from the owner. We are not able to assess
           the condition of the inside of any chimney, boiler or other flues. We
           do not lift fitted carpets or coverings without the owner's consent.
           Intermittent faults of services may not be apparent on the day of
-          inspection.<br />
+          inspection.
         </p>
+        <p></p>
         <p style={{ textAlign: "justify" }}>
           If we are concerned about parts of the property that the inspection
           cannot cover, the report will tell you about any further
@@ -794,7 +796,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           recommendations on how these repairs should be carried out. Some
           maintenance and repairs we suggest may be expensive. Purely cosmetic
           and minor maintenance defects that do not affect performance might not
-          be reported. The report that we provide is not a warranty.<br />
+          be reported. The report that we provide is not a warranty.
         </p>
       </Page>
     </>
