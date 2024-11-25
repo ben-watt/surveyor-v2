@@ -57,12 +57,6 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       action: () => editor.chain().focus().toggleCode().run(),
       isActive: () => editor.isActive("code"),
     },
-    // {
-    //   icon: 'mark-pen-line',
-    //   title: 'Highlight',
-    //   action: () => editor.chain().focus().toggleHighlight().run(),
-    //   isActive: () => editor.isActive('highlight'),
-    // },
     {
       type: "divider",
     },
@@ -163,7 +157,7 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       {items.map((item, index) => (
         <Fragment key={index}>
           {item.type === "divider" ? (
-            <span className="ml-2 mr-2 bg-gray-300 pl-[2px]" />
+            <span className="m-auto h-[1.5rem] bg-gray-300 pl-[1px]" />
           ) : (
             <MenuItem {...item} />
           )}

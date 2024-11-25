@@ -265,7 +265,7 @@ export const NewEditor = ({
   }, [editor, tocData]);
 
   return (
-    <div className="print:hidden">
+    <div className="print:hidden border border-grey-200">
       <BlockMenuBar editor={editor} onPrint={onPrint} />
       <EditorContent editor={editor} />
     </div>

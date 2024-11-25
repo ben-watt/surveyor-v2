@@ -76,6 +76,13 @@
   }
 }
 
+.lucide {
+  /* Change this! */
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 1px;
+}
+
 .tiptap {
   --purple-light: #f3f2ff;
   --purple: #9635ff;
