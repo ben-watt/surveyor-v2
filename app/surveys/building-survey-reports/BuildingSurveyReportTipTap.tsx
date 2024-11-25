@@ -768,7 +768,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           about matters affecting the property. We carefully and thoroughly
           inspect the property using our best endeavours to see as much of it as
           is physically accessible. Where this is not possible an explanation
-          will be provided.
+          will be provided.<br />
         </p>
         <p style={{ textAlign: "justify" }}>
           We visually inspect roofs, chimneys and other surfaces on the outside
@@ -776,7 +776,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           public property and with the help of binoculars. Flat roofs no more
           than 3m above ground level are inspected using a ladder where it is
           safe to do so. We inspect the roof structure from inside the roof
-          space if there is safe access.
+          space if there is safe access.<br />
         </p>
         <p style={{ textAlign: "justify" }}>
           We examine floor surfaces and under-floor spaces so far as there is
@@ -784,7 +784,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           the condition of the inside of any chimney, boiler or other flues. We
           do not lift fitted carpets or coverings without the owner's consent.
           Intermittent faults of services may not be apparent on the day of
-          inspection.
+          inspection.<br />
         </p>
         <p style={{ textAlign: "justify" }}>
           If we are concerned about parts of the property that the inspection
@@ -794,7 +794,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           recommendations on how these repairs should be carried out. Some
           maintenance and repairs we suggest may be expensive. Purely cosmetic
           and minor maintenance defects that do not affect performance might not
-          be reported. The report that we provide is not a warranty.
+          be reported. The report that we provide is not a warranty.<br />
         </p>
       </Page>
     </>
