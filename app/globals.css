@@ -77,10 +77,13 @@
 }
 
 .lucide {
-  /* Change this! */
   width: 1.5rem;
   height: 1.5rem;
   stroke-width: 1px;
+}
+
+.lucide * {
+  vector-effect: non-scaling-stroke;
 }
 
 .tiptap {

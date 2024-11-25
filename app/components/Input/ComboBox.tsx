@@ -83,7 +83,7 @@ export function Combobox(props: ComboboxProps) {
             </CommandList>
             {props.onCreateNew && (
               <CommandGroup forceMount>
-                <CommandItem value="Create new..." onSelect={ev => props.onCreateNew && props.onCreateNew()}>
+                <CommandItem className="font-semibold" value="Create new..." onSelect={ev => props.onCreateNew && props.onCreateNew()}>
                   Create new...
                 </CommandItem>
               </CommandGroup>

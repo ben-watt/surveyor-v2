@@ -77,32 +77,7 @@ export const ComponentPicker = ({ name, elementId, defaultValues }: ComponentPic
 
   const w = useWatch({ control, name: typedName, defaultValue: fields });
   const controlledFields = fields.map((f, i) => ({ ...f, ...w[i] }));
-
-  const [comboBoxProps, setComboBoxProps] = useState<
-    { label: string; value: string }[]
-  >([]);
-
   const [availableComponents, setAvailableComponents] = useState<ComponentDataWithChild[]>([]);
-
-  useEffect(() => {
-    const props = mapToComboBoxProps(
-      availableComponents.filter((c) => c.elementId === elementId)
-    );
-    setComboBoxProps(props);
-  }, [availableComponents, elementId]);
-
-  function mapToComboBoxProps(
-    data: ComponentDataWithChild[]
-  ): { label: string; value: string }[] {
-    return data.flatMap((c) =>
-      c.materials
-        .map((m) => ({
-          label: `${c.name} • ${m!.name}`,
-          value: `${c.name}_${m!.name}`,
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label))
-    );
-  }
 
   useEffect(() => {
     async function fetchData() {
@@ -236,6 +211,18 @@ export const ComponentPicker = ({ name, elementId, defaultValues }: ComponentPic
 
           const useNameOveride = field.useNameOveride;
           const id = field.id;
+          const otherSelectedMaterialIds = w.filter((f :any) => f.id !== id).map((f :any) => f.id);
+
+          const props = availableComponents
+            .filter((c) => c.elementId === elementId)
+            .flatMap((c) =>
+              c.materials
+                .map((m) => ({
+                  label: `${c.name} • ${m!.name}`,
+                  value: `${c.name}_${m!.name}`,
+                }))
+                .filter(m => otherSelectedMaterialIds.includes(m.value) === false)
+            ).sort((a, b) => a.label.localeCompare(b.label));
 
           return (
             <div
@@ -245,14 +232,12 @@ export const ComponentPicker = ({ name, elementId, defaultValues }: ComponentPic
               <div className="flex items-center justify-end space-x-2 h-2">
                 {id && (
                   <Pencil
-                    className="hover:cursor-pointer"
-                    size={15}
+                    className="hover:cursor-pointer p-1"
                     onClick={(ev) => handleEdit(id)}
                   />
                 )}
                 <X
                   className="text-red-400 hover:cursor-pointer"
-                  size={20}
                   onClick={(ev) => remove(index )}
                 />
               </div>
@@ -262,7 +247,7 @@ export const ComponentPicker = ({ name, elementId, defaultValues }: ComponentPic
                     <>
                       <Combobox
                         labelTitle="Material Component"
-                        data={comboBoxProps}
+                        data={props}
                         onCreateNew={() => handleCreateNew(elementId)}
                         controllerProps={{
                           name: `${typedName}.${index}.id` as const,
@@ -270,7 +255,6 @@ export const ComponentPicker = ({ name, elementId, defaultValues }: ComponentPic
                           rules: {
                             required: true
                           }
-
                         }}
                       />
                     </>
