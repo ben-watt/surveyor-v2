@@ -1,6 +1,6 @@
 import { useCurrentEditor, type Editor } from "@tiptap/react";
 
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import MenuItem from "./BlockMenuItem";
 import {
@@ -23,6 +23,17 @@ import {
   Undo,
   Printer,
 } from "lucide-react";
+import { DropdownMenu } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Level } from "@tiptap/extension-heading";
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -58,25 +69,18 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       isActive: () => editor.isActive("code"),
     },
     {
+      icon: <RemoveFormatting />,
+      title: "Clear Format",
+      action: () => editor.chain().focus().clearNodes().unsetAllMarks().run(),
+    },
+    {
       type: "divider",
     },
     {
-      icon: <Heading1 />,
-      title: "Heading 1",
-      action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
-      isActive: () => editor.isActive("heading", { level: 1 }),
+      type: "dropdown",
     },
     {
-      icon: <Heading2 />,
-      title: "Heading 2",
-      action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-      isActive: () => editor.isActive("heading", { level: 2 }),
-    },
-    {
-      icon: <Text />,
-      title: "Paragraph",
-      action: () => editor.chain().focus().setParagraph().run(),
-      isActive: () => editor.isActive("paragraph"),
+      type: "divider",
     },
     {
       icon: <List />,
@@ -90,12 +94,21 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       action: () => editor.chain().focus().toggleOrderedList().run(),
       isActive: () => editor.isActive("orderedList"),
     },
-    // {
-    //   icon: 'list-check-2',
-    //   title: 'Task List',
-    //   action: () => editor.chain().focus().toggleTaskList().run(),
-    //   isActive: () => editor.isActive('taskList'),
-    // },
+    {
+      type: "divider",
+    },
+    {
+      icon: <Text />,
+      title: "Paragraph",
+      action: () => editor.chain().focus().setParagraph().run(),
+      isActive: () => editor.isActive("paragraph"),
+    },
+    {
+      icon: <TextQuote />,
+      title: "Blockquote",
+      action: () => editor.chain().focus().toggleBlockquote().run(),
+      isActive: () => editor.isActive("blockquote"),
+    },
     {
       icon: <Code2 />,
       title: "Code Block",
@@ -106,28 +119,14 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       type: "divider",
     },
     {
-      icon: <TextQuote />,
-      title: "Blockquote",
-      action: () => editor.chain().focus().toggleBlockquote().run(),
-      isActive: () => editor.isActive("blockquote"),
-    },
-    {
       icon: <SeparatorHorizontal />,
-      title: "Horizontal Rule",
+      title: "Page Break",
       action: () => editor.chain().focus().setHorizontalRule().run(),
-    },
-    {
-      type: "divider",
     },
     {
       icon: <WrapText />,
       title: "Hard Break",
       action: () => editor.chain().focus().setHardBreak().run(),
-    },
-    {
-      icon: <RemoveFormatting />,
-      title: "Clear Format",
-      action: () => editor.chain().focus().clearNodes().unsetAllMarks().run(),
     },
     {
       type: "divider",
@@ -153,11 +152,13 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
   ];
 
   return (
-    <div className="editor__header flex justify-around sticky top-0 bg-white z-10 p-2 shadow-sm">
+    <div className="editor__header flex justify-around sticky top-0 bg-white z-10 p-2 border-b">
       {items.map((item, index) => (
         <Fragment key={index}>
           {item.type === "divider" ? (
             <span className="m-auto h-[1.5rem] bg-gray-300 pl-[1px]" />
+          ) : item.type === "dropdown" ? (
+            <MenuHeadingDropdown editor={editor} />
           ) : (
             <MenuItem {...item} />
           )}
@@ -166,3 +167,59 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
     </div>
   );
 }
+
+/*
+  action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+  isActive: () => editor.isActive("heading", { level: 1 }),
+*/
+
+interface MenuHeadingDropdownProps {
+  editor: Editor;
+}
+
+const MenuHeadingDropdown = ({ editor }: MenuHeadingDropdownProps) => {
+  const [stateLevel, setStateLevel] = useState<number>(0);
+
+  const toggleHeading = (level: string) => {
+    const l = parseInt(level);
+    if(l === 0) {
+      editor.chain().focus().setParagraph().run();
+    } else {
+      editor.chain().focus().toggleHeading({ level: l as Level }).run();
+    }
+
+    setStateLevel(l);
+  };
+
+  // When the user selects a heading then update the value in the dropdown
+  useEffect(() => {
+    editor.on("selectionUpdate", () => {
+      if(editor.isActive("heading")) {
+        const level = editor.getAttributes("heading").level as number;
+        setStateLevel(level);
+      } else {
+        setStateLevel(0);
+      }
+    });
+  }, [editor]);
+
+  return (
+    <Select value={stateLevel.toString()} onValueChange={val => toggleHeading(val)}>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Normal Text" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Text Style</SelectLabel>
+          <SelectItem value="0">Normal Text</SelectItem>
+          <SelectItem value="1">H1</SelectItem>
+          <SelectItem value="2">H2</SelectItem>
+          <SelectItem value="3">H3</SelectItem>
+          <SelectItem value="4">H4</SelectItem>
+          <SelectItem value="5">H5</SelectItem>
+          <SelectItem value="6">H6</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  );
+};

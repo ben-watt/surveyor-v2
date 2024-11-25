@@ -1,4 +1,3 @@
-import { Icon, icons, LucideAArrowDown } from "lucide-react";
 import { ReactElement } from "react";
 
 export default function MenuItem({
@@ -14,7 +13,7 @@ export default function MenuItem({
 }) {  
   return (
     <button
-      className={`hover:bg-gray-200  p-2 rounded menu-item${isActive && isActive() ? "active:bg-grey-200" : ""}`}
+      className={`hover:bg-gray-200 p-2 rounded menu-item${isActive && isActive() ? "active:bg-grey-200" : ""}`}
       onClick={action}
       title={title}>
         {icon}
