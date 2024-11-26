@@ -357,7 +357,7 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
 
   const reduceFontSize = () => {
     if (fontSize > MIN_FONT_SIZE) {
-      const newSize = fontSize - 0.5;
+      const newSize = fontSize - 1;
       editor.chain().focus().setFontSize(`${newSize}pt`).run();
       setFontSize(newSize);
     }
@@ -365,7 +365,7 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
 
   const increaseFontSize = () => {
     if (fontSize < MAX_FONT_SIZE) {
-      const newSize = fontSize + 0.5;
+      const newSize = fontSize + 1;
       editor.chain().focus().setFontSize(`${newSize}pt`).run();
       setFontSize(newSize);
     }
@@ -389,7 +389,7 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
           </SelectTrigger>
           <SelectContent className="min-w-11">
             <SelectGroup>
-              {fontSizeDropdown.map((size) => (<SelectItem key={size} value={size.toString()}>{size}</SelectItem>))}
+              {Array.from(new Set(fontSizeDropdown.concat(fontSize))).map((size) => (<SelectItem key={size} value={size.toString()}>{size}</SelectItem>))}
             </SelectGroup>
           </SelectContent>
         </Select>
