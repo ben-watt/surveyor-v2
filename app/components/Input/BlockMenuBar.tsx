@@ -1,4 +1,4 @@
-import { useCurrentEditor, type Editor } from "@tiptap/react";
+import { type Editor } from "@tiptap/react";
 
 import { Fragment, useEffect, useState } from "react";
 
@@ -7,8 +7,6 @@ import {
   Bold,
   Code,
   Code2,
-  Heading1,
-  Heading2,
   Italic,
   List,
   ListOrdered,
@@ -18,7 +16,6 @@ import {
   Text,
   RemoveFormatting,
   WrapText,
-  Forward,
   Redo,
   Undo,
   Printer,
@@ -28,6 +25,8 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
+  Grid2x2Plus,
+  Grid2x2X,
 } from "lucide-react";
 import {
   Select,
@@ -140,14 +139,20 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       isActive: () => editor.isActive("orderedList"),
     },
     {
-      type: "divider",
-      render: () => <Divider />,
+      icon: <Grid2x2Plus />,
+      title: "Add Table",
+      action: () => editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run(),
+      isActive: () => false,
     },
     {
-      icon: <Text />,
-      title: "Paragraph",
-      action: () => editor.chain().focus().setParagraph().run(),
-      isActive: () => editor.isActive("paragraph"),
+      icon: <Grid2x2X />,
+      title: "Delete Table",
+      action: () => editor.chain().focus().deleteTable().run(),
+      isActive: () => false,
+    },
+    {
+      type: "divider",
+      render: () => <Divider />,
     },
     {
       icon: <TextQuote />,
@@ -211,11 +216,6 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
   );
 }
 
-/*
-  action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
-  isActive: () => editor.isActive("heading", { level: 1 }),
-*/
-
 interface MenuHeadingDropdownProps {
   editor: Editor;
 }
@@ -257,12 +257,12 @@ const MenuHeadingDropdown = ({ editor }: MenuHeadingDropdownProps) => {
         onValueChange={(val) => toggleHeading(val)}
       >
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Normal Text" />
+          <SelectValue placeholder="Paragraph" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Text Style</SelectLabel>
-            <SelectItem value="0">Normal Text</SelectItem>
+            <SelectItem value="0">Paragraph</SelectItem>
             <SelectItem value="1">H1</SelectItem>
             <SelectItem value="2">H2</SelectItem>
             <SelectItem value="3">H3</SelectItem>
