@@ -18,6 +18,7 @@ import Heading from "@tiptap/extension-heading";
 import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
 import FileHandler from "@tiptap-pro/extension-file-handler";
+import Highlight from '@tiptap/extension-highlight';
 import { FontSize } from "../TipTapExtensions/FontSize";
 import BlockMenuBar from "./BlockMenuBar";
 import {
@@ -189,6 +190,9 @@ export const NewEditor = ({
     }),
     TextStyle,
     FontSize,
+    Highlight.configure({
+      multicolor: true,
+    }),
     ImageResizeWithAttributes.configure({
       allowBase64: true
     }),

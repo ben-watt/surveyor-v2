@@ -164,7 +164,7 @@ export default function PDF({ form }: PdfProps) {
             <p style={{ textAlign: "right" }}>
               Date: {reportDate.toDateString()}
             </p>
-            <p style={{ textAlign: "right" }}>Ref: #{form.id[8]}</p>
+            <p style={{ textAlign: "right" }}>Ref: #{form.id.substring(0,8)}</p>
           </div>
         </TableBlock>
       </Page>
@@ -230,25 +230,31 @@ export default function PDF({ form }: PdfProps) {
               Property to be maintained as usual.
             </li>
           </ul>
-          <p style={{ backgroundColor: "green" }}></p>
+          <p style={{ textAlign: "center" }}>
+            <mark style={{ backgroundColor: "green" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
+          </p>
           <ul>
             <li>
               Defects requiring repair/replacement but not considered urgent nor
               serious. Property to be maintained as usual.
             </li>
           </ul>
-          <p style={{ backgroundColor: "orange" }}></p>
+          <p style={{ textAlign: "center" }}>
+            <mark style={{ backgroundColor: "orange" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
+          </p>
           <ul>
             <li>
               Serious defects to be fully considered prior to purchase that need
               to be repaired, replace or investigated urgently.
             </li>
           </ul>
-          <p style={{ backgroundColor: "red" }}></p>
+          <p style={{ textAlign: "center" }}>
+            <mark style={{ backgroundColor: "red" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
+          </p>
           <ul>
             <li>Not inspected</li>
           </ul>
-          <p className="w-100-perc h-100-perc text-centre">
+          <p style={{ textAlign: "center"}}>
             <strong>NI</strong>
           </p>
         </TableBlock>
@@ -880,12 +886,12 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               <p
                 style={{
                   fontWeight: "bold",
-                  backgroundColor: mapRagToBackgroundColour(mc.ragStatus),
                 }}
               >
-                {mc.ragStatus === "N/I" ? "NI" : ""}
+                <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus)}}>
+                  {mc.ragStatus === "N/I" ? "NI" : ""}
+                </mark>
               </p>
-
               <p></p>
               <p>
                 <strong>Condition / Defect</strong>
