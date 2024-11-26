@@ -30,6 +30,7 @@ import {
   BetweenVerticalStart,
   TableCellsMergeIcon,
   TableCellsSplitIcon,
+  TableOfContents,
 } from "lucide-react";
 import {
   Select,
@@ -196,6 +197,11 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
     {
       type: "divider",
       render: () => <Divider />,
+    },
+    {
+      icon: <TableOfContents />,
+      title: "Table of Contents",
+      action: () => editor.chain().focus(),
     },
     {
       icon: <Printer />,
@@ -393,7 +399,7 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
 
   return (
     <div className="flex items-center">
-      <button>
+      <button className="p-1">
         <Minus onClick={() => reduceFontSize()} />
       </button>
       <div className="ml-1 mr-1">
@@ -408,7 +414,7 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
           </SelectContent>
         </Select>
       </div>
-      <button>
+      <button className="p-1">
         <Plus onClick={() => increaseFontSize()} />
       </button>
     </div>

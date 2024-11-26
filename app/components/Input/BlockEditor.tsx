@@ -117,7 +117,6 @@ function parseDataHierarchy(data: TableOfContentData) {
 
     stack.push(item.itemIndex);
     const text = stack.join(".");
-    console.log("[Table Of Contents]", text);
     stack.pop();
     return {
       item,
