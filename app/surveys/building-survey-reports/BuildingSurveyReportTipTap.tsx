@@ -214,7 +214,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <p
-          style={{ fontSize: "1.5em", marginBottom: "8mm" }}
+          style={{ fontSize: "18pt", marginBottom: "8mm" }}
         >
           Contents
         </p>

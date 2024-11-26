@@ -27,8 +27,8 @@ export const FontSize = Extension.create<FontSizeOptions>({
 
   addOptions(): FontSizeOptions {
     return {
-      types: ['textStyle'],
-      defaultSize: '20pt',
+      types: ['textStyle', 'heading', 'paragraph'],
+      defaultSize: '12pt',
       getStyle: (fontSize: string) => {
         return `font-size: ${fontSize}`
       }
@@ -44,7 +44,6 @@ export const FontSize = Extension.create<FontSizeOptions>({
             default: this.options.defaultSize,
             parseHTML: element => element.style.fontSize.replace(/['"]+/g, ''),
             renderHTML: attributes => {
-              console.log("[FontSize]", "renderHTML", attributes);
               if (!attributes.fontSize) {
                 return {};
               }
