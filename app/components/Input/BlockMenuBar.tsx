@@ -27,6 +27,11 @@ import {
   AlignJustify,
   Grid2x2Plus,
   Grid2x2X,
+  BetweenHorizontalStart,
+  BetweenVerticalStart,
+  TableColumnsSplit,
+  TableCellsMergeIcon,
+  TableCellsSplitIcon,
 } from "lucide-react";
 import {
   Select,
@@ -145,12 +150,6 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       isActive: () => false,
     },
     {
-      icon: <Grid2x2X />,
-      title: "Delete Table",
-      action: () => editor.chain().focus().deleteTable().run(),
-      isActive: () => false,
-    },
-    {
       type: "divider",
       render: () => <Divider />,
     },
@@ -205,13 +204,66 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
     },
   ];
 
+  const tableContextMenu = {
+    isActive: () => editor.isActive("table"),
+    items: [
+      {
+        icon: <BetweenHorizontalStart />,
+        title: "Add Row After",
+        action: () => editor.chain().focus().addRowAfter().run(),
+      },
+      {
+        icon: <BetweenVerticalStart />,
+        title: "Add Column After",
+        action: () => editor.chain().focus().addColumnAfter().run(),
+      },
+      {
+        icon: <TableCellsSplitIcon />,
+        title: "Split Cell",
+        action: () => editor.chain().focus().splitCell().run(),
+      },
+      {
+        icon: <TableCellsMergeIcon />,
+        title: "Merge Cells",
+        action: () => editor.chain().focus().mergeCells().run(),
+      },
+      {
+        icon: <Grid2x2X className="text-red-700" />,
+        title: "Delete Table",
+        action: () => editor.chain().focus().deleteTable().run(),
+        isActive: () => false,
+      },
+      {
+        icon: <BetweenHorizontalStart className="text-red-700" />,
+        title: "Delete Row",
+        action: () => editor.chain().focus().deleteRow().run(),
+      },
+      {
+        icon: <BetweenVerticalStart className="text-red-700" />,
+        title: "Delete Column",
+        action: () => editor.chain().focus().deleteColumn().run(),
+      }
+    ],
+  }
+
   return (
-    <div className="editor__header flex justify-around sticky top-0 bg-white z-10 p-2 border-b">
-      {items.map((item, index) => (
-        <Fragment key={index}>
-          {item.render ? item.render() : <MenuItem {...item as MenuItemProps} />}
-        </Fragment>
-      ))}
+    <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b">
+      <div className="flex justify-left">
+        {items.map((item, index) => (
+          <div key={index} className="flex m-[1px]">
+            {item.render ? item.render() : <MenuItem {...item as MenuItemProps} />}
+          </div>
+        ))}
+      </div>
+      {tableContextMenu.isActive() && (
+        <div className="flex justify-left">
+          {tableContextMenu.items.map((item, index) => (
+            <div key={index} className="flex m-[1px]">
+              <MenuItem {...item as MenuItemProps} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
