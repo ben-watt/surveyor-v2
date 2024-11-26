@@ -609,7 +609,7 @@ function Report({ initFormValues }: ReportProps) {
                 {section.elementSections.map((elementSection, i) => (
                   <section
                     key={`${sectionIndex}.${i}`}
-                    className="border border-grey-600 p-2 m-2 rounded "
+                    className="border border-grey-600 p-2 m-2 rounded"
                   >
                     <InputToggle
                       label={elementSection.name}
