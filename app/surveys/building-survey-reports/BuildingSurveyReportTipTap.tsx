@@ -27,7 +27,7 @@ const TableBlock = ({
     if (elementsArr.length % widths.length !== 0)
       console.warn("[Table Block]", "Number of children should be a multiple of widths", elementsArr.length, widths.length);
 
-    const landscapeWidth = 948; // Width of the page in landscape
+    const landscapeWidth = 928; // Width of the page in landscape
     let tableRows = [];
     for (let i = 0; i < elementsArr.length; i = i + widths.length) {
       const firstChildInRow = elementsArr[i];
@@ -42,7 +42,7 @@ const TableBlock = ({
 
       let rows = widths.map((w, j) => {
         if (j === widths.length - 1) {
-          return <td key={j}>{elementsArr[i + j]}</td>;
+          return <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>{elementsArr[i + j]}</td>;
         } else {
           return (
             <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
@@ -59,7 +59,7 @@ const TableBlock = ({
   }
 
   return (
-    <table style={{ margin: "0" }}>
+    <table>
       <tbody>{createTableRows(children)}</tbody>
     </table>
   );
@@ -886,11 +886,10 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               <p
                 style={{
                   fontWeight: "bold",
+                  textAlign: "center",
                 }}
               >
-                <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus)}}>
-                  {mc.ragStatus === "N/I" ? "NI" : ""}
-                </mark>
+                {mc.ragStatus === "N/I" ? "NI" : <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus)}}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>}
               </p>
               <p></p>
               <p>
