@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Level } from "@tiptap/extension-heading";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "./ComboBox";
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -93,25 +94,25 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       icon: <AlignLeft />,
       title: "Align Left",
       action: () => editor.chain().focus().setTextAlign("left").run(),
-      isActive: () => editor.isActive({ textAlign: 'left' }),
+      isActive: () => editor.isActive({ textAlign: "left" }),
     },
     {
       icon: <AlignCenter />,
       title: "Align Center",
       action: () => editor.chain().focus().setTextAlign("center").run(),
-      isActive: () => editor.isActive({ textAlign: 'center' }),
+      isActive: () => editor.isActive({ textAlign: "center" }),
     },
     {
       icon: <AlignRight />,
       title: "Align Right",
       action: () => editor.chain().focus().setTextAlign("right").run(),
-      isActive: () => editor.isActive({ textAlign: 'right' }),
+      isActive: () => editor.isActive({ textAlign: "right" }),
     },
     {
       icon: <AlignJustify />,
       title: "Align Justify",
       action: () => editor.chain().focus().setTextAlign("justify").run(),
-      isActive: () => editor.isActive({ textAlign: 'justify' }),
+      isActive: () => editor.isActive({ textAlign: "justify" }),
     },
     {
       type: "divider",
@@ -123,7 +124,7 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
     },
     {
       type: "font-size",
-      render: () => <></>,
+      render: () => <MenuFontSize editor={editor} />,
     },
     {
       type: "divider",
@@ -144,7 +145,8 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
     {
       icon: <Grid2x2Plus />,
       title: "Add Table",
-      action: () => editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run(),
+      action: () =>
+        editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run(),
       isActive: () => false,
     },
     {
@@ -240,16 +242,20 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
         icon: <BetweenVerticalStart className="text-red-700" />,
         title: "Delete Column",
         action: () => editor.chain().focus().deleteColumn().run(),
-      }
+      },
     ],
-  }
+  };
 
   return (
     <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b">
       <div className="flex justify-left">
         {items.map((item, index) => (
           <div key={index} className="flex m-[1px]">
-            {item.render ? item.render() : <MenuItem {...item as MenuItemProps} />}
+            {item.render ? (
+              item.render()
+            ) : (
+              <MenuItem {...(item as MenuItemProps)} />
+            )}
           </div>
         ))}
       </div>
@@ -257,7 +263,7 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
         <div className="flex justify-left">
           {tableContextMenu.items.map((item, index) => (
             <div key={index} className="flex m-[1px]">
-              <MenuItem {...item as MenuItemProps} />
+              <MenuItem {...(item as MenuItemProps)} />
             </div>
           ))}
         </div>
@@ -306,7 +312,7 @@ const MenuHeadingDropdown = ({ editor }: MenuHeadingDropdownProps) => {
         value={stateLevel.toString()}
         onValueChange={(val) => toggleHeading(val)}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[8rem]">
           <SelectValue placeholder="Paragraph" />
         </SelectTrigger>
         <SelectContent>
@@ -330,30 +336,67 @@ interface MenuFontSizeProps {
   editor: Editor;
 }
 
-// Not currently implemented as no existing extension exists
 const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
-  const [fontSize, setFontSize] = useState<string>("12pt");
+  const DEFAULT_FONT_SIZE = 12;
+  const [fontSize, setFontSize] = useState<number>(DEFAULT_FONT_SIZE);
+  const MIN_FONT_SIZE = 6;
+  const MAX_FONT_SIZE = 97;
+  const fontSizeDropdown = [6, 10, 12, 14, 20, 26, 34, 97];
 
   useEffect(() => {
     editor.on("selectionUpdate", () => {
       if (editor.isActive("textStyle")) {
         const fontSize = editor.getAttributes("textStyle").fontSize as string;
-        setFontSize(fontSize);
+        const size = parseInt(fontSize.replace("pt", ""));
+        setFontSize(size);
+      } else {
+        setFontSize(DEFAULT_FONT_SIZE);
       }
     });
   });
 
+  const reduceFontSize = () => {
+    if (fontSize > MIN_FONT_SIZE) {
+      const newSize = fontSize - 0.5;
+      editor.chain().focus().setFontSize(`${newSize}pt`).run();
+      setFontSize(newSize);
+    }
+  };
+
+  const increaseFontSize = () => {
+    if (fontSize < MAX_FONT_SIZE) {
+      const newSize = fontSize + 0.5;
+      editor.chain().focus().setFontSize(`${newSize}pt`).run();
+      setFontSize(newSize);
+    }
+  };
+
+  const changeFontSize = (size: string) => {
+    const newSize = parseInt(size);
+    editor.chain().focus().setFontSize(`${newSize}pt`).run();
+    setFontSize(newSize);
+  };
+
   return (
     <div className="flex items-center">
-      <Minus />
+      <button>
+        <Minus onClick={() => reduceFontSize()} />
+      </button>
       <div className="ml-1 mr-1">
-        <Input
-          className="p-0 w-12 text-center ring-0"
-          onClick={() => editor.chain().setFontSize("12pt").run()}
-          value={fontSize}
-        />
+        <Select value={fontSize.toString()} onValueChange={v => changeFontSize(v)}>
+          <SelectTrigger className="[&_svg]:hidden">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-11">
+            <SelectGroup>
+              {fontSizeDropdown.map((size) => (<SelectItem key={size} value={size.toString()}>{size}</SelectItem>))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
-      <Plus />
+      <button>
+        <Plus onClick={() => increaseFontSize()} />
+      </button>
     </div>
   );
 };

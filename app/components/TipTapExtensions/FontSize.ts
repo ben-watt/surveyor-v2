@@ -4,7 +4,7 @@ import '@tiptap/extension-text-style';
 type FontSizeOptions = {
   types: string[];
   defaultSize: string;
-  getStyle: (fontSize: string)=>string
+  getStyle: (fontSize: string) => string;
 };
 
 declare module '@tiptap/core' {
