@@ -205,17 +205,7 @@ export const NewEditor = ({
     TableCell,
     extendAttributes(Paragraph, ["id", "data-toc-id-selector"]),
     extendAttributes(Heading, ["data-add-toc-here-id"]),
-    StarterKit.configure({
-      listItem: {},
-      bulletList: {
-        keepMarks: true,
-        keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-      },
-      orderedList: {
-        keepMarks: true,
-        keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-      },
-    }),
+    StarterKit,
     TableOfContents.configure({
       getIndex: getHierarchicalIndexes,
       getId: (textContent) => "toc-" + v4().slice(0, 8),

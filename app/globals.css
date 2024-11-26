@@ -276,8 +276,12 @@
   outline: 3px solid var(--purple);
 }
 
-.tiptap li {
+.tiptap ul li {
   list-style: circle;
+}
+
+.tiptap ol li {
+  list-style: decimal;
 }
 
 .tiptap #toc li {
