@@ -133,7 +133,7 @@ export default function PDF({ form }: PdfProps) {
             />
           </div>
           <div>
-            <p style={{ textAlign: "right", fontSize: "1.5em" }}>
+            <p style={{ textAlign: "right", fontSize: "20pt" }}>
               Level {form.level} Building Survey Report
             </p>
             <p style={{ textAlign: "right" }}></p>
