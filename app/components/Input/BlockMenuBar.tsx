@@ -345,12 +345,26 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
 
   useEffect(() => {
     editor.on("selectionUpdate", () => {
-      if (editor.isActive("textStyle")) {
-        const fontSize = editor.getAttributes("textStyle").fontSize as string;
+      const setFromNode = (nodeType: string) => {
+        const fontSize = editor.getAttributes(nodeType).fontSize as string;
         const size = parseInt(fontSize.replace("pt", ""));
-        setFontSize(size);
-      } else {
-        setFontSize(DEFAULT_FONT_SIZE);
+        if(size) {
+          setFontSize(size);
+        } else {
+          setFontSize(DEFAULT_FONT_SIZE);
+        }
+      }
+
+      if(editor.isActive("heading")) {
+        setFromNode("heading");
+      }
+
+      if(editor.isActive("paragraph")) {
+        setFromNode("paragraph");
+      }
+      
+      if (editor.isActive("textStyle")) {
+        setFromNode("textStyle");
       }
     });
   });
