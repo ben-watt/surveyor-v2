@@ -18,7 +18,7 @@ import Heading from "@tiptap/extension-heading";
 import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
 import FileHandler from "@tiptap-pro/extension-file-handler";
-import FontSize from "tiptap-extension-font-size";
+import { FontSize } from "../TipTapExtensions/FontSize";
 import BlockMenuBar from "./BlockMenuBar";
 import {
   getHierarchicalIndexes,
@@ -29,6 +29,7 @@ import {
 import { renderToStaticMarkup } from "react-dom/server";
 import { v4 } from "uuid";
 import { Node } from "@tiptap/core";
+
 
 /*
   Will allow the node to have the attributes mentioned in the array
@@ -183,21 +184,21 @@ export const NewEditor = ({
     }),
     Section,
     Color.configure({ types: [TextStyle.name, ListItem.name] }),
+    TextAlign.configure({
+      types: ["paragraph", "heading"],
+    }),
     TextStyle,
     FontSize,
     ImageResizeWithAttributes.configure({
       allowBase64: true
     }),
+    
     Table.configure({
       resizable: true,
     }),
     TableRow,
     TableHeader,
     TableCell,
-    TextAlign.configure({
-      types: ["paragraph", "heading"],
-    }),
-    FontSize,
     extendAttributes(Paragraph, ["id", "data-toc-id-selector"]),
     extendAttributes(Heading, ["data-add-toc-here-id"]),
     StarterKit.configure({

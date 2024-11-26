@@ -1,6 +1,6 @@
 import { type Editor } from "@tiptap/react";
 
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import MenuItem, { MenuItemProps } from "./BlockMenuItem";
 import {
@@ -13,7 +13,6 @@ import {
   SeparatorHorizontal,
   Strikethrough,
   TextQuote,
-  Text,
   RemoveFormatting,
   WrapText,
   Redo,
@@ -29,7 +28,6 @@ import {
   Grid2x2X,
   BetweenHorizontalStart,
   BetweenVerticalStart,
-  TableColumnsSplit,
   TableCellsMergeIcon,
   TableCellsSplitIcon,
 } from "lucide-react";
