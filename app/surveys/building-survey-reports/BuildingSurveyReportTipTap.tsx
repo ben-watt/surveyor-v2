@@ -213,12 +213,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <p
-          style={{ fontSize: "18pt", marginBottom: "8mm" }}
-        >
-          Contents
-        </p>
-        <section id="toc"></section>
+        <div data-type="table-of-contents"></div>
       </Page>
       <Page>
         <h1 style={{ fontWeight: "bold" }}>Definitions</h1>
