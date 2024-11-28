@@ -1,4 +1,4 @@
-import Dexie from 'dexie';
+import Dexie, { EntityTable } from 'dexie';
 import { type Schema } from "@/amplify/data/resource";
 import dexieCloud from "dexie-cloud-addon";
 import dixycloudjson from "@/dexie-cloud.json";
