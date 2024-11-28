@@ -213,7 +213,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <div data-type="table-of-contents"></div>
+        <div data-type="table-of-contents" data-toc-data="[]"></div>
       </Page>
       <Page>
         <h1 style={{ fontWeight: "bold" }}>Definitions</h1>

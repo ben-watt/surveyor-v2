@@ -12,7 +12,7 @@ import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
 
-import React from "react";
+import React, { useEffect } from "react";
 import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
 import FileHandler from "@tiptap-pro/extension-file-handler";
@@ -21,12 +21,12 @@ import { FontSize } from "../TipTapExtensions/FontSize";
 import BlockMenuBar from "./BlockMenuBar";
 import {
   getHierarchicalIndexes,
-  TableOfContentData,
   TableOfContents,
 } from "@tiptap-pro/extension-table-of-contents";
 import { v4 } from "uuid";
 import { Node } from "@tiptap/core";
-import { TocContext, TocNode } from "../TipTapExtensions/Toc";
+import { TocContext, TocDataRepo, TocNode } from "../TipTapExtensions/Toc";
+import { useDebounceCallback } from "usehooks-ts";
 
 function extendAttributesWithDefaults<T>(node: Node<T>, attrs: { [key: string]: string }, attrDefault?: string) {
   return node.extend({
@@ -135,9 +135,16 @@ export const NewEditor = ({
       getIndex: getHierarchicalIndexes,
       getId: (textContent) => "toc-" + v4().slice(0, 8),
       onUpdate: (data, isCreate) => {
-        if(data.length != tocData?.data.length || isCreate) {
-          setTocData({ data, isCreate })
-        }
+        const mappedData = data.map(d => ({
+          originalLevel: d.originalLevel,
+          level: d.level,
+          textContent: d.textContent,
+          id: d.id,
+          pos: d.pos,
+          itemIndex: d.itemIndex,
+        }));
+
+        TocDataRepo.set(mappedData, isCreate ?? false);
       },
     }),
     TocNode,
@@ -149,7 +156,7 @@ export const NewEditor = ({
     onCreate: onCreate,
     onUpdate: onUpdate,
   });
-
+  
   return (
     <div className="print:hidden border border-grey-200">
       <BlockMenuBar editor={editor} onPrint={onPrint} />
