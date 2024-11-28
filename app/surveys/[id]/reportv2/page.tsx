@@ -23,6 +23,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const getReport = async () => {
       try {
         let result = await reportClient.models.Surveys.get({ id: params.id });
+        console.log(result)
 
         if (!result.errors && result.data != null) {
           const formData = JSON.parse(

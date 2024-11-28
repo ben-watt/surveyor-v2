@@ -36,7 +36,7 @@ export default function Page() {
       header: ({ column }) => (
         <SortableHeader column={column} header="Element" />
       ),
-      accessorFn: (v) => v.element.name,
+      accessorFn: (v) => v.element?.name,
     },
     {
       header: "Materials Count",

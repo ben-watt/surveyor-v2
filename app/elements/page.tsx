@@ -15,13 +15,16 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
 import { useAsyncArrayState } from "../hooks/useAsyncState";
+import { SelectionSet } from "aws-amplify/api";
 
 type ElementData = Schema["Elements"]["type"];
+const selectionSet = ["id", "name", "order", "createdAt", "components.id"] as const;
+type SelectedElementData = SelectionSet<ElementData, typeof selectionSet>;
 
 export default function Page() {
   const [isLoading, elementData, setElementData] = useAsyncArrayState(fetchReports);
 
-  const columns: ColumnDef<ElementData>[] = [
+  const columns: ColumnDef<SelectedElementData>[] = [
     {
       header: "Name",
       accessorKey: "name",
@@ -30,6 +33,11 @@ export default function Page() {
       id: "order",
       header: ({ column }) => <SortableHeader column={column} header="Order" />,
       accessorFn: (v) => (v.order ? v.order : 0),
+    },
+    {
+      id: "component count",
+      header: "Component Count",
+      accessorFn: (v) => v.components.length,
     },
     {
       id: "created",
@@ -74,7 +82,9 @@ export default function Page() {
 
   async function fetchReports() {
     try {
-      const response = await client.models.Elements.list();
+      const response = await client.models.Elements.list({
+        selectionSet: selectionSet,
+      });
       if (response.data) {
         return response.data;
       }

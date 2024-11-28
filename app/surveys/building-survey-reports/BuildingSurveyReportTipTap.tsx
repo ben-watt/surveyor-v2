@@ -27,7 +27,7 @@ const TableBlock = ({
     if (elementsArr.length % widths.length !== 0)
       console.warn("[Table Block]", "Number of children should be a multiple of widths", elementsArr.length, widths.length);
 
-    const landscapeWidth = 948; // Width of the page in landscape
+    const landscapeWidth = 928; // Width of the page in landscape
     let tableRows = [];
     for (let i = 0; i < elementsArr.length; i = i + widths.length) {
       const firstChildInRow = elementsArr[i];
@@ -42,7 +42,7 @@ const TableBlock = ({
 
       let rows = widths.map((w, j) => {
         if (j === widths.length - 1) {
-          return <td key={j}>{elementsArr[i + j]}</td>;
+          return <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>{elementsArr[i + j]}</td>;
         } else {
           return (
             <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
@@ -59,7 +59,7 @@ const TableBlock = ({
   }
 
   return (
-    <table style={{ margin: "0" }}>
+    <table>
       <tbody>{createTableRows(children)}</tbody>
     </table>
   );
@@ -95,6 +95,20 @@ const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
   );
 };
 
+const fallback = (value: any, fallbackValue: any) => {
+  if(value === undefined || value === null) 
+    return fallbackValue;
+  
+  switch (typeof value) {
+    case "string":
+      return value.length > 0 ? value : fallbackValue;
+    case "number":
+      return value === 0 ? value : fallbackValue;
+    default:
+      return fallbackValue;
+  }
+}
+
 /// This must be a sync function
 /// It needs to be rendered to a basic string rather than a react component
 export default function PDF({ form }: PdfProps) {
@@ -119,7 +133,7 @@ export default function PDF({ form }: PdfProps) {
             />
           </div>
           <div>
-            <p style={{ textAlign: "right", fontSize: "1.5em" }}>
+            <p style={{ textAlign: "right", fontSize: "20pt" }}>
               Level {form.level} Building Survey Report
             </p>
             <p style={{ textAlign: "right" }}></p>
@@ -150,7 +164,7 @@ export default function PDF({ form }: PdfProps) {
             <p style={{ textAlign: "right" }}>
               Date: {reportDate.toDateString()}
             </p>
-            <p style={{ textAlign: "right" }}>Ref: #{form.id[8]}</p>
+            <p style={{ textAlign: "right" }}>Ref: #{form.id.substring(0,8)}</p>
           </div>
         </TableBlock>
       </Page>
@@ -199,12 +213,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <p
-          style={{ fontSize: "1.5em", marginBottom: "8mm", fontWeight: "bold" }}
-        >
-          Contents
-        </p>
-        <section id="toc"></section>
+        <div data-type="table-of-contents" data-toc-data="[]"></div>
       </Page>
       <Page>
         <h1 style={{ fontWeight: "bold" }}>Definitions</h1>
@@ -216,25 +225,31 @@ export default function PDF({ form }: PdfProps) {
               Property to be maintained as usual.
             </li>
           </ul>
-          <p style={{ backgroundColor: "green" }}></p>
+          <p style={{ textAlign: "center" }}>
+            <mark style={{ backgroundColor: "green" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
+          </p>
           <ul>
             <li>
               Defects requiring repair/replacement but not considered urgent nor
               serious. Property to be maintained as usual.
             </li>
           </ul>
-          <p style={{ backgroundColor: "orange" }}></p>
+          <p style={{ textAlign: "center" }}>
+            <mark style={{ backgroundColor: "orange" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
+          </p>
           <ul>
             <li>
               Serious defects to be fully considered prior to purchase that need
               to be repaired, replace or investigated urgently.
             </li>
           </ul>
-          <p style={{ backgroundColor: "red" }}></p>
+          <p style={{ textAlign: "center" }}>
+            <mark style={{ backgroundColor: "red" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
+          </p>
           <ul>
             <li>Not inspected</li>
           </ul>
-          <p className="w-100-perc h-100-perc text-centre">
+          <p style={{ textAlign: "center"}}>
             <strong>NI</strong>
           </p>
         </TableBlock>
@@ -266,12 +281,11 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h2 style={{ fontWeight: "bold" }}>Typical House Diagram</h2>
-        <Image
+        <img
           style={{ margin: "0 auto" }}
           src="/typical-house.webp"
           alt="typical house"
           width={800}
-          height={800}
         />
       </Page>
       <Page>
@@ -283,8 +297,14 @@ export default function PDF({ form }: PdfProps) {
           <p>{form.propertyDescription.constructionDetails.value}</p>
           <h3>Year of Construction</h3>
           <p>{form.propertyDescription.yearOfConstruction.value}</p>
-          <h3>Year of Refurbishment</h3>
-          <p>{form.propertyDescription.yearOfRefurbishment.value}</p>
+          <h3>Year of Extensions</h3>
+          <p>
+            {fallback(form.propertyDescription.yearOfExtensions.value, "N/A")}
+          </p>
+          <h3>Year of Conversions</h3>
+          <p>
+            {fallback(form.propertyDescription.yearOfConversions.value, "N/A")}
+          </p>
           <h3>Grounds</h3>
           <p>{form.propertyDescription.grounds.value}</p>
           <h3>Services</h3>
@@ -563,8 +583,8 @@ to pay higher premiums in light of this information.`}
         />
         <h2 style={{ fontWeight: "bold" }}>Risks to the people</h2>
         <RiskRow
-          id={"asbestoss"}
-          risk={"Asbestoss"}
+          id={"asbestos"}
+          risk={"Asbestos"}
           description={`Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been
 concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition
 (R&D) Asbestos survey before commencing any refurbishment works.`}
@@ -607,6 +627,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
             addressed to ensure the longevity of the property and to prevent
             more costly repairs in the long term.
           </p>
+          <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
             Internally, the property exhibits reasonable condition. We noted
             that chimney breasts would benefit from having air vents installed.
@@ -624,13 +645,14 @@ Board’s website. We have not undertaken any separate inquiries with the releva
             Furthermore, we recommend a CCTV drainage survey to ascertain the
             condition of the underground drainage pipework and the septic tank.
           </p>
-
+          <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
             The property should remain in reasonable condition should all
             repairs recommended be undertaken, however, you should fully
             consider the financial implications associated with the repairs
             identified before proceeding with the purchase of the property.
           </p>
+          <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
             We recommend that your solicitor reviews legal information and
             information returned from local searches to ascertain whether there
@@ -746,25 +768,36 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           about matters affecting the property. We carefully and thoroughly
           inspect the property using our best endeavours to see as much of it as
           is physically accessible. Where this is not possible an explanation
-          will be provided. We visually inspect roofs, chimneys and other
-          surfaces on the outside of the building from ground level and, if
-          necessary, from neighbouring public property and with the help of
-          binoculars. Flat roofs no more than 3m above ground level are
-          inspected using a ladder where it is safe to do so. We inspect the
-          roof structure from inside the roof space if there is safe access. We
-          examine floor surfaces and under-floor spaces so far as there is safe
-          access and permission from the owner. We are not able to assess the
-          condition of the inside of any chimney, boiler or other flues. We do
-          not lift fitted carpets or coverings without the owner's consent.
+          will be provided.
+        </p>
+        <p></p>
+        <p style={{ textAlign: "justify" }}>
+          We visually inspect roofs, chimneys and other surfaces on the outside
+          of the building from ground level and, if necessary, from neighbouring
+          public property and with the help of binoculars. Flat roofs no more
+          than 3m above ground level are inspected using a ladder where it is
+          safe to do so. We inspect the roof structure from inside the roof
+          space if there is safe access.
+        </p>
+        <p></p>
+        <p style={{ textAlign: "justify" }}>
+          We examine floor surfaces and under-floor spaces so far as there is
+          safe access and permission from the owner. We are not able to assess
+          the condition of the inside of any chimney, boiler or other flues. We
+          do not lift fitted carpets or coverings without the owner's consent.
           Intermittent faults of services may not be apparent on the day of
-          inspection. If we are concerned about parts of the property that the
-          inspection cannot cover, the report will tell you about any further
+          inspection.
+        </p>
+        <p></p>
+        <p style={{ textAlign: "justify" }}>
+          If we are concerned about parts of the property that the inspection
+          cannot cover, the report will tell you about any further
           investigations that are needed. Where practicable and agreed we report
           on the cost of any work for identified repairs and make
           recommendations on how these repairs should be carried out. Some
           maintenance and repairs we suggest may be expensive. Purely cosmetic
           and minor maintenance defects that do not affect performance might not
-          be reported. The report that we provide is not a warranty
+          be reported. The report that we provide is not a warranty.
         </p>
       </Page>
     </>
@@ -848,12 +881,11 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               <p
                 style={{
                   fontWeight: "bold",
-                  backgroundColor: mapRagToBackgroundColour(mc.ragStatus),
+                  textAlign: "center",
                 }}
               >
-                {mc.ragStatus === "N/I" ? "NI" : ""}
+                {mc.ragStatus === "N/I" ? "NI" : <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus)}}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>}
               </p>
-
               <p></p>
               <p>
                 <strong>Condition / Defect</strong>

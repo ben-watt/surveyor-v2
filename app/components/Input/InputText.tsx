@@ -1,6 +1,12 @@
 import { Input as ShadInput } from "@/components/ui/input";
-import { UseFormRegisterReturn } from "react-hook-form";
+import {
+  FieldErrors,
+  FieldValues,
+  UseFormRegisterReturn,
+} from "react-hook-form";
 import { Label } from "./Label";
+import { ErrorMessage } from "@hookform/error-message";
+import InputError from "../InputError";
 
 interface InputTextProps {
   labelTitle?: string;
@@ -10,6 +16,7 @@ interface InputTextProps {
   className?: string;
   disabled?: boolean;
   register?: () => UseFormRegisterReturn<string>;
+  errors?: FieldErrors<FieldValues>;
 }
 
 function Input({
@@ -20,11 +27,16 @@ function Input({
   className = "",
   disabled = false,
   register,
+  errors,
 }: InputTextProps) {
-  const reg = register ? register() : {};
+  let reg = null;
+  if (register) {
+    reg = register();
+  }
+
   return (
     <div>
-      {labelTitle && <Label text={labelTitle} /> }
+      {labelTitle && <Label text={labelTitle} />}
       <ShadInput
         className="focus:ring-0 focus:border-none h-auto"
         type={type}
@@ -33,6 +45,13 @@ function Input({
         disabled={disabled}
         {...reg}
       />
+      {reg && (
+        <ErrorMessage
+          errors={errors}
+          name={reg.name}
+          render={({ message }) => InputError({ message })}
+        />
+      )}
     </div>
   );
 }

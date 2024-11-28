@@ -12,50 +12,70 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { FieldValues, useController, UseControllerProps } from "react-hook-form";
+import { ErrorMessage } from "@hookform/error-message";
+import InputError from "../InputError";
+import { useEffect } from "react";
 
 interface InputDateProps {
   labelTitle: string;
-  onChange: (d: Date | undefined) => void;
-  value?: Date;
   ref: React.Ref<HTMLInputElement>;
+  controllerProps: UseControllerProps<FieldValues>;
 }
 
-const InputDate = ({ onChange, value, labelTitle }: InputDateProps, ref : React.LegacyRef<HTMLDivElement>) => {
-  const date = value;
+const InputDate = ({ labelTitle, controllerProps }: InputDateProps, ref : React.LegacyRef<HTMLDivElement>) => {
+  const { field, formState } = useController(controllerProps);
+  const date = field?.value?.toString();
+
   const handleSelect = (d: Date | undefined) => {
-    onChange(d);
+    field.onChange(d);
   };
+
+  // Default value only set once.
+  useEffect(() => {
+    if(date) {
+      field.onChange(new Date(date));
+    }
+  }, []);
 
   return (
     <>
       <div>
-        <label>
-          <span className="text-sm">{labelTitle}</span>
-        </label>
+        <div>
+          <label>
+            <span className="text-sm">{labelTitle}</span>
+          </label>
+        </div>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-[240px] justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start" ref={ref}>
+            <Calendar
+              mode="single"
+              selected={field.value}
+              onSelect={handleSelect}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant={"outline"}
-            className={cn(
-              "w-[240px] justify-start text-left font-normal",
-              !date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : <span>Pick a date</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start" ref={ref}>
-          <Calendar
-            mode="single"
-            selected={value}
-            onSelect={handleSelect}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
+      <ErrorMessage
+        errors={formState.errors}
+        name={field.name}
+        render={(data) => InputError({ message: data.message })}
+      />
     </>
   );
 };

@@ -76,11 +76,22 @@
   }
 }
 
+.lucide {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1px;
+}
+
+.lucide * {
+  vector-effect: non-scaling-stroke;
+}
+
 .tiptap {
   --purple-light: #f3f2ff;
   --purple: #9635ff;
   --black: #000000;
   --white: #ffffff;
+  --grey-1: #676666;
   --gray-2: #e2e8f0;
   --gray-3: #cbd5e0;
 }
@@ -189,7 +200,7 @@
 
 .tiptap hr {
   border: none;
-  border-top: 1px solid var(--gray-2);
+  border-top: 2px solid var(--grey-1);
   margin: 2rem 0;
 }
 
@@ -210,7 +221,6 @@
   border: 1px solid var(--gray-3);
   box-sizing: border-box;
   min-width: 1em;
-  padding: 6px 8px;
   position: relative;
   vertical-align: top;
 }
@@ -227,7 +237,7 @@
 }
 
 .tiptap table .selectedCell:after {
-  background: var(--gray-2);
+  background-color: var(--purple-light);
   content: "";
   left: 0;
   right: 0;
@@ -235,7 +245,7 @@
   bottom: 0;
   pointer-events: none;
   position: absolute;
-  z-index: 2;
+  z-index: -1;
 }
 
 .tiptap table .column-resize-handle {
@@ -266,8 +276,12 @@
   outline: 3px solid var(--purple);
 }
 
-.tiptap li {
+.tiptap ul li {
   list-style: circle;
+}
+
+.tiptap ol li {
+  list-style: decimal;
 }
 
 .tiptap #toc li {
@@ -276,4 +290,11 @@
 
 .tiptap {
   font-family: Arial, sans-serif;
+}
+
+.tiptap *[data-toc-text]::before {
+  content: attr(data-toc-text);
+  padding-right: 7px;
+  /* width: 40px;
+  display: inline-block; */
 }

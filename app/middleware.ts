@@ -1,12 +1,11 @@
-// middleware.ts
 import { NextRequest, NextResponse } from "next/server";
-
 import { fetchAuthSession } from "aws-amplify/auth/server";
-
 import { runWithAmplifyServerContext } from "./utils/amplify-utils";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
+
+  console.log("[Middleware] Checking if user is authenticated");
 
   const authenticated = await runWithAmplifyServerContext({
     nextServerContext: { request, response },

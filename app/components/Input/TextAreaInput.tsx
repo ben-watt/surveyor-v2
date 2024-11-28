@@ -1,20 +1,42 @@
 import { Textarea } from "@/components/ui/textarea";
-import { UseFormRegisterReturn } from "react-hook-form";
+import {
+  FieldErrors,
+  FieldValues,
+  UseFormRegisterReturn,
+} from "react-hook-form";
 import { Label } from "./Label";
+import { ErrorMessage } from "@hookform/error-message";
+import InputError from "../InputError";
 
 interface TextAreaInputProps {
-    labelTitle?: string;
-    defaultValue?: string;
-    placeholder?: string;
-    register: () => UseFormRegisterReturn<string>;
+  labelTitle?: string;
+  defaultValue?: string;
+  placeholder?: string;
+  register: () => UseFormRegisterReturn<string>;
+  errors?: FieldErrors<FieldValues>;
 }
 
-export default function TextAreaInput({ register, labelTitle = "", defaultValue = "", placeholder = ""} : TextAreaInputProps){
-    const props = register();
-    return(
-        <div>
-            {labelTitle && <Label text={labelTitle} /> }
-            <Textarea {...props} placeholder={placeholder} defaultValue={defaultValue} />
-        </div>
-    )
+export default function TextAreaInput({
+  register,
+  labelTitle = "",
+  defaultValue = "",
+  placeholder = "",
+  errors,
+}: TextAreaInputProps) {
+  const reg = register();
+  return (
+    <div>
+      {labelTitle && <Label text={labelTitle} />}
+      <Textarea
+        {...reg}
+        placeholder={placeholder}
+        defaultValue={defaultValue}
+      />
+      <ErrorMessage
+        errors={errors}
+        name={reg.name}
+        render={({ message }) => InputError({ message })}
+      />
+    </div>
+  );
 }

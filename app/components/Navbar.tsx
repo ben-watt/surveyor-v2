@@ -29,6 +29,7 @@ import {
   FetchUserAttributesOutput,
 } from "aws-amplify/auth";
 import { getUrl } from "aws-amplify/storage";
+import { v4 } from "uuid";
 
 const NetworkStatus = dynamic(
   () => import("./NetworkStatus").then((mod) => mod.NetworkStatus),
@@ -39,7 +40,7 @@ export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
   return (
     <header className="flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white text-sm py-4 dark:bg-gray-800">
       <nav
-        className="max-w-[85rem] w-full mx-auto px-4 h-10 z-10 flex justify-between items-center"
+        className="max-w-[85rem] w-full mx-auto px-4 h-10 z-50 flex justify-between items-center"
         aria-label="Global"
       >
         {children}
@@ -52,6 +53,7 @@ export default function SecureNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [profileHref, setProfileHref] = useState<string | undefined>();
   const cmdBarRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen && cmdBarRef.current) {
@@ -61,14 +63,18 @@ export default function SecureNav() {
 
   useEffect(() => {
     async function getProfilePic() {
-      const userAttributes = await fetchUserAttributes();
-      const pPic = userAttributes?.profile;
-      if (pPic) {
-        const presignedUrl = await getUrl({
-          path: pPic,
-        });
+      try {
+        const userAttributes = await fetchUserAttributes();
+        const pPic = userAttributes?.profile;
+        if (pPic) {
+          const presignedUrl = await getUrl({
+            path: pPic,
+          });
 
-        setProfileHref(presignedUrl.url.href);
+          setProfileHref(presignedUrl.url.href);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile picture", error);
       }
     }
 
@@ -169,7 +175,7 @@ const CommandBar = forwardRef<HTMLInputElement, CommandBarProps>(
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup heading="Suggestions">
-              <CommandItem onSelect={() => handleNaviate("/surveys/create")}>
+              <CommandItem onSelect={() => handleNaviate(`/surveys/create?id=${v4()}`)}>
                 <NotebookPen className="mr-2 h-4 w-4" />
                 <span>Create Survey</span>
               </CommandItem>

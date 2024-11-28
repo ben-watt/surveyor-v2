@@ -6,7 +6,7 @@ import client from "../clients/AmplifyDataClient";
 import toast from "react-hot-toast";
 import { Schema } from "@/amplify/data/resource";
 
-import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
+import { JsonView, allExpanded, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 
 import {matchSorter} from 'match-sorter';
@@ -52,7 +52,6 @@ export default function Page() {
           const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
           componentData.push({
             elementId: matchingElement?.id || "",
-            //elementName: matchingElement?.name || sheet.elementName,
             name: d.type,
             materials: [{
               name: d.specification,
@@ -102,7 +101,7 @@ export default function Page() {
   }
 
   async function removeData() {
-    const tasks = elementIds.map(async (elementId) => {
+    const removeElements = elementIds.map(async (elementId) => {
       const response = await client.models.Elements.delete({ id: elementId });
       if (response.data) {
         setElementIds((prev) => prev.filter((e) => e !== elementId));
@@ -112,7 +111,20 @@ export default function Page() {
       }
     });
 
-    await Promise.all(tasks);
+    const removeComponents = async function() {
+      const componentIds  = await client.models.Components.list();
+      componentIds.data?.map(async (component) => {
+        const response = await client.models.Components.delete({ id: component.id });
+        if (response.data) {
+          console.log("Deleted component", component);
+        } else {
+          console.error("Failed to delete component", component);
+          toast.error("Failed to delete component");
+        }
+      });
+    }
+
+    await Promise.all([removeElements, removeComponents()]);
   }
 
   async function seedComponentData() {

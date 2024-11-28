@@ -7,6 +7,7 @@ export type BuildingSurveyFormData = {
         email: string,
         signaturePath: string[],
     }
+    status: "draft" | "created",
     address: string,
     clientName: string,
     reportDate: Date,
@@ -25,7 +26,7 @@ export type InputType = "text" | "number" | "date" | "textarea" | "select" | "ch
 
 export type Input<T> = {
     type: InputType,
-    value: T,
+    value?: T,
     label: string,
     placeholder: string,
     required: boolean
@@ -40,7 +41,8 @@ export type Tenure = "Freehold" | "Leasehold" | "Commonhold" | "Other" | "Unknow
 export type PropertyDescription = {
     propertyType: Input<string>,
     yearOfConstruction: Input<Year>,
-    yearOfRefurbishment: Input<Year>,
+    yearOfExtensions: Input<Year>,
+    yearOfConversions: Input<Year>,
     constructionDetails: Input<description>,
     grounds: Input<description>,
     services: Input<string>,

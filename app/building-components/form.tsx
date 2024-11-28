@@ -9,8 +9,7 @@ import {
   useForm,
   useFormContext,
 } from "react-hook-form";
-import { basicToast, successToast } from "@/app/components/Toasts";
-import { useRouter } from "next/navigation";
+import { toast } from "@/app/components/Toasts";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
@@ -27,14 +26,16 @@ type ComponentDataUpdate = Omit<
 
 interface DataFormProps {
   id?: string;
+  defaultValues?: ComponentDataUpdate;
+  onSave?: () => void;
 }
 
-export function DataForm({ id }: DataFormProps) {
-  const methods = useForm<ComponentDataUpdate>({});
+export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
+  const methods = useForm<ComponentDataUpdate>({ defaultValues: defaultValues });
   const { register, handleSubmit } = methods;
+  const [isLoading, setIsLoading] = useState(true);
 
   const [elements, setElements] = useState<Schema["Elements"]["type"][]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     if (id) {
@@ -43,6 +44,7 @@ export function DataForm({ id }: DataFormProps) {
           const response = await reportClient.models.Components.get({ id });
           console.log(response.data);
           methods.reset(response.data as ComponentDataUpdate);
+          setIsLoading(false);
         } catch (error) {
           console.error("Failed to fetch data", error);
         }
@@ -57,6 +59,10 @@ export function DataForm({ id }: DataFormProps) {
       try {
         const response = await reportClient.models.Elements.list();
         setElements(response.data);
+
+        if(!id) {
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("Failed to fetch elements", error);
       }
@@ -79,16 +85,21 @@ export function DataForm({ id }: DataFormProps) {
           });
         }
 
-        successToast("Saved");
-        router.push("/building-components");
+        toast.success("Saved");
       } catch (error) {
         console.error("Failed to save data", error);
-        basicToast(`Error unable to save data.`);
+        toast.basic(`Error unable to save data.`);
       }
+
+      onSave && onSave();
     };
 
     saveData();
   };
+
+  if(isLoading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <FormProvider {...methods}>
@@ -99,7 +110,10 @@ export function DataForm({ id }: DataFormProps) {
         />
         <Combobox
           labelTitle="Element"
-          register={() => register("elementId", { required: true })}
+          controllerProps={{
+            name: "elementId",
+            rules: { required: true },
+          }}
           data={elements.map((x) => ({ label: x.name, value: x.id }))}
         />
         <AddMaterials />

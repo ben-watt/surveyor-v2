@@ -3,7 +3,6 @@
 import React, { MouseEventHandler, useCallback, useEffect, useState } from "react";
 import Uppy, { Meta, Body, UppyFile } from "@uppy/core";
 import { useUppyState } from "@uppy/react";
-import Webcam from "@uppy/webcam";
 import ImageEditor from "@uppy/image-editor";
 import GoldenRetriever from "@uppy/golden-retriever";
 import UppyAmplifyPlugin from "./UppyAmplifyPlugin";
@@ -18,13 +17,17 @@ import dynamic from "next/dynamic";
 import {
   FieldPath,
   FieldValues,
+  Form,
   Path,
   useController,
   UseControllerProps,
 } from "react-hook-form";
 import { Label } from "./Label";
+import { ErrorMessage } from "@hookform/error-message";
+import InputError from "../InputError";
 
 interface InputImageUppyProps {
+  id?: string;
   path: string;
   initFiles?: string[];
   onUploaded?: (file: UppyFile<Meta, Body>) => void;
@@ -41,6 +44,7 @@ const Dashboard = dynamic(
 // Could be good to explore totally custom UI with
 // cropper js for editing
 function InputImageUppy({
+  id,
   path,
   initFiles,
   onUploaded,
@@ -55,16 +59,13 @@ function InputImageUppy({
   // IMPORTANT: passing an initializer function to prevent Uppy from being reinstantiated on every render.
   const [uppy] = useState(() =>
     new Uppy<Meta, Body>({
+      id: id,
       autoProceed: true,
       restrictions: {
         allowedFileTypes: ["image/*"],
         minNumberOfFiles: minNumberOfFiles,
         maxNumberOfFiles: maxNumberOfFiles,
       },
-    })
-    .use(Webcam, {
-      mobileNativeCamera: true,
-      modes: ["picture"],
     })
     .use(ImageEditor)
     .use(GoldenRetriever)
@@ -195,29 +196,30 @@ function InputImageUppy({
   };
 
   return (
-    <div className="relative">
-      <Dashboard
-        showNativePhotoCameraButton={true}
-        nativeCameraFacingMode={"environment"}
-        showLinkToFileUploadResult={true}
-        singleFileFullScreen={false}        
-        showRemoveButtonAfterComplete={true}
-        doneButtonHandler={() => {}}
-        hideCancelButton={true}
-        height={fileCount > 0 ? 500 : 200}
-        uppy={uppy}
-        showProgressDetails={true}
-        proudlyDisplayPoweredByUppy={false}
-        metaFields={metaFields}
-      />
-      {/* <div className="absolute bottom-1 left-1 text-sm">
+    <div>
+      <div className="relative">
+        <Dashboard
+          id={id}
+          showLinkToFileUploadResult={true}
+          singleFileFullScreen={false}
+          showRemoveButtonAfterComplete={true}
+          doneButtonHandler={() => {}}
+          hideCancelButton={true}
+          height={fileCount > 0 ? 500 : 100}
+          uppy={uppy}
+          showProgressDetails={true}
+          proudlyDisplayPoweredByUppy={false}
+          metaFields={metaFields}
+        />
+        {/* <div className="absolute bottom-1 left-1 text-sm">
         {fileCount} files
       </div> */}
-      {showEdit &&  (
-        <div className="absolute top-4 left-4 z-[1005]">
-          <button onClick={handleEdit}>Edit</button>
-        </div>
-      )}
+        {showEdit && (
+          <div className="absolute top-4 left-4 z-[1005]">
+            <button onClick={handleEdit}>Edit</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -252,21 +254,18 @@ type P = Path<OnlyInludeTypes<Test, string[]>>;
 //change FieldPath<TFieldValues> to Path<OnlyInludeTypes<TFieldValues, string[]>>
 // However it is not recursive and will only work for the first level of the object
 
-interface InputImageUppyPropsWithRegister<
-  TFieldValues extends FieldValues,
-  TName extends FieldPath<TFieldValues>
-> extends InputImageUppyProps {
-  rhfProps: UseControllerProps<TFieldValues, TName>;
+interface InputImageUppyPropsWithRegister extends InputImageUppyProps {
+  rhfProps: UseControllerProps<FieldValues>;
   labelText?: string;
 }
 
 /// fk = FileKey = path + file.name
-function RhfInputImage<TFieldValues extends FieldValues>({
+function RhfInputImage({
   path,
   rhfProps,
   labelText,
-}: InputImageUppyPropsWithRegister<TFieldValues, FieldPath<TFieldValues>>) {
-  const { field } = useController(rhfProps);
+}: InputImageUppyPropsWithRegister) {
+  const { field, formState } = useController(rhfProps);
   const fileNames = field.value?.map((f: string) => f.split("/").reverse()[0]) || [];
 
   const onUploaded = (file: UppyFile<Meta, Body>) => {
@@ -285,10 +284,16 @@ function RhfInputImage<TFieldValues extends FieldValues>({
     <div {...field}>
       {labelText && <Label text={labelText} />}
       <InputImageUppy
+        id={path}
         path={path}
         initFiles={fileNames}
         onUploaded={onUploaded}
         onDeleted={onDeleted}
+      />
+      <ErrorMessage
+        errors={formState.errors}
+        name={field.name}
+        render={({ message }) => InputError({ message })}
       />
     </div>
   );
