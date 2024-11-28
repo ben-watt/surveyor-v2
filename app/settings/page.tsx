@@ -13,6 +13,8 @@ import {matchSorter} from 'match-sorter';
 
 import bankOfDefects from "./defects.json";
 import elements from "./elements.json";
+import { db } from "../clients/Database";
+import { dexieDb } from "../clients/Dexie";
 
 type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section"> & { id?: string };
 const seedElementData: ElementData[] = elements;
@@ -65,39 +67,51 @@ export default function Page() {
     return componentData;
   }
 
-  useEffect(() => {
-    async function fetchReports() {
-      try {
-        const response = await client.models.Elements.list();
+  // useEffect(() => {
+  //   async function fetchReports() {
+  //     try {
+  //       const response = await client.models.Elements.list();
 
-        if (response.data) {
-          setElementIds(response.data.map((e) => e.id));
-          setElements(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch elements", error);
-      }
-    }
-    fetchReports();
-  }, []);
+  //       if (response.data) {
+  //         setElementIds(response.data.map((e) => e.id));
+  //         setElements(response.data);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch elements", error);
+  //     }
+  //   }
+  //   fetchReports();
+  // }, []);
 
   async function seedData() {
     try {
+      console.log("Seeding elements", seedElementData);
       const tasks = seedElementData.map(async (element) => {
-        const response = await client.models.Elements.create(element);
+        return db.elements.add({
+          name: element.name,
+          description: element.description ?? "",
+          order: element.order ?? 0,
+          section: element.section
+        });
 
-        if (response.data) {
-          setElementIds((prev) => [...prev, response!.data!.id]);
-        } else {
-          console.error("Failed to seed element", element);
-          toast.error("Failed to seed element");
-        }
+        // const response = await client.models.Elements.create(element);
+
+        // if (response.data) {
+        //   setElementIds((prev) => [...prev, response!.data!.id]);
+        // } else {
+        //   console.error("Failed to seed element", element);
+        //   toast.error("Failed to seed element");
+        // }
       });
 
       await Promise.all(tasks);
     } catch (error) {
       console.error("Failed to seed elements", error);
     }
+
+    dexieDb.elements.toArray().then((elements) => {
+      console.log("[DBV2] Elements", elements);
+    });
   }
 
   async function removeData() {

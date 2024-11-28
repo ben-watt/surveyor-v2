@@ -417,12 +417,10 @@ function Report({ initFormValues }: ReportProps) {
   useDebouncedEffect(
     () => {
       const autoSave = async () => {
-        await db.surveys.upsert(
+        await db.surveys.upsert(initFormValues.id,
           {
-            id: initFormValues.id,
             content: JSON.stringify(allFields),
-          },
-          { localOnly: true }
+          }
         );
 
         toast.success("Autosaved");
@@ -442,12 +440,11 @@ function Report({ initFormValues }: ReportProps) {
 
       form.status = "draft";
 
-      await db.surveys.upsert(
+      await db.surveys.upsert(form.id,
         {
           id: form.id,
           content: JSON.stringify(form),
         },
-        { localOnly: true }
       );
 
       toast.success("Saved as Draft");
@@ -467,8 +464,7 @@ function Report({ initFormValues }: ReportProps) {
 
       console.log("[BuildingSurveyForm]", "Submitting form", form);
 
-      let _ = await db.surveys.upsert({
-        id: form.id,
+      let _ = await db.surveys.upsert(form.id, {
         content: JSON.stringify(form),
       });
 

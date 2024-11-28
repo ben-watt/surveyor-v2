@@ -29,7 +29,8 @@ type TableData = BuildingSurveyFormData;
 
 function HomePage() {
   const [isLoading, surveys] = db.surveys.useList();
-  const data = surveys.map(x => {
+
+  const data = surveys?.map(x => {
     return JSON.parse(x.content as string) as BuildingSurveyFormData;
   });
   

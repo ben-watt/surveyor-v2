@@ -7,8 +7,7 @@ import "instantsearch.css/themes/satellite.css";
 import { Authenticator } from "@aws-amplify/ui-react";
 import { Toaster } from "react-hot-toast";
 import SecureNav from "./components/Navbar";
-import { dbV2 } from "./clients/Dexie";
-import { useEffect } from "react";
+import { dexieDb } from "./clients/Dexie";
 import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { DynamicDrawerProvider } from "./components/Drawer";
@@ -26,10 +25,10 @@ export default function RootLayout({
 
   useEffect(() => {
     async function init() {
-      dbV2.cloud.login()
-      const user = dbV2.cloud.currentUser
+      dexieDb.cloud.login()
+      const user = dexieDb.cloud.currentUser
       
-      dbV2.surveys.toArray().then((survey) => {
+      dexieDb.surveys.toArray().then((survey) => {
         console.log("[DBV2] Survey", survey);
       });
     
@@ -47,7 +46,6 @@ export default function RootLayout({
         <DynamicDrawerProvider>
           <TooltipProvider>
             <div className="print:hidden">
-              {isAuthenticated && <SecureNav />}
               <Toaster position="top-right" />
             </div>
             <div className="m-auto max-w-[85rem] print:max-w-max">
