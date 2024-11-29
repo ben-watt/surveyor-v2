@@ -38,6 +38,7 @@ import { fetchUserAttributes } from "aws-amplify/auth";
 import { ComponentPicker } from "./ComponentPicker";
 import { Err, Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/hooks/useAsyncError";
+import Link from "next/link";
 
 const ImageInput = dynamic(
   () =>
@@ -361,6 +362,8 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
       const formResult = await createDefaultFormValues(id);
       if (formResult.ok) {
         setFormData(formResult.val);
+        // Todo: May be worth saving and re-directing here so we don't create a new form on refresh
+        // or simply updating the browser history
       } else {
         throwError(formResult.val);
       }
@@ -384,15 +387,13 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   }, [id, isLoading, report, throwError]);
 
   return (
-    <div className="md:grid md:grid-cols-4 mb-4">
-      <div className="col-start-2 col-span-2">
-        {formData ? (
+    <>
+     {formData ? (
           <Report initFormValues={formData} />
         ) : (
           <div>Loading...</div>
         )}
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -486,104 +487,12 @@ function Report({ initFormValues }: ReportProps) {
   };
 
   return (
-    <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit, onError)}>
-          <FormSection title="Report Details">
-            <div>
-              <Combobox
-                labelTitle="Level"
-                data={[
-                  { label: "Level 2", value: "2" },
-                  { label: "Level 3", value: "3" },
-                ]}
-                controllerProps={{
-                  name: "level",
-                  rules: { required: true },
-                }}
-              />
-            </div>
-            <div>
-              <Input
-                labelTitle="Address"
-                placeholder="123 Main St, London, UK"
-                register={() => register("address", { required: true })}
-              />
-            </div>
-            <div>
-              <Input
-                labelTitle="Client"
-                placeholder="Mr John Doe"
-                register={() => register("clientName", { required: true })}
-              />
-            </div>
-            <div>
-              <InputDate
-                labelTitle="Inspection Date"
-                controllerProps={{
-                  name: "inspectionDate",
-                  rules: {
-                    required: true,
-                    validate: (v) => {
-                      const endOfDay = new Date();
-                      endOfDay.setHours(23, 59, 59, 999);
-                      return (
-                        new Date(v) < endOfDay ||
-                        "Date cannot be in the future"
-                      );
-                    },
-                  },
-                }}
-              />
-            </div>
-            <div>
-              <Input
-                labelTitle="Weather"
-                placeholder="Sunny, clear, 20°C"
-                register={() => register("weather", { required: true })}
-              />
-            </div>
-            <div>
-              <TextAreaInput
-                labelTitle="Orientation"
-                register={() => register("orientation", { required: true })}
-              />
-            </div>
-            <div>
-              <TextAreaInput
-                labelTitle="Situation"
-                register={() => register("situation", { required: true })}
-              />
-            </div>
-            <div>
-              <ImageInput
-                labelText="Money Shot"
-                rhfProps={{
-                  name: "moneyShot",
-                  rules: {
-                    validate: (v) =>
-                      v.length == 1 || "Only one image is required",
-                  },
-                }}
-                minNumberOfFiles={1}
-                maxNumberOfFiles={1}
-                path={`report-images/${initFormValues.id}/moneyShot/`}
-              />
-            </div>
-            <div>
-              <ImageInput
-                labelText="Front Elevation Images"
-                rhfProps={{
-                  name: "frontElevationImagesUri",
-                  rules: {
-                    validate: (v) =>
-                      v.length > 0 ||
-                      "At least one elevation image is required",
-                  },
-                }}
-                path={`report-images/${initFormValues.id}/frontElevationImages/`}
-              />
-            </div>
-          </FormSection>
+    <div>
+      <div>
+        <Link href="/surveys/create/report-details">Report Details</Link>
+      </div>
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit, onError)}>
           <FormSection title="Property Description">
             {Object.keys(initFormValues.propertyDescription)?.map((key) => {
               const propKey =
@@ -658,41 +567,42 @@ function Report({ initFormValues }: ReportProps) {
               </FormSection>
             );
           })}
-        <FormSection title="Checklist">
-          {initFormValues.checklist.map((checklist, index) => {
-            return (
-              <div className="mt-4 mb-4" key={index}>
-                <div>
-                  {mapToInputType(
-                    checklist,
-                    `checklist.${index}.value`,
-                    register
-                  )}
+          <FormSection title="Checklist">
+            {initFormValues.checklist.map((checklist, index) => {
+              return (
+                <div className="mt-4 mb-4" key={index}>
+                  <div>
+                    {mapToInputType(
+                      checklist,
+                      `checklist.${index}.value`,
+                      register
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </FormSection>
-        <div>
-          {Object.values(formState.errors).length > 0 && (
-            <InputError message="Please fix the errors above before saving" />
-          )}
-        </div>
-        <div className="space-y-2">
-          <PrimaryBtn className="w-full flex justify-center" type="submit">
-            Save
-          </PrimaryBtn>
-          {initFormValues.status === "draft" && (
-            <Button
-              className="w-full flex justify-center"
-              variant="secondary"
-              onClick={saveAsDraft}
-            >
-              Save As Draft
-            </Button>
-          )}
-        </div>
-      </form>
-    </FormProvider>
+              );
+            })}
+          </FormSection>
+          <div>
+            {Object.values(formState.errors).length > 0 && (
+              <InputError message="Please fix the errors above before saving" />
+            )}
+          </div>
+          <div className="space-y-2">
+            <PrimaryBtn className="w-full flex justify-center" type="submit">
+              Save
+            </PrimaryBtn>
+            {initFormValues.status === "draft" && (
+              <Button
+                className="w-full flex justify-center"
+                variant="secondary"
+                onClick={saveAsDraft}
+              >
+                Save As Draft
+              </Button>
+            )}
+          </div>
+        </form>
+      </FormProvider>
+    </div>
   );
 }
