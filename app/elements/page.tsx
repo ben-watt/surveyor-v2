@@ -16,13 +16,25 @@ import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
 import { useAsyncArrayState } from "../hooks/useAsyncState";
 import { SelectionSet } from "aws-amplify/api";
+import { db } from "../clients/Database";
+import { Component, Element } from "@/app/clients/Dexie";
 
-type ElementData = Schema["Elements"]["type"];
-const selectionSet = ["id", "name", "order", "createdAt", "components.id"] as const;
-type SelectedElementData = SelectionSet<ElementData, typeof selectionSet>;
+// type ElementData = Schema["Elements"]["type"];
+// const selectionSet = [
+//   "id",
+//   "name",
+//   "order",
+//   "createdAt",
+//   "components.id",
+// ] as const;
+// type SelectedElementData = SelectionSet<ElementData, typeof selectionSet>;
+
+type SelectedElementData = Element & { components: Component[] };
 
 export default function Page() {
-  const [isLoading, elementData, setElementData] = useAsyncArrayState(fetchReports);
+  const [isLoading, elementData] = db.elements.useListWith<SelectedElementData>("components", async (x, db) => await db.components.where({ elementId: x.id }).toArray());
+
+  console.log("[elementData]", elementData);
 
   const columns: ColumnDef<SelectedElementData>[] = [
     {
@@ -40,15 +52,15 @@ export default function Page() {
       accessorFn: (v) => v.components.length,
     },
     {
-      id: "created",
+      id: "updated",
       header: ({ column }) => (
-        <SortableHeader column={column} header="Created" />
+        <SortableHeader column={column} header="Last Updated" />
       ),
-      accessorFn: (v) => new Date(v.createdAt),
+      accessorFn: (v) => new Date(v.updatedAt),
       cell: (props) => {
         const date = props.getValue() as Date;
         return date.toLocaleDateString();
-      }
+      },
     },
     {
       id: "actions",
@@ -80,30 +92,9 @@ export default function Page() {
     },
   ];
 
-  async function fetchReports() {
-    try {
-      const response = await client.models.Elements.list({
-        selectionSet: selectionSet,
-      });
-      if (response.data) {
-        return response.data;
-      }
-      return [];
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   function deleteFn(id: string): void {
     async function deleteAsync() {
-      try {
-        const response = await client.models.Elements.delete({ id });
-        if (!response.errors && response.data != null) {
-          setElementData(elementData.filter((r) => r.id !== id));
-        }
-      } catch (error) {
-        console.error(error);
-      }
+      await db.elements.delete(id);
     }
 
     deleteAsync();

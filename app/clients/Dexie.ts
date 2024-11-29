@@ -16,20 +16,22 @@ export type Element = {
   order: number;
   section: string;
   description: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type Component = {
   id: string;
   name: string;
   elementId: string;
-  element: Element;
-  defects: Defect[];
 }
 
 export type Defect = {
   id: string;
   name: string;
   materials: Material[];
+  componentId: string;
+  component: Component;
   description: string;
 }
 
@@ -48,7 +50,7 @@ const db = new Dexie('SurveyorApp', { addons: [dexieCloud] }) as Dexie & {
 db.version(1).stores({
   surveys: '@id',
   elements: '@id',
-  components: '@id',
+  components: '@id,elementId',
   defects: '@id', 
   materials: 'name',
 });

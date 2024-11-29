@@ -9,16 +9,16 @@ import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect } from "react";
 import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "../components/Input/ComboBox";
+import { db } from "../clients/Database";
 
-type ElementsData = Schema["Elements"]["type"];
-type ElementsDataUpdate = Omit<ElementsData, "createdAt" | "updatedAt">;
+type ElementsData = Element;
 
 interface DataFormProps {
   id?: string;
 }
 
 export function DataForm({ id }: DataFormProps) {
-  const form = useForm<ElementsDataUpdate>({});
+  const form = useForm<ElementsData>({});
   const { register, handleSubmit } = form;
   const router = useRouter();
 
@@ -26,9 +26,14 @@ export function DataForm({ id }: DataFormProps) {
     if (id) {
       const fetch = async () => {
         try {
-          const response = await reportClient.models.Elements.get({ id });
-          form.reset(response.data as ElementsDataUpdate);
-          console.debug("fetched existing data", response.data);
+          const response = await db.elements.get(id);
+          if (!response) {
+            console.error("Element not found");
+            return;
+          }
+          
+          form.reset(response);
+          console.debug("fetched existing data", response);
         } catch (error) {
           console.error("Failed to fetch defect", error);
         }
@@ -38,20 +43,14 @@ export function DataForm({ id }: DataFormProps) {
     }
   }, [form, id]);
 
-  const onSubmit = (data: ElementsDataUpdate) => {
+  const onSubmit = (data: ElementsData) => {
     const save = async () => {
       try {
         if (!data.id) {
-          await reportClient.models.Elements.create(data);
+          await db.elements.add(data);
           toast.success("Created Element");
         } else {
-          await reportClient.models.Elements.update({
-            id: data.id,
-            name: data.name,
-            order: data.order,
-            section: data.section,
-            description: data.description,
-          });
+          await db.elements.upsert(data.id, data);
           toast.success("Updated Element");
         }
 

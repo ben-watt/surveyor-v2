@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import client from "../clients/AmplifyDataClient";
 import toast from "react-hot-toast";
 import { Schema } from "@/amplify/data/resource";
 
@@ -14,7 +13,6 @@ import {matchSorter} from 'match-sorter';
 import bankOfDefects from "./defects.json";
 import elements from "./elements.json";
 import { db } from "../clients/Database";
-import { dexieDb } from "../clients/Dexie";
 
 type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section"> & { id?: string };
 const seedElementData: ElementData[] = elements;
@@ -23,14 +21,15 @@ type ComponentData = Omit<Schema["Components"]["type"], "owner" | "createdAt" | 
 type ComponentDataView = ComponentData;
 
 export default function Page() {
-  const [elementIds, setElementIds] = useState<string[]>([]);
-  const [elements, setElements] = useState<ElementData[]>([]);
   const [componentData, setComponentData] = useState<ComponentData[]>([]);
+  const [loadingElements, elements] = db.elements.useList();
+  const [loadingComponents, components] = db.components.useList();
 
   useEffect(() => {
+    if(loadingElements) return;
     const componentData = mapBodToComponentData(bankOfDefects, elements);
     setComponentData(componentData);
-  }, [elements])
+  }, [elements, loadingElements])
 
 
   function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[]): ComponentDataView[] {
@@ -51,9 +50,11 @@ export default function Page() {
           }
         }
         else {
+          console.log("[matchSorter]", elements, sheet.elementName);
           const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
+          console.log("[matching element]", matchingElement);
           componentData.push({
-            elementId: matchingElement?.id || "",
+            elementId: matchingElement?.id ?? "",
             name: d.type,
             materials: [{
               name: d.specification,
@@ -67,91 +68,49 @@ export default function Page() {
     return componentData;
   }
 
-  // useEffect(() => {
-  //   async function fetchReports() {
-  //     try {
-  //       const response = await client.models.Elements.list();
-
-  //       if (response.data) {
-  //         setElementIds(response.data.map((e) => e.id));
-  //         setElements(response.data);
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to fetch elements", error);
-  //     }
-  //   }
-  //   fetchReports();
-  // }, []);
-
   async function seedData() {
     try {
-      console.log("Seeding elements", seedElementData);
-      const tasks = seedElementData.map(async (element) => {
+      const elementDataSeedTasks = seedElementData.map(async (element) => {
         return db.elements.add({
           name: element.name,
           description: element.description ?? "",
           order: element.order ?? 0,
           section: element.section
         });
-
-        // const response = await client.models.Elements.create(element);
-
-        // if (response.data) {
-        //   setElementIds((prev) => [...prev, response!.data!.id]);
-        // } else {
-        //   console.error("Failed to seed element", element);
-        //   toast.error("Failed to seed element");
-        // }
       });
 
-      await Promise.all(tasks);
+      await Promise.all(elementDataSeedTasks);
     } catch (error) {
       console.error("Failed to seed elements", error);
     }
-
-    dexieDb.elements.toArray().then((elements) => {
-      console.log("[DBV2] Elements", elements);
-    });
   }
 
   async function removeData() {
-    const removeElements = elementIds.map(async (elementId) => {
-      const response = await client.models.Elements.delete({ id: elementId });
-      if (response.data) {
-        setElementIds((prev) => prev.filter((e) => e !== elementId));
-      } else {
-        console.error("Failed to delete element", elementId);
-        toast.error("Failed to delete element");
-      }
+    const removeElements = elements.map(async (e) => {
+      db.elements.delete(e.id);
     });
 
-    const removeComponents = async function() {
-      const componentIds  = await client.models.Components.list();
-      componentIds.data?.map(async (component) => {
-        const response = await client.models.Components.delete({ id: component.id });
-        if (response.data) {
-          console.log("Deleted component", component);
-        } else {
-          console.error("Failed to delete component", component);
-          toast.error("Failed to delete component");
-        }
-      });
-    }
+    const removeComponents = components.map(async c => {
+      await db.components.delete(c.id);
+    })
 
-    await Promise.all([removeElements, removeComponents()]);
+    await Promise.all([removeElements, removeComponents]);
   }
 
   async function seedComponentData() {
     try {
       const tasks = componentData.map(async (component) => {
-        const response = await client.models.Components.create(component);
-
-        if (response.data) {
-          console.log("Created component", component);
-        } else {
+        try {
+          await db.components.add({
+            elementId: component.elementId,
+            name: component.name,
+          });
+        } catch(error) {
           console.error("Failed to seed component", component);
           toast.error(`Failed to seed component ${component.name}`);
         }
+        
+        console.log("Created component", component);
       });
 
       await Promise.all(tasks);
@@ -173,7 +132,11 @@ export default function Page() {
             <li>
               <div className="flex gap-4">
                 <div>Elements</div>
-                <div>{elementIds.length}</div>
+                <div>{elements.length}</div>
+              </div>
+              <div className="flex gap-4">
+                <div>Components</div>
+                <div>{components.length}</div>
               </div>
             </li>
           </ul>
@@ -182,7 +145,7 @@ export default function Page() {
           <Button
             onClick={() => seedData()}
             variant="default"
-            disabled={elementIds.length > 0}
+            disabled={elements.length > 0}
           >
             Seed Data
           </Button>
@@ -191,14 +154,14 @@ export default function Page() {
           <Button
             onClick={() => removeData()}
             variant="destructive"
-            disabled={elementIds.length == 0}
+            disabled={elements.length == 0}
           >
             Remove Data
           </Button>
         </div>
         <h2>Component Data</h2>
-        <JsonView data={componentData} shouldExpandNode={allExpanded} style={defaultStyles} clickToExpandNode={true} />
         <Button onClick={() => seedComponentData()}>Seed Component Data</Button>
+        <JsonView data={componentData} shouldExpandNode={allExpanded} style={defaultStyles} clickToExpandNode={true} />
       </div>
     </>
   );
