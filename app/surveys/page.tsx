@@ -132,7 +132,7 @@ function HomePage() {
                   </Link>
                 </DropdownMenuItem>
                 {showGenerate && (<DropdownMenuItem>
-                  <Link href={`/surveys/${reportId}/reportv2`}>
+                  <Link href={`/reports/reportv2/${reportId}`}>
                     Generate report
                   </Link>
                 </DropdownMenuItem>)}
