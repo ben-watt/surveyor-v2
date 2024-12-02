@@ -49,21 +49,21 @@ const PropertyDescriptionForm = ({
   return (
     <FormProvider {...methods}>
         <FormSection title="Property Description">
-        {Object.keys(initValues).map((key) => {
-            const propKey = key as keyof Omit<PropertyDescription, "status">;
-            const property = initValues[propKey] as Input<any>;
-            if (isInputT(property)) {
-            const reqName = `${propKey}.value` as const;
+            {Object.keys(initValues).map((key) => {
+                const propKey = key as keyof Omit<PropertyDescription, "status">;
+                const property = initValues[propKey] as Input<any>;
+                if (isInputT(property)) {
+                const reqName = `${propKey}.value` as const;
 
-            return (
-                <div key={key} className="mt-1 mb-1">
-                {mapToInputType(property, reqName, register)}
-                </div>
-            );
-            } else {
-            return (<div key={key}></div>);
-            }
-        })}
+                return (
+                    <div key={key} className="mt-1 mb-1">
+                    {mapToInputType(property, reqName, register)}
+                    </div>
+                );
+                } else {
+                    return null;
+                }
+            })}
         </FormSection>
     </FormProvider>
   );

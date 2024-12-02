@@ -40,9 +40,9 @@ export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends
       const fetchLocal = async () => {
         const localData = await table.toArray();
 
-        table.hook("creating", (primKey, obj, transaction) => { setData([...data, obj]); });
-        table.hook("updating", (mods, primKey, obj, transaction) => { setData(data.map((d) => d.id === obj.id ? obj : d)); });
-        table.hook("deleting", (primKey, obj, transaction) => { setData(data.filter((d) => d.id !== obj.id)); });
+        table.hook("creating", (primKey, obj, transaction) => { setData(prev => [...prev, obj]); });
+        table.hook("updating", (mods, primKey, obj, transaction) => { setData(prev => prev.map((d) => d.id === obj.id ? obj : d)); });
+        table.hook("deleting", (primKey, obj, transaction) => { setData(prev => prev.filter((d) => d.id !== obj.id)); });
 
         setData(localData);
         setHydrated(true);
