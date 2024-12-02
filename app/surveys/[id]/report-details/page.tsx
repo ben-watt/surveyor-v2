@@ -9,10 +9,9 @@ import dynamic from "next/dynamic";
 import { FormProvider, SubmitErrorHandler, useForm } from "react-hook-form";
 import { ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { PrimaryBtn } from "@/app/components/Buttons";
-//import { useBuildingSurveyStore } from "../../building-survey-reports/BuildingSurveyStore";
-import { report } from "process";
-import { error } from "console";
-import { db } from "@/app/clients/Database";
+import { surveyStore } from "@/app/clients/Database";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const ImageInput = dynamic(
   () =>
@@ -31,27 +30,53 @@ interface ReportDetailsFormProps {
 const ReportDetailsForm = ({ params: { id } }: ReportDetailsFormProps) => {
   const methods = useForm<ReportDetails>();
   const { register, handleSubmit } = methods;
-  const survey = db.surveys.useGet(id); 
+  const [isLoading, survey] = surveyStore.useGet(id); 
+  const router = useRouter();
+
+
+  useEffect(() => {
+    if (survey) {
+      methods.reset(survey.content.reportDetails);
+    }
+  }, [methods, survey])
 
   const onValidHandler = (data: any): void => {
     console.log("handleSubmit", data);
-    // db.surveys.upsert({
-    //   id: id,
-    //   reportDetails: {
-    //     ...data,
-    //     status: { status: "complete", errors: [] },
-    //   },
-    // })
+    if(!survey) return;
+
+    surveyStore.update({
+      ...survey,
+      id: id,
+      content: {
+        ...survey.content,
+        reportDetails: {
+          ...data,
+          status: { status: "complete", errors: [] },
+        },
+      }
+    })
+
+    router.push(`/surveys/${id}`);
   };
 
   const onInvalidHandler: SubmitErrorHandler<ReportDetails> = (errors) => {
-    console.log("handleSubmit errors", errors);
-    // store.updateReportDetails(id, {
-    //   status: {
-    //     status: "error",
-    //     errors: Object.values(errors).map((e) => e.message ?? ""),
-    //   },
-    // });
+    console.log("handleSubmit errors", errors, survey);
+    if(!survey) return;
+
+    surveyStore.update({
+      ...survey,
+      id: id,
+      content: {
+        ...survey.content,
+        reportDetails: {
+          ...methods.getValues(),
+          status: {
+            status: "error",
+            errors: Object.values(errors).map((e) => e.message ?? ""),
+          },
+        },
+      },
+    });
   };
 
   const AtLeastOneImageValidator = (v: any) => {

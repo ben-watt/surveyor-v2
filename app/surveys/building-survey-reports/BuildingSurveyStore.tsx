@@ -12,7 +12,6 @@ import {
 import { db, Survey } from "@/app/clients/Dexie";
 import client from "@/app/clients/AmplifyDataClient";
 import { Schema } from "@/amplify/data/resource";
-import { json } from "stream/consumers";
 
 
 type CreateSurvey = Omit<Survey, "syncStatus" | "updatedAt" | "createdAt" | "owner">;
@@ -30,7 +29,9 @@ interface SurveyStore {
   syncLocalChangesToServer: () => void;
 }
 
-const dexieStorage = createJSONStorage<SurveyStore>(() => ({
+const dexieStorage = createJSONStorage<{surveys: {
+    [key: string]: Survey;
+  }}>(() => ({
   /**
    * Retrieve all items from the Dexie database for the given key
    * (e.g., surveys).
@@ -55,7 +56,7 @@ const dexieStorage = createJSONStorage<SurveyStore>(() => ({
         return "[]";
       }
     }
-    return null; // Return null for unknown keys
+    return null;
   },
 
   /**
@@ -251,6 +252,7 @@ const useSurveyStore = create<SurveyStore, any>(
       onRehydrateStorage: (state) => {
         return () => state.setHasHydrated(true);
       },
+      partialize: (state) => ({ surveys: state.surveys }),
     }
   )
 );

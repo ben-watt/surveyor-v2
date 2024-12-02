@@ -21,26 +21,16 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
-import { db } from "@/app/clients/Database";
+import { surveyStore } from "@/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
-import { useSurveyStore } from "./building-survey-reports/BuildingSurveyStore";
-import { StateEnum } from "@aws-sdk/client-rum";
 
 
 type TableData = BuildingSurveyFormData;
 
 function HomePage() {
-  const data = useSurveyStore((state) => state.surveys);
-  const _hasHydrated = useSurveyStore((state) => state._hasHydrated);
-
-  console.log("[Hydration Complete]", useSurveyStore.getState());
-  
-  
+  const [isLoading, data] = surveyStore.useList();
   const [createId, setCreateId] = useState<string>("");
 
-  useEffect(() => {
-    console.log("[store]", data, _hasHydrated);
-  }, [data, _hasHydrated]);
 
   useEffect(() => {
     setCreateId(v4());
@@ -48,7 +38,7 @@ function HomePage() {
 
   const deleteSurvey = async (id: string) => {
     try {
-      db.surveys.delete(id);
+      surveyStore.remove(id);
     } catch (error) {
       console.error(error);
     }
@@ -155,7 +145,7 @@ function HomePage() {
       },
     ];
 
-    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={Object.values(data).map(x => x.content)} />
+    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={data.map(x => x.content)} />
   }
 }
 

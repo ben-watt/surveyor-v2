@@ -1,281 +1,154 @@
-import { useEffect, useState } from "react";
-import { CreateSurvey, db as dexieDb, Survey, UpdateSurvey } from "./Dexie";
 import Dexie from "dexie";
+import { useEffect, useState } from "react";
+import { db, Survey } from "./Dexie";
 import client from "./AmplifyDataClient";
-import { Schema } from "@/amplify/data/resource";
-import { BuildingSurveyFormData } from "../surveys/building-survey-reports/BuildingSurveyReportSchema";
+
+// Utility to Map Server Responses to Survey Type
+const mapToSurvey = (data: any): Survey => ({
+  id: data.id,
+  syncStatus: "synced",
+  content: data.content,
+  updatedAt: data.updatedAt,
+  createdAt: data.createdAt,
+});
 
 
-interface RemoteData {
+type TableEntity = {
   id: string;
-  updatedAt: string | undefined;
+  updatedAt: string;
+  syncStatus: string; //"synced" | "draft" | "queued" | "failed";
 }
 
-interface DexieData<T extends RemoteData> {
-    id: string;
-    updatedAt: Date;
-    syncState: "local" | "synced";
-    data: T;
-}
-
-interface Result<T> {
-  data: T | null;
-  errors: string[] | null;
-}
-
-type OptionalExceptFor<T, TRequired extends keyof T> = Partial<T> & Pick<T, TRequired>;
-
-type CreateDexieHooksProps<T extends RemoteData, TCreate, TUpdate> = {
-  db: Dexie;
-  tableName: string;
-  remoteList: () => Promise<T[]>;
-  remoteAdd: (data: TCreate) => Promise<Result<T>>;
-  remoteDelete: (id: string) => Promise<Result<T>>;
-  remoteUpdate: (data: TUpdate) => Promise<Result<T>>;
-  remoteGet: (id: string) => Promise<Result<T>>;
-};
-
-function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends OptionalExceptFor<T, 'id'>>({
-  db,
-  tableName,
-  remoteList: remoteQuery,
-  remoteAdd,
-  remoteDelete,
-  remoteUpdate,
-  remoteGet,
-}: CreateDexieHooksProps<T, TCreate, TUpdate>) {
-
-  const tbl = db.table<DexieData<T>>(tableName);
-
-  const updateLocalDbIfNewer = async (
-    remote: T
-  ): Promise<boolean> => {
-    if (remote.id === undefined) {
-      return false;
-    }
-
-    const localData = await tbl.get(remote.id as never);
-    if (remote.updatedAt === undefined) {
-      return false;
-    }
-
-    if (localData && localData.updatedAt) {
-      if (new Date(remote.updatedAt) > new Date(localData.updatedAt)) {
-        await tbl.put({ id: remote.id, syncState: "synced", updatedAt: new Date(), data: remote });
-        return true;
-      }
-      return false;
-    } else {
-      await tbl.add({ id: remote.id, syncState: "synced", updatedAt: new Date(), data: remote });
-      return true;
-    }
-  };
+// Factory for Dexie Hooks
+export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: string }>(
+  db: Dexie,
+  tableName: string,
+  remoteHandlers: {
+    list: () => Promise<T[]>;
+    create: (data: TCreate) => Promise<T>;
+    update: (data: TUpdate) => Promise<T>;
+    delete: (id: string) => Promise<void>;
+  }
+) {
+  const table = db.table<T>(tableName);
 
   const useList = (): [boolean, T[]] => {
     const [data, setData] = useState<T[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      tbl.hook("creating", (ctx, survey) => {
-        setData((prev) => [...prev, survey.data]);
-      });
-
-      tbl.hook("deleting", (pk, obj, transaction) => {
-        setData((prev) => {
-          return prev.filter((s) => s.id !== (pk as string));
-        });
-      });
-
-      tbl.hook("updating", (mod, pk, obj, transaction) => {
-        setData((prev) => prev.map((s) => (s.id === obj.id ? obj.data : s)));
-      });
-    }, []);
-
-    useEffect(() => {
-      const fetchLocal = async (): Promise<void> => {
-        const data = await tbl.toArray();
-        setData(data.map((d) => d.data));
-        setIsLoading(false);
-      };
-
-      /// Fetches the surveys from the server and updates the local database
-      /// with the latest data. If we have a newer version of the survey on the server
-      /// we update the local database with the new data.
-      const fetchRemote = async () => {
-        const response = await remoteQuery();
-
-        const newRecordsOnServer = response.map(
-          async (d) => await updateLocalDbIfNewer(d)
-        );
-
-        const result = await Promise.all(newRecordsOnServer);
-        if (result.some((r) => r)) {
-          fetchLocal();
-        }
+      const fetchLocal = async () => {
+        const localData = await table.toArray();
+        setData(localData);
+        setLoading(false);
       };
 
       fetchLocal();
-      fetchRemote();
     }, []);
 
-    return [isLoading, data];
+    return [loading, data];
   };
 
-  const useGet = (
-    id: string
-  ): [boolean, T | undefined] => {
-    const [data, setData] = useState<T>();
-    const [isLoading, setIsLoading] = useState(true);
+  const useGet = (id: string): [boolean, T | undefined] => {
+    const [data, setData] = useState<T | undefined>(undefined);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      const fetch = async () => {
-        const localData = await tbl.get(id);
-        setData(localData?.data);
-        setIsLoading(false);
+      const fetchLocal = async () => {
+        const localData = await table.get(id);
+        setData(localData);
+        setLoading(false);
       };
 
-      const fetchRemote = async () => {
-        const result = await remoteGet(id);
-        if (result.data) {
-          await updateLocalDbIfNewer(result.data);
-          fetch();
+      fetchLocal();
+    }, [id]);
+
+    return [loading, data];
+  };
+
+  const syncWithServer = async () => {
+    const remoteData = await remoteHandlers.list();
+    for (const remote of remoteData) {
+      const local = await table.get(remote.id);
+      if (!local || new Date(remote.updatedAt) > new Date(local.updatedAt)) {
+        await table.put({ ...remote, syncStatus: "synced" });
+      }
+    }
+
+    const allLocal = await table.toArray();
+    for (const local of allLocal) {
+      if (local.syncStatus === "queued") {
+        try {
+          const updated = local.id
+            ? await remoteHandlers.update(local as unknown as TUpdate)
+            : await remoteHandlers.create(local as unknown as TCreate);
+
+          await table.put({ ...updated, syncStatus: "synced" });
+        } catch {
+          await table.put({ ...local, syncStatus: "failed" });
         }
-      };
-
-      fetch();
-      fetchRemote();
-    }, []);
-
-    return [isLoading, data];
-  };
-
-  const addData = async (
-    data: TCreate
-  ) => {
-    const result = await remoteAdd(data);
-    if (result.data) {
-      await tbl.put({ id: result.data.id, syncState: "synced", updatedAt: new Date(), data: result.data });
+      }
     }
   };
 
-  const deleteData = async (
-    id: string
-  ) => {
-    const data = await db.table<DexieData<T>>(tableName).get(id);
-    if (data?.syncState === "local" || data?.syncState === undefined) {
-      await tbl.delete(id);
-      return;
-    }
-
-    const result = await remoteDelete(id);
-    if (result.data) {
-      await tbl.delete(id);
-    }
+  const add = async (data: TCreate) => {
+    await table.add({
+      ...data,
+      syncStatus: "draft",
+    } as unknown as T);
   };
 
-  interface UpdateArgs {
-    localOnly: boolean;
-  }
+  const update = async (data: TUpdate) => {
+    const local = await table.get(data.id);
+    if(local === undefined) {
+      throw new Error("Item not found");
+    }
 
-  const updateData = async (
-    data: TUpdate,
-    args?: UpdateArgs
-  ) => {
-    const localData = await tbl.get(data.id);
-    await tbl.put({
-      id: data.id,
-      syncState: localData?.syncState || "local",
-      updatedAt: new Date(),
-      data: data as unknown as T,
+    await table.put({
+      ...local,
+      ...data,
+      syncStatus: "queued",
+      updatedAt: new Date().toISOString(),
     });
+  };
 
-    if(args?.localOnly) {
-      return;
+  const remove = async (id: string) => {
+    const local = await table.get(id);
+    if (local?.syncStatus === "synced") {
+      await remoteHandlers.delete(id);
     }
-      
-    const result = await addOrUpdateRemote(data, localData?.syncState || "local");
-
-    if (result.data) {
-      await tbl.put({
-        id: data.id,
-        syncState: "synced",
-        updatedAt: new Date(),
-        data: data as unknown as T,
-      });
-    } else {
-      console.error(result.errors);
-      throw new Error("Failed to update data");
-    }
-  }
-
-  async function addOrUpdateRemote(data: TUpdate, syncState: "local" | "synced") {
-    if (syncState === "local") {
-      return await remoteAdd(data as unknown as TCreate);
-    } else {
-      return await remoteUpdate(data);
-    }
+    await table.delete(id);
   };
 
   return {
-    useList: () => useList(),
-    useGet: (id: string) => useGet(id),
-    add: (data: TCreate) => addData(data),
-    delete: (id: string) => deleteData(id),
-    upsert: (data: TUpdate, args?: UpdateArgs) => updateData(data, args),
+    useList,
+    useGet,
+    syncWithServer,
+    add,
+    update,
+    remove,
   };
 }
 
-const mapToSurvey = (data: Schema['Surveys']['type'] | null): Survey => {
-  if(!data) {
-    throw new Error("Failed to map survey");
+// Export Surveys API
+export const surveyStore = CreateDexieHooks<Survey, Survey, Partial<Survey> & { id: string }>(
+  db,
+  "surveys",
+  {
+    list: async () => {
+      const response = await client.models.Surveys.list();
+      return response.data.map(mapToSurvey);
+    },
+    create: async (data) => {
+      const response = await client.models.Surveys.create(data);
+      return mapToSurvey(response.data);
+    },
+    update: async (data) => {
+      const response = await client.models.Surveys.update(data);
+      return mapToSurvey(response.data);
+    },
+    delete: async (id) => {
+      await client.models.Surveys.delete({ id });
+    },
   }
-
-  return {
-      id: data.id,
-      syncStatus: data.syncStatus,
-      content: data.content as BuildingSurveyFormData,
-      updatedAt: data.updatedAt,
-      createdAt: data.createdAt,
-  };
-}
-
-const db = {
-  surveys: CreateDexieHooks<Survey, CreateSurvey, UpdateSurvey>({
-    db: dexieDb,
-    tableName: "surveys",
-    remoteList: async () => {
-      const result = await client.models.Surveys.list();
-      return result.data.map(mapToSurvey);
-    },
-    remoteGet: async (id) => {
-      const result = await client.models.Surveys.get({ id });
-      return {
-        data: mapToSurvey(result.data),
-        errors: result?.errors?.map((e) => e.message) || null,
-      };
-    },
-    remoteAdd: async (data) => {
-      const result = await client.models.Surveys.create(data);
-      return {
-        data: mapToSurvey(result.data),
-        errors: result?.errors?.map((e) => e.message) || null,
-      }
-    },
-    remoteDelete: async (id) => {
-      const result = await client.models.Surveys.delete({ id });
-      return {
-        data: mapToSurvey(result.data),
-        errors: result?.errors?.map((e) => e.message) || null,
-      }
-    },
-    remoteUpdate: async (data) => {
-      const result = await client.models.Surveys.update(data);
-      return {
-        data: mapToSurvey(result.data),
-        errors: result?.errors?.map((e) => e.message) || null,
-      }
-    },
-  }),
-};
-
-export { db };
+);

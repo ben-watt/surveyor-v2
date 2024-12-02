@@ -33,7 +33,7 @@ import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection, FormSectionLink } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
-import { db } from "@/app/clients/Database";
+import { surveyStore } from "@/app/clients/Database";
 import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { ComponentPicker } from "./ComponentPicker";
@@ -364,15 +364,12 @@ const createDefaultFormValues = async (
 };
 
 export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
-  //const [isLoading, report] = db.surveys.useGet(id);
+  const [isLoading, report] = surveyStore.useGet(id);
   const [formData, setFormData] = useState<BuildingSurveyForm | undefined>(
     undefined
   );
-  const store = useSurveyStore();
-  const throwError = useAsyncError();
 
-  const isLoading = false;
-  const report = store.surveys[id];
+  const throwError = useAsyncError();
 
   useEffect(() => {
     async function createNewForm() {
@@ -504,7 +501,7 @@ function Report({ initFormValues }: ReportProps) {
         <FormSectionLink
           title="Report Details"
           href={`/surveys/${initFormValues.id}/report-details`}
-          status="incomplete"
+          status={initFormValues.reportDetails.status.status}
         />
       </div>
       <FormProvider {...methods}>
