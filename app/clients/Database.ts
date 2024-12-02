@@ -34,36 +34,46 @@ export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends
 
   const useList = (): [boolean, T[]] => {
     const [data, setData] = useState<T[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
       const fetchLocal = async () => {
         const localData = await table.toArray();
+
+        table.hook("creating", (primKey, obj, transaction) => { setData([...data, obj]); });
+        table.hook("updating", (mods, primKey, obj, transaction) => { setData(data.map((d) => d.id === obj.id ? obj : d)); });
+        table.hook("deleting", (primKey, obj, transaction) => { setData(data.filter((d) => d.id !== obj.id)); });
+
         setData(localData);
-        setLoading(false);
+        setHydrated(true);
       };
 
       fetchLocal();
     }, []);
 
-    return [loading, data];
+    return [hydrated, data];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
     const [data, setData] = useState<T | undefined>(undefined);
-    const [loading, setLoading] = useState(true);
+    const [hydrated, setHydrated] = useState(false);
 
     useEffect(() => {
       const fetchLocal = async () => {
         const localData = await table.get(id);
+
+        table.hook("creating", (primKey, obj, transaction) => { setData(obj); });
+        table.hook("updating", (mods, primKey, obj, transaction) => { setData(obj); });
+        table.hook("deleting", (primKey, obj, transaction) => { setData(undefined); });
+
         setData(localData);
-        setLoading(false);
+        setHydrated(true);
       };
 
       fetchLocal();
     }, [id]);
 
-    return [loading, data];
+    return [hydrated, data];
   };
 
   const syncWithServer = async () => {
@@ -91,7 +101,7 @@ export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends
     }
   };
 
-  const add = async (data: TCreate) => {
+  const add = async (data: Omit<TCreate, "syncStatus">) => {
     await table.add({
       ...data,
       syncStatus: "draft",
@@ -130,8 +140,10 @@ export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends
   };
 }
 
-// Export Surveys API
-export const surveyStore = CreateDexieHooks<Survey, Survey, Partial<Survey> & { id: string }>(
+type UpdateSurvey = Partial<Survey> & { id: string };
+type CreateSurvey = Omit<Survey, "updatedAt" | "createdAt">;
+
+export const surveyStore = CreateDexieHooks<Survey, CreateSurvey, UpdateSurvey>(
   db,
   "surveys",
   {

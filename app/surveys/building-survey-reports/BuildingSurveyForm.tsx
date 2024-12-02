@@ -39,7 +39,6 @@ import { fetchUserAttributes } from "aws-amplify/auth";
 import { ComponentPicker } from "./ComponentPicker";
 import { Err, Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/hooks/useAsyncError";
-import { useSurveyStore } from "./BuildingSurveyStore";
 import { report } from "process";
 
 const ImageInput = dynamic(
@@ -364,10 +363,7 @@ const createDefaultFormValues = async (
 };
 
 export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
-  const [isLoading, report] = surveyStore.useGet(id);
-  const [formData, setFormData] = useState<BuildingSurveyForm | undefined>(
-    undefined
-  );
+  const [isHydrated, report] = surveyStore.useGet(id);
 
   const throwError = useAsyncError();
 
@@ -376,7 +372,10 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
       const formResult = await createDefaultFormValues(id);
 
       if (formResult.ok) {
-        setFormData(formResult.val);
+        surveyStore.add({
+          id: id,
+          content: formResult.val,
+        })
         // Todo: May be worth saving and re-directing here so we don't create a new form on refresh
         // or simply updating the browser history
       } else {
@@ -384,27 +383,15 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
       }
     }
 
-    function parseExistingFormContent(content: string) {
-      const formData = JSON.parse(content) as BuildingSurveyForm;
-      console.log("[BuildingSurveyForm]", "Loading Existing Form", formData);
-      setFormData(formData);
-    }
-
-    if (isLoading) {
-      return;
-    }
-
-    if (report) {
-      //parseExistingFormContent(report.content as BuildingSurveyFormData);
-      setFormData(report.content);
-    } else {
+    if (isHydrated && !report) {
       createNewForm();
     }
-  }, [id, isLoading, report, throwError]);
+
+  }, [id, isHydrated, report, throwError]);
 
   return (
     <>
-      {formData ? <Report initFormValues={formData} /> : <div>Loading...</div>}
+      {report ? <Report initFormValues={report.content} /> : <div>Loading...</div>}
     </>
   );
 }
@@ -421,7 +408,6 @@ function Report({ initFormValues }: ReportProps) {
   const { register, handleSubmit, watch, formState } = methods;
 
   const router = useRouter();
-  const store = useSurveyStore();
 
   const sections = watch("sections") as BuildingSurveyForm["sections"];
   const allFields = watch();
@@ -455,10 +441,10 @@ function Report({ initFormValues }: ReportProps) {
       let form = watch();
 
       form.status = "draft";
-      store.addSurvey({
+      surveyStore.add({
         id: form.id,
         content: form,
-      });
+      })
 
       toast.success("Saved as Draft");
 

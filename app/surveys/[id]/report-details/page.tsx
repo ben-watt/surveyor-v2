@@ -10,8 +10,9 @@ import { FormProvider, SubmitErrorHandler, useForm } from "react-hook-form";
 import { ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import { surveyStore } from "@/app/clients/Database";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Survey } from "@/app/clients/Dexie";
 
 const ImageInput = dynamic(
   () =>
@@ -21,32 +22,38 @@ const ImageInput = dynamic(
   { ssr: false }
 );
 
-interface ReportDetailsFormProps {
+interface ReportDetailsFormPageProps {
   params: {
     id: string;
   };
 }
 
-const ReportDetailsForm = ({ params: { id } }: ReportDetailsFormProps) => {
-  const methods = useForm<ReportDetails>();
+const ReportDetailFormPage = ({ params: { id } }: ReportDetailsFormPageProps) => {
+  const [isHydrated, survey] = surveyStore.useGet(id); 
+
+  return (
+    <div>
+      {!isHydrated && <div>Loading...</div>}
+      {isHydrated && survey && <ReportDetailsForm survey={survey} />}
+    </div>
+  );
+};
+
+interface ReportDetailsFormProps {
+  survey: Survey;
+}
+
+const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
+  const methods = useForm<ReportDetails>({ defaultValues: survey.content.reportDetails });
   const { register, handleSubmit } = methods;
-  const [isLoading, survey] = surveyStore.useGet(id); 
   const router = useRouter();
 
-
-  useEffect(() => {
-    if (survey) {
-      methods.reset(survey.content.reportDetails);
-    }
-  }, [methods, survey])
-
   const onValidHandler = (data: any): void => {
-    console.log("handleSubmit", data);
     if(!survey) return;
 
     surveyStore.update({
       ...survey,
-      id: id,
+      id: survey.id,
       content: {
         ...survey.content,
         reportDetails: {
@@ -56,16 +63,15 @@ const ReportDetailsForm = ({ params: { id } }: ReportDetailsFormProps) => {
       }
     })
 
-    router.push(`/surveys/${id}`);
+    router.push(`/surveys/${survey.id}`);
   };
 
   const onInvalidHandler: SubmitErrorHandler<ReportDetails> = (errors) => {
-    console.log("handleSubmit errors", errors, survey);
     if(!survey) return;
 
     surveyStore.update({
       ...survey,
-      id: id,
+      id: survey.id,
       content: {
         ...survey.content,
         reportDetails: {
@@ -168,7 +174,7 @@ const ReportDetailsForm = ({ params: { id } }: ReportDetailsFormProps) => {
               }}
               minNumberOfFiles={1}
               maxNumberOfFiles={1}
-              path={`report-images/${id}/moneyShot/`}
+              path={`report-images/${survey.id}/moneyShot/`}
             />
           </div>
           <div>
@@ -180,7 +186,7 @@ const ReportDetailsForm = ({ params: { id } }: ReportDetailsFormProps) => {
                   validate: AtLeastOneImageValidator,
                 },
               }}
-              path={`report-images/${id}/frontElevationImages/`}
+              path={`report-images/${survey.id}/frontElevationImages/`}
             />
           </div>
         </FormSection>
@@ -190,4 +196,4 @@ const ReportDetailsForm = ({ params: { id } }: ReportDetailsFormProps) => {
   );
 };
 
-export default ReportDetailsForm;
+export default ReportDetailFormPage;

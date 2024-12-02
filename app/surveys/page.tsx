@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 type TableData = BuildingSurveyFormData;
 
 function HomePage() {
-  const [isLoading, data] = surveyStore.useList();
+  const [isHydrated, data] = surveyStore.useList();
   const [createId, setCreateId] = useState<string>("");
 
 
@@ -70,11 +70,11 @@ function HomePage() {
       },
       {
         header: "Client Name",
-        accessorKey: "clientName",
+        accessorKey: "reportDetails.clientName",
       },
       {
         header: "Address",
-        accessorKey: "address",
+        accessorKey: "reportDetails.address",
       },
       {
         header: "Owner",
