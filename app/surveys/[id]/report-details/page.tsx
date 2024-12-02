@@ -51,7 +51,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
   const onValidHandler = (data: any): void => {
     if(!survey) return;
 
-    surveyStore.update({
+    surveyStore.update(survey.id, survey => ({
       ...survey,
       id: survey.id,
       content: {
@@ -61,7 +61,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
           status: { status: "complete", errors: [] },
         },
       }
-    })
+    }));
 
     router.push(`/surveys/${survey.id}`);
   };
@@ -69,7 +69,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
   const onInvalidHandler: SubmitErrorHandler<ReportDetails> = (errors) => {
     if(!survey) return;
 
-    surveyStore.update({
+    surveyStore.update(survey.id, survey => ({
       ...survey,
       id: survey.id,
       content: {
@@ -82,7 +82,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
           },
         },
       },
-    });
+    }));
   };
 
   const AtLeastOneImageValidator = (v: any) => {

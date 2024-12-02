@@ -108,14 +108,14 @@ export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends
     } as unknown as T);
   };
 
-  const update = async (data: TUpdate) => {
-    const local = await table.get(data.id);
+  const update = async (id: string, updateFn: (currentState: T) => T) => {
+    const local = await table.get(id);
     if(local === undefined) {
       throw new Error("Item not found");
     }
 
+    const data = updateFn(local);
     await table.put({
-      ...local,
       ...data,
       syncStatus: "queued",
       updatedAt: new Date().toISOString(),
