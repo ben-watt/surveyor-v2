@@ -1,12 +1,10 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 import {
   ElementSection,
   Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
-  InputType,
   SurveySection,
-  BuildingSurveyFormData,
 } from "./BuildingSurveyReportSchema";
 
 import {
@@ -19,11 +17,10 @@ import {
 import { InputToggle } from "../../components/Input/InputToggle";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "../../components/Input/InputText";
-import InputDate from "../../components/Input/InputDate";
 import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
 import reportClient from "@/app/clients/AmplifyDataClient";
-import { CustomToast, toast } from "@/app/components/Toasts";
+import { toast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { Button } from "@/components/ui/button";
@@ -34,12 +31,11 @@ import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
 import { FormSection, FormSectionLink } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
 import { surveyStore } from "@/app/clients/Database";
-import { useDebouncedEffect } from "@/app/hooks/useDebounceEffect";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { ComponentPicker } from "./ComponentPicker";
 import { Err, Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/hooks/useAsyncError";
-import { report } from "process";
+import { mapToInputType } from "./Utils";
 
 const ImageInput = dynamic(
   () =>
@@ -48,92 +44,6 @@ const ImageInput = dynamic(
     ),
   { ssr: false }
 );
-
-function mapToInputType<T, K extends FieldValues>(
-  input: InputT<T>,
-  registerName: Path<K>,
-  register: UseFormRegister<K>
-) {
-  switch (input.type) {
-    case "text":
-      return (
-        <Input
-          labelTitle={input.label}
-          placeholder={input.placeholder}
-          register={() => register(registerName, { required: input.required })}
-        />
-      );
-    case "number":
-      return (
-        <Input
-          type="number"
-          labelTitle={input.label}
-          placeholder={input.placeholder}
-          register={() => register(registerName, { required: input.required })}
-        />
-      );
-    case "textarea":
-      return (
-        <TextAreaInput
-          labelTitle={input.label}
-          placeholder={input.placeholder}
-          register={() => register(registerName, { required: input.required })}
-        />
-      );
-    case "checkbox":
-      return (
-        <InputCheckbox
-          labelText={input.label}
-          rhfProps={{
-            name: registerName,
-            rules: { required: input.required },
-          }}
-        />
-      );
-    case "always-true-checkbox":
-      return (
-        <InputCheckbox
-          labelText={input.label}
-          rhfProps={{
-            name: registerName,
-            rules: { required: input.required, validate: (value) => value === true },
-          }}
-        />
-      );
-    case "select":
-      return (
-        <>
-          <label htmlFor={input.label} className="text-sm">
-            {input.label}
-          </label>
-          <Combobox
-            data={[
-              { label: "Freehold", value: "Freehold" },
-              { label: "Leasehold", value: "Leasehold" },
-              { label: "Commonhold", value: "Commonhold" },
-              { label: "Other", value: "Other" },
-              { label: "Unknown", value: "Unknown" },
-            ]}
-            controllerProps={{
-              name: registerName,
-              rules: { required: input.required },
-            }}
-          />
-        </>
-      );
-    default:
-      return (
-        <Input
-          labelTitle={input.label}
-          register={() =>
-            register(registerName, {
-              required: input.required
-            })
-          }
-        />
-      );
-  }
-}
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -334,6 +244,7 @@ const createDefaultFormValues = async (
         placeholder: "Freehold, Leasehold, Commonhold, Other",
         required: true,
       },
+      status: { status: "incomplete", errors: [] },
     },   
     sections: surveySections,
     checklist: [
@@ -412,8 +323,6 @@ function Report({ initFormValues }: ReportProps) {
   const sections = watch("sections") as BuildingSurveyForm["sections"];
   const allFields = watch();
 
-  console.log("[BuildingSurveyForm]", "All Fields", allFields);
-
   // useDebouncedEffect(
   //   () => {
   //     const autoSave = async () => {
@@ -490,24 +399,15 @@ function Report({ initFormValues }: ReportProps) {
           status={initFormValues.reportDetails.status.status}
         />
       </div>
+      <div>
+        <FormSectionLink
+          title="Property Description"
+          href={`/surveys/${initFormValues.id}/property-description`}
+          status={initFormValues.propertyDescription.status.status}
+        />
+      </div>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit, onError)}>
-          <FormSection title="Property Description">
-            {Object.keys(initFormValues.propertyDescription)?.map((key) => {
-              const propKey =
-                key as keyof typeof initFormValues.propertyDescription;
-              const property = initFormValues.propertyDescription[
-                propKey
-              ] as InputT<InputType>;
-              const reqName = `propertyDescription.${propKey}.value` as const;
-
-              return (
-                <div key={key} className="mt-1 mb-1">
-                  {mapToInputType(property, reqName, register)}
-                </div>
-              );
-            })}
-          </FormSection>
           {sections.map((section, sectionIndex) => {
             return (
               <FormSection

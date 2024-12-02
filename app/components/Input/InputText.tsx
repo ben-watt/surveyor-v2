@@ -31,7 +31,7 @@ function Input({
 }: InputTextProps) {
   let reg = null;
   if (register) {
-    reg = register();
+      reg = register();
   }
 
   return (

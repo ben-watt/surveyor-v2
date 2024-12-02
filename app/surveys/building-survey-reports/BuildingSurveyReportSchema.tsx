@@ -1,5 +1,3 @@
-import { Path, PathValue, Validate } from "react-hook-form"
-
 export type BuildingSurveyFormData = {
     id: string,
     owner: {
@@ -61,6 +59,7 @@ export type PropertyDescription = {
     numberOfBedrooms: Input<roomCount>,
     numberOfBathrooms: Input<roomCount>,
     tenure: Input<Tenure>,
+    status: FormSectionStatus,
 }
 
 export type SurveySection = {
