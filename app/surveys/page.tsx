@@ -23,17 +23,24 @@ import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
 import { db } from "@/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
+import { useSurveyStore } from "./building-survey-reports/BuildingSurveyStore";
+import { StateEnum } from "@aws-sdk/client-rum";
 
 
 type TableData = BuildingSurveyFormData;
 
 function HomePage() {
-  const [isLoading, surveys] = db.surveys.useList();
-  const data = surveys.map(x => {
-    return JSON.parse(x.content as string) as BuildingSurveyFormData;
-  });
+  const data = useSurveyStore((state) => state.surveys);
+  const _hasHydrated = useSurveyStore((state) => state._hasHydrated);
+
+  console.log("[Hydration Complete]", useSurveyStore.getState());
+  
   
   const [createId, setCreateId] = useState<string>("");
+
+  useEffect(() => {
+    console.log("[store]", data, _hasHydrated);
+  }, [data, _hasHydrated]);
 
   useEffect(() => {
     setCreateId(v4());
@@ -54,7 +61,7 @@ function HomePage() {
           <h1 className="text-3xl dark:text-white">Surveys</h1>
         </div>
         <div>
-          <Link href={`/surveys/create?id=${createId}`}>
+          <Link href={`/surveys/${createId}`}>
             <CopyMarkupBtn>Create</CopyMarkupBtn>
           </Link>
         </div>
@@ -100,7 +107,7 @@ function HomePage() {
       {
         id: "created",
         header: ({ column }) => <SortableHeader column={column} header="Created" />,
-        accessorFn: (v) => new Date(v.reportDate),
+        accessorFn: (v) => new Date(v.reportDetails.reportDate),
         cell: (props) => (props.getValue() as Date).toDateString(),
         sortingFn: 'datetime',
       },
@@ -148,7 +155,7 @@ function HomePage() {
       },
     ];
 
-    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={data} />
+    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={Object.values(data).map(x => x.content)} />
   }
 }
 

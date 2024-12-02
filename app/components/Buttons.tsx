@@ -13,7 +13,11 @@ export function PrimaryBtn(props: ButtonProps) {
   const { className = "", children } = props;
 
   return (
-    <button type="button" {...props} className={`text-center cursor-pointer py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-zinc-900 text-white hover:bg-zinc-900 disabled:opacity-50 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 hover:shadow-md ${className}`}>{children}</button>
+    <button type="button" {...props} className={`w-full text-center cursor-pointer py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-zinc-900 text-white hover:bg-zinc-900 disabled:opacity-50 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 hover:shadow-md ${className}`}>
+      <div className="m-auto">
+        {children}
+      </div>
+    </button>
   )
 }
 

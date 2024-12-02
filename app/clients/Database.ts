@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { CreateSurvey, db as dexieDb, Survey, UpdateSurvey } from "./Dexie";
 import Dexie from "dexie";
 import client from "./AmplifyDataClient";
+import { Schema } from "@/amplify/data/resource";
+import { BuildingSurveyFormData } from "../surveys/building-survey-reports/BuildingSurveyReportSchema";
 
 
 interface RemoteData {
@@ -223,39 +225,53 @@ function CreateDexieHooks<T extends RemoteData, TCreate, TUpdate extends Optiona
   };
 }
 
+const mapToSurvey = (data: Schema['Surveys']['type'] | null): Survey => {
+  if(!data) {
+    throw new Error("Failed to map survey");
+  }
+
+  return {
+      id: data.id,
+      syncStatus: data.syncStatus,
+      content: data.content as BuildingSurveyFormData,
+      updatedAt: data.updatedAt,
+      createdAt: data.createdAt,
+  };
+}
+
 const db = {
   surveys: CreateDexieHooks<Survey, CreateSurvey, UpdateSurvey>({
     db: dexieDb,
     tableName: "surveys",
     remoteList: async () => {
       const result = await client.models.Surveys.list();
-      return result.data;
+      return result.data.map(mapToSurvey);
     },
     remoteGet: async (id) => {
       const result = await client.models.Surveys.get({ id });
       return {
-        data: result.data,
+        data: mapToSurvey(result.data),
         errors: result?.errors?.map((e) => e.message) || null,
       };
     },
     remoteAdd: async (data) => {
       const result = await client.models.Surveys.create(data);
       return {
-        data: result.data,
+        data: mapToSurvey(result.data),
         errors: result?.errors?.map((e) => e.message) || null,
       }
     },
     remoteDelete: async (id) => {
       const result = await client.models.Surveys.delete({ id });
       return {
-        data: result.data,
+        data: mapToSurvey(result.data),
         errors: result?.errors?.map((e) => e.message) || null,
       }
     },
     remoteUpdate: async (data) => {
       const result = await client.models.Surveys.update(data);
       return {
-        data: result.data,
+        data: mapToSurvey(result.data),
         errors: result?.errors?.map((e) => e.message) || null,
       }
     },

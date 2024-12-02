@@ -12,6 +12,7 @@ const schema = a.schema({
   Surveys: a
     .model({
       id: a.id().required(),
+      syncStatus: a.string().required(),
       content: a.json().required(),
     })
     .authorization((allow) => [

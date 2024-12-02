@@ -1,6 +1,7 @@
+import { Path, PathValue, Validate } from "react-hook-form"
+
 export type BuildingSurveyFormData = {
     id: string,
-    level: "2" | "3"
     owner: {
         id: string,
         name: string,
@@ -8,6 +9,14 @@ export type BuildingSurveyFormData = {
         signaturePath: string[],
     }
     status: "draft" | "created",
+    reportDetails: ReportDetails,
+    propertyDescription: PropertyDescription,
+    sections: SurveySection[],
+    checklist: Array<Input<boolean>>,
+}
+
+export type ReportDetails = {
+    level: "2" | "3"
     address: string,
     clientName: string,
     reportDate: Date,
@@ -15,22 +24,23 @@ export type BuildingSurveyFormData = {
     weather: string,
     orientation: string,
     situation: string,
-    propertyDescription: PropertyDescription,
-    frontElevationImagesUri: string[]
     moneyShot: string[],
-    sections: SurveySection[],
-    checklist: Array<Input<boolean>>,
+    frontElevationImagesUri: string[]
+    status: FormSectionStatus
 }
 
-export type InputType = "text" | "number" | "date" | "textarea" | "select" | "checkbox" | "boolean"
+export type FormSectionStatus = {
+    status: "complete" | "incomplete" | "error" | "warning";
+    errors: string[];
+}
+export type InputType = "text" | "number" | "date" | "textarea" | "select" | "checkbox" | "boolean" | "always-true-checkbox"
 
 export type Input<T> = {
     type: InputType,
     value?: T,
     label: string,
     placeholder: string,
-    required: boolean
-    validate?: (value: T) => boolean,
+    required: boolean,
 }
 
 type description = string;

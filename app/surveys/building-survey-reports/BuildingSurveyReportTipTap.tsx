@@ -112,10 +112,10 @@ const fallback = (value: any, fallbackValue: any) => {
 /// This must be a sync function
 /// It needs to be rendered to a basic string rather than a react component
 export default function PDF({ form }: PdfProps) {
-  const clientName = form.clientName;
-  const address = form.address;
-  const reportDate = new Date(form.reportDate);
-  const inspectionDate = new Date(form.inspectionDate);
+  const clientName = form.reportDetails.clientName;
+  const address = form.reportDetails.address;
+  const reportDate = new Date(form.reportDetails.reportDate);
+  const inspectionDate = new Date(form.reportDetails.inspectionDate);
 
   console.debug("Building Survey Report", form);
 
@@ -126,7 +126,7 @@ export default function PDF({ form }: PdfProps) {
           <div>
             <Image
               style={{ margin: "0 auto" }}
-              src={form.moneyShot[0]}
+              src={form.reportDetails.moneyShot[0]}
               alt="main page image"
               width="700"
               height="480"
@@ -134,7 +134,7 @@ export default function PDF({ form }: PdfProps) {
           </div>
           <div>
             <p style={{ textAlign: "right", fontSize: "20pt" }}>
-              Level {form.level} Building Survey Report
+              Level {form.reportDetails.level} Building Survey Report
             </p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>Of the premises known as</p>
@@ -205,11 +205,11 @@ export default function PDF({ form }: PdfProps) {
           <p>Report Issue Date:</p>
           <p>{reportDate.toDateString()}</p>
           <p>Weather at the time of inspection:</p>
-          <p>{form.weather}</p>
+          <p>{form.reportDetails.weather}</p>
           <p>Orientation</p>
-          <p>{form.orientation}</p>
+          <p>{form.reportDetails.orientation}</p>
           <p>Situation</p>
-          <p>{form.situation}</p>
+          <p>{form.reportDetails.situation}</p>
         </TableBlock>
       </Page>
       <Page>
@@ -339,7 +339,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <TableBlock widths={[50, 50]}>
-          {form.frontElevationImagesUri.map((uri, i) => (
+          {form.reportDetails.frontElevationImagesUri.map((uri, i) => (
             <img
               src={uri}
               key={`frontElevation_img_${i}`}
@@ -899,7 +899,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               </div>
               <p></p>
 
-              {form.level === "3" && (
+              {form.reportDetails.level === "3" && (
                 <>
                   <p></p>
                   <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
