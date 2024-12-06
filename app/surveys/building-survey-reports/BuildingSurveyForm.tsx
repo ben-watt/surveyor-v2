@@ -36,6 +36,23 @@ import { ComponentPicker } from "./ComponentPicker";
 import { Err, Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/hooks/useAsyncError";
 import { mapToInputType } from "./Utils";
+import { Ellipsis, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const ImageInput = dynamic(
   () =>
@@ -97,7 +114,7 @@ const createDefaultFormValues = async (
     ): ElementSection => ({
       id: element.id,
       name: element.name,
-      isPartOfSurvey: false,
+      isPartOfSurvey: true,
       description: "",
       images: [],
       materialComponents: [],
@@ -245,31 +262,34 @@ const createDefaultFormValues = async (
         required: true,
       },
       status: { status: "incomplete", errors: [] },
-    },   
+    },
     sections: surveySections,
-    checklist: [
-      shouldBeTrueCheckBox("Have you checked for asbestos?"),
-      shouldBeTrueCheckBox("Have you lifted manhole covers to drains?"),
-      shouldBeTrueCheckBox("Have you checked for Japanese Knotweed?"),
-      shouldBeTrueCheckBox(
-        "Have you checked external ground levels in relation to DPCs / Air Vents?"
-      ),
-      shouldBeTrueCheckBox(
-        "Have you located services, elecs, gas, water, etc...?"
-      ),
-      shouldBeTrueCheckBox(
-        "Have you checked if chimney breasts been removed internally?"
-      ),
-      shouldBeTrueCheckBox(
-        "Have you checked the locations and severity of all cracks been logged?"
-      ),
-      shouldBeTrueCheckBox(
-        "Have you checked if there are any mature trees in close proximity to the building?"
-      ),
-      shouldBeTrueCheckBox(
-        "I confirm that the information provided is accurate"
-      ),
-    ],
+    checklist: {
+      items: [
+        shouldBeTrueCheckBox("Have you checked for asbestos?"),
+        shouldBeTrueCheckBox("Have you lifted manhole covers to drains?"),
+        shouldBeTrueCheckBox("Have you checked for Japanese Knotweed?"),
+        shouldBeTrueCheckBox(
+          "Have you checked external ground levels in relation to DPCs / Air Vents?"
+        ),
+        shouldBeTrueCheckBox(
+          "Have you located services, elecs, gas, water, etc...?"
+        ),
+        shouldBeTrueCheckBox(
+          "Have you checked if chimney breasts been removed internally?"
+        ),
+        shouldBeTrueCheckBox(
+          "Have you checked the locations and severity of all cracks been logged?"
+        ),
+        shouldBeTrueCheckBox(
+          "Have you checked if there are any mature trees in close proximity to the building?"
+        ),
+        shouldBeTrueCheckBox(
+          "I confirm that the information provided is accurate"
+        ),
+      ],
+      status: { status: "incomplete", errors: [] },
+    },
   });
 };
 
@@ -286,7 +306,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
         surveyStore.add({
           id: id,
           content: formResult.val,
-        })
+        });
         // Todo: May be worth saving and re-directing here so we don't create a new form on refresh
         // or simply updating the browser history
       } else {
@@ -297,12 +317,15 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
     if (isHydrated && !report) {
       createNewForm();
     }
-
   }, [id, isHydrated, report, throwError]);
 
   return (
     <>
-      {report ? <Report initFormValues={report.content} /> : <div>Loading...</div>}
+      {report ? (
+        <Report initFormValues={report.content} />
+      ) : (
+        <div>Loading...</div>
+      )}
     </>
   );
 }
@@ -321,7 +344,6 @@ function Report({ initFormValues }: ReportProps) {
   const router = useRouter();
 
   const sections = watch("sections") as BuildingSurveyForm["sections"];
-  const allFields = watch();
 
   // useDebouncedEffect(
   //   () => {
@@ -353,7 +375,7 @@ function Report({ initFormValues }: ReportProps) {
       surveyStore.add({
         id: form.id,
         content: form,
-      })
+      });
 
       toast.success("Saved as Draft");
 
@@ -367,18 +389,13 @@ function Report({ initFormValues }: ReportProps) {
   const onSubmit = async () => {
     // try {
     //   let form = watch();
-
     //   form.status = "created";
-
     //   console.log("[BuildingSurveyForm]", "Submitting form", form);
-
     //   let _ = await db.surveys.upsert({
     //     id: form.id,
     //     content: JSON.stringify(form),
     //   });
-
     //   toast.success("Survey Saved");
-
     //   router.push("/surveys");
     // } catch (error) {
     //   toast.error("Failed to save report");
@@ -392,95 +409,122 @@ function Report({ initFormValues }: ReportProps) {
 
   return (
     <div>
-      <div>
-        <FormSectionLink
-          title="Report Details"
-          href={`/surveys/${initFormValues.id}/report-details`}
-          status={initFormValues.reportDetails.status.status}
-        />
-      </div>
-      <div>
-        <FormSectionLink
-          title="Property Description"
-          href={`/surveys/${initFormValues.id}/property-description`}
-          status={initFormValues.propertyDescription.status.status}
-        />
-      </div>
       <FormProvider {...methods}>
+        <div>
+          <FormSectionLink
+            title="Report Details"
+            href={`/surveys/${initFormValues.id}/report-details`}
+            status={initFormValues.reportDetails.status.status}
+          />
+        </div>
+        <div>
+          <FormSectionLink
+            title="Property Description"
+            href={`/surveys/${initFormValues.id}/property-description`}
+            status={initFormValues.propertyDescription.status.status}
+          />
+        </div>
         <form onSubmit={handleSubmit(onSubmit, onError)}>
           {sections.map((section, sectionIndex) => {
             return (
               <FormSection
                 title={section.name}
                 key={`${section}-${sectionIndex}`}
+                collapsable={true}
               >
                 {section.elementSections.map((elementSection, i) => (
-                  <section
-                    key={`${sectionIndex}.${i}`}
-                    className="border border-grey-600 p-2 m-2 rounded"
-                  >
-                    <InputToggle
-                      label={elementSection.name}
-                      register={() =>
-                        register(
-                          `sections.${sectionIndex}.elementSections.${i}.isPartOfSurvey`
-                        )
-                      }
-                    >
-                      <div className="flex-row space-y-2 p-2">
-                        <SmartTextArea
-                          placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
-                          register={() =>
-                            register(
-                              `sections.${sectionIndex}.elementSections.${i}.description`,
-                              { required: true, shouldUnregister: true }
-                            )
-                          }
-                        />
+                  <div key={i} className="border border-gray-200 p-2 rounded">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4>{elementSection.name}</h4>
+                      </div>
+                      <div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => {}}>
+                              Add Component
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {}}>
+                              Upload Photos
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {}}>
+                              Edit Description
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <span className="text-red-500">
+                                Remove Element
+                              </span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                    <Dialog>
+                      <DialogTrigger>Open</DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Are you absolutely sure?</DialogTitle>
+                          <DialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete your account and remove your data from our
+                            servers.
+                          </DialogDescription>
+                        </DialogHeader>
                         <div>
-                          <ImageInput
-                            rhfProps={{
-                              name: `sections.${sectionIndex}.elementSections.${i}.images`,
-                              rules: {
-                                validate: (v) =>
-                                  v.length > 0 ||
-                                  "At least one image is required",
-                                shouldUnregister: true,
-                              },
-                            }}
-                            path={`report-images/${initFormValues.id}/elementSections/${i}/images/`}
+                          <SmartTextArea
+                            placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
+                            register={() =>
+                              register(
+                                `sections.${sectionIndex}.elementSections.${i}.description`,
+                                { required: true, shouldUnregister: true }
+                              )
+                            }
+                          />
+                          <div>
+                            <ImageInput
+                              rhfProps={{
+                                name: `sections.${sectionIndex}.elementSections.${i}.images`,
+                                rules: {
+                                  validate: (v) =>
+                                    v.length > 0 ||
+                                    "At least one image is required",
+                                  shouldUnregister: true,
+                                },
+                              }}
+                              path={`report-images/${initFormValues.id}/elementSections/${i}/images/`}
+                            />
+                          </div>
+                          <ComponentPicker
+                            elementId={elementSection.id}
+                            defaultValues={
+                              initFormValues.sections[sectionIndex]
+                                .elementSections[i].materialComponents
+                            }
+                            name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
                           />
                         </div>
-                        <ComponentPicker
-                          elementId={elementSection.id}
-                          defaultValues={
-                            initFormValues.sections[sectionIndex]
-                              .elementSections[i].materialComponents
-                          }
-                          name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
-                        />
-                      </div>
-                    </InputToggle>
-                  </section>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 ))}
               </FormSection>
             );
           })}
-          <FormSection title="Checklist">
-            {initFormValues.checklist.map((checklist, index) => {
-              return (
-                <div className="mt-4 mb-4" key={index}>
-                  <div>
-                    {mapToInputType(
-                      checklist,
-                      `checklist.${index}.value`,
-                      register
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </FormSection>
+          <div>
+            <FormSectionLink
+              title="Checklist"
+              href={`/surveys/${initFormValues.id}/checklist`}
+              status={initFormValues.checklist.status.status}
+            />
+          </div>
           <div>
             {Object.values(formState.errors).length > 0 && (
               <InputError message="Please fix the errors above before saving" />

@@ -27,7 +27,7 @@ export const FormSection = ({
         <div className="flex justify-between items-center">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
         </div>
-        <div className="space-y-4">
+        <div className="space-y-2">
             {children}
         </div>
       </div>
@@ -44,7 +44,7 @@ export const FormSection = ({
           <h2 className="text-lg font-semibold">{title}</h2>
         </div>
       )}
-        <div className="space-y-4" hidden={collapsed}>
+        <div className="space-y-2 mt-2" hidden={collapsed}>
             {children}
         </div>
     </div>

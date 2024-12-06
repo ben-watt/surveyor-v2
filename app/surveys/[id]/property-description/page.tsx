@@ -65,6 +65,7 @@ const PropertyDescriptionForm = ({
   const onValidSubmit: SubmitHandler<PropertyDescription> = (data) => {
     surveyStore.update(id, (currentState) => {
       currentState.content.propertyDescription = {
+        ...currentState.content.propertyDescription,
         ...data,
         status: {
           status: "complete",

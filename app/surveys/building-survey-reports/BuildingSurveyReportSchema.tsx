@@ -10,7 +10,12 @@ export type BuildingSurveyFormData = {
     reportDetails: ReportDetails,
     propertyDescription: PropertyDescription,
     sections: SurveySection[],
-    checklist: Array<Input<boolean>>,
+    checklist: Checklist,
+}
+
+export type Checklist = {
+    items: Array<Input<boolean>>,
+    status: FormSectionStatus
 }
 
 export type ReportDetails = {
