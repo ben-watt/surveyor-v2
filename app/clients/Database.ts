@@ -2,6 +2,7 @@ import Dexie from "dexie";
 import { useEffect, useState } from "react";
 import { db, Survey } from "./Dexie";
 import client from "./AmplifyDataClient";
+import { Draft, produce } from "immer";
 
 // Utility to Map Server Responses to Survey Type
 const mapToSurvey = (data: any): Survey => ({
@@ -108,13 +109,14 @@ export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends
     } as unknown as T);
   };
 
-  const update = async (id: string, updateFn: (currentState: T) => T) => {
+  const update = async (id: string, updateFn: (currentState: Draft<T>) => void) => {
     const local = await table.get(id);
     if(local === undefined) {
       throw new Error("Item not found");
     }
 
-    const data = updateFn(local);
+    const data = produce(local, updateFn);
+    console.log("[update] data", data);
     await table.put({
       ...data,
       syncStatus: "queued",
