@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   ElementSection,
@@ -13,6 +13,7 @@ import {
   UseFormRegister,
   FieldValues,
   Path,
+  useFieldArray,
 } from "react-hook-form";
 import { InputToggle } from "../../components/Input/InputToggle";
 import { PrimaryBtn } from "@/app/components/Buttons";
@@ -53,6 +54,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DynamicDrawer } from "@/app/components/Drawer";
 
 const ImageInput = dynamic(
   () =>
@@ -69,6 +71,7 @@ interface BuildingSurveyFormProps {
 const selectionSetElement = [
   "id",
   "name",
+  "description",
   "components.*",
   "order",
   "section",
@@ -115,7 +118,7 @@ const createDefaultFormValues = async (
       id: element.id,
       name: element.name,
       isPartOfSurvey: true,
-      description: "",
+      description: element.description ?? "",
       images: [],
       materialComponents: [],
     });
@@ -339,7 +342,7 @@ function Report({ initFormValues }: ReportProps) {
     defaultValues: initFormValues,
   });
 
-  const { register, handleSubmit, watch, formState } = methods;
+  const { handleSubmit, watch, formState } = methods;
 
   const router = useRouter();
 
@@ -407,123 +410,42 @@ function Report({ initFormValues }: ReportProps) {
     console.error(errors);
   };
 
+  const formSections = [
+    {
+      title: "Report Details",
+      href: `/surveys/${initFormValues.id}/report-details`,
+      status: initFormValues.reportDetails.status.status,
+    },
+    {
+      title: "Property Description",
+      href: `/surveys/${initFormValues.id}/property-description`,
+      status: initFormValues.propertyDescription.status.status,
+    },
+    {
+      title: "Property Condition",
+      href: `/surveys/${initFormValues.id}/condition`,
+      status: initFormValues.propertyDescription.status.status,
+    },
+    {
+      title: "Checklist",
+      href: `/surveys/${initFormValues.id}/checklist`,
+      status: initFormValues.checklist.status.status,
+    },
+  ];
+
   return (
     <div>
       <FormProvider {...methods}>
-        <div>
-          <FormSectionLink
-            title="Report Details"
-            href={`/surveys/${initFormValues.id}/report-details`}
-            status={initFormValues.reportDetails.status.status}
-          />
-        </div>
-        <div>
-          <FormSectionLink
-            title="Property Description"
-            href={`/surveys/${initFormValues.id}/property-description`}
-            status={initFormValues.propertyDescription.status.status}
-          />
-        </div>
         <form onSubmit={handleSubmit(onSubmit, onError)}>
-          {sections.map((section, sectionIndex) => {
-            return (
-              <FormSection
-                title={section.name}
-                key={`${section}-${sectionIndex}`}
-                collapsable={true}
-              >
-                {section.elementSections.map((elementSection, i) => (
-                  <div key={i} className="border border-gray-200 p-2 rounded">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4>{elementSection.name}</h4>
-                      </div>
-                      <div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => {}}>
-                              Add Component
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {}}>
-                              Upload Photos
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {}}>
-                              Edit Description
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <span className="text-red-500">
-                                Remove Element
-                              </span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                    <Dialog>
-                      <DialogTrigger>Open</DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Are you absolutely sure?</DialogTitle>
-                          <DialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete your account and remove your data from our
-                            servers.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div>
-                          <SmartTextArea
-                            placeholder={`Description of the ${elementSection.name.toLowerCase()}...`}
-                            register={() =>
-                              register(
-                                `sections.${sectionIndex}.elementSections.${i}.description`,
-                                { required: true, shouldUnregister: true }
-                              )
-                            }
-                          />
-                          <div>
-                            <ImageInput
-                              rhfProps={{
-                                name: `sections.${sectionIndex}.elementSections.${i}.images`,
-                                rules: {
-                                  validate: (v) =>
-                                    v.length > 0 ||
-                                    "At least one image is required",
-                                  shouldUnregister: true,
-                                },
-                              }}
-                              path={`report-images/${initFormValues.id}/elementSections/${i}/images/`}
-                            />
-                          </div>
-                          <ComponentPicker
-                            elementId={elementSection.id}
-                            defaultValues={
-                              initFormValues.sections[sectionIndex]
-                                .elementSections[i].materialComponents
-                            }
-                            name={`sections.${sectionIndex}.elementSections.${i}.materialComponents`}
-                          />
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                ))}
-              </FormSection>
-            );
-          })}
-          <div>
-            <FormSectionLink
-              title="Checklist"
-              href={`/surveys/${initFormValues.id}/checklist`}
-              status={initFormValues.checklist.status.status}
-            />
+          <div className="space-y-4">
+            {formSections.map((section, index) => (
+              <FormSectionLink
+                key={index}
+                title={section.title}
+                href={section.href}
+                status={section.status}
+              />
+            ))}
           </div>
           <div>
             {Object.values(formState.errors).length > 0 && (
@@ -531,12 +453,12 @@ function Report({ initFormValues }: ReportProps) {
             )}
           </div>
           <div className="space-y-2">
-            <PrimaryBtn className="w-full flex justify-center" type="submit">
+            <PrimaryBtn type="submit">
               Save
             </PrimaryBtn>
             {initFormValues.status === "draft" && (
               <Button
-                className="w-full flex justify-center"
+                className="w-full"
                 variant="secondary"
                 onClick={saveAsDraft}
               >

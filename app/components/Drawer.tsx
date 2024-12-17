@@ -92,7 +92,7 @@ export function DynamicDrawer({
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <div className="p-2">
+          <div>
             {content}
           </div>
         </DialogContent>
@@ -112,7 +112,7 @@ export function DynamicDrawer({
         </div>
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">Close</Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

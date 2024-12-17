@@ -37,11 +37,11 @@ export const FormSection = ({
   return (
     <div className="border border-grey-600 mt-2 mb-2 rounded p-2">
       {title && (
-        <div className="flex items-center" onClick={() => setCollapsed((prev) => !prev)}>
+        <div className="flex justify-between items-center" onClick={() => setCollapsed((prev) => !prev)}>
+          <h2 className="text-lg font-semibold">{title}</h2>
           <motion.div className="mr-2" animate={collapsed ? "closed" : "open" } variants={variants}>
             <ChevronRight size={20} />
           </motion.div>
-          <h2 className="text-lg font-semibold">{title}</h2>
         </div>
       )}
         <div className="space-y-2 mt-2" hidden={collapsed}>
