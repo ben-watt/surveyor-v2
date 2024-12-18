@@ -29,7 +29,7 @@ import { Schema } from "@/amplify/data/resource";
 import { SelectionSet } from "aws-amplify/api";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
-import { FormSection, FormSectionLink } from "@/app/components/FormSection";
+import { FormSection, MultiFormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
 import { surveyStore } from "@/app/clients/Database";
 import { fetchUserAttributes } from "aws-amplify/auth";
@@ -55,6 +55,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { DynamicDrawer } from "@/app/components/Drawer";
+import ReportDetailFormPage from "../[id]/report-details/page";
+import PropertyDescriptionPage from "../[id]/property-description/page";
+import ChecklistPage from "../[id]/checklist/page";
+import ConditionPage from "../[id]/condition/page";
 
 const ImageInput = dynamic(
   () =>
@@ -120,7 +124,7 @@ const createDefaultFormValues = async (
       isPartOfSurvey: true,
       description: element.description ?? "",
       images: [],
-      materialComponents: [],
+      components: [],
     });
 
     const response = await reportClient.models.Elements.list({
@@ -415,21 +419,37 @@ function Report({ initFormValues }: ReportProps) {
       title: "Report Details",
       href: `/surveys/${initFormValues.id}/report-details`,
       status: initFormValues.reportDetails.status.status,
+      drawer: {
+        description: "Edit Report Details",
+        content: <ReportDetailFormPage params={{ id: initFormValues.id }}  />
+      }
     },
     {
       title: "Property Description",
       href: `/surveys/${initFormValues.id}/property-description`,
       status: initFormValues.propertyDescription.status.status,
+      drawer: {
+        description: "Edit Property Description",
+        content: <PropertyDescriptionPage params={{ id: initFormValues.id }} />
+      }
     },
     {
       title: "Property Condition",
       href: `/surveys/${initFormValues.id}/condition`,
       status: initFormValues.propertyDescription.status.status,
+      drawer: {
+        description: "Edit Property Condition",
+        content: <ConditionPage params={{ id: initFormValues.id }} />
+      }
     },
     {
       title: "Checklist",
       href: `/surveys/${initFormValues.id}/checklist`,
       status: initFormValues.checklist.status.status,
+      drawer: {
+        description: "Edit Checklist",
+        content: <ChecklistPage params={{ id: initFormValues.id }} />
+      }
     },
   ];
 
@@ -437,13 +457,18 @@ function Report({ initFormValues }: ReportProps) {
     <div>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit, onError)}>
-          <div className="space-y-4">
+          <div className="space-y-1">
             {formSections.map((section, index) => (
-              <FormSectionLink
+              <MultiFormSection
                 key={index}
                 title={section.title}
                 href={section.href}
                 status={section.status}
+                drawer={{
+                  title: section.title,
+                  description: section.drawer.description,
+                  content: section.drawer.content,
+                }}
               />
             ))}
           </div>

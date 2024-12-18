@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 import React, { PropsWithChildren } from "react";
 import { motion } from "framer-motion"
 import Link from "next/link";
+import { DynamicDrawer } from "./Drawer";
 
 interface FormSectionProps {
   title?: string;
@@ -56,12 +57,21 @@ interface FormSectionLinkProps {
   title: string;
   href: string;
   status: "complete" | "incomplete" | "error" | "warning";
+  drawer: DrawerProps
 }
 
-export const FormSectionLink = ({ title, href, status }: FormSectionLinkProps) => {
+interface DrawerProps {
+  title: string;
+  description: string;
+  content: React.ReactNode;
+}
+
+export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLinkProps) => {
+  const [isDrawerOpen, setIsDrawerOpen] = React.useState<boolean>(false);
+
   return (
-    <Link href={href}>
-      <div className="border border-grey-600 mt-2 mb-2 rounded p-2">
+    <div>
+      <div className="border border-grey-600 mt-2 mb-2 rounded p-2" onClick={() => setIsDrawerOpen(true)}>
         <div className="flex justify-between items-center">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
           {status === "complete" && <div className="bg-green-700 px-2 text-white rounded-sm">Complete</div>}
@@ -70,7 +80,13 @@ export const FormSectionLink = ({ title, href, status }: FormSectionLinkProps) =
           {status === "warning" && <div className="bg-yellow-500 px-2 text-white rounded-sm">Warning</div>}
         </div>
       </div>
-    </Link>
-    
+      <DynamicDrawer
+          isOpen={isDrawerOpen}
+          title={drawer.title}
+          description={drawer.description}
+          handleClose={() => setIsDrawerOpen(false)}
+          content={drawer.content}
+        />
+    </div>
   )
 }

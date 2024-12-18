@@ -22,7 +22,7 @@ interface ChecklistPageProps {
   };
 }
 
-const ChecklistPage = ({
+export const ChecklistPage = ({
   params: { id },
 }: ChecklistPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);
@@ -82,7 +82,6 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValidSubmit, onInvalidSubmit)}>
-        <FormSection title="Checklist">
           {initValues.items.map((checklist, index) => {
             return (
               <div className="mt-4 mb-4" key={index}>
@@ -92,7 +91,6 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
               </div>
             );
           })}
-        </FormSection>
         <PrimaryBtn type="submit">Save</PrimaryBtn>
       </form>
     </FormProvider>

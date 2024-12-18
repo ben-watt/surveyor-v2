@@ -1,18 +1,8 @@
 import Dexie from "dexie";
 import { useEffect, useState } from "react";
-import { db, Survey } from "./Dexie";
+import { Component, db, Survey } from "./Dexie";
 import client from "./AmplifyDataClient";
 import { Draft, produce } from "immer";
-
-// Utility to Map Server Responses to Survey Type
-const mapToSurvey = (data: any): Survey => ({
-  id: data.id,
-  syncStatus: "synced",
-  content: data.content,
-  updatedAt: data.updatedAt,
-  createdAt: data.createdAt,
-});
-
 
 type TableEntity = {
   id: string;
@@ -21,7 +11,7 @@ type TableEntity = {
 }
 
 // Factory for Dexie Hooks
-export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: string }>(
+function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: string }>(
   db: Dexie,
   tableName: string,
   remoteHandlers: {
@@ -142,6 +132,14 @@ export function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends
   };
 }
 
+const mapToSurvey = (data: any): Survey => ({
+  id: data.id,
+  syncStatus: "synced",
+  content: data.content,
+  updatedAt: data.updatedAt,
+  createdAt: data.createdAt,
+});
+
 type UpdateSurvey = Partial<Survey> & { id: string };
 type CreateSurvey = Omit<Survey, "updatedAt" | "createdAt">;
 
@@ -160,6 +158,41 @@ export const surveyStore = CreateDexieHooks<Survey, CreateSurvey, UpdateSurvey>(
     update: async (data) => {
       const response = await client.models.Surveys.update(data);
       return mapToSurvey(response.data);
+    },
+    delete: async (id) => {
+      await client.models.Surveys.delete({ id });
+    },
+  }
+);
+
+const mapToComponent = (data: any): Component => ({
+  id: data.id,
+  syncStatus: "synced",
+  updatedAt: data.updatedAt,
+  createdAt: data.createdAt,
+  name: data.name,
+  materials: data.materials,
+  elementId: data.elementId,
+});
+
+type UpdateComponent = Partial<Component> & { id: string };
+type CreateComponent = Omit<Component, "updatedAt" | "createdAt">;
+
+export const componentStore = CreateDexieHooks<Component, CreateComponent, UpdateComponent>(
+  db,
+  "components",
+  {
+    list: async () => {
+      const response = await client.models.Components.list();
+      return response.data.map(mapToComponent);
+    },
+    create: async (data) => {
+      const response = await client.models.Components.create(data);
+      return mapToComponent(response.data);
+    },
+    update: async (data) => {
+      const response = await client.models.Components.update(data);
+      return mapToComponent(response.data);
     },
     delete: async (id) => {
       await client.models.Surveys.delete({ id });

@@ -23,7 +23,7 @@ interface PropertyDescriptionPageProps {
   };
 }
 
-const PropertyDescriptionPage = ({
+export const PropertyDescriptionPage = ({
   params: { id },
 }: PropertyDescriptionPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);
@@ -89,7 +89,6 @@ const PropertyDescriptionForm = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValidSubmit, onInvalidSubmit)}>
-        <FormSection title="Property Description">
           {Object.keys(initValues)
           .map((key) => {
             const propKey = key as keyof Omit<PropertyDescription, "status">;
@@ -109,7 +108,6 @@ const PropertyDescriptionForm = ({
               return null;
             }
           })}
-        </FormSection>
         <PrimaryBtn type="submit">Save</PrimaryBtn>
       </form>
     </FormProvider>

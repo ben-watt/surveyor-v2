@@ -77,8 +77,17 @@ export type ElementSection = {
     name: string,
     isPartOfSurvey: boolean,
     description: string,
-    materialComponents : MaterialComponent[],
+    components: Component[],
     images: string[],
+}
+
+export type Component = {
+    id: string,
+    name: string,
+    defects: Defect[],
+    ragStatus: RagStatus,
+    useNameOveride: boolean,
+    budgetCost?: number,
 }
 
 export type MaterialComponent = {
@@ -93,7 +102,12 @@ export type MaterialComponent = {
 export type Defect = {
     name: string,
     description: string,
-    isChecked: boolean
+    isChecked: boolean,
+    material: Material[]
+}
+
+export type Material = {
+    name: string
 }
 
 export type RagStatus = "Red" | "Amber" | "Green" | "N/I";

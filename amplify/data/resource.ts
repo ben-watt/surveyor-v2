@@ -43,6 +43,7 @@ const schema = a.schema({
       id: a.id().required(),
       name: a.string().required(),
       materials: a.ref("Material").required().array().required(),
+      syncStatus: a.string().required(),
       elementId: a.id().required(),
       element: a.belongsTo("Elements", "elementId"),
     })

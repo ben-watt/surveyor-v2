@@ -28,7 +28,7 @@ interface ReportDetailsFormPageProps {
   };
 }
 
-const ReportDetailFormPage = ({ params: { id } }: ReportDetailsFormPageProps) => {
+export const ReportDetailFormPage = ({ params: { id } }: ReportDetailsFormPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id); 
 
   return (
@@ -98,7 +98,6 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValidHandler, onInvalidHandler)}>
-        <FormSection title="Report Details" defaultCollapsed={false}>
           <div>
             <Combobox
               labelTitle="Level"
@@ -189,7 +188,6 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
               path={`report-images/${survey.id}/frontElevationImages/`}
             />
           </div>
-        </FormSection>
         <PrimaryBtn type="submit">Save</PrimaryBtn>
       </form>
     </FormProvider>
