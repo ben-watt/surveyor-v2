@@ -36,10 +36,7 @@ import SmartTextArea from "@/app/components/Input/SmartTextArea";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { db } from "@/app/clients/Dexie";
 import { Combobox } from "@/app/components/Input/ComboBox";
-
-function isInputT<T>(input: any): input is Input<T> {
-  return input.type !== undefined;
-}
+import { RhfInputImage } from "@/app/components/Input/InputImage";
 
 interface ConditionPageProps {
   params: {
@@ -149,10 +146,7 @@ const ElementSectionComponent = ({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setElementDialogOpen(true)}>
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {}}>
-                Add Component
+                Edit Element
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {}}>
                 Upload Photos
@@ -170,7 +164,10 @@ const ElementSectionComponent = ({
           description={`Edit the ${elementSection.name} element for survey`}
           handleClose={() => setElementDialogOpen(false)}
           content={
-            <EditElement id={elementSection.id} {...{ descriptionText, register, sectionIndex, elementIndex, }}/>
+            <EditElement
+              id={elementSection.id}
+              {...{ descriptionText, register, sectionIndex, elementIndex }}
+            />
           }
         />
       </div>
@@ -179,14 +176,20 @@ const ElementSectionComponent = ({
 };
 
 interface EditElementProps {
-   id: string
-   descriptionText: string
-   register: UseFormRegister<SurveySection[]>
-   sectionIndex: number
-   elementIndex: number
+  id: string;
+  descriptionText: string;
+  register: UseFormRegister<SurveySection[]>;
+  sectionIndex: number;
+  elementIndex: number;
 }
 
-const EditElement = ({ id, descriptionText, register, sectionIndex, elementIndex }: EditElementProps) => {
+const EditElement = ({
+  id,
+  descriptionText,
+  register,
+  sectionIndex,
+  elementIndex,
+}: EditElementProps) => {
   const [isHydrated, components] = componentStore.useList();
 
   console.log("[EditElement] isLoading", isHydrated, components);
@@ -197,46 +200,62 @@ const EditElement = ({ id, descriptionText, register, sectionIndex, elementIndex
         <p className="text-base font-semibold">Description</p>
         <TextAreaInput
           placeholder={descriptionText}
-          register={() => register(
-            `${sectionIndex}.elementSections.${elementIndex}.description` as const,
-            { required: true }
-          )} />
+          defaultValue={descriptionText}
+          register={() =>
+            register(
+              `${sectionIndex}.elementSections.${elementIndex}.description` as const,
+              { required: true }
+            )
+          }
+        />
+      </div>
+      <div>
+        <p className="text-base font-semibold">Photos</p>
+        <RhfInputImage
+          path={`report-images/${id}/elementSections/${elementIndex}/images/`}
+          rhfProps={{
+            name: `${sectionIndex}.elementSections.${elementIndex}.images`,
+          }}
+          maxNumberOfFiles={5}
+        />
       </div>
       <div>
         <p className="text-base font-semibold">Components</p>
         {!isHydrated && <div>Loading...</div>}
         <div className="space-y-1">
-          {isHydrated && components.length > 0 && (
-            components.filter(x => x.elementId == id).map((component, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 p-2 rounded flex items-center justify-between"
-              >
-                <h5>{component.name}</h5>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => {}}>
-                      Add Defect
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {}}>
-                      Upload Photos
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <span className="text-red-500">Remove from Survey</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ))
-          )}
+          {isHydrated &&
+            components.length > 0 &&
+            components
+              .filter((x) => x.elementId == id)
+              .map((component, index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 p-2 rounded flex items-center justify-between"
+                >
+                  <h5>{component.name}</h5>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => {}}>
+                        Add Defect
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {}}>
+                        Upload Photos
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <span className="text-red-500">Remove from Survey</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ))}
         </div>
         {isHydrated && components.length == 0 && (
           <p className="text-sm">No components found for this element</p>
@@ -244,8 +263,6 @@ const EditElement = ({ id, descriptionText, register, sectionIndex, elementIndex
       </div>
     </div>
   );
-}
+};
 
 export default ConditionPage;
-
-

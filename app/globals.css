@@ -298,3 +298,7 @@
   /* width: 40px;
   display: inline-block; */
 }
+
+.filepond--item {
+  width: calc(50% - 0.5em);
+}
