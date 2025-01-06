@@ -56,7 +56,8 @@ export default function Page() {
             materials: [{
               name: d.specification,
               defects: [{ name: d.defect.toString(), description: d.level2Wording}]
-            }]
+            }],
+            syncStatus: "SYNCED"
           })
         }
       })

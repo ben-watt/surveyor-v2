@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
-import { TransferProgressEvent, uploadData } from "aws-amplify/storage";
+import { TransferProgressEvent, uploadData, getUrl, remove, list } from "aws-amplify/storage";
 import { v4 as uuidv4 } from 'uuid';
 import {
   FieldValues,
@@ -44,24 +44,61 @@ interface FileState {
 export const InputImage = ({ 
     id,
     path,
-    initFiles,
     onUploaded,
     onDeleted,
     minNumberOfFiles = 0,
     maxNumberOfFiles = 10
 }: InputImageProps) => {
     const [files, setFiles] = React.useState<FileState[]>([]);
+    const [pondFiles, setPondFiles] = React.useState<any[]>([]);
 
     useEffect(() => {
-        if (initFiles) {
-            const initialStates = initFiles.map(filename => ({
-                id: uuidv4(),
-                file: new File([], filename),
-                status: "uploaded" as const
-            }));
-            setFiles(initialStates);
-        }
-    }, [initFiles]);
+        const loadInitialFiles = async () => {
+            try {
+                const cleanPath = path.startsWith('public/') ? path.substring(7) : path;
+                console.debug('[InputImage] Listing files in path:', cleanPath);
+                const { items } = await list({
+                    path: cleanPath
+                }); 
+                
+                if (items.length > 0) {
+                    const signedUrls = await Promise.all(
+                        items.map(async (item) => {
+                            const filename = item.path.split('/').pop() || '';
+                            console.debug('[InputImage] Getting URL for:', item.path);
+                            const { url } = await getUrl({
+                                path: item.path
+                            });
+                            console.debug('[InputImage] Got signed URL:', url);
+                            return {
+                                source: url.href,
+                                options: {
+                                    type: 'limbo',
+                                    metadata: {
+                                        filename,
+                                        poster: url.href
+                                    },
+                                    file: {
+                                        name: filename,
+                                        size: item.size,
+                                        type: 'image/*'
+                                    },
+                                    load: url.href
+                                },
+                                poster: url.href
+                            };
+                        })
+                    );
+                    console.debug('[InputImage] Setting pond files:', signedUrls);
+                    setPondFiles(signedUrls);
+                }
+            } catch (error) {
+                console.error('[InputImage] Error loading files:', error);
+            }
+        };
+
+        loadInitialFiles();
+    }, [path]);
 
     const uploadFile = async (
         fileState: FileState, 
@@ -75,11 +112,9 @@ export const InputImage = ({
             
             const uploadedFile = await uploadData({
                 data: fileState.file,
-                path: join(path, fileState.file.name),
+                path: path,
                 options: {
                     onProgress: (progress: TransferProgressEvent) => {
-                        console.debug("[Filepond uploadFile] Progress:", progress);
-
                         const progressPercent = progress.transferredBytes / (progress.totalBytes || 1) * 100;
                         onProgress(true, progress.transferredBytes, Math.floor(progress.totalBytes || 0));
                         setFiles(current => current.map(f => f.id === fileState.id
@@ -90,7 +125,7 @@ export const InputImage = ({
                 },
             }).result;
 
-            console.debug("[Filepond uploadFile] Completed:", uploadedFile)
+            console.debug("[Filepond uploadFile] Completed:", uploadedFile);
 
             setFiles(current =>
                 current.map(f =>
@@ -100,6 +135,7 @@ export const InputImage = ({
                 )
             );
 
+            onUploaded?.({ name: fileState.file.name });
             onComplete();
 
         } catch (error) {
@@ -112,6 +148,23 @@ export const InputImage = ({
                 )
             );
             onError(error);
+        }
+    };
+
+    const handleRemoveFile = async (file: FilePondFile) => {
+        try {
+            const filename = file.getMetadata('filename') || file.filename;
+            await remove({
+                path: join(path, filename),
+            });
+            setPondFiles(current => current.filter(f => 
+                f.options?.metadata?.filename !== filename
+            ));
+            onDeleted?.({ name: filename });
+            return true;
+        } catch (error) {
+            console.error("[InputImage] Failed to delete file:", error);
+            return false;
         }
     };
 
@@ -132,19 +185,41 @@ export const InputImage = ({
 
         setFiles(current => [...current, fileState]);
         
-        // Return abort function that FilePond can call
-        return uploadFile(
-            fileState,
-            () => load(file),
-            error,
-            progress,
-            abort
-        ).catch(error);
-    };
-
-    const handleRemoveFile = (file: FilePondFile) => {
-        onDeleted?.({ name: file.filename });
-        return true;
+        try {
+            await uploadFile(
+                fileState,
+                () => {
+                    const previewUrl = URL.createObjectURL(file);
+                    setPondFiles(current => [...current, {
+                        source: previewUrl,
+                        options: {
+                            type: 'local',
+                            metadata: {
+                                filename: file.name,
+                                poster: previewUrl
+                            }
+                        }
+                    }]);
+                    load(file);
+                },
+                error,
+                progress,
+                abort
+            );
+            
+            return {
+                abort: () => {
+                    abort();
+                }
+            };
+        } catch (err) {
+            error(err);
+            return {
+                abort: () => {
+                    abort();
+                }
+            };
+        }
     };
 
     return (
@@ -159,15 +234,24 @@ export const InputImage = ({
                 process: (fieldName, file, metadata, load, error, progress, abort) => {
                     process(fieldName, file as File, metadata, load, error, progress, abort);
                     return {}
+                },
+                load: async (source, load, error, progress, abort, headers) => {
+                    try {
+                        const response = await fetch(source);
+                        const blob = await response.blob();
+                        load(blob);
+                        
+                        return {
+                            abort: () => {
+                                // Abort fetch if needed
+                            }
+                        };
+                    } catch (err) {
+                        error('Could not load image');
+                    }
                 }
             }}
-
-           /*  files={initFiles?.map(filename => ({
-                source: filename,
-                options: {
-                    type: 'local'
-                }
-            }))}  */
+            files={pondFiles}
         />
     );
 };
@@ -184,7 +268,6 @@ export const RhfInputImage = ({
     ...props
 }: InputImagePropsWithRegister) => {
     const { field, formState } = useController(rhfProps);
-    const fileNames = field.value?.map((f: string) => f.split("/").reverse()[0]) || [];
 
     const onUploaded = (file: { name: string }) => {
         console.log("[RhfInputImage] onUploaded", file);
@@ -205,7 +288,6 @@ export const RhfInputImage = ({
             <InputImage
                 id={path}
                 path={path}
-                initFiles={fileNames}
                 onUploaded={onUploaded}
                 onDeleted={onDeleted}
                 {...props}
