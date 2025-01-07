@@ -1,33 +1,45 @@
-// Import React FilePond
+// 1. Group and organize imports
+// React and FilePond
 import React, { useEffect } from 'react';
 import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
-import { TransferProgressEvent, uploadData, getUrl, remove, list } from "aws-amplify/storage";
-import { v4 as uuidv4 } from 'uuid';
+import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
+import FilePondPluginFilePoster from 'filepond-plugin-file-poster';
 import {
-  FieldValues,
-  useController,
-  UseControllerProps,
-} from "react-hook-form";
-import { Label } from "./Label";
+    ProcessServerConfigFunction,
+    LoadServerConfigFunction,
+    RestoreServerConfigFunction,
+    FetchServerConfigFunction,
+    RemoveServerConfigFunction
+} from 'filepond';
+
+// AWS Amplify
+import { TransferProgressEvent, uploadData, getUrl, remove, list } from "aws-amplify/storage";
+
+// Form handling
+import { FieldValues, useController, UseControllerProps } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
+
+// Components
+import { Label } from "./Label";
 import InputError from "../InputError";
 
-// Import FilePond styles
+// Styles
 import 'filepond/dist/filepond.min.css';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
-
-import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
-
-import FilePondPluginFilePoster from 'filepond-plugin-file-poster';
 import 'filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css';
+
+// Utils
 import { join } from 'path';
 
-// Register the plugin with FilePond
-registerPlugin(FilePondPluginFilePoster);
-registerPlugin(FilePondPluginImagePreview);
-registerPlugin(FilePondPluginImageExifOrientation);
+// 2. Register plugins at the top level
+registerPlugin(
+    FilePondPluginFilePoster,
+    FilePondPluginImagePreview,
+    FilePondPluginImageExifOrientation
+);
 
+// 3. Type definitions
 interface InputImageProps {
     id?: string;
     path: string;
@@ -38,6 +50,100 @@ interface InputImageProps {
     maxNumberOfFiles?: number;
 }
 
+interface InputImagePropsWithRegister extends InputImageProps {
+    rhfProps: UseControllerProps<FieldValues>;
+    labelText?: string;
+}
+
+// 4. Extract server configuration to a separate function for better readability
+const createServerConfig = (path: string, handleRemoveFile: (path: string) => Promise<boolean>) => ({
+    process: ((fieldName, file, metadata, load, error, progress, abort) => {
+        const uploadTask = uploadData({
+            data: file,
+            path: join(path, file.name),
+            options: {
+                onProgress: (p: TransferProgressEvent) => {
+                    progress(true, p.transferredBytes, Math.floor(p.totalBytes || 0))
+                },
+                metadata: {
+                    ...metadata,
+                    filename: file.name
+                }
+            },
+        });
+
+        uploadTask.result.then((uploadedFile) => {
+            load(file.name);
+            console.debug("[FilePond Process] Upload successful:", uploadedFile);
+        });
+
+        return {
+            abort: () => {
+                uploadTask.cancel("Upload cancelled");
+            }
+        }
+    }) as ProcessServerConfigFunction,
+    load: ((source, load, error, progress, abort, headers) => {
+        try {
+            getUrl({ path: source })
+            .then(({ url }) => {
+                const finalUrl = source.includes('amazonaws.com') ? source : url.href;
+                fetch(finalUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response;
+                })
+                .then((response) => {
+                    response.blob().then((value) => load(value));
+                });
+            });
+        } catch (err) {
+            console.error("[Load Err] Could not load image:", err);
+            error('Could not load image');
+        }
+    }) as LoadServerConfigFunction,
+    restore: ((uniqueFileId, load, error, progress, abort, headers) => {
+        try {
+            getUrl({ path: uniqueFileId })
+            .then(({ url }) => {
+                fetch(url.href)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response;
+                })
+                .then((response) => {
+                    response.blob().then((value) => load(value as File));
+                });
+            });
+        } catch (err) {
+            console.error("[Restore Err] Could not restore file:", err);
+            error('Could not restore file');
+        }
+    }) as RestoreServerConfigFunction,
+    fetch: ((url, load, error, progress, abort, headers) => {
+        try {
+            fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response;
+            })
+            .then((response) => {
+                response.blob().then((value) => load(value));
+            });
+        } catch (err) {
+            console.error("[Fetch Err] Could not fetch file:", err);
+            error('Could not fetch file');
+        }
+    }) as FetchServerConfigFunction,
+    revert: null,
+    remove: ((source, load, error) => {
+        console.debug("[FilePond Remove] Removing file:", source);
+        handleRemoveFile(source);
+        load();
+    }) as RemoveServerConfigFunction
+});
+
+// 5. Export the component
 export const InputImage = ({ 
     id,
     path,
@@ -124,106 +230,7 @@ export const InputImage = ({
             instantUpload={true}
             allowImagePreview={true}
             imagePreviewHeight={100}
-            server={{
-                process: (fieldName, file, metadata, load, error, progress, abort) => {
-                        const uploadTask = uploadData({
-                            data: file,
-                            path: join(path, file.name),
-                            options: {
-                                onProgress: (p: TransferProgressEvent) => {
-                                    progress(true, p.transferredBytes, Math.floor(p.totalBytes || 0))
-                                },
-                                metadata: {
-                                    ...metadata,
-                                    filename: file.name
-                                }
-                            },
-                        });
-
-                        uploadTask.result.then((uploadedFile) => {
-                            load(file.name);
-                            console.debug("[FilePond Process] Upload successful:", uploadedFile);
-                        });
-
-                    return {
-                        abort: () => {
-                            uploadTask.cancel("Upload cancelled");
-                        }
-                    }
-                },
-                load: async (source, load, error, progress, abort, headers) => {
-                    try {
-                        console.debug('[FilePond Load] Loading file from:', source);
-                        
-                        const url = source.includes('amazonaws.com') 
-                            ? source 
-                            : (await getUrl({ path: source })).url.href;
-
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        
-                        const blob = await response.blob();
-                        load(blob);
-
-                        return {
-                            abort: () => {
-                                // Abort fetch if needed
-                            }
-                        };
-                    } catch (err) {
-                        console.error("[Load Err] Could not load image:", err);
-                        error('Could not load image');
-                    }
-                },
-                restore: async (uniqueFileId, load, error, progress, abort, headers) => {
-                    try {
-                        console.debug('[FilePond Restore] Restoring file:', uniqueFileId);
-                        
-                        const { url } = await getUrl({ path: uniqueFileId });
-                        const response = await fetch(url.href);
-                        
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        
-                        const blob = await response.blob();
-                        load(blob as File);
-                        
-                        return {
-                            abort: () => {
-                                // Abort fetch if needed
-                            }
-                        };
-                    } catch (err) {
-                        console.error("[Restore Err] Could not restore file:", err);
-                        error('Could not restore file');
-                    }
-                },
-                fetch: async (url, load, error, progress, abort, headers) => {
-                    try {
-                        console.debug('[FilePond Fetch] Fetching file from:', url);
-                        
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        
-                        const blob = await response.blob();
-                        load(blob);
-                        
-                        return {
-                            abort: () => {
-                                // Abort fetch if needed
-                            }
-                        };
-                    } catch (err) {
-                        console.error("[Fetch Err] Could not fetch file:", err);
-                        error('Could not fetch file');
-                    }
-                },
-                revert: null,
-                remove: (source, load, error) => {
-                    console.debug("[FilePond Remove] Removing file:", source);
-                    handleRemoveFile(source);
-                    load();
-                },
-            }}
+            server={createServerConfig(path, handleRemoveFile)}
             files={pondFiles}
             onupdatefiles={(fileItems) => {
                 console.debug('[FilePond] Files updated:', fileItems);
@@ -234,11 +241,6 @@ export const InputImage = ({
         />
     );
 };
-
-interface InputImagePropsWithRegister extends InputImageProps {
-    rhfProps: UseControllerProps<FieldValues>;
-    labelText?: string;
-}
 
 export const RhfInputImage = ({
     path,
