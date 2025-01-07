@@ -16,11 +16,15 @@ import InputError from "../InputError";
 // Import FilePond styles
 import 'filepond/dist/filepond.min.css';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
-import { FilePondFile, ProgressServerConfigFunction } from 'filepond';
+
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
+
+import FilePondPluginFilePoster from 'filepond-plugin-file-poster';
+import 'filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css';
 import { join } from 'path';
 
 // Register the plugin with FilePond
+registerPlugin(FilePondPluginFilePoster);
 registerPlugin(FilePondPluginImagePreview);
 registerPlugin(FilePondPluginImageExifOrientation);
 
@@ -34,13 +38,6 @@ interface InputImageProps {
     maxNumberOfFiles?: number;
 }
 
-interface FileState {
-    id: string;
-    file: File;
-    status: "pending" | "uploading" | "uploaded" | "error";
-    progress?: number;
-}
-
 export const InputImage = ({ 
     id,
     path,
@@ -49,21 +46,25 @@ export const InputImage = ({
     minNumberOfFiles = 0,
     maxNumberOfFiles = 10
 }: InputImageProps) => {
-    const [files, setFiles] = React.useState<FileState[]>([]);
     const [pondFiles, setPondFiles] = React.useState<any[]>([]);
 
     useEffect(() => {
         const loadInitialFiles = async () => {
             try {
-                const cleanPath = path.startsWith('public/') ? path.substring(7) : path;
-                console.debug('[InputImage] Listing files in path:', cleanPath);
+                // Ensure the path ends with a slash so it matches all subpaths
+                const trailingPath = path.endsWith('/') ? path : path + '/';
                 const { items } = await list({
-                    path: cleanPath
-                }); 
+                    path: trailingPath,
+                    options: {
+                        listAll: true
+                    }
+                });
+
+                console.debug("[InputImage] Fetched existing files:", items);
                 
                 if (items.length > 0) {
                     const signedUrls = await Promise.all(
-                        items.map(async (item) => {
+                        items.map(async (item, i) => {
                             const filename = item.path.split('/').pop() || '';
                             console.debug('[InputImage] Getting URL for:', item.path);
                             const { url } = await getUrl({
@@ -71,9 +72,9 @@ export const InputImage = ({
                             });
                             console.debug('[InputImage] Got signed URL:', url);
                             return {
-                                source: url.href,
+                                source: item.path,
                                 options: {
-                                    type: 'limbo',
+                                    type: 'local',
                                     metadata: {
                                         filename,
                                         poster: url.href
@@ -82,10 +83,8 @@ export const InputImage = ({
                                         name: filename,
                                         size: item.size,
                                         type: 'image/*'
-                                    },
-                                    load: url.href
-                                },
-                                poster: url.href
+                                    }
+                                }
                             };
                         })
                     );
@@ -100,125 +99,18 @@ export const InputImage = ({
         loadInitialFiles();
     }, [path]);
 
-    const uploadFile = async (
-        fileState: FileState, 
-        onComplete: () => void,
-        onError: (error: any) => void,
-        onProgress: ProgressServerConfigFunction,
-        onAbort: () => void
-    ): Promise<void> => {
+    const handleRemoveFile = async (path: string) => {
         try {
-            console.debug("[Filepond uploadFile] Uploading file:", fileState.file);
-            
-            const uploadedFile = await uploadData({
-                data: fileState.file,
-                path: path,
-                options: {
-                    onProgress: (progress: TransferProgressEvent) => {
-                        const progressPercent = progress.transferredBytes / (progress.totalBytes || 1) * 100;
-                        onProgress(true, progress.transferredBytes, Math.floor(progress.totalBytes || 0));
-                        setFiles(current => current.map(f => f.id === fileState.id
-                            ? { ...f, status: "uploading", progress: progressPercent }
-                            : f
-                        ));
-                    },
-                },
-            }).result;
-
-            console.debug("[Filepond uploadFile] Completed:", uploadedFile);
-
-            setFiles(current =>
-                current.map(f =>
-                    f.id === fileState.id
-                        ? { ...f, status: "uploaded" }
-                        : f
-                )
-            );
-
-            onUploaded?.({ name: fileState.file.name });
-            onComplete();
-
-        } catch (error) {
-            console.error("[AwsAmplify] Upload failed:", error);
-            setFiles(current =>
-                current.map(f =>
-                    f.id === fileState.id
-                        ? { ...f, status: "error" }
-                        : f
-                )
-            );
-            onError(error);
-        }
-    };
-
-    const handleRemoveFile = async (file: FilePondFile) => {
-        try {
-            const filename = file.getMetadata('filename') || file.filename;
+            console.debug("[InputImage] handleRemoveFile", path);
             await remove({
-                path: join(path, filename),
+                path: path,
             });
-            setPondFiles(current => current.filter(f => 
-                f.options?.metadata?.filename !== filename
-            ));
-            onDeleted?.({ name: filename });
+            setPondFiles(current => current.filter(f => f.source !== path));
+            onDeleted?.({ name: path.split('/').pop() || '' });
             return true;
         } catch (error) {
             console.error("[InputImage] Failed to delete file:", error);
             return false;
-        }
-    };
-
-    const process = async (
-        fieldName: string,
-        file: File,
-        metadata: any,
-        load: (file: File) => void,
-        error: (error: any) => void,
-        progress: ProgressServerConfigFunction,
-        abort: () => void
-    ) => {
-        const fileState: FileState = {
-            id: uuidv4(),
-            file,
-            status: "pending"
-        };
-
-        setFiles(current => [...current, fileState]);
-        
-        try {
-            await uploadFile(
-                fileState,
-                () => {
-                    const previewUrl = URL.createObjectURL(file);
-                    setPondFiles(current => [...current, {
-                        source: previewUrl,
-                        options: {
-                            type: 'local',
-                            metadata: {
-                                filename: file.name,
-                                poster: previewUrl
-                            }
-                        }
-                    }]);
-                    load(file);
-                },
-                error,
-                progress,
-                abort
-            );
-            
-            return {
-                abort: () => {
-                    abort();
-                }
-            };
-        } catch (err) {
-            error(err);
-            return {
-                abort: () => {
-                    abort();
-                }
-            };
         }
     };
 
@@ -229,15 +121,89 @@ export const InputImage = ({
             maxFiles={maxNumberOfFiles}
             allowRevert={true}
             acceptedFileTypes={['image/*']}
-            onremovefile={(error, file) => handleRemoveFile(file)}
+            instantUpload={true}
+            allowImagePreview={true}
+            imagePreviewHeight={100}
             server={{
                 process: (fieldName, file, metadata, load, error, progress, abort) => {
-                    process(fieldName, file as File, metadata, load, error, progress, abort);
-                    return {}
+                        const uploadTask = uploadData({
+                            data: file,
+                            path: join(path, file.name),
+                            options: {
+                                onProgress: (p: TransferProgressEvent) => {
+                                    progress(true, p.transferredBytes, Math.floor(p.totalBytes || 0))
+                                },
+                                metadata: {
+                                    ...metadata,
+                                    filename: file.name
+                                }
+                            },
+                        });
+
+                        uploadTask.result.then((uploadedFile) => {
+                            load(file.name);
+                            console.debug("[FilePond Process] Upload successful:", uploadedFile);
+                        });
+
+                    return {
+                        abort: () => {
+                            uploadTask.cancel("Upload cancelled");
+                        }
+                    }
                 },
                 load: async (source, load, error, progress, abort, headers) => {
                     try {
-                        const response = await fetch(source);
+                        console.debug('[FilePond Load] Loading file from:', source);
+                        
+                        const url = source.includes('amazonaws.com') 
+                            ? source 
+                            : (await getUrl({ path: source })).url.href;
+
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        
+                        const blob = await response.blob();
+                        load(blob);
+
+                        return {
+                            abort: () => {
+                                // Abort fetch if needed
+                            }
+                        };
+                    } catch (err) {
+                        console.error("[Load Err] Could not load image:", err);
+                        error('Could not load image');
+                    }
+                },
+                restore: async (uniqueFileId, load, error, progress, abort, headers) => {
+                    try {
+                        console.debug('[FilePond Restore] Restoring file:', uniqueFileId);
+                        
+                        const { url } = await getUrl({ path: uniqueFileId });
+                        const response = await fetch(url.href);
+                        
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        
+                        const blob = await response.blob();
+                        load(blob as File);
+                        
+                        return {
+                            abort: () => {
+                                // Abort fetch if needed
+                            }
+                        };
+                    } catch (err) {
+                        console.error("[Restore Err] Could not restore file:", err);
+                        error('Could not restore file');
+                    }
+                },
+                fetch: async (url, load, error, progress, abort, headers) => {
+                    try {
+                        console.debug('[FilePond Fetch] Fetching file from:', url);
+                        
+                        const response = await fetch(url);
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        
                         const blob = await response.blob();
                         load(blob);
                         
@@ -247,11 +213,24 @@ export const InputImage = ({
                             }
                         };
                     } catch (err) {
-                        error('Could not load image');
+                        console.error("[Fetch Err] Could not fetch file:", err);
+                        error('Could not fetch file');
                     }
-                }
+                },
+                revert: null,
+                remove: (source, load, error) => {
+                    console.debug("[FilePond Remove] Removing file:", source);
+                    handleRemoveFile(source);
+                    load();
+                },
             }}
             files={pondFiles}
+            onupdatefiles={(fileItems) => {
+                console.debug('[FilePond] Files updated:', fileItems);
+            }}
+            labelFileProcessingError={(error) => {
+                return error?.body || 'Upload failed';
+            }}
         />
     );
 };
@@ -271,15 +250,19 @@ export const RhfInputImage = ({
 
     const onUploaded = (file: { name: string }) => {
         console.log("[RhfInputImage] onUploaded", file);
-        if(field.value) {
-            field.onChange([...field.value, path + file.name || ""]);
-        } else {
-            field.onChange([path + file.name || ""]);
+        // Initialize as empty array if field.value is undefined
+        const currentFiles = Array.isArray(field.value) ? field.value : [];
+        const newFile = path + file.name;
+        
+        // Only add if not already present
+        if (!currentFiles.includes(newFile)) {
+            field.onChange([...currentFiles, newFile]);
         }
     };
 
     const onDeleted = (file: { name: string }) => {
-        field.onChange(field.value?.filter((fk: string) => fk !== path + file.name) || []);
+        const currentFiles = Array.isArray(field.value) ? field.value : [];
+        field.onChange(currentFiles.filter((fk: string) => fk !== path + file.name));
     };
 
     return (
