@@ -68,34 +68,46 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   };
 
   const syncWithServer = async () => {
-    const remoteData = await remoteHandlers.list();
-    for (const remote of remoteData) {
-      const local = await table.get(remote.id);
-      if (!local || new Date(remote.updatedAt) > new Date(local.updatedAt)) {
-        await table.put({ ...remote, syncStatus: "synced" });
-      }
-    }
+    console.debug("[syncWithServer] Syncing with server");
 
-    const allLocal = await table.toArray();
-    for (const local of allLocal) {
-      if (local.syncStatus === "queued") {
-        try {
-          const updated = local.id
-            ? await remoteHandlers.update(local as unknown as TUpdate)
-            : await remoteHandlers.create(local as unknown as TCreate);
-
-          await table.put({ ...updated, syncStatus: "synced" });
-        } catch {
-          await table.put({ ...local, syncStatus: "failed" });
+    try {
+      const remoteData = await remoteHandlers.list();
+      for (const remote of remoteData) {
+        const local = await table.get(remote.id);
+        if (!local || new Date(remote.updatedAt) > new Date(local.updatedAt)) {
+          await table.put({ ...remote, syncStatus: "synced" });
         }
       }
+
+      const allLocal = await table.toArray();
+      for (const local of allLocal) {
+        if (local.syncStatus === "queued") {
+          try {
+            const exists = remoteData.find(r => r.id === local.id);
+            if(exists) {
+              const updated = await remoteHandlers.update(local as unknown as TUpdate);
+              await table.put({ ...updated, syncStatus: "synced" });
+            } else {
+              const created = await remoteHandlers.create(local as unknown as TCreate);
+              await table.put({ ...created, syncStatus: "synced" });
+            }
+            
+          } catch {
+            await table.put({ ...local, syncStatus: "failed" });
+          }
+        }
+      }
+
+      console.debug("[syncWithServer] Synced with server successfully"); 
+    } catch (error) {
+      console.error("[syncWithServer] Error syncing with server", error);
     }
   };
 
   const add = async (data: Omit<TCreate, "syncStatus">) => {
     await table.add({
       ...data,
-      syncStatus: "draft",
+      syncStatus: "queued",
     } as unknown as T);
   };
 
@@ -122,6 +134,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     await table.delete(id);
   };
 
+  const removeAll = async () => {
+    await table.clear();
+  };
+
   return {
     useList,
     useGet,
@@ -129,6 +145,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     add,
     update,
     remove,
+    removeAll
   };
 }
 
@@ -175,8 +192,8 @@ const mapToComponent = (data: any): Component => ({
   elementId: data.elementId,
 });
 
-type UpdateComponent = Partial<Component> & { id: string };
-type CreateComponent = Omit<Component, "updatedAt" | "createdAt">;
+export type UpdateComponent = Partial<Component> & { id: string };
+export type CreateComponent = Omit<Component, "updatedAt" | "createdAt">;
 
 export const componentStore = CreateDexieHooks<Component, CreateComponent, UpdateComponent>(
   db,
@@ -195,7 +212,7 @@ export const componentStore = CreateDexieHooks<Component, CreateComponent, Updat
       return mapToComponent(response.data);
     },
     delete: async (id) => {
-      await client.models.Surveys.delete({ id });
+      await client.models.Components.delete({ id });
     },
   }
 );

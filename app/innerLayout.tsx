@@ -15,6 +15,7 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { useRouter, usePathname } from "next/navigation";
 import Error from "./error";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { componentStore, surveyStore } from "./clients/Database";
 
 export default function RootLayout({
   children,
@@ -40,6 +41,11 @@ export default function RootLayout({
 
     fetchUser();
   }, [router, path]);
+
+  useEffect(() => {
+    componentStore.syncWithServer();
+    surveyStore.syncWithServer();
+  }, []);
 
   return (
     <>

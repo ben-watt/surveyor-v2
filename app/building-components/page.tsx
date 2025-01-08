@@ -16,17 +16,14 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
 import { SelectionSet } from "aws-amplify/api";
-
-const selectionSet = ["id", "name", "elementId", "materials.*", "createdAt", "element.name"] as const;
-type ComponentData = Omit<SelectionSet<Schema["Components"]["type"], typeof selectionSet>, "materials">;
-type Material = Schema["Material"]["type"];
-type ComponentDataWithChild = ComponentData & { materials: Material[] };
+import { componentStore } from "../clients/Database";
+import { Component } from "../clients/Dexie";
 
 export default function Page() {
-  const [data, setData] = useState<ComponentDataWithChild[]>([]);
+  const [isHydrated, data] = componentStore.useList();
   const [search, setSearch] = useState<string>("");
 
-  const columns: ColumnDef<ComponentDataWithChild>[] = [
+  const columns: ColumnDef<Component>[] = [
     {
       header: "Name",
       accessorKey: "name",
@@ -36,7 +33,7 @@ export default function Page() {
       header: ({ column }) => (
         <SortableHeader column={column} header="Element" />
       ),
-      accessorFn: (v) => v.element?.name,
+      accessorFn: (v) => v.elementId,
     },
     {
       header: "Materials Count",
@@ -86,31 +83,10 @@ export default function Page() {
     },
   ];
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await client.models.Components.list({
-          selectionSet: selectionSet,
-        });
-
-        if (response.data) {
-          setData(response.data as ComponentDataWithChild[]);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    fetchData();
-  }, [search]);
-
   function deleteDefect(id: string): void {
     async function deleteDefect() {
       try {
-        const response = await client.models.Components.delete({ id });
-        if (!response.errors && response.data != null) {
-          setData(data.filter((r) => r.id !== id));
-        }
+        await componentStore.remove(id);
       } catch (error) {
         console.error(error);
       }

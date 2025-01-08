@@ -192,7 +192,7 @@ const EditElement = ({
 }: EditElementProps) => {
   const [isHydrated, components] = componentStore.useList();
 
-  console.log("[EditElement] isLoading", isHydrated, components);
+  console.log("[EditElement] data", isHydrated, components, id);
 
   return (
     <div className="space-y-4">

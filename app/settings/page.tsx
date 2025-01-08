@@ -13,12 +13,13 @@ import {matchSorter} from 'match-sorter';
 
 import bankOfDefects from "./defects.json";
 import elements from "./elements.json";
+import { componentStore, CreateComponent } from "../clients/Database";
+import { Component } from "../clients/Dexie";
 
 type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section"> & { id?: string };
 const seedElementData: ElementData[] = elements;
 
-type ComponentData = Omit<Schema["Components"]["type"], "owner" | "createdAt" | "updatedAt" | "element" | "id">;
-type ComponentDataView = ComponentData;
+type ComponentData = Omit<Component, "owner" | "createdAt" | "updatedAt" | "syncStatus"> & { id: string };
 
 export default function Page() {
   const [elementIds, setElementIds] = useState<string[]>([]);
@@ -31,8 +32,8 @@ export default function Page() {
   }, [elements])
 
 
-  function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[]): ComponentDataView[] {
-    let componentData: ComponentDataView[] = [];
+  function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[]): ComponentData[] {
+    let componentData: ComponentData[] = [];
   
     bod.forEach((sheet) => {
       sheet.defects.forEach(d => {
@@ -51,13 +52,13 @@ export default function Page() {
         else {
           const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
           componentData.push({
+            id: crypto.randomUUID(),
             elementId: matchingElement?.id || "",
             name: d.type,
             materials: [{
               name: d.specification,
               defects: [{ name: d.defect.toString(), description: d.level2Wording}]
             }],
-            syncStatus: "SYNCED"
           })
         }
       })
@@ -113,31 +114,24 @@ export default function Page() {
     });
 
     const removeComponents = async function() {
-      const componentIds  = await client.models.Components.list();
-      componentIds.data?.map(async (component) => {
-        const response = await client.models.Components.delete({ id: component.id });
-        if (response.data) {
-          console.log("Deleted component", component);
-        } else {
-          console.error("Failed to delete component", component);
-          toast.error("Failed to delete component");
-        }
-      });
+      try {
+        await componentStore.removeAll();
+      } catch (error) {
+        console.error("Failed to delete components");
+        toast.error("Failed to delete component");
+      }
     }
 
-    await Promise.all([removeElements, removeComponents()]);
+    await Promise.all([Promise.all(removeElements), removeComponents()]);
   }
 
   async function seedComponentData() {
     try {
       const tasks = componentData.map(async (component) => {
-        const response = await client.models.Components.create(component);
-
-        if (response.data) {
-          console.log("Created component", component);
-        } else {
-          console.error("Failed to seed component", component);
-          toast.error(`Failed to seed component ${component.name}`);
+        try {
+          await componentStore.add(component);
+        } catch (error) {
+          console.error("Failed to seed component", component, error);
         }
       });
 
