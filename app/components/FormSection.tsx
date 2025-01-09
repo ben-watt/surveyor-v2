@@ -57,13 +57,17 @@ interface FormSectionLinkProps {
   title: string;
   href: string;
   status: "complete" | "incomplete" | "error" | "warning";
-  drawer: DrawerProps
+  drawer: DrawerProps;
+}
+
+interface DrawerContentProps {
+  setIsDrawerOpen: (isOpen: boolean) => void;
 }
 
 interface DrawerProps {
   title: string;
   description: string;
-  content: React.ReactNode;
+  content: React.ReactNode; //React.ComponentType<DrawerContentProps>;
 }
 
 export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLinkProps) => {

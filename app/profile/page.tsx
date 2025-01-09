@@ -17,6 +17,7 @@ import dynamic from "next/dynamic";
 import { StorageImage } from "@aws-amplify/ui-react-storage";
 import { Edit } from "lucide-react";
 import { Label } from "../components/Input/Label";
+import { InputImageComponent } from "../components/Input/InputImage";
 
 interface ImageUploadWithPreviewProps {
     labelText? : string;
@@ -24,41 +25,6 @@ interface ImageUploadWithPreviewProps {
     initImage: string | undefined;
     rhfProps: UseControllerProps;
 }
-
-const ImageUploadWithPreview = ({ path, initImage, rhfProps, labelText } : ImageUploadWithPreviewProps) => {
-    const [edit, setEdit] = useState(false);
-
-    if(!initImage || edit) {
-        return (
-            <ImageInput
-            labelText={labelText}
-            path={path}
-            initFiles={initImage ? [initImage] : []}
-            maxNumberOfFiles={1}
-            rhfProps={rhfProps}
-          />
-        )
-    }
-
-    return (
-        <div>
-            <Label text={labelText} />
-            <div className="relative">
-                <StorageImage alt={labelText} path={initImage} />
-                <Edit className="absolute top-0 -right-8 hover:cursor-pointer" onClick={() => setEdit(true)} />
-            </div>
-        </div>
-    )
-}
-
-
-const ImageInput = dynamic(
-  () =>
-    import("@/app/components/Input/UppyInputImage").then(
-      (x) => x.input.rhfImage
-    ),
-  { ssr: false }
-);
 
 function Page() {
   const [userAttributes, setUserAttributes] =
@@ -141,8 +107,8 @@ function Page() {
               placeholder="Enter you signed name"
               defaultValue={userAttributes?.nickname}
             />
-            <ImageUploadWithPreview path={`profile/${userAttributes?.sub}/profilePicture/`} initImage={userAttributes?.profile} rhfProps={{name: "profile"}} labelText="Profile Picture" />
-            <ImageUploadWithPreview path={`profile/${userAttributes?.sub}/signatureImage/`} initImage={userAttributes?.picture} rhfProps={{name: "picture"}} labelText="Signature Image" />
+            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${userAttributes?.sub}/profilePicture/`} rhfProps={{name: "profile"}} labelText="Profile Picture" />
+            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${userAttributes?.sub}/signatureImage/`} rhfProps={{name: "picture"}} labelText="Signature Image" />
             <Button
               role="submit"
               disabled={!enableForm}

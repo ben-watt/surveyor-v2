@@ -250,7 +250,7 @@ const EditElement = ({
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
-                        <span className="text-red-500">Remove from Survey</span>
+                        <span>Exclude from Survey</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

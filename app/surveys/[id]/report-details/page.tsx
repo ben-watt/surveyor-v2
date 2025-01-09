@@ -5,7 +5,6 @@ import { Combobox } from "@/app/components/Input/ComboBox";
 import InputDate from "@/app/components/Input/InputDate";
 import Input from "@/app/components/Input/InputText";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
-import dynamic from "next/dynamic";
 import { FormProvider, SubmitErrorHandler, useForm } from "react-hook-form";
 import { ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { PrimaryBtn } from "@/app/components/Buttons";
@@ -13,19 +12,12 @@ import { surveyStore } from "@/app/clients/Database";
 import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Survey } from "@/app/clients/Dexie";
-
-const ImageInput = dynamic(
-  () =>
-    import("@/app/components/Input/UppyInputImage").then(
-      (x) => x.input.rhfImage
-    ),
-  { ssr: false }
-);
+import { InputImageComponent } from "@/app/components/Input/InputImage";
 
 interface ReportDetailsFormPageProps {
   params: {
     id: string;
-  };
+  },
 }
 
 export const ReportDetailFormPage = ({ params: { id } }: ReportDetailsFormPageProps) => {
@@ -163,7 +155,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
             />
           </div>
           <div>
-            <ImageInput
+            <InputImageComponent.rhfImage
               labelText="Money Shot"
               rhfProps={{
                 name: "moneyShot",
@@ -177,7 +169,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
             />
           </div>
           <div>
-            <ImageInput
+            <InputImageComponent.rhfImage
               labelText="Front Elevation Images"
               rhfProps={{
                 name: "frontElevationImagesUri",

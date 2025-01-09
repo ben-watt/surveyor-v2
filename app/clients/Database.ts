@@ -7,7 +7,14 @@ import { Draft, produce } from "immer";
 type TableEntity = {
   id: string;
   updatedAt: string;
-  syncStatus: string; //"synced" | "draft" | "queued" | "failed";
+  syncStatus: string;
+}
+
+enum SyncStatus {
+  Synced = "synced",
+  Draft = "draft",
+  Queued = "queued",
+  Failed = "failed",
 }
 
 // Factory for Dexie Hooks
@@ -75,25 +82,25 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       for (const remote of remoteData) {
         const local = await table.get(remote.id);
         if (!local || new Date(remote.updatedAt) > new Date(local.updatedAt)) {
-          await table.put({ ...remote, syncStatus: "synced" });
+          await table.put({ ...remote, syncStatus: SyncStatus.Synced });
         }
       }
 
       const allLocal = await table.toArray();
       for (const local of allLocal) {
-        if (local.syncStatus === "queued") {
+        if (local.syncStatus === SyncStatus.Queued) {
           try {
             const exists = remoteData.find(r => r.id === local.id);
             if(exists) {
               const updated = await remoteHandlers.update(local as unknown as TUpdate);
-              await table.put({ ...updated, syncStatus: "synced" });
+              await table.put({ ...updated, syncStatus: SyncStatus.Synced });
             } else {
               const created = await remoteHandlers.create(local as unknown as TCreate);
-              await table.put({ ...created, syncStatus: "synced" });
+              await table.put({ ...created, syncStatus: SyncStatus.Synced });
             }
             
           } catch {
-            await table.put({ ...local, syncStatus: "failed" });
+            await table.put({ ...local, syncStatus: SyncStatus.Failed });
           }
         }
       }
@@ -107,7 +114,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   const add = async (data: Omit<TCreate, "syncStatus">) => {
     await table.add({
       ...data,
-      syncStatus: "queued",
+      syncStatus: SyncStatus.Queued,
     } as unknown as T);
   };
 
@@ -151,7 +158,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
 const mapToSurvey = (data: any): Survey => ({
   id: data.id,
-  syncStatus: "synced",
+  syncStatus: SyncStatus.Synced,
   content: data.content,
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
@@ -184,7 +191,7 @@ export const surveyStore = CreateDexieHooks<Survey, CreateSurvey, UpdateSurvey>(
 
 const mapToComponent = (data: any): Component => ({
   id: data.id,
-  syncStatus: "synced",
+  syncStatus: SyncStatus.Synced,
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
   name: data.name,
