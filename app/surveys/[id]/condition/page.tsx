@@ -18,7 +18,7 @@ import {
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { componentStore, surveyStore } from "@/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
-import { PrimaryBtn } from "@/app/components/Buttons";
+import { OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
 import { MoreHorizontal, Router } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -71,8 +71,6 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
   const { register, handleSubmit } = methods;
   const router = useRouter();
 
-  console.log("[ConditionForm] initValues", initValues);
-
   // TODO: Need to ensure I don't overwrite the existing data
   // for the property data fields.
   const onValidSubmit: SubmitHandler<SurveySection[]> = (data) => {
@@ -105,7 +103,13 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
             ))}
           </FormSection>
         ))}
+        <div className="space-y-2">
+        <Button className="w-full" variant="outline">
+          Inspect Item
+        </Button>
         <PrimaryBtn type="submit">Save</PrimaryBtn>
+        </div>
+
       </form>
     </FormProvider>
   );

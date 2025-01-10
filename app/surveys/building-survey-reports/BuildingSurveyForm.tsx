@@ -97,7 +97,7 @@ const createDefaultFormValues = async (
   id: string
 ): Promise<Result<BuildingSurveyForm, Error>> => {
   const fetchElements = async (): Promise<SurveySection[]> => {
-    let initialSections: SurveySection[] = [
+    return [
       {
         name: "External Condition of Property",
         elementSections: [],
@@ -115,42 +115,6 @@ const createDefaultFormValues = async (
         elementSections: [],
       },
     ];
-
-    const createDefaultElementSection = (
-      element: ElementData
-    ): ElementSection => ({
-      id: element.id,
-      name: element.name,
-      isPartOfSurvey: true,
-      description: element.description ?? "",
-      images: [],
-      components: [],
-    });
-
-    const response = await reportClient.models.Elements.list({
-      selectionSet: selectionSetElement,
-    });
-
-    if (response.data) {
-      response.data
-        .sort((x, y) => {
-          let a = x.order ? x.order : 0;
-          let b = y.order ? y.order : 0;
-          return a - b;
-        })
-        .map((element) => {
-          const elementSection = createDefaultElementSection(element);
-          const section = initialSections.find(
-            (section) => section.name === element.section
-          );
-
-          section && section.elementSections.push(elementSection);
-        });
-    } else {
-      Err(new Error("Failed to fetch elements required for the survey."));
-    }
-
-    return initialSections;
   };
 
   const surveySections = await fetchElements();

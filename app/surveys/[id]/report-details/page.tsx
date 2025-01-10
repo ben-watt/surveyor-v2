@@ -67,7 +67,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
       content: {
         ...survey.content,
         reportDetails: {
-          ...methods.getValues(),
+          ...survey.content.reportDetails,
           status: {
             status: "error",
             errors: Object.values(errors).map((e) => e.message ?? ""),
