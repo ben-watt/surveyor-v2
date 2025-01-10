@@ -28,7 +28,7 @@ interface DynamicDrawerOpenArgs {
 
 interface DynamicDrawerContextType {
   openDrawer: (props: DynamicDrawerOpenArgs) => void;
-  closeDrawer: () => void;
+  closeDrawer: (id?: string) => void;
 }
 
 const DynamicDrawerContext = React.createContext<DynamicDrawerContextType>({
@@ -47,35 +47,48 @@ export function useDynamicDrawer() {
 export function DynamicDrawerProvider({
   children,
 }: React.PropsWithChildren<{}>) {
-  const [state, setState] = React.useState(
-    {
-      isOpen: false,
-      props: {} as DynamicDrawerOpenArgs,
-    });
+  const [drawers, setDrawers] = React.useState<Array<{
+    id: string;
+    props: DynamicDrawerOpenArgs;
+  }>>([]);
 
   function handleOpenDrawer(props: DynamicDrawerOpenArgs) {
-    setState({ isOpen: true, props });
+    const id = crypto.randomUUID();
+    setDrawers(prev => [...prev, { id, props }]);
   }
 
-  function handleCloseDrawer() {
-    setState({ isOpen: false, props: {} as DynamicDrawerOpenArgs });
+  function handleCloseDrawer(id?: string) {
+    if (id) {
+      setDrawers(prev => prev.filter(drawer => drawer.id !== id));
+    } else {
+      setDrawers(prev => prev.slice(0, -1));
+    }
   }
 
   return (
     <DynamicDrawerContext.Provider value={{ openDrawer: handleOpenDrawer, closeDrawer: handleCloseDrawer }}>
       {children}
-      <DynamicDrawer isOpen={state.isOpen} handleClose={handleCloseDrawer} {...state.props} />
+      {drawers.map(({ id, props }) => (
+        <DynamicDrawer
+          key={id}
+          drawerId={id}
+          isOpen={true}
+          handleClose={() => handleCloseDrawer(id)}
+          {...props}
+        />
+      ))}
     </DynamicDrawerContext.Provider>
   );
 }
 
-
 interface DynamicDrawerProps extends DynamicDrawerOpenArgs {
+  drawerId: string;
   isOpen: boolean;
   handleClose: () => void;
 }
 
 export function DynamicDrawer({
+  drawerId,
   title,
   description,
   content,
@@ -102,7 +115,9 @@ export function DynamicDrawer({
 
   return (
     <Drawer open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DrawerContent className="max-h-lvh">
+      <DrawerContent className="max-h-lvh" style={{ 
+        transform: `translateY(calc(-${drawerId.length * 2}px))`
+      }}>
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>

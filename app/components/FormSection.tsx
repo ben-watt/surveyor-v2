@@ -2,7 +2,7 @@ import { ChevronRight } from "lucide-react";
 import React, { PropsWithChildren } from "react";
 import { motion } from "framer-motion"
 import Link from "next/link";
-import { DynamicDrawer } from "./Drawer";
+import { DynamicDrawer, useDynamicDrawer } from "./Drawer";
 
 interface FormSectionProps {
   title?: string;
@@ -71,11 +71,15 @@ interface DrawerProps {
 }
 
 export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLinkProps) => {
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState<boolean>(false);
+  const { openDrawer } = useDynamicDrawer();
 
   return (
     <div>
-      <div className="border border-grey-600 mt-2 mb-2 rounded p-2" onClick={() => setIsDrawerOpen(true)}>
+      <div className="border border-grey-600 mt-2 mb-2 rounded p-2" onClick={() => openDrawer({
+        title: drawer.title,
+        description: drawer.description,
+        content: drawer.content,
+      })}>
         <div className="flex justify-between items-center">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
           {status === "complete" && <div className="bg-green-700 px-2 text-white rounded-sm">Complete</div>}
@@ -84,13 +88,6 @@ export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLin
           {status === "warning" && <div className="bg-yellow-500 px-2 text-white rounded-sm">Warning</div>}
         </div>
       </div>
-      <DynamicDrawer
-          isOpen={isDrawerOpen}
-          title={drawer.title}
-          description={drawer.description}
-          handleClose={() => setIsDrawerOpen(false)}
-          content={drawer.content}
-        />
     </div>
   )
 }

@@ -31,12 +31,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { DynamicDrawer } from "@/app/components/Drawer";
+import { DynamicDrawer, useDynamicDrawer } from "@/app/components/Drawer";
 import SmartTextArea from "@/app/components/Input/SmartTextArea";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { db } from "@/app/clients/Dexie";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
+import InspectionForm from "./InspectionForm";
 
 interface ConditionPageProps {
   params: {
@@ -70,6 +71,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
   const methods = useForm<SurveySection[]>({ defaultValues: initValues });
   const { register, handleSubmit } = methods;
   const router = useRouter();
+  const { openDrawer } = useDynamicDrawer();
 
   // TODO: Need to ensure I don't overwrite the existing data
   // for the property data fields.
@@ -89,7 +91,6 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onValidSubmit, onInvalidSubmit)}>
         {initValues.map((section, sectionIndex) => (
           <FormSection key={section.name} title={section.name} collapsable>
             {section.elementSections.map((elementSection, elementIndex) => (
@@ -104,13 +105,16 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
           </FormSection>
         ))}
         <div className="space-y-2">
-        <Button className="w-full" variant="outline">
+        <Button className="w-full" variant="default" onClick={() => {
+          openDrawer({
+            title: "Inspect Item",
+            description: "Inspect the item",
+            content: <InspectionForm />
+          })
+        }}>
           Inspect Item
         </Button>
-        <PrimaryBtn type="submit">Save</PrimaryBtn>
         </div>
-
-      </form>
     </FormProvider>
   );
 };
@@ -128,7 +132,7 @@ const ElementSectionComponent = ({
   elementIndex,
   register,
 }: ElementSectionProps) => {
-  const [isElementDialogOpen, setElementDialogOpen] = useState<boolean>(false);
+  const { openDrawer } = useDynamicDrawer();
   const [descriptionText, setDescriptionText] = useState<string>(
     elementSection.description
   );
@@ -149,7 +153,14 @@ const ElementSectionComponent = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setElementDialogOpen(true)}>
+              <DropdownMenuItem onClick={() => openDrawer({
+                title: `Edit Element - ${elementSection.name}`,
+                description: `Edit the ${elementSection.name} element for survey`,
+                content: <EditElement
+                  id={elementSection.id}
+                  {...{ descriptionText, register, sectionIndex, elementIndex }}
+                />
+              })}>
                 Edit Element
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {}}>
@@ -162,18 +173,6 @@ const ElementSectionComponent = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <DynamicDrawer
-          isOpen={isElementDialogOpen}
-          title={`Edit Element - ${elementSection.name}`}
-          description={`Edit the ${elementSection.name} element for survey`}
-          handleClose={() => setElementDialogOpen(false)}
-          content={
-            <EditElement
-              id={elementSection.id}
-              {...{ descriptionText, register, sectionIndex, elementIndex }}
-            />
-          }
-        />
       </div>
     </div>
   );
