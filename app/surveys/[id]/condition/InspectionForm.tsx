@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import Input from "@/app/components/Input/InputText";
 import { FormSection } from "@/app/components/FormSection";
@@ -12,6 +12,118 @@ import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import surveySections from "@/app/settings/surveySections.json";
 import { Combobox } from "@/app/components/Input/ComboBox";
 
+const LOCATION_OPTIONS = [
+  {
+    value: "exterior",
+    label: "Exterior",
+    children: [
+      {
+        value: "front",
+        label: "Front Elevation",
+        children: [
+          { value: "front-wall", label: "Front Wall" },
+          { value: "front-windows", label: "Front Windows" },
+          { value: "front-door", label: "Front Door" },
+          { value: "front-roof", label: "Front Roof Line" }
+        ]
+      },
+      {
+        value: "rear",
+        label: "Rear Elevation",
+        children: [
+          { value: "rear-wall", label: "Rear Wall" },
+          { value: "rear-windows", label: "Rear Windows" },
+          { value: "rear-door", label: "Rear Door" },
+          { value: "rear-roof", label: "Rear Roof Line" }
+        ]
+      },
+      {
+        value: "sides",
+        label: "Side Elevations",
+        children: [
+          {
+            value: "left-side",
+            label: "Left Side",
+            children: [
+              { value: "left-wall", label: "Left Wall" },
+              { value: "left-windows", label: "Left Windows" }
+            ]
+          },
+          {
+            value: "right-side",
+            label: "Right Side",
+            children: [
+              { value: "right-wall", label: "Right Wall" },
+              { value: "right-windows", label: "Right Windows" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    value: "interior",
+    label: "Interior",
+    children: [
+      {
+        value: "ground-floor",
+        label: "Ground Floor",
+        children: [
+          {
+            value: "living-areas",
+            label: "Living Areas",
+            children: [
+              { value: "living-room", label: "Living Room" },
+              { value: "dining-room", label: "Dining Room" },
+              { value: "kitchen", label: "Kitchen" }
+            ]
+          },
+          {
+            value: "utility",
+            label: "Utility Areas",
+            children: [
+              { value: "hallway", label: "Hallway" },
+              { value: "wc", label: "WC" },
+              { value: "storage", label: "Storage" }
+            ]
+          }
+        ]
+      },
+      {
+        value: "first-floor",
+        label: "First Floor",
+        children: [
+          {
+            value: "bedrooms",
+            label: "Bedrooms",
+            children: [
+              { value: "master-bedroom", label: "Master Bedroom" },
+              { value: "bedroom-2", label: "Bedroom 2" },
+              { value: "bedroom-3", label: "Bedroom 3" }
+            ]
+          },
+          {
+            value: "bathrooms",
+            label: "Bathrooms",
+            children: [
+              { value: "main-bathroom", label: "Main Bathroom" },
+              { value: "en-suite", label: "En-suite" }
+            ]
+          },
+          { value: "landing", label: "Landing" }
+        ]
+      },
+      {
+        value: "loft",
+        label: "Loft",
+        children: [
+          { value: "loft-space", label: "Loft Space" },
+          { value: "loft-access", label: "Loft Access" }
+        ]
+      }
+    ]
+  }
+];
 
 const MOCK_DEFECTS = [
   {
@@ -61,6 +173,7 @@ type InspectionFormData = {
 export default function InspectionForm() {
   const [isHydrated, components] = componentStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
+
   const methods = useForm<InspectionFormData>({
     defaultValues: {
       location: "",
@@ -81,16 +194,71 @@ export default function InspectionForm() {
   });
 
   const { register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
+  const formValues = watch();
+
+  // Memoize the filtered elements based on selected survey section
+  const elementOptions = useMemo(() => {
+    const filteredElements = elements.filter(
+      element => !formValues.surveySection || element.section === formValues.surveySection
+    );
+    return filteredElements.map(element => ({
+      value: element.id,
+      label: element.name
+    }));
+  }, [elements, formValues.surveySection]);
+
+  // Memoize the filtered components based on selected element
+  const componentOptions = useMemo(() => {
+    const filteredComponents = components.filter(
+      component => component.elementId === formValues.element
+    );
+    return filteredComponents.map(component => ({
+      value: component.id,
+      label: component.name
+    }));
+  }, [components, formValues.element]);
+
+  // Reset dependent fields when survey section changes
+  useEffect(() => {
+    const elementExists = elements.some(
+      e => e.id === formValues.element && e.section === formValues.surveySection
+    );
+    
+    if (formValues.surveySection && !elementExists && formValues.element) {
+      setValue("element", "");
+      setValue("component", {
+        id: "",
+        name: "",
+        defects: [],
+        ragStatus: "N/I",
+        useNameOveride: false,
+      });
+    }
+  }, [formValues.surveySection, formValues.element, elements, setValue]);
+
+  // Reset component when element changes
+  useEffect(() => {
+    const componentExists = components.some(
+      c => c.id === formValues.component.id && c.elementId === formValues.element
+    );
+    
+    if (formValues.element && !componentExists && formValues.component.id) {
+      setValue("component", {
+        id: "",
+        name: "",
+        defects: [],
+        ragStatus: "N/I",
+        useNameOveride: false,
+      });
+    }
+  }, [formValues.element, formValues.component.id, components, setValue]);
 
   const onSubmit = (data: InspectionFormData) => {
     console.log(data);
   };
 
-  const selectedDefects = watch("defects");
-  const selectedSurveySection = watch("surveySection");
-
   const handleDefectToggle = (defect: typeof MOCK_DEFECTS[number]) => {
-    const current = selectedDefects;
+    const current = formValues.defects;
     const exists = current.some((d) => d.name === defect.name);
     
     if (exists) {
@@ -116,28 +284,17 @@ export default function InspectionForm() {
     label: section.name
   }));
 
-  const elementOptions = elements
-    .filter(element => !selectedSurveySection || element.section === selectedSurveySection)
-    .map(element => ({
-      value: element.id,
-      label: element.name
-    }));
-
-  const componentOptions = components
-    .filter(component => component.elementId === watch("element"))
-    .map(component => ({
-      value: component.id,
-      label: component.name
-    }));
-
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <FormSection title="Basic Information">
-          <Input
+          <Combobox
             labelTitle="Location"
-            register={() => register("location")}
-            placeholder="Enter location"
+            data={LOCATION_OPTIONS}
+            name="location"
+            control={control}
+            errors={errors}
+            showParentLabels={true}
           />
           <Combobox
             labelTitle="Survey Section"
@@ -145,17 +302,6 @@ export default function InspectionForm() {
             name="surveySection"
             control={control}
             errors={errors}
-            onChange={() => {
-              // Reset element and component when section changes
-              setValue("element", "");
-              setValue("component", {
-                id: "",
-                name: "",
-                defects: [],
-                ragStatus: "N/I",
-                useNameOveride: false,
-              });
-            }}
           />
           <Combobox
             labelTitle="Element"
@@ -163,19 +309,6 @@ export default function InspectionForm() {
             name="element"
             control={control}
             errors={errors}
-            onChange={(value) => {
-              const element = elements.find(e => e.id === value);
-              if (element) {
-                // Reset component when element changes
-                setValue("component", {
-                  id: "",
-                  name: "",
-                  defects: [],
-                  ragStatus: "N/I",
-                  useNameOveride: false,
-                });
-              }
-            }}
           />
           <Combobox
             labelTitle="Component"
@@ -215,9 +348,6 @@ export default function InspectionForm() {
               maxNumberOfFiles={5}
             />
           </div>
-        </FormSection>
-
-        <FormSection title="RAG Status">
           <Combobox
             labelTitle="RAG Status"
             data={RAG_OPTIONS}
@@ -236,7 +366,7 @@ export default function InspectionForm() {
               >
                 <Checkbox
                   id={`defect-${defect.name}`}
-                  checked={selectedDefects.some((d) => d.name === defect.name)}
+                  checked={formValues.defects.some((d) => d.name === defect.name)}
                   onCheckedChange={() => handleDefectToggle(defect)}
                 />
                 <div className="space-y-1">

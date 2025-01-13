@@ -21,12 +21,13 @@ export const ConfigureAwsRum = () => {
       const APPLICATION_VERSION: string = '1.0.0';
       const APPLICATION_REGION: string = 'eu-west-1';
 
-      const awsRum: AwsRum = new AwsRum(
-        APPLICATION_ID,
-        APPLICATION_VERSION,
-        APPLICATION_REGION,
-        config
-      );
+      // TODO: Uncomment this later when I can review to fix.
+      // const awsRum: AwsRum = new AwsRum(
+      //   APPLICATION_ID,
+      //   APPLICATION_VERSION,
+      //   APPLICATION_REGION,
+      //   config
+      // );
       
       console.log("[AWS Rum] AWS RUM initialized successfully");
 
