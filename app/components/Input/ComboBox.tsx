@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { CheckIcon, ArrowDownNarrowWide } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { FieldErrors, FieldValues, UseControllerProps, UseFormRegisterReturn, useController, useFormContext } from "react-hook-form";
+import { Control, FieldErrors, FieldValues, useController } from "react-hook-form";
 import { Label } from "./Label";
 import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
@@ -26,18 +25,38 @@ import InputError from "../InputError";
 interface ComboboxProps {
   data: { value: string; label: string }[];
   labelTitle?: string;
-  onCreateNew?: () => any | void;
-  errors?: FieldErrors<FieldValues>;
-  controllerProps: UseControllerProps<FieldValues, string>;
+  onCreateNew?: () => void;
+  errors?: FieldErrors;
+  name: string;
+  control: Control<any>;
+  onChange?: (value: string) => void;
 }
 
-export function Combobox(props: ComboboxProps) {
-  const { field } = useController(props.controllerProps);
+export function Combobox({
+  data,
+  labelTitle,
+  onCreateNew,
+  errors,
+  name,
+  control,
+  onChange,
+}: ComboboxProps) {
+  const { field } = useController({
+    name,
+    control,
+  });
   const [open, setOpen] = React.useState(false);
+
+  const handleSelect = (value: string) => {
+    const newValue = value === field.value ? "" : value;
+    field.onChange(newValue);
+    onChange?.(newValue);
+    setOpen(false);
+  };
 
   return (
     <div>
-      <Label text={props.labelTitle} />
+      <Label text={labelTitle} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -47,7 +66,7 @@ export function Combobox(props: ComboboxProps) {
             className="justify-between w-full text-ellipsis overflow-hidden"
           >
             {field.value
-              ? props.data.find((d) => d.value === field.value)?.label
+              ? data.find((d) => d.value === field.value)?.label
               : "Select..."}
             <ArrowDownNarrowWide className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -61,14 +80,11 @@ export function Combobox(props: ComboboxProps) {
             <CommandList>
               <CommandEmpty>Nothing found.</CommandEmpty>
               <CommandGroup>
-                {props.data.map((d) => (
+                {data.map((d) => (
                   <CommandItem
                     key={d.value}
                     value={d.label}
-                    onSelect={() => {
-                      field.onChange(d.value === field.value ? "" : d.value);
-                      setOpen(false);
-                    }}
+                    onSelect={() => handleSelect(d.value)}
                   >
                     {d.label}
                     <CheckIcon
@@ -81,9 +97,9 @@ export function Combobox(props: ComboboxProps) {
                 ))}
               </CommandGroup>
             </CommandList>
-            {props.onCreateNew && (
+            {onCreateNew && (
               <CommandGroup forceMount>
-                <CommandItem className="font-semibold" value="Create new..." onSelect={ev => props.onCreateNew && props.onCreateNew()}>
+                <CommandItem className="font-semibold" value="Create new..." onSelect={onCreateNew}>
                   Create new...
                 </CommandItem>
               </CommandGroup>
@@ -93,7 +109,7 @@ export function Combobox(props: ComboboxProps) {
       </Popover>
       <ErrorMessage
         name={field.name}
-        errors={props.errors}
+        errors={errors}
         render={({ message }) => InputError({ message })} />
     </div>
   );

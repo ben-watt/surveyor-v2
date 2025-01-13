@@ -7,34 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { componentStore } from "@/app/clients/Database";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
-// Mock data for features and defects
-const MOCK_FEATURES = [
-  "Double Glazed",
-  "Triple Glazed",
-  "Toughened Glass",
-  "Self-Cleaning",
-  "UV Protection",
-  "Low-E Coating",
-  "Gas Filled",
-  "Sound Insulation",
-  "Security Glass",
-  "Fire Resistant"
-] as const;
+import { RhfInputImage } from "@/app/components/Input/InputImage";
+import TextAreaInput from "@/app/components/Input/TextAreaInput";
+import surveySections from "@/app/settings/surveySections.json";
+import { Combobox } from "@/app/components/Input/ComboBox";
 
 const MOCK_DEFECTS = [
   {
@@ -65,22 +41,21 @@ const MOCK_DEFECTS = [
 
 type InspectionFormData = {
   location: string;
-  reportSection: string;
+  surveySection: string;
   element: string;
   component: Component;
-  features: string[];
+  description: string;
+  images: string[];
   ragStatus: RagStatus;
   defects: Defect[];
 }
 
 export default function InspectionForm() {
   const [isHydrated, components] = componentStore.useList();
-  const [open, setOpen] = React.useState(false);
-
   const methods = useForm<InspectionFormData>({
     defaultValues: {
       location: "",
-      reportSection: "",
+      surveySection: "",
       element: "",
       component: {
         id: "",
@@ -89,33 +64,20 @@ export default function InspectionForm() {
         ragStatus: "N/I",
         useNameOveride: false,
       },
-      features: [],
+      description: "",
+      images: [],
       ragStatus: "N/I",
       defects: [],
     },
   });
 
-  const { register, watch, setValue, handleSubmit } = methods;
+  const { register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
 
   const onSubmit = (data: InspectionFormData) => {
     console.log(data);
   };
 
-  const selectedFeatures = watch("features");
   const selectedDefects = watch("defects");
-  const selectedComponent = watch("component");
-
-  const handleFeatureToggle = (feature: string) => {
-    const current = selectedFeatures;
-    if (current.includes(feature)) {
-      setValue(
-        "features",
-        current.filter((f) => f !== feature)
-      );
-    } else {
-      setValue("features", [...current, feature]);
-    }
-  };
 
   const handleDefectToggle = (defect: typeof MOCK_DEFECTS[number]) => {
     const current = selectedDefects;
@@ -139,6 +101,16 @@ export default function InspectionForm() {
     }
   };
 
+  const surveySectionOptions = surveySections.map(section => ({
+    value: section.name,
+    label: section.name
+  }));
+
+  const componentOptions = components.map(component => ({
+    value: component.id,
+    label: component.name
+  }));
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -148,77 +120,55 @@ export default function InspectionForm() {
             register={() => register("location")}
             placeholder="Enter location"
           />
-          <Input
-            labelTitle="Report Section"
-            register={() => register("reportSection")}
-            placeholder="Enter report section"
+          <Combobox
+            labelTitle="Survey Section"
+            data={surveySectionOptions}
+            name="surveySection"
+            control={control}
+            errors={errors}
           />
           <Input
             labelTitle="Element"
             register={() => register("element")}
             placeholder="Enter element"
           />
-          
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={open}
-                className="w-full justify-between"
-              >
-                {selectedComponent.name
-                  ? components.find((component) => component.id === selectedComponent.id)?.name
-                  : "Select component..."}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput placeholder="Search components..." />
-                <CommandEmpty>No component found.</CommandEmpty>
-                <CommandGroup>
-                  {components.map((component) => (
-                    <CommandItem
-                      key={component.id}
-                      value={component.id}
-                      onSelect={() => {
-                        //setValue("component", component);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedComponent.id === component.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {component.name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <Combobox
+            labelTitle="Component"
+            data={componentOptions}
+            name="component.id"
+            control={control}
+            onChange={(value) => {
+              const component = components.find(c => c.id === value);
+              if (component) {
+                setValue("component", {
+                  id: component.id,
+                  name: component.name,
+                  defects: [],
+                  ragStatus: "N/I",
+                  useNameOveride: false,
+                });
+              }
+            }}
+            errors={errors}
+          />
         </FormSection>
 
-        <FormSection title="Features">
-          <div className="grid grid-cols-2 gap-4">
-            {MOCK_FEATURES.map((feature) => (
-              <div key={feature} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`feature-${feature}`}
-                  checked={selectedFeatures.includes(feature)}
-                  onCheckedChange={() => handleFeatureToggle(feature)}
-                />
-                <Label
-                  htmlFor={`feature-${feature}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {feature}
-                </Label>
-              </div>
-            ))}
+        <FormSection title="Component Details">
+          <TextAreaInput
+            labelTitle="Description"
+            register={() => register("description")}
+            placeholder="Enter component description"
+          />
+          <div className="space-y-2">
+            <Label>Images</Label>
+            <RhfInputImage
+              path="inspections/"
+              rhfProps={{
+                name: "images",
+                control
+              }}
+              maxNumberOfFiles={5}
+            />
           </div>
         </FormSection>
 

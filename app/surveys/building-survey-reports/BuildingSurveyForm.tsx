@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 import {
-  ElementSection,
   Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
   SurveySection,
@@ -10,51 +9,20 @@ import {
 import {
   useForm,
   FormProvider,
-  UseFormRegister,
-  FieldValues,
-  Path,
-  useFieldArray,
 } from "react-hook-form";
-import { InputToggle } from "../../components/Input/InputToggle";
 import { PrimaryBtn } from "@/app/components/Buttons";
-import Input from "../../components/Input/InputText";
-import SmartTextArea from "../../components/Input/SmartTextArea";
 import InputError from "@/app/components/InputError";
-import reportClient from "@/app/clients/AmplifyDataClient";
 import { toast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
-import { Combobox } from "@/app/components/Input/ComboBox";
 import { Button } from "@/components/ui/button";
 import { Schema } from "@/amplify/data/resource";
 import { SelectionSet } from "aws-amplify/api";
-import TextAreaInput from "@/app/components/Input/TextAreaInput";
-import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
-import { FormSection, MultiFormSection } from "@/app/components/FormSection";
+import { MultiFormSection } from "@/app/components/FormSection";
 import dynamic from "next/dynamic";
 import { surveyStore } from "@/app/clients/Database";
 import { fetchUserAttributes } from "aws-amplify/auth";
-import { ComponentPicker } from "./ComponentPicker";
-import { Err, Ok, Result } from "ts-results";
+import { Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/hooks/useAsyncError";
-import { mapToInputType } from "./Utils";
-import { Ellipsis, MoreHorizontal } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { DynamicDrawer } from "@/app/components/Drawer";
 import ReportDetailFormPage from "../[id]/report-details/page";
 import PropertyDescriptionPage from "../[id]/property-description/page";
 import ChecklistPage from "../[id]/checklist/page";
@@ -97,24 +65,7 @@ const createDefaultFormValues = async (
   id: string
 ): Promise<Result<BuildingSurveyForm, Error>> => {
   const fetchElements = async (): Promise<SurveySection[]> => {
-    return [
-      {
-        name: "External Condition of Property",
-        elementSections: [],
-      },
-      {
-        name: "Internal Condition of Property",
-        elementSections: [],
-      },
-      {
-        name: "Services",
-        elementSections: [],
-      },
-      {
-        name: "Grounds (External Areas)",
-        elementSections: [],
-      },
-    ];
+    return [];
   };
 
   const surveySections = await fetchElements();

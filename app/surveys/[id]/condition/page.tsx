@@ -19,7 +19,7 @@ import {
 import { componentStore, surveyStore } from "@/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { OutlineBtn, PrimaryBtn } from "@/app/components/Buttons";
-import { MoreHorizontal, Router } from "lucide-react";
+import { ClipboardList, MoreHorizontal, Router } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
@@ -89,6 +89,29 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
     // });
   };
 
+  const onStartNewInspection = () => {
+    openDrawer({
+      title: "Inspect Item",
+      description: "Inspect the item",
+      content: <InspectionForm />
+    })
+  }
+
+  if(initValues.length == 0) {
+    return (
+      <div className="text-center p-6">
+        <div className="mx-auto bg-muted rounded-full w-12 h-12 flex items-center justify-center mb-4">
+          <ClipboardList className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <h2 className="text-2xl font-semibold mb-2">No Inspections Yet</h2>
+        <p className="text-muted-foreground mb-6">You haven't inspected any items in this building.</p>
+        <Button onClick={onStartNewInspection}>
+          Start New Inspection
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <FormProvider {...methods}>
         {initValues.map((section, sectionIndex) => (
@@ -105,13 +128,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
           </FormSection>
         ))}
         <div className="space-y-2">
-        <Button className="w-full" variant="default" onClick={() => {
-          openDrawer({
-            title: "Inspect Item",
-            description: "Inspect the item",
-            content: <InspectionForm />
-          })
-        }}>
+        <Button className="w-full" variant="default" onClick={onStartNewInspection}>
           Inspect Item
         </Button>
         </div>
