@@ -1,6 +1,6 @@
 import Dexie from "dexie";
 import { useEffect, useState } from "react";
-import { Component, db, Survey } from "./Dexie";
+import { Component, db, Survey, Element as BuildingSurveyElement } from "./Dexie";
 import client from "./AmplifyDataClient";
 import { Draft, produce } from "immer";
 
@@ -220,6 +220,41 @@ export const componentStore = CreateDexieHooks<Component, CreateComponent, Updat
     },
     delete: async (id) => {
       await client.models.Components.delete({ id });
+    },
+  }
+);
+
+const mapToElement = (data: any): BuildingSurveyElement => ({
+  id: data.id,
+  syncStatus: SyncStatus.Synced,
+  updatedAt: data.updatedAt,
+  createdAt: data.createdAt,
+  name: data.name,
+  section: data.section,
+  description: data.description,
+});
+
+export type UpdateElement = Partial<BuildingSurveyElement> & { id: string };
+export type CreateElement = Omit<BuildingSurveyElement, "updatedAt" | "createdAt">;
+
+export const elementStore = CreateDexieHooks<BuildingSurveyElement, CreateElement, UpdateElement>(
+  db,
+  "elements",
+  {
+    list: async () => {
+      const response = await client.models.Elements.list();
+      return response.data.map(mapToElement);
+    },
+    create: async (data) => {
+      const response = await client.models.Elements.create(data);
+      return mapToElement(response.data);
+    },
+    update: async (data) => {
+      const response = await client.models.Elements.update(data);
+      return mapToElement(response.data);
+    },
+    delete: async (id) => {
+      await client.models.Elements.delete({ id });
     },
   }
 );

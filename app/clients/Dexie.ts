@@ -14,15 +14,18 @@ export type CreateSurvey = ReplaceFieldType<Schema['Surveys']['createType'], "co
 export type DeleteSurvey = Schema['Surveys']['deleteType']
 
 export type Component = Omit<Schema['Components']['type'], "element">;
+export type Element = Omit<Schema['Elements']['type'], "components">;
 
 const db = new Dexie('Surveys') as Dexie & {
   surveys: EntityTable<Survey, "id">;
   components: EntityTable<Component, "id">;
+  elements: EntityTable<Element, "id">;
 };
 
 db.version(1).stores({
   surveys: '&id, updatedAt, syncStatus',
   components: '&id, updatedAt, syncStatus',
+  elements: '&id, updatedAt, syncStatus',
 });
 
 

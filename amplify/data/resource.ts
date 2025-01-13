@@ -26,6 +26,7 @@ const schema = a.schema({
     section: a.string().required(),
     description: a.string(),
     components: a.hasMany("Components", "elementId"),
+    syncStatus: a.string().required(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),

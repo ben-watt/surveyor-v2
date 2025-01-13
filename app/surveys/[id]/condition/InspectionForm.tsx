@@ -6,11 +6,12 @@ import { RagStatus, Component, Defect } from "@/app/surveys/building-survey-repo
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { componentStore } from "@/app/clients/Database";
+import { componentStore, elementStore } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import surveySections from "@/app/settings/surveySections.json";
 import { Combobox } from "@/app/components/Input/ComboBox";
+
 
 const MOCK_DEFECTS = [
   {
@@ -39,6 +40,13 @@ const MOCK_DEFECTS = [
   }
 ] as const;
 
+const RAG_OPTIONS = [
+  { value: "Red", label: "Red" },
+  { value: "Amber", label: "Amber" },
+  { value: "Green", label: "Green" },
+  { value: "N/I", label: "Not Inspected" }
+];
+
 type InspectionFormData = {
   location: string;
   surveySection: string;
@@ -52,6 +60,7 @@ type InspectionFormData = {
 
 export default function InspectionForm() {
   const [isHydrated, components] = componentStore.useList();
+  const [elementsHydrated, elements] = elementStore.useList();
   const methods = useForm<InspectionFormData>({
     defaultValues: {
       location: "",
@@ -78,6 +87,7 @@ export default function InspectionForm() {
   };
 
   const selectedDefects = watch("defects");
+  const selectedSurveySection = watch("surveySection");
 
   const handleDefectToggle = (defect: typeof MOCK_DEFECTS[number]) => {
     const current = selectedDefects;
@@ -106,10 +116,19 @@ export default function InspectionForm() {
     label: section.name
   }));
 
-  const componentOptions = components.map(component => ({
-    value: component.id,
-    label: component.name
-  }));
+  const elementOptions = elements
+    .filter(element => !selectedSurveySection || element.section === selectedSurveySection)
+    .map(element => ({
+      value: element.id,
+      label: element.name
+    }));
+
+  const componentOptions = components
+    .filter(component => component.elementId === watch("element"))
+    .map(component => ({
+      value: component.id,
+      label: component.name
+    }));
 
   return (
     <FormProvider {...methods}>
@@ -126,11 +145,37 @@ export default function InspectionForm() {
             name="surveySection"
             control={control}
             errors={errors}
+            onChange={() => {
+              // Reset element and component when section changes
+              setValue("element", "");
+              setValue("component", {
+                id: "",
+                name: "",
+                defects: [],
+                ragStatus: "N/I",
+                useNameOveride: false,
+              });
+            }}
           />
-          <Input
+          <Combobox
             labelTitle="Element"
-            register={() => register("element")}
-            placeholder="Enter element"
+            data={elementOptions}
+            name="element"
+            control={control}
+            errors={errors}
+            onChange={(value) => {
+              const element = elements.find(e => e.id === value);
+              if (element) {
+                // Reset component when element changes
+                setValue("component", {
+                  id: "",
+                  name: "",
+                  defects: [],
+                  ragStatus: "N/I",
+                  useNameOveride: false,
+                });
+              }
+            }}
           />
           <Combobox
             labelTitle="Component"
@@ -165,7 +210,7 @@ export default function InspectionForm() {
               path="inspections/"
               rhfProps={{
                 name: "images",
-                control
+                control: control as any
               }}
               maxNumberOfFiles={5}
             />
@@ -173,15 +218,13 @@ export default function InspectionForm() {
         </FormSection>
 
         <FormSection title="RAG Status">
-          <select
-            {...register("ragStatus")}
-            className="w-full rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="Red">Red</option>
-            <option value="Amber">Amber</option>
-            <option value="Green">Green</option>
-            <option value="N/I">Not Inspected</option>
-          </select>
+          <Combobox
+            labelTitle="RAG Status"
+            data={RAG_OPTIONS}
+            name="ragStatus"
+            control={control}
+            errors={errors}
+          />
         </FormSection>
 
         <FormSection title="Defects">
