@@ -332,6 +332,29 @@ export default function InspectionForm() {
         </FormSection>
 
         <FormSection title="Component Details">
+          <Combobox
+              labelTitle="RAG Status"
+              data={RAG_OPTIONS}
+              name="ragStatus"
+              control={control}
+              errors={errors}
+            />
+          <Combobox
+              labelTitle="Condition"
+              data={RAG_OPTIONS}
+              name="condition"
+              control={control}
+              errors={errors}
+            />
+            {["Red", "Amber"].includes(watch("ragStatus")) && (
+              <Combobox
+                labelTitle="Defects"
+                data={RAG_OPTIONS}
+                name="condition"
+                control={control}
+                errors={errors}
+            />
+            )}
           <TextAreaInput
             labelTitle="Description"
             register={() => register("description")}
@@ -348,43 +371,7 @@ export default function InspectionForm() {
               maxNumberOfFiles={5}
             />
           </div>
-          <Combobox
-            labelTitle="RAG Status"
-            data={RAG_OPTIONS}
-            name="ragStatus"
-            control={control}
-            errors={errors}
-          />
         </FormSection>
-
-        <FormSection title="Defects">
-          <div className="space-y-4">
-            {MOCK_DEFECTS.map((defect) => (
-              <div
-                key={defect.name}
-                className="flex items-start space-x-2 border p-3 rounded-md"
-              >
-                <Checkbox
-                  id={`defect-${defect.name}`}
-                  checked={formValues.defects.some((d) => d.name === defect.name)}
-                  onCheckedChange={() => handleDefectToggle(defect)}
-                />
-                <div className="space-y-1">
-                  <Label
-                    htmlFor={`defect-${defect.name}`}
-                    className="text-sm font-medium"
-                  >
-                    {defect.name}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {defect.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </FormSection>
-
         <Button type="submit" className="w-full">
           Save Inspection
         </Button>

@@ -31,14 +31,22 @@ const schema = a.schema({
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),
   ]),
-  Defect: a.customType({
-    name: a.string().required(),
-    description: a.string().required(),
-  }),
   Material: a.customType({
-    name: a.string().required(),
-    defects: a.ref("Defect").required().array().required(),
+    name: a.string().required()
   }),
+  Phrases: a.model({
+    id: a.id().required(),
+    syncStatus: a.string().required(),
+    name: a.string().required(),
+    type: a.string().required(), // "Defect" or "Condition"
+    associatedMaterialIds: a.string().required().array().required(),
+    associatedElementIds:  a.string().required().array().required(),
+    associatedComponentIds:  a.string().required().array().required(),
+    phrase: a.string().required(),
+  }).authorization((allow) => [
+    allow.owner().to(["create", "read", "update", "delete"]),
+    allow.authenticated().to(["create", "read", "update", "delete"]),
+  ]),
   Components: a
     .model({
       id: a.id().required(),
