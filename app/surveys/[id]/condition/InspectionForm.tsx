@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import Input from "@/app/components/Input/InputText";
 import { FormSection } from "@/app/components/FormSection";
-import { RagStatus, Component, Defect } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { RagStatus, Component } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import surveySections from "@/app/settings/surveySections.json";
 import { Combobox } from "@/app/components/Input/ComboBox";
+import { Phrase } from "@/app/clients/Dexie";
 
 const LOCATION_OPTIONS = [
   {
@@ -125,33 +126,6 @@ const LOCATION_OPTIONS = [
   }
 ];
 
-const MOCK_DEFECTS = [
-  {
-    name: "Condensation",
-    description: "Moisture between glass panes indicating seal failure"
-  },
-  {
-    name: "Cracked Glass",
-    description: "Visible cracks or chips in the glass"
-  },
-  {
-    name: "Failed Seal",
-    description: "Deteriorated or damaged window seals"
-  },
-  {
-    name: "Frame Damage",
-    description: "Visible damage or rot in window frames"
-  },
-  {
-    name: "Hardware Issues",
-    description: "Problems with handles, locks, or hinges"
-  },
-  {
-    name: "Drafts",
-    description: "Air leakage around windows"
-  }
-] as const;
-
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
   { value: "Amber", label: "Amber" },
@@ -167,7 +141,8 @@ type InspectionFormData = {
   description: string;
   images: string[];
   ragStatus: RagStatus;
-  defects: Defect[];
+  defects: Phrase[];
+  conditions: Phrase[];
 }
 
 export default function InspectionForm() {
@@ -183,13 +158,13 @@ export default function InspectionForm() {
         id: "",
         name: "",
         defects: [],
+        conditions: [],
         ragStatus: "N/I",
         useNameOveride: false,
       },
       description: "",
       images: [],
       ragStatus: "N/I",
-      defects: [],
     },
   });
 
@@ -232,6 +207,7 @@ export default function InspectionForm() {
         defects: [],
         ragStatus: "N/I",
         useNameOveride: false,
+        conditions: [],
       });
     }
   }, [formValues.surveySection, formValues.element, elements, setValue]);
@@ -249,34 +225,13 @@ export default function InspectionForm() {
         defects: [],
         ragStatus: "N/I",
         useNameOveride: false,
+        conditions: [],
       });
     }
   }, [formValues.element, formValues.component.id, components, setValue]);
 
   const onSubmit = (data: InspectionFormData) => {
     console.log(data);
-  };
-
-  const handleDefectToggle = (defect: typeof MOCK_DEFECTS[number]) => {
-    const current = formValues.defects;
-    const exists = current.some((d) => d.name === defect.name);
-    
-    if (exists) {
-      setValue(
-        "defects",
-        current.filter((d) => d.name !== defect.name)
-      );
-    } else {
-      setValue("defects", [
-        ...current,
-        {
-          name: defect.name,
-          description: defect.description,
-          isChecked: true,
-          material: [],
-        },
-      ]);
-    }
   };
 
   const surveySectionOptions = surveySections.map(section => ({
@@ -324,6 +279,7 @@ export default function InspectionForm() {
                   defects: [],
                   ragStatus: "N/I",
                   useNameOveride: false,
+                  conditions: [],
                 });
               }
             }}
@@ -340,9 +296,9 @@ export default function InspectionForm() {
               errors={errors}
             />
           <Combobox
-              labelTitle="Condition"
+              labelTitle="Conditions"
               data={RAG_OPTIONS}
-              name="condition"
+              name="conditions"
               control={control}
               errors={errors}
             />
@@ -350,7 +306,7 @@ export default function InspectionForm() {
               <Combobox
                 labelTitle="Defects"
                 data={RAG_OPTIONS}
-                name="condition"
+                name="defects"
                 control={control}
                 errors={errors}
             />

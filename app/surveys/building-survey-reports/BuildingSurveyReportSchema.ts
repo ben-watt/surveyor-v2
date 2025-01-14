@@ -84,26 +84,17 @@ export type ElementSection = {
 export type Component = {
     id: string,
     name: string,
-    defects: Defect[],
+    conditions: Phrase[],
+    defects: Phrase[],
     ragStatus: RagStatus,
     useNameOveride: boolean,
     budgetCost?: number,
 }
 
-export type MaterialComponent = {
+export type Phrase = {
     id: string,
     name: string,
-    defects: Defect[],
-    ragStatus: RagStatus,
-    useNameOveride: boolean,
-    budgetCost?: number,
-}
-
-export type Defect = {
-    name: string,
     description: string,
-    isChecked: boolean,
-    material: Material[]
 }
 
 export type Material = {

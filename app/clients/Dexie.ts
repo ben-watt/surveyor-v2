@@ -24,6 +24,7 @@ type TableEntity = {
   id: string;
   updatedAt: string;
   syncStatus: string;
+  syncError?: string;
 }
 
 enum SyncStatus {
@@ -114,8 +115,8 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
               await table.put({ ...created, syncStatus: SyncStatus.Synced });
             }
             
-          } catch {
-            await table.put({ ...local, syncStatus: SyncStatus.Failed });
+          } catch(error: any) {
+            await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.message });
           }
         }
       }

@@ -133,14 +133,14 @@ function StatusBadge({
 }) {
   const getStatusColor = (status: SyncStatus) => {
     const baseColors = {
-      [SyncStatus.Draft]: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-      [SyncStatus.Synced]: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-      [SyncStatus.Queued]: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-      [SyncStatus.Failed]: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+      [SyncStatus.Draft]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+      [SyncStatus.Synced]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+      [SyncStatus.Queued]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+      [SyncStatus.Failed]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
     };
 
     return isActive 
-      ? baseColors[status].replace("100", "200").replace("900", "800")
+      ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
       : baseColors[status];
   };
 
@@ -150,8 +150,8 @@ function StatusBadge({
       disabled={count === 0}
       className={`px-2 py-1 text-xs font-medium rounded-full inline-flex items-center gap-2 
         ${getStatusColor(status)} 
-        ${count === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}
-        ${isActive ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
+        ${count === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer'}
+        ${isActive ? 'ring-1 ring-gray-400 dark:ring-gray-500' : ''}`}
     >
       {status.toUpperCase()} ({count})
     </button>

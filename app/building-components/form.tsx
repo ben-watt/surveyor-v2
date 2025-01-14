@@ -69,7 +69,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     };
 
     fetchElements();
-  }, []);
+  }, [id]);
 
   const onSubmit = (data: ComponentDataUpdate) => {
     const saveData = async () => {
@@ -144,7 +144,7 @@ const AddMaterials = () => {
       ))}
       <Button
         variant="secondary"
-        onClick={() => append({ name: "", defects: [] })}
+        onClick={() => append({ name: "" })}
       >
         Add Material
       </Button>
@@ -163,11 +163,6 @@ interface ListMaterialsProps {
 
 const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
   const { control, register } = useFormContext<ComponentDataUpdate>();
-  const {
-    append,
-    remove: removeDefect,
-    fields,
-  } = useFieldArray({ control: control, name: `materials.${index}.defects` });
 
   return (
     <div key={field.id}>
@@ -180,59 +175,7 @@ const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
             }
           />
         </div>
-
-        <Button
-          className="h-full"
-          variant="secondary"
-          onClick={() => append({ name: "", description: "" })}
-        >
-          Add Defect
-        </Button>
-        <Button
-          className="h-full"
-          variant="destructive"
-          onClick={() => remove(index)}
-        >
-          Remove
-        </Button>
       </div>
-
-      {fields.map((defect, defectIndex) => (
-        <FormSection key={defectIndex}>
-          <div className="grid gap-4 m-4">
-            <div className="flex gap-4 items-end">
-              <div className="flex-1">
-                <Input
-                  key={defect.id}
-                  labelTitle="Defect Name"
-                  register={() =>
-                    register(`materials.${index}.defects.${defectIndex}.name`, {
-                      required: true,
-                    })
-                  }
-                />
-              </div>
-
-              <Button
-                variant="destructive"
-                onClick={() => removeDefect(defectIndex)}
-              >
-                Remove
-              </Button>
-            </div>
-            <TextAreaInput
-              key={defect.id}
-              labelTitle="Defect Description"
-              register={() =>
-                register(
-                  `materials.${index}.defects.${defectIndex}.description`,
-                  { required: true }
-                )
-              }
-            />
-          </div>
-        </FormSection>
-      ))}
     </div>
   );
 };

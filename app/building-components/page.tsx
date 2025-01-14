@@ -40,10 +40,6 @@ export default function Page() {
       accessorFn: (v) => v.materials.length,
     },
     {
-      header: "Defect Count",
-      accessorFn: (v) => v.materials.reduce((acc, m) => acc + m.defects.length, 0),
-    },
-    {
       id: "created",
       header: ({ column }) => (
         <SortableHeader column={column} header="Created" />
