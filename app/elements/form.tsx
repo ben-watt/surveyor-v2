@@ -19,7 +19,7 @@ interface DataFormProps {
 
 export function DataForm({ id }: DataFormProps) {
   const form = useForm<ElementsDataUpdate>({});
-  const { register, handleSubmit } = form;
+  const { register, handleSubmit, control } = form;
   const router = useRouter();
 
   useEffect(() => {
@@ -84,10 +84,9 @@ export function DataForm({ id }: DataFormProps) {
             { value: "Sevices", label: "Sevices" },
             { value: "Grounds (External Areas)", label: "Grounds (External Areas)" },
           ]}
-          controllerProps={{
-            name: "section",
-            rules: { required: "Section is required" },
-          }}
+          name="section"
+          control={control}
+          rules={{ required: "Section is required" }}
         />
         <Input
           labelTitle="Order"

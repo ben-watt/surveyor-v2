@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Control, FieldErrors, useController } from "react-hook-form";
+import { Control, FieldErrors, RegisterOptions, useController } from "react-hook-form";
 import { Label } from "./Label";
 import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
@@ -36,8 +36,10 @@ interface ComboboxProps {
   errors?: FieldErrors;
   name: string;
   control: Control<any>;
-  onChange?: (value: string) => void;
+  rules?: RegisterOptions;
+  onChange?: (value: string | string[]) => void;
   showParentLabels?: boolean;
+  isMulti?: boolean;
 }
 
 export function Combobox({
@@ -47,12 +49,15 @@ export function Combobox({
   errors,
   name,
   control,
+  rules,
   onChange,
   showParentLabels = false,
+  isMulti = false,
 }: ComboboxProps) {
   const { field } = useController({
     name,
     control,
+    rules
   });
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -97,13 +102,25 @@ export function Combobox({
       return;
     }
 
-    const newValue = value === field.value ? "" : value;
-    field.onChange(newValue);
-    onChange?.(newValue);
-    setOpen(false);
-    setNavigationStack([data]);
-    setBreadcrumbs([]);
-  }, [data, field, onChange]);
+    if (isMulti) {
+      const currentValues = Array.isArray(field.value) ? field.value : [];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues, value];
+      field.onChange(newValues);
+      onChange?.(newValues);
+    } else {
+      const newValue = value === field.value ? "" : value;
+      field.onChange(newValue);
+      onChange?.(newValue);
+      setOpen(false);
+    }
+
+    if (!isMulti) {
+      setNavigationStack([data]);
+      setBreadcrumbs([]);
+    }
+  }, [data, field, onChange, isMulti]);
 
   const handleBack = React.useCallback(() => {
     if (navigationStack.length > 1) {
@@ -113,14 +130,21 @@ export function Combobox({
   }, [navigationStack.length]);
 
   const currentLevel = navigationStack[navigationStack.length - 1];
-  const selectedItem = flatData.find(item => item.value === field.value);
+  const selectedItems = isMulti && Array.isArray(field.value)
+    ? field.value.map(value => flatData.find(item => item.value === value))
+    : [flatData.find(item => item.value === field.value)];
+
+  const selectedLabels = selectedItems
+    .filter(Boolean)
+    .map(item => item?.fullLabel)
+    .join(", ");
 
   return (
     <div>
       <Label text={labelTitle} />
       <Popover open={open} onOpenChange={(isOpen) => {
         setOpen(isOpen);
-        if (!isOpen) {
+        if (!isOpen && !isMulti) {
           setNavigationStack([data]);
           setBreadcrumbs([]);
           setSearch("");
@@ -133,9 +157,7 @@ export function Combobox({
             aria-expanded={open}
             className="justify-between w-full text-ellipsis overflow-hidden"
           >
-            {selectedItem
-              ? selectedItem.fullLabel
-              : "Select..."}
+            {selectedLabels || "Select..."}
             <ArrowDownNarrowWide className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -162,7 +184,13 @@ export function Combobox({
                       <CheckIcon
                         className={cn(
                           "ml-auto h-4 w-4",
-                          field.value === item.value ? "opacity-100" : "opacity-0"
+                          isMulti
+                            ? Array.isArray(field.value) && field.value.includes(item.value)
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : field.value === item.value
+                              ? "opacity-100"
+                              : "opacity-0"
                         )}
                       />
                     </CommandItem>
@@ -196,7 +224,13 @@ export function Combobox({
                           <CheckIcon
                             className={cn(
                               "ml-auto h-4 w-4",
-                              field.value === item.value ? "opacity-100" : "opacity-0"
+                              isMulti
+                                ? Array.isArray(field.value) && field.value.includes(item.value)
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                                : field.value === item.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
                             )}
                           />
                         )}

@@ -127,6 +127,14 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     }
   };
 
+  const get = async (id: string) => {
+    const local = await table.get(id);
+    if(local === undefined) {
+      throw new Error("Item not found");
+    }
+    return local;
+  };
+
   const add = async (data: Omit<TCreate, "syncStatus">) => {
     await table.add({
       ...data,
@@ -171,6 +179,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     useGet,
     syncWithServer,
     add,
+    get,
     update,
     remove,
     removeAll

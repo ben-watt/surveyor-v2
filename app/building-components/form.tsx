@@ -4,19 +4,13 @@ import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "@/app/components/Input/InputText";
 import {
   FormProvider,
-  UseFieldArrayRemove,
-  useFieldArray,
   useForm,
-  useFormContext,
 } from "react-hook-form";
 import { toast } from "@/app/components/Toasts";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "@/app/components/Input/ComboBox";
-import { Button } from "@/components/ui/button";
-import TextAreaInput from "@/app/components/Input/TextAreaInput";
-import { FormSection } from "../components/FormSection";
 
 type ComponentData = Schema["Components"]["type"];
 type ComponentDataUpdate = Omit<
@@ -32,7 +26,7 @@ interface DataFormProps {
 
 export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const methods = useForm<ComponentDataUpdate>({ defaultValues: defaultValues });
-  const { register, handleSubmit } = methods;
+  const { register, handleSubmit, control } = methods;
   const [isLoading, setIsLoading] = useState(true);
 
   const [elements, setElements] = useState<Schema["Elements"]["type"][]>([]);
@@ -110,13 +104,11 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         />
         <Combobox
           labelTitle="Element"
-          controllerProps={{
-            name: "elementId",
-            rules: { required: true },
-          }}
+          name="elementId"
+          control={control}
+          rules={{ required: true }}
           data={elements.map((x) => ({ label: x.name, value: x.id }))}
         />
-        <AddMaterials />
         <PrimaryBtn className="w-full flex justify-center" type="submit">
           Save
         </PrimaryBtn>
@@ -124,58 +116,3 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     </FormProvider>
   );
 }
-
-const AddMaterials = () => {
-  const { control } = useFormContext<ComponentDataUpdate>();
-  const { append, remove, fields } = useFieldArray({
-    control: control,
-    name: "materials",
-  });
-
-  return (
-    <>
-      {fields.map((field, index) => (
-        <ListMaterials
-          key={field.id}
-          field={field}
-          index={index}
-          remove={remove}
-        />
-      ))}
-      <Button
-        variant="secondary"
-        onClick={() => append({ name: "" })}
-      >
-        Add Material
-      </Button>
-    </>
-  );
-};
-
-interface ListMaterialsProps {
-  field: {
-    name: string;
-    defects: ({ name: string; description: string } | null)[];
-  } & Record<"id", string>;
-  index: number;
-  remove: UseFieldArrayRemove;
-}
-
-const ListMaterials = ({ field, index, remove }: ListMaterialsProps) => {
-  const { control, register } = useFormContext<ComponentDataUpdate>();
-
-  return (
-    <div key={field.id}>
-      <div className="flex gap-4 items-end">
-        <div className="flex-1">
-          <Input
-            labelTitle="Material Name"
-            register={() =>
-              register(`materials.${index}.name`, { required: true })
-            }
-          />
-        </div>
-      </div>
-    </div>
-  );
-};

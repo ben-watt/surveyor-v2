@@ -13,6 +13,7 @@ import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Survey } from "@/app/clients/Dexie";
 import { InputImageComponent } from "@/app/components/Input/InputImage";
+import { useDynamicDrawer } from "@/app/components/Drawer";
 
 interface ReportDetailsFormPageProps {
   params: {
@@ -37,8 +38,9 @@ interface ReportDetailsFormProps {
 
 const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
   const methods = useForm<ReportDetails>({ defaultValues: survey.content.reportDetails });
-  const { register, handleSubmit } = methods;
+  const { register, handleSubmit, control } = methods;
   const router = useRouter();
+  const drawerContext = useDynamicDrawer();
 
   const onValidHandler = (data: any): void => {
     if(!survey) return;
@@ -56,6 +58,7 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
     }));
 
     router.push(`/surveys/${survey.id}`);
+    drawerContext.closeDrawer();
   };
 
   const onInvalidHandler: SubmitErrorHandler<ReportDetails> = (errors) => {
@@ -97,10 +100,9 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
                 { label: "Level 2", value: "2" },
                 { label: "Level 3", value: "3" },
               ]}
-              controllerProps={{
-                name: "level",
-                rules: { required: true },
-              }}
+              name="level"
+              control={control}
+              rules={{ required: true }}
             />
           </div>
           <div>

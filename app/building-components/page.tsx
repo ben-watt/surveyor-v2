@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import client from "@/app/clients/AmplifyDataClient";
 import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
@@ -16,14 +16,25 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
 import { SelectionSet } from "aws-amplify/api";
-import { componentStore } from "../clients/Database";
-import { Component } from "../clients/Dexie";
+import { componentStore, elementStore } from "../clients/Database";
+import { Component, Element } from "../clients/Dexie";
+
+type TableData = Component & {
+  element: Element;
+}
 
 export default function Page() {
-  const [isHydrated, data] = componentStore.useList();
-  const [search, setSearch] = useState<string>("");
+  const [isHydrated, components] = componentStore.useList();
+  const [data, setData] = useState<TableData[]>([]);
 
-  const columns: ColumnDef<Component>[] = [
+  useEffect(() => {
+    components.forEach(async (component) => {
+      const element = await elementStore.get(component.elementId);
+      setData((prev) => [...prev, { ...component, element }]);
+    });
+  }, [components]);
+
+  const columns: ColumnDef<TableData>[] = [
     {
       header: "Name",
       accessorKey: "name",
@@ -33,14 +44,10 @@ export default function Page() {
       header: ({ column }) => (
         <SortableHeader column={column} header="Element" />
       ),
-      accessorFn: (v) => v.elementId,
+      accessorFn: (v) => v.element.name,
     },
     {
-      header: "Materials Count",
-      accessorFn: (v) => v.materials.length,
-    },
-    {
-      id: "created",
+      id: "created", 
       header: ({ column }) => (
         <SortableHeader column={column} header="Created" />
       ),

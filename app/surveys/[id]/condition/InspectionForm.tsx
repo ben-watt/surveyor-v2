@@ -6,7 +6,7 @@ import { RagStatus, Component } from "@/app/surveys/building-survey-reports/Buil
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { componentStore, elementStore } from "@/app/clients/Database";
+import { componentStore, elementStore, phraseStore } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import surveySections from "@/app/settings/surveySections.json";
@@ -148,6 +148,7 @@ type InspectionFormData = {
 export default function InspectionForm() {
   const [isHydrated, components] = componentStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
+  const [phrasesHydrated, phrases] = phraseStore.useList();
 
   const methods = useForm<InspectionFormData>({
     defaultValues: {
@@ -192,6 +193,26 @@ export default function InspectionForm() {
       label: component.name
     }));
   }, [components, formValues.element]);
+
+  // Memoize the filtered phrases for conditions and defects
+  const conditionOptions = useMemo(() => {
+    const filteredPhrases = phrases.filter(
+      phrase => phrase.type === "Condition" 
+      && phrase.associatedComponentIds.includes(formValues.component.id));
+    return filteredPhrases.map(phrase => ({
+      value: phrase.id,
+      label: phrase.name
+    }));
+  }, [phrases, formValues.component.id]);
+  
+  const defectOptions = useMemo(() => {
+    const filteredPhrases = phrases.filter(phrase => phrase.type === "Defect" 
+      && phrase.associatedComponentIds.includes(formValues.component.id));
+    return filteredPhrases.map(phrase => ({
+      value: phrase.id,
+      label: phrase.name
+    }));
+  }, [formValues.component.id, phrases]);
 
   // Reset dependent fields when survey section changes
   useEffect(() => {
@@ -297,18 +318,20 @@ export default function InspectionForm() {
             />
           <Combobox
               labelTitle="Conditions"
-              data={RAG_OPTIONS}
+              data={conditionOptions}
               name="conditions"
               control={control}
               errors={errors}
+              isMulti={true}
             />
             {["Red", "Amber"].includes(watch("ragStatus")) && (
               <Combobox
                 labelTitle="Defects"
-                data={RAG_OPTIONS}
+                data={defectOptions}
                 name="defects"
                 control={control}
                 errors={errors}
+                isMulti={true}
             />
             )}
           <TextAreaInput
