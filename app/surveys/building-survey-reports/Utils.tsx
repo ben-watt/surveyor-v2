@@ -1,4 +1,4 @@
-import { FieldValues, Path, UseFormRegister } from "react-hook-form";
+import { Control, FieldValues, Path, UseFormRegister } from "react-hook-form";
 import { Input as InputT } from "./BuildingSurveyReportSchema";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { InputCheckbox } from "@/app/components/Input/InputCheckbox";
@@ -8,7 +8,8 @@ import Input from "@/app/components/Input/InputText";
 export function mapToInputType<T, K extends FieldValues>(
   input: InputT<T>,
   registerName: Path<K>,
-  register: UseFormRegister<K>
+  register: UseFormRegister<K>,
+  control: Control<K>
 ) {
   try {
     console.log("[mapToInputType]", input, registerName, register);
@@ -86,10 +87,9 @@ export function mapToInputType<T, K extends FieldValues>(
                 { label: "Other", value: "Other" },
                 { label: "Unknown", value: "Unknown" },
               ]}
-              controllerProps={{
-                name: registerName,
-                rules: { required: input.required },
-              }}
+              name={registerName}
+              rules={{ required: input.required }}
+              control={control}
             />
           </>
         );

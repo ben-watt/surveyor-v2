@@ -1,6 +1,5 @@
 "use client";
 
-import { FormSection } from "@/app/components/FormSection";
 import { FormProvider, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import {
   PropertyDescription,
@@ -9,7 +8,6 @@ import {
 import { surveyStore } from "@/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { PrimaryBtn } from "@/app/components/Buttons";
-import { Router } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -55,7 +53,7 @@ const PropertyDescriptionForm = ({
   initValues,
 }: PropertyDescriptionFormProps) => {
   const methods = useForm<PropertyDescription>({ defaultValues: initValues });
-  const { register, handleSubmit } = methods;
+  const { register, handleSubmit, control } = methods;
   const router = useRouter();
 
   console.log("[PropertyDescriptionForm] initValues", initValues);
@@ -101,7 +99,7 @@ const PropertyDescriptionForm = ({
 
               return (
                 <div key={key} className="mt-1 mb-1">
-                  {mapToInputType(property, reqName, register)}
+                  {mapToInputType(property, reqName, register, control)}
                 </div>
               );
             } else {
