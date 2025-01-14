@@ -12,13 +12,11 @@ import {
 } from "react-hook-form";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import InputError from "@/app/components/InputError";
-import { toast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Schema } from "@/amplify/data/resource";
 import { SelectionSet } from "aws-amplify/api";
 import { MultiFormSection } from "@/app/components/FormSection";
-import dynamic from "next/dynamic";
 import { surveyStore } from "@/app/clients/Database";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { Ok, Result } from "ts-results";
@@ -27,14 +25,7 @@ import ReportDetailFormPage from "../[id]/report-details/page";
 import PropertyDescriptionPage from "../[id]/property-description/page";
 import ChecklistPage from "../[id]/checklist/page";
 import ConditionPage from "../[id]/condition/page";
-
-const ImageInput = dynamic(
-  () =>
-    import("@/app/components/Input/UppyInputImage").then(
-      (x) => x.input.rhfImage
-    ),
-  { ssr: false }
-);
+import toast from "react-hot-toast";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -72,7 +63,7 @@ const createDefaultFormValues = async (
   const user = await fetchUserAttributes();
 
   if (!user.sub || !user.name || !user.email || !user.picture) {
-    toast.info(
+    toast.custom(
       "Some user information is missing. Please check you've added all your profile information."
     );
   }

@@ -6,11 +6,11 @@ import {
   FormProvider,
   useForm,
 } from "react-hook-form";
-import { toast } from "@/app/components/Toasts";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "@/app/components/Input/ComboBox";
+import toast from "react-hot-toast";
 
 type ComponentData = Schema["Components"]["type"];
 type ComponentDataUpdate = Omit<
@@ -82,7 +82,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         toast.success("Saved");
       } catch (error) {
         console.error("Failed to save data", error);
-        toast.basic(`Error unable to save data.`);
+        toast.custom(`Error unable to save data.`);
       }
 
       onSave && onSave();

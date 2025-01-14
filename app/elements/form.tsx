@@ -3,12 +3,12 @@
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "@/app/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
-import { toast } from "@/app/components/Toasts";
 import { useRouter } from "next/navigation";
 import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect } from "react";
 import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "../components/Input/ComboBox";
+import toast from "react-hot-toast";
 
 type ElementsData = Schema["Elements"]["type"];
 type ElementsDataUpdate = Omit<ElementsData, "createdAt" | "updatedAt">;
