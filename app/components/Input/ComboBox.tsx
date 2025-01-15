@@ -24,7 +24,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
 
 interface ComboboxDataItem {
-  value: string;
+  value: any;
   label: string;
   children?: ComboboxDataItem[];
 }
@@ -37,7 +37,7 @@ interface ComboboxProps {
   name: string;
   control: Control<any>;
   rules?: RegisterOptions;
-  onChange?: (value: string | string[]) => void;
+  onChange?: (value: any) => void;
   showParentLabels?: boolean;
   isMulti?: boolean;
 }
@@ -71,7 +71,7 @@ export function Combobox({
   }, [data]);
 
   // Flatten the nested data structure for searching
-  const flattenData = React.useCallback((items: ComboboxDataItem[], parentLabel = ""): { value: string; label: string; fullLabel: string }[] => {
+  const flattenData = React.useCallback((items: ComboboxDataItem[], parentLabel = ""): { value: any; label: string; fullLabel: string }[] => {
     return items.reduce((acc, item) => {
       const fullLabel = showParentLabels && parentLabel ? `${parentLabel} > ${item.label}` : item.label;
       const result = [{ value: item.value, label: item.label, fullLabel }];
@@ -81,7 +81,7 @@ export function Combobox({
       }
       
       return [...acc, ...result];
-    }, [] as { value: string; label: string; fullLabel: string }[]);
+    }, [] as { value: any; label: string; fullLabel: string }[]);
   }, [showParentLabels]);
 
   const flatData = React.useMemo(() => flattenData(data), [data, flattenData]);
@@ -95,24 +95,41 @@ export function Combobox({
     );
   }, [flatData, search]);
 
-  const handleSelect = React.useCallback((value: string, item?: ComboboxDataItem) => {
+  const handleSelect = React.useCallback((label: string, item?: ComboboxDataItem) => {
     if (item?.children) {
       setNavigationStack(prev => [...prev, item.children!]);
       setBreadcrumbs(prev => [...prev, item.label]);
       return;
     }
 
+    const selectedItem = flatData.find(i => i.label === label);
+    if (!selectedItem) return;
+
     if (isMulti) {
       const currentValues = Array.isArray(field.value) ? field.value : [];
-      const newValues = currentValues.includes(value)
-        ? currentValues.filter(v => v !== value)
-        : [...currentValues, value];
-      field.onChange(newValues);
-      onChange?.(newValues);
+      const valueExists = currentValues.some(v => {
+        if (typeof v === 'object' && v !== null && typeof selectedItem.value === 'object' && selectedItem.value !== null) {
+          return JSON.stringify(v) === JSON.stringify(selectedItem.value);
+        }
+        return v === selectedItem.value;
+      });
+
+      field.onChange(valueExists 
+        ? currentValues.filter(v => {
+            if (typeof v === 'object' && v !== null && typeof selectedItem.value === 'object' && selectedItem.value !== null) {
+              return JSON.stringify(v) !== JSON.stringify(selectedItem.value);
+            }
+            return v !== selectedItem.value;
+          })
+        : [...currentValues, selectedItem.value]
+      );
     } else {
-      const newValue = value === field.value ? "" : value;
-      field.onChange(newValue);
-      onChange?.(newValue);
+      const valueMatches = typeof field.value === 'object' && field.value !== null 
+        && typeof selectedItem.value === 'object' && selectedItem.value !== null
+        ? JSON.stringify(field.value) === JSON.stringify(selectedItem.value)
+        : field.value === selectedItem.value;
+
+      field.onChange(valueMatches ? "" : selectedItem.value);
       setOpen(false);
     }
 
@@ -120,7 +137,7 @@ export function Combobox({
       setNavigationStack([data]);
       setBreadcrumbs([]);
     }
-  }, [data, field, onChange, isMulti]);
+  }, [data, field, isMulti, flatData]);
 
   const handleBack = React.useCallback(() => {
     if (navigationStack.length > 1) {
@@ -130,14 +147,50 @@ export function Combobox({
   }, [navigationStack.length]);
 
   const currentLevel = navigationStack[navigationStack.length - 1];
-  const selectedItems = isMulti && Array.isArray(field.value)
-    ? field.value.map(value => flatData.find(item => item.value === value))
-    : [flatData.find(item => item.value === field.value)];
+  const selectedItems = React.useMemo(() => {
+    if (!field.value) return [];
+    
+    if (isMulti && Array.isArray(field.value)) {
+      return field.value.map(value => 
+        flatData.find(item => {
+          if (typeof value === 'object' && value !== null && typeof item.value === 'object' && item.value !== null) {
+            return JSON.stringify(value) === JSON.stringify(item.value);
+          }
+          return value === item.value;
+        })
+      );
+    }
+    
+    const item = flatData.find(item => {
+      if (typeof field.value === 'object' && field.value !== null && typeof item.value === 'object' && item.value !== null) {
+        return JSON.stringify(field.value) === JSON.stringify(item.value);
+      }
+      return field.value === item.value;
+    });
+    
+    return item ? [item] : [];
+  }, [field.value, flatData, isMulti]);
 
-  const selectedLabels = selectedItems
-    .filter(Boolean)
-    .map(item => item?.fullLabel)
-    .join(", ");
+  const selectedLabels = React.useMemo(() => 
+    selectedItems.filter(Boolean).map(item => item?.fullLabel).join(", "),
+    [selectedItems]
+  );
+
+  const isItemSelected = React.useCallback((itemValue: any) => {
+    if (isMulti && Array.isArray(field.value)) {
+      return field.value.some(v => {
+        if (typeof v === 'object' && v !== null && typeof itemValue === 'object' && itemValue !== null) {
+          return JSON.stringify(v) === JSON.stringify(itemValue);
+        }
+        return v === itemValue;
+      });
+    }
+    
+    if (typeof field.value === 'object' && field.value !== null && typeof itemValue === 'object' && itemValue !== null) {
+      return JSON.stringify(field.value) === JSON.stringify(itemValue);
+    }
+    return field.value === itemValue;
+  }, [field.value, isMulti]);
 
   return (
     <div>
@@ -177,20 +230,14 @@ export function Combobox({
                     <CommandItem
                       key={item.value}
                       value={item.label}
-                      onSelect={() => handleSelect(item.value)}
+                      onSelect={() => handleSelect(item.label)}
                       className="flex items-center"
                     >
                       {item.fullLabel}
                       <CheckIcon
                         className={cn(
                           "ml-auto h-4 w-4",
-                          isMulti
-                            ? Array.isArray(field.value) && field.value.includes(item.value)
-                              ? "opacity-100"
-                              : "opacity-0"
-                            : field.value === item.value
-                              ? "opacity-100"
-                              : "opacity-0"
+                          isItemSelected(item.value) ? "opacity-100" : "opacity-0"
                         )}
                       />
                     </CommandItem>
@@ -214,7 +261,7 @@ export function Combobox({
                       <CommandItem
                         key={item.value}
                         value={item.label}
-                        onSelect={() => handleSelect(item.value, item)}
+                        onSelect={() => handleSelect(item.label, item)}
                         className="flex items-center"
                       >
                         {item.label}
@@ -224,13 +271,7 @@ export function Combobox({
                           <CheckIcon
                             className={cn(
                               "ml-auto h-4 w-4",
-                              isMulti
-                                ? Array.isArray(field.value) && field.value.includes(item.value)
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                                : field.value === item.value
-                                  ? "opacity-100"
-                                  : "opacity-0"
+                              isItemSelected(item.value) ? "opacity-100" : "opacity-0"
                             )}
                           />
                         )}

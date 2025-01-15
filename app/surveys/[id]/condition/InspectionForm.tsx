@@ -1,17 +1,16 @@
 import React, { useEffect, useMemo } from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import Input from "@/app/components/Input/InputText";
+import { useForm, FormProvider, FieldErrors } from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
-import { RagStatus, Component } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { RagStatus, Component, ElementSection } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { componentStore, elementStore, phraseStore } from "@/app/clients/Database";
+import { componentStore, elementStore, phraseStore, surveyStore } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import surveySections from "@/app/settings/surveySections.json";
 import { Combobox } from "@/app/components/Input/ComboBox";
-import { Phrase } from "@/app/clients/Dexie";
+import { useDynamicDrawer } from "@/app/components/Drawer";
+import toast from "react-hot-toast";
 
 const LOCATION_OPTIONS = [
   {
@@ -136,38 +135,59 @@ const RAG_OPTIONS = [
 type InspectionFormData = {
   location: string;
   surveySection: string;
-  element: string;
+  element: {
+    id: string;
+    name: string;
+  };
   component: Component;
-  description: string;
+  additionalDescription: string;
   images: string[];
   ragStatus: RagStatus;
-  defects: Phrase[];
-  conditions: Phrase[];
+  defects: {
+    id: string;
+    name: string;
+    phrase: string;
+  }[];
+  conditions: {
+    id: string;
+    name: string;
+    phrase: string;
+  }[];
 }
 
-export default function InspectionForm() {
+interface InspectionFormProps {
+  surveyId: string;
+}
+
+export default function InspectionForm({ surveyId }: InspectionFormProps) {
   const [isHydrated, components] = componentStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
 
-  const methods = useForm<InspectionFormData>({
-    defaultValues: {
-      location: "",
-      surveySection: "",
-      element: "",
-      component: {
-        id: "",
-        name: "",
-        defects: [],
-        conditions: [],
-        ragStatus: "N/I",
-        useNameOveride: false,
-      },
-      description: "",
-      images: [],
-      ragStatus: "N/I",
+  const drawer = useDynamicDrawer();
+  const defaultValues : InspectionFormData = {
+    location: "",
+    surveySection: "",
+    element: {
+      id: "",
+      name: ""
     },
-  });
+    component: {
+      id: "",
+      name: "",
+      defects: [],
+      conditions: [],
+      ragStatus: "N/I",
+      useNameOveride: false,
+    },
+    additionalDescription: "",
+    images: [],
+    ragStatus: "N/I",
+    defects: [],
+    conditions: [],
+  };
+
+  const methods = useForm<InspectionFormData>({ defaultValues });
 
   const { register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
   const formValues = watch();
@@ -178,7 +198,7 @@ export default function InspectionForm() {
       element => !formValues.surveySection || element.section === formValues.surveySection
     );
     return filteredElements.map(element => ({
-      value: element.id,
+      value: { id: element.id, name: element.name },
       label: element.name
     }));
   }, [elements, formValues.surveySection]);
@@ -186,7 +206,7 @@ export default function InspectionForm() {
   // Memoize the filtered components based on selected element
   const componentOptions = useMemo(() => {
     const filteredComponents = components.filter(
-      component => component.elementId === formValues.element
+      component => component.elementId === formValues.element.id
     );
     return filteredComponents.map(component => ({
       value: component.id,
@@ -217,42 +237,102 @@ export default function InspectionForm() {
   // Reset dependent fields when survey section changes
   useEffect(() => {
     const elementExists = elements.some(
-      e => e.id === formValues.element && e.section === formValues.surveySection
+      e => e.id === formValues.element.id && e.section === formValues.surveySection
     );
     
-    if (formValues.surveySection && !elementExists && formValues.element) {
-      setValue("element", "");
-      setValue("component", {
-        id: "",
-        name: "",
-        defects: [],
-        ragStatus: "N/I",
-        useNameOveride: false,
-        conditions: [],
-      });
+    if (formValues.surveySection && !elementExists && formValues.element.id) {
+      setValue("element", defaultValues.element, { shouldDirty: false });
+      setValue("component", defaultValues.component, { shouldDirty: false });
     }
-  }, [formValues.surveySection, formValues.element, elements, setValue]);
+  }, [formValues.surveySection, formValues.element.id, setValue, defaultValues.element, defaultValues.component, elements]);
 
   // Reset component when element changes
   useEffect(() => {
     const componentExists = components.some(
-      c => c.id === formValues.component.id && c.elementId === formValues.element
+      c => c.id === formValues.component.id && c.elementId === formValues.element.id
     );
     
     if (formValues.element && !componentExists && formValues.component.id) {
-      setValue("component", {
-        id: "",
-        name: "",
-        defects: [],
-        ragStatus: "N/I",
-        useNameOveride: false,
-        conditions: [],
-      });
+      setValue("component", defaultValues.component);
     }
-  }, [formValues.element, formValues.component.id, components, setValue]);
+  }, [formValues.element, formValues.component.id, components, setValue, defaultValues.component]);
 
-  const onSubmit = (data: InspectionFormData) => {
-    console.log(data);
+  const onValid = async (data: InspectionFormData) => {
+    await surveyStore.update(surveyId, (survey) => {
+      let surveySection = survey.content.sections.find(section => section.name === data.surveySection);
+      if (!surveySection) {
+        surveySection = {
+          name: data.surveySection,
+          elementSections: []
+        };
+        survey.content.sections.push(surveySection);
+      }
+
+      let elementSection = surveySection.elementSections.find(
+        (element: ElementSection) => element.name === data.element.id
+      );
+      if (!elementSection) {
+        elementSection = {
+          name: data.element.name,
+          components: [],
+          id: crypto.randomUUID(),
+          isPartOfSurvey: true,
+          description: "",
+          images: []
+        } as ElementSection;
+        surveySection.elementSections.push(elementSection);
+      }
+
+      if (elementSection) {
+        const existingComponent = elementSection.components.find(
+          (component: Component) => component.id === data.component.id
+        );
+        if (existingComponent) {
+          Object.assign(existingComponent, {
+            ...data.component,
+            ragStatus: data.ragStatus,
+            conditions: (data.conditions || []).map(p => ({
+              id: p.id,
+              name: p.name,
+              phrase: p.phrase || ""
+            })),
+            defects: (data.defects || []).map(p => ({
+              id: p.id,
+              name: p.name,
+              phrase: p.phrase || ""
+            }))
+          });
+        } else {
+          elementSection.components.push({
+            id: data.component.id,
+            name: data.component.name,
+            conditions: (data.conditions || []).map(p => ({
+              id: p.id,
+              name: p.name,
+              phrase: p.phrase || "",
+              description: ""
+            })),
+            defects: (data.defects || []).map(p => ({
+              id: p.id,
+              name: p.name,
+              phrase: p.phrase || "",
+              description: ""
+            })),
+            ragStatus: data.ragStatus,
+            useNameOveride: false,
+          });
+        }
+      }
+
+      return survey;
+    });
+
+    drawer.closeDrawer();
+    toast.success("Inspection saved");
+  };
+
+  const onInvalid = (errors: FieldErrors<InspectionFormData>) => {
+    console.log(errors);
   };
 
   const surveySectionOptions = surveySections.map(section => ({
@@ -262,7 +342,7 @@ export default function InspectionForm() {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onValid, onInvalid)} className="space-y-6">
         <FormSection title="Basic Information">
           <Combobox
             labelTitle="Location"
@@ -271,6 +351,9 @@ export default function InspectionForm() {
             control={control}
             errors={errors}
             showParentLabels={true}
+            rules={{
+              required: "Location is required"
+            }}
           />
           <Combobox
             labelTitle="Survey Section"
@@ -278,6 +361,9 @@ export default function InspectionForm() {
             name="surveySection"
             control={control}
             errors={errors}
+            rules={{
+              required: "Survey section is required"
+            }}
           />
           <Combobox
             labelTitle="Element"
@@ -285,6 +371,9 @@ export default function InspectionForm() {
             name="element"
             control={control}
             errors={errors}
+            rules={{
+              required: "Element is required"
+            }}
           />
           <Combobox
             labelTitle="Component"
@@ -305,6 +394,9 @@ export default function InspectionForm() {
               }
             }}
             errors={errors}
+            rules={{
+              required: "Component is required"
+            }}
           />
         </FormSection>
 
@@ -315,9 +407,12 @@ export default function InspectionForm() {
               name="ragStatus"
               control={control}
               errors={errors}
+              rules={{
+                required: "RAG status is required"
+              }}
             />
           <Combobox
-              labelTitle="Conditions"
+              labelTitle="Condition"
               data={conditionOptions}
               name="conditions"
               control={control}
@@ -332,11 +427,36 @@ export default function InspectionForm() {
                 control={control}
                 errors={errors}
                 isMulti={true}
+                onChange={(value) => {
+                  if(value && Array.isArray(value)) {
+                    const defects = value
+                      .map(v => {
+                        const p = phrases.find(p => p.id === v);
+                        return p ? {
+                          id: p.id,
+                          name: p.name,
+                          phrase: p.phrase || ""
+                        } : undefined;
+                      })
+                      .filter((p): p is { id: string; name: string; phrase: string } => p !== undefined);
+                    setValue("defects", defects);
+                  }
+                }}
             />
             )}
+            {
+              Array.isArray(formValues.defects) && formValues.defects.map((defect) => {
+                const phrase = phrases.find(p => p.id === defect.id);
+                return (
+                  <div key={defect.id} className="space-y-2 border-b border-gray-200 p-4 text-xs">
+                    <p>{phrase?.phrase}</p>
+                  </div>
+                );
+              })
+            }
           <TextAreaInput
-            labelTitle="Description"
-            register={() => register("description")}
+            labelTitle="Additional Description"
+            register={() => register("additionalDescription")}
             placeholder="Enter component description"
           />
           <div className="space-y-2">

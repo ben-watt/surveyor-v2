@@ -93,7 +93,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
     openDrawer({
       title: "Inspect Item",
       description: "Inspect the item",
-      content: <InspectionForm />
+      content: <InspectionForm surveyId={id} />
     })
   }
 
