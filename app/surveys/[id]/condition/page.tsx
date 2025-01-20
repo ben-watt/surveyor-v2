@@ -7,8 +7,8 @@ import { componentStore, surveyStore } from "@/app/clients/Database";
 import { ClipboardList, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 import {
+  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
