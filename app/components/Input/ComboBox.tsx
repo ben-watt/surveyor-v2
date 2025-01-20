@@ -37,7 +37,6 @@ interface ComboboxProps {
   name: string;
   control: Control<any>;
   rules?: RegisterOptions;
-  onChange?: (value: any) => void;
   showParentLabels?: boolean;
   isMulti?: boolean;
 }
@@ -50,7 +49,6 @@ export function Combobox({
   name,
   control,
   rules,
-  onChange,
   showParentLabels = false,
   isMulti = false,
 }: ComboboxProps) {

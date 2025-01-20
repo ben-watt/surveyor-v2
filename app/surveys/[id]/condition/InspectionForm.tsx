@@ -141,7 +141,17 @@ export default function InspectionForm({
       component => component.elementId === formValues.element.id
     );
     return filteredComponents.map(component => ({
-      value: component.id,
+      value: {
+        id: component.id,
+        name: component.name,
+        defects: [],
+        ragStatus: "N/I",
+        useNameOveride: false,
+        conditions: [],
+        location: "",
+        additionalDescription: "",
+        images: [],
+      },
       label: component.name
     }));
   }, [components, formValues.element]);
@@ -161,7 +171,7 @@ export default function InspectionForm({
     const filteredPhrases = phrases.filter(phrase => phrase.type === "Defect" 
       && phrase.associatedComponentIds.includes(formValues.component.id));
     return filteredPhrases.map(phrase => ({
-      value: phrase.id,
+      value: phrase,
       label: phrase.name
     }));
   }, [formValues.component.id, phrases]);
@@ -352,25 +362,8 @@ export default function InspectionForm({
           <Combobox
               labelTitle="Component"
               data={componentOptions}
-              name="component.id"
+              name="component"
               control={control}
-              onChange={(value) => {
-                const component = components.find(c => c.id === value);
-                console.log("[InspectionForm] component", component);
-                if (component) {
-                  setValue("component", {
-                    id: component.id,
-                    name: component.name,
-                    defects: [],
-                    ragStatus: "N/I",
-                    useNameOveride: false,
-                    conditions: [],
-                    location: "",
-                    additionalDescription: "",
-                    images: [],
-                  });
-                }
-              }}
               errors={errors}
               rules={{
                 required: "Component is required"
@@ -402,21 +395,6 @@ export default function InspectionForm({
                 control={control}
                 errors={errors}
                 isMulti={true}
-                onChange={(value) => {
-                  if(value && Array.isArray(value)) {
-                    const defects = value
-                      .map(v => {
-                        const p = phrases.find(p => p.id === v);
-                        return p ? {
-                          id: p.id,
-                          name: p.name,
-                          description: p.phrase || ""
-                        } : undefined;
-                      })
-                      .filter((p): p is { id: string; name: string; description: string } => p !== undefined);
-                    setValue("defects", defects);
-                  }
-                }}
             />
             )}
             {
