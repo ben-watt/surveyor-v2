@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { useForm, FormProvider, FieldErrors } from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
-import { RagStatus, Component, ElementSection } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { RagStatus, Component, ElementSection, Phrase } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { componentStore, elementStore, phraseStore, surveyStore, locationStore } from "@/app/clients/Database";
@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import { Location } from "@/app/clients/Dexie";
 import { Edit } from "lucide-react";
 import ElementForm from "./ElementForm";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -33,36 +34,31 @@ type InspectionFormData = {
   additionalDescription: string;
   images: string[];
   ragStatus: RagStatus;
-  defects: {
-    id: string;
-    name: string;
-    phrase: string;
-  }[];
-  conditions: {
-    id: string;
-    name: string;
-    phrase: string;
-  }[];
+  defects: Phrase[];
+  conditions: Phrase[];
 }
 
 interface InspectionFormProps {
   surveyId: string;
+  componentId?: string; // Optional - if provided, will pre-populate form from survey data
 }
 
-export default function InspectionForm({ surveyId }: InspectionFormProps) {
+export default function InspectionForm({ 
+  surveyId, 
+  componentId
+}: InspectionFormProps) {
   const [componentsHydrated, components] = componentStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
   const [locationsHydrated, locations] = locationStore.useList();
+  const [isHydrated, survey] = surveyStore.useGet(surveyId);
 
   const drawer = useDynamicDrawer();
-  const defaultValues : InspectionFormData = {
+  
+  let defaultValues: InspectionFormData = {
     location: "",
     surveySection: "",
-    element: {
-      id: "",
-      name: ""
-    },
+    element: { id: "", name: "" },
     component: {
       id: "",
       name: "",
@@ -70,6 +66,9 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
       conditions: [],
       ragStatus: "N/I",
       useNameOveride: false,
+      location: "",
+      additionalDescription: "",
+      images: [],
     },
     additionalDescription: "",
     images: [],
@@ -79,6 +78,48 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
   };
 
   const methods = useForm<InspectionFormData>({ defaultValues });
+  const { reset } = methods;
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (componentId && survey) {
+      // Find the component in the survey data
+      for (const section of survey.content.sections) {
+        for (const elementSection of section.elementSections) {
+          const component = elementSection.components.find(c => c.id === componentId);
+          if (component) {
+            let restoredValues = {
+              location: component.location || "",
+              surveySection: section.name,
+              element: {
+                id: elementSection.id,
+                name: elementSection.name
+              },
+              component: {
+                id: component.id,
+                name: component.name,
+                defects: component.defects || [],
+                conditions: component.conditions || [],
+                ragStatus: component.ragStatus,
+                useNameOveride: component.useNameOveride,
+              },
+              additionalDescription: component.additionalDescription || "",
+              images: component.images || [],
+              ragStatus: component.ragStatus,
+              defects: component.defects || [],
+              conditions: component.conditions || [],
+            };
+
+            reset(restoredValues);
+            break;
+          }
+        }
+      }
+    }
+
+   
+  }, [isHydrated, survey, componentId, reset]);
 
   const { register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
   const formValues = watch();
@@ -149,6 +190,8 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
   }, [formValues.element, formValues.component.id, components, setValue, defaultValues.component]);
 
   const onValid = async (data: InspectionFormData) => {
+    console.log("[InspectionForm] onValid", data);
+
     await surveyStore.update(surveyId, (survey) => {
       let surveySection = survey.content.sections.find(section => section.name === data.surveySection);
       if (!surveySection) {
@@ -176,44 +219,27 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
       }
 
       if (elementSection) {
-        const existingComponent = elementSection.components.find(
-          (component: Component) => component.id === data.component.id
-        );
-        if (existingComponent) {
-          Object.assign(existingComponent, {
-            ...data.component,
-            ragStatus: data.ragStatus,
-            conditions: (data.conditions || []).map(p => ({
-              id: p.id,
-              name: p.name,
-              phrase: p.phrase || ""
-            })),
-            defects: (data.defects || []).map(p => ({
-              id: p.id,
-              name: p.name,
-              phrase: p.phrase || ""
-            }))
-          });
-        } else {
-          elementSection.components.push({
-            id: data.component.id,
-            name: data.component.name,
-            conditions: (data.conditions || []).map(p => ({
-              id: p.id,
-              name: p.name,
-              phrase: p.phrase || "",
-              description: ""
-            })),
-            defects: (data.defects || []).map(p => ({
-              id: p.id,
-              name: p.name,
-              phrase: p.phrase || "",
-              description: ""
-            })),
-            ragStatus: data.ragStatus,
-            useNameOveride: false,
-          });
-        }
+        elementSection.components.push({
+          id: data.component.id,
+          name: data.component.name,
+          location: data.location,
+          additionalDescription: data.additionalDescription,
+          images: data.images,
+          conditions: (data.conditions || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            phrase: p.description || "",
+            description: p.description || ""
+          })),
+          defects: (data.defects || []).map(p => ({
+            id: p.id,
+            name: p.name,
+            phrase: p.description || "",
+            description: p.description || ""
+          })),
+          ragStatus: data.ragStatus,
+          useNameOveride: false,
+        });
       }
 
       return survey;
@@ -245,6 +271,24 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
 
     return buildLocationTree(locations);
   }, [locations]);
+
+  if (!isHydrated) {
+    return (
+      <div className="space-y-6">
+        <FormSection title="Basic Information">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </FormSection>
+        <FormSection title="Component Details">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </FormSection>
+      </div>
+    );
+  }
 
   return (
     <FormProvider {...methods}>
@@ -312,6 +356,7 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
               control={control}
               onChange={(value) => {
                 const component = components.find(c => c.id === value);
+                console.log("[InspectionForm] component", component);
                 if (component) {
                   setValue("component", {
                     id: component.id,
@@ -320,6 +365,9 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
                     ragStatus: "N/I",
                     useNameOveride: false,
                     conditions: [],
+                    location: "",
+                    additionalDescription: "",
+                    images: [],
                   });
                 }
               }}
@@ -362,20 +410,20 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
                         return p ? {
                           id: p.id,
                           name: p.name,
-                          phrase: p.phrase || ""
+                          description: p.phrase || ""
                         } : undefined;
                       })
-                      .filter((p): p is { id: string; name: string; phrase: string } => p !== undefined);
+                      .filter((p): p is { id: string; name: string; description: string } => p !== undefined);
                     setValue("defects", defects);
                   }
                 }}
             />
             )}
             {
-              Array.isArray(formValues.defects) && formValues.defects.map((defect) => {
+              Array.isArray(formValues.defects) && formValues.defects.map((defect, index) => {
                 const phrase = phrases.find(p => p.id === defect.id);
                 return (
-                  <div key={defect.id} className="space-y-2 border-b border-gray-200 p-4 text-xs">
+                  <div key={`${defect.id}-${index}`} className="space-y-2 border-b border-gray-200 p-4 text-xs">
                     <p>{phrase?.phrase}</p>
                   </div>
                 );
@@ -389,7 +437,7 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
           <div className="space-y-2">
             <Label>Images</Label>
             <RhfInputImage
-              path="inspections/"
+              path={`report-images/${surveyId}/components/${formValues.component.id}`}
               rhfProps={{
                 name: "images",
                 control: control as any

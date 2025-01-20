@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import client from "../clients/AmplifyDataClient";
 import toast from "react-hot-toast";
 import { Schema } from "@/amplify/data/resource";
 import { JsonView, defaultStyles } from 'react-json-view-lite';
@@ -344,7 +343,7 @@ export default function Page() {
         phrases: entitiesToSync.phrases,
         locations: entitiesToSync.locations,
       });
-      
+
       const syncTasks = [];
       
       if (entitiesToSync.elements) {
@@ -399,28 +398,6 @@ export default function Page() {
     }
   }
 
-  async function seedLocationsFromJson() {
-    try {
-      setIsLoading(true);
-      
-      // Clear existing locations
-      await locationStore.removeAll();
-
-      // Prepare and add locations
-      const preparedLocations = prepareLocationData(locations);
-      await Promise.all(
-        preparedLocations.map(location => locationStore.add(location))
-      );
-
-      toast.success("Successfully imported locations");
-    } catch (error) {
-      console.error("Failed to import locations", error);
-      toast.error("Failed to import locations");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
   // Filter data based on selected status
   const filteredElements = elements.filter(e => !filters.elements || e.syncStatus === filters.elements);
   const filteredComponents = components.filter(c => !filters.components || c.syncStatus === filters.components);
@@ -466,13 +443,6 @@ export default function Page() {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl dark:text-white">Data Management</h2>
             <div className="flex gap-4">
-              <Button
-                onClick={seedLocationsFromJson}
-                variant="outline"
-                disabled={isLoading}
-              >
-                Import Locations
-              </Button>
               <Dialog open={syncDialog} onOpenChange={setSyncDialog}>
                 <DialogTrigger asChild>
                   <Button

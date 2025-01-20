@@ -53,8 +53,8 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
 
   const onStartNewInspection = () => {
     openDrawer({
-      title: "Inspect Item",
-      description: "Inspect the item",
+      title: "Inspect Component",
+      description: "Inspect the component",
       content: <InspectionForm surveyId={id} />
     })
   }
@@ -66,7 +66,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
           <ClipboardList className="h-6 w-6 text-muted-foreground" />
         </div>
         <h2 className="text-2xl font-semibold mb-2">No Inspections Yet</h2>
-        <p className="text-muted-foreground mb-6">You haven't inspected any items in this building.</p>
+        <p className="text-muted-foreground mb-6">You haven't inspected any components in this building.</p>
         <Button onClick={onStartNewInspection}>
           Start New Inspection
         </Button>

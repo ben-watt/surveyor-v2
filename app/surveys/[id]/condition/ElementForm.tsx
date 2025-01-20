@@ -10,6 +10,8 @@ import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { useDynamicDrawer } from "@/app/components/Drawer";
 import toast from "react-hot-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import InspectionForm from "./InspectionForm";
+import { Clipboard, Edit } from "lucide-react";
 
 type ElementFormData = {
   description: string;
@@ -35,6 +37,8 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
   const methods = useForm<ElementFormData>({ defaultValues });
   const { register, control, handleSubmit, reset } = methods;
 
+  const [elementData, setElementData] = React.useState<ElementSection | null>(null);
+
   useEffect(() => {
     const loadElementData = async () => {
       try {
@@ -51,6 +55,7 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
         console.debug("[ElementForm] elementSection", elementSection);
 
         if (elementSection) {
+          setElementData(elementSection);
           reset({
             description: elementSection.description || "",
             images: elementSection.images || [],
@@ -121,6 +126,45 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
             />
           </div>
         </FormSection>
+
+        <FormSection title="Components">
+          <div className="space-y-4">
+            {elementData?.components.map((component) => (
+              <div key={component.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-4 h-4 rounded-sm ${
+                    component.ragStatus === "Red" ? "bg-red-500" :
+                    component.ragStatus === "Amber" ? "bg-amber-500" :
+                    component.ragStatus === "Green" ? "bg-green-500" :
+                    "bg-gray-500"
+                  }`} />
+                  <span>{component.name}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    drawer.openDrawer({
+                      title: `Inspect Component - ${component.name}`,
+                      description: `Inspect the ${component.name} component`,
+                      content: <InspectionForm
+                        surveyId={surveyId}
+                      />
+                    });
+                  }}
+                >
+                  <Edit  className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+            {(!elementData?.components || elementData.components.length === 0) && (
+              <div className="text-center text-gray-500 py-4">
+                No components added yet. Add components through the inspection form.
+              </div>
+            )}
+          </div>
+        </FormSection>
+
         <Button type="submit" className="w-full">
           Save Element Details
         </Button>

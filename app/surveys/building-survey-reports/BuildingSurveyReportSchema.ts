@@ -89,6 +89,9 @@ export type Component = {
     ragStatus: RagStatus,
     useNameOveride: boolean,
     budgetCost?: number,
+    location: string,
+    additionalDescription: string,
+    images: string[],
 }
 
 export type Phrase = {
