@@ -22,13 +22,13 @@ interface InputDateProps {
   controllerProps: UseControllerProps<FieldValues>;
 }
 
-const InputDate = React.forwardRef<HTMLDivElement, InputDateProps>(
-  ({ labelTitle, controllerProps }, ref) => {
+const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
   const { field, formState } = useController(controllerProps);
   const date = field.value ? new Date(field.value) : undefined;
-
+  const [open, setOpen] = React.useState(false);
   const handleSelect = (d: Date | undefined) => {
     field.onChange(d);
+    setOpen(false);
   };
 
   // Initialize date from field value if it exists
@@ -47,8 +47,8 @@ const InputDate = React.forwardRef<HTMLDivElement, InputDateProps>(
           </label>
         </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
+        <Popover open={open}>
+          <PopoverTrigger asChild onClick={(ev) => setOpen(!open)}>
             <Button
               variant={"outline"}
               className={cn(
@@ -60,7 +60,7 @@ const InputDate = React.forwardRef<HTMLDivElement, InputDateProps>(
               {date ? format(date, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-50" align="start" ref={ref}>
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
               selected={date}
@@ -78,7 +78,7 @@ const InputDate = React.forwardRef<HTMLDivElement, InputDateProps>(
       />
     </>
   );
-});
+};
 
 InputDate.displayName = "InputDate";
 
