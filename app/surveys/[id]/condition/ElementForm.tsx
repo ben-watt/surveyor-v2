@@ -117,7 +117,7 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
           <div className="space-y-2">
             <Label>Images</Label>
             <RhfInputImage
-              path={`report-images/${surveyId}/${elementId}`}
+              path={`report-images/${surveyId}/elements/${elementId}`}
               rhfProps={{
                 name: "images",
                 control: control as any
@@ -149,6 +149,7 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
                       description: `Inspect the ${component.name} component`,
                       content: <InspectionForm
                         surveyId={surveyId}
+                        componentId={component.id}
                       />
                     });
                   }}

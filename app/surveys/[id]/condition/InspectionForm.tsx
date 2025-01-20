@@ -30,7 +30,10 @@ type InspectionFormData = {
     id: string;
     name: string;
   };
-  component: Component;
+  component: {
+    id: string;
+    name: string;
+  };
   additionalDescription: string;
   images: string[];
   ragStatus: RagStatus;
@@ -61,14 +64,7 @@ export default function InspectionForm({
     element: { id: "", name: "" },
     component: {
       id: "",
-      name: "",
-      defects: [],
-      conditions: [],
-      ragStatus: "N/I",
-      useNameOveride: false,
-      location: "",
-      additionalDescription: "",
-      images: [],
+      name: ""
     },
     additionalDescription: "",
     images: [],
@@ -99,16 +95,12 @@ export default function InspectionForm({
               component: {
                 id: component.id,
                 name: component.name,
-                defects: component.defects || [],
-                conditions: component.conditions || [],
-                ragStatus: component.ragStatus,
-                useNameOveride: component.useNameOveride,
               },
-              additionalDescription: component.additionalDescription || "",
-              images: component.images || [],
               ragStatus: component.ragStatus,
               defects: component.defects || [],
               conditions: component.conditions || [],
+              additionalDescription: component.additionalDescription || "",
+              images: component.images || [],
             };
 
             reset(restoredValues);
@@ -143,14 +135,7 @@ export default function InspectionForm({
     return filteredComponents.map(component => ({
       value: {
         id: component.id,
-        name: component.name,
-        defects: [],
-        ragStatus: "N/I",
-        useNameOveride: false,
-        conditions: [],
-        location: "",
-        additionalDescription: "",
-        images: [],
+        name: component.name
       },
       label: component.name
     }));
