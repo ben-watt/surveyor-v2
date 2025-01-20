@@ -100,7 +100,7 @@ export function DynamicDrawer({
   if (isDesktop) {
     return (
       <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-        <DialogContent className="sm:max-w-[425px] max-h-full overflow-scroll">
+        <DialogContent className="sm:max-w-md max-h-full overflow-scroll">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>

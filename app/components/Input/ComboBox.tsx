@@ -208,10 +208,12 @@ export function Combobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="justify-between w-full text-ellipsis overflow-hidden"
+            className="justify-between w-full text-ellipsis overflow-hidden whitespace-nowrap"
           >
-            {selectedLabels || "Select..."}
-            <ArrowDownNarrowWide className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <div className="flex justify-between items-center w-full min-w-0">
+              <span className="flex-1 text-start truncate min-w-0 max-w-72">{selectedLabels || "Select..."}</span>
+              <ArrowDownNarrowWide className="flex-none ml-2 h-4 w-4 opacity-50 shrink-0" />
+            </div>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="p-0" align="start">
