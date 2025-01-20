@@ -12,6 +12,7 @@ import { Combobox } from "@/app/components/Input/ComboBox";
 import { useDynamicDrawer } from "@/app/components/Drawer";
 import toast from "react-hot-toast";
 import { Location } from "@/app/clients/Dexie";
+import { Edit } from "lucide-react";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -232,13 +233,12 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
   const locationOptions = useMemo(() => {
     const buildLocationTree = (items: Location[], parentId?: string): any[] => {
       return items
-        .filter(item => item.parentId === parentId)
+        .filter(item => item.parentId === parentId || (!parentId && item.parentId == null))
         .map(item => ({
           value: item.value,
           label: item.label,
           children: buildLocationTree(items, item.id)
         }))
-        .filter(item => item.children.length > 0 || !parentId); // Only include leaf nodes at root level
     };
 
     return buildLocationTree(locations);
@@ -269,42 +269,47 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
               required: "Survey section is required"
             }}
           />
-          <Combobox
-            labelTitle="Element"
-            data={elementOptions}
-            name="element"
-            control={control}
-            errors={errors}
-            rules={{
-              required: "Element is required"
-            }}
-          />
-          <Combobox
-            labelTitle="Component"
-            data={componentOptions}
-            name="component.id"
-            control={control}
-            onChange={(value) => {
-              const component = components.find(c => c.id === value);
-              if (component) {
-                setValue("component", {
-                  id: component.id,
-                  name: component.name,
-                  defects: [],
-                  ragStatus: "N/I",
-                  useNameOveride: false,
-                  conditions: [],
-                });
-              }
-            }}
-            errors={errors}
-            rules={{
-              required: "Component is required"
-            }}
-          />
+          <div className="flex items-end gap-2 justify-between">
+            <Combobox
+              labelTitle="Element"
+              data={elementOptions}
+              name="element"
+              control={control}
+              errors={errors}
+              rules={{
+                required: "Element is required"
+              }}
+            />
+            <Button className="flex-none" variant="outline" disabled={formValues.element.id === ""}>
+              <Edit  className="w-4 h-4" />
+            </Button>
+          </div>
         </FormSection>
 
         <FormSection title="Component Details">
+          <Combobox
+              labelTitle="Component"
+              data={componentOptions}
+              name="component.id"
+              control={control}
+              onChange={(value) => {
+                const component = components.find(c => c.id === value);
+                if (component) {
+                  setValue("component", {
+                    id: component.id,
+                    name: component.name,
+                    defects: [],
+                    ragStatus: "N/I",
+                    useNameOveride: false,
+                    conditions: [],
+                  });
+                }
+              }}
+              errors={errors}
+              rules={{
+                required: "Component is required"
+              }}
+            />
           <Combobox
               labelTitle="RAG Status"
               data={RAG_OPTIONS}

@@ -1,0 +1,330 @@
+[
+  {
+    "id": "interior",
+    "value": "interior",
+    "label": "Interior"
+  },
+  {
+    "id": "exterior",
+    "value": "exterior",
+    "label": "Exterior"
+  },
+  {
+    "id": "ground_floor",
+    "value": "ground_floor",
+    "label": "Ground Floor",
+    "parentId": "interior"
+  },
+  {
+    "id": "first_floor",
+    "value": "first_floor",
+    "label": "First Floor",
+    "parentId": "interior"
+  },
+  {
+    "id": "second_floor",
+    "value": "second_floor",
+    "label": "Second Floor",
+    "parentId": "interior"
+  },
+  {
+    "id": "third_floor",
+    "value": "third_floor",
+    "label": "Third Floor",
+    "parentId": "interior"
+  },
+  {
+    "id": "basement",
+    "value": "basement",
+    "label": "Basement",
+    "parentId": "interior"
+  },
+  {
+    "id": "attic",
+    "value": "attic",
+    "label": "Attic",
+    "parentId": "interior"
+  },
+  {
+    "id": "living_areas",
+    "value": "living_areas",
+    "label": "Living Areas",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "kitchen",
+    "value": "kitchen",
+    "label": "Kitchen",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "kitchen_utility",
+    "value": "kitchen_utility",
+    "label": "Kitchen Utility Area",
+    "parentId": "kitchen"
+  },
+  {
+    "id": "pantry",
+    "value": "pantry",
+    "label": "Pantry",
+    "parentId": "kitchen"
+  },
+  {
+    "id": "ground_bathroom",
+    "value": "ground_bathroom",
+    "label": "Ground Floor Bathroom",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "ground_wc",
+    "value": "ground_wc",
+    "label": "Ground Floor WC",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "entrance_hall",
+    "value": "entrance_hall",
+    "label": "Entrance Hall",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "reception_room",
+    "value": "reception_room",
+    "label": "Reception Room",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "living_room",
+    "value": "living_room",
+    "label": "Living Room",
+    "parentId": "living_areas"
+  },
+  {
+    "id": "dining_room",
+    "value": "dining_room",
+    "label": "Dining Room",
+    "parentId": "living_areas"
+  },
+  {
+    "id": "conservatory",
+    "value": "conservatory",
+    "label": "Conservatory",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "study",
+    "value": "study",
+    "label": "Study",
+    "parentId": "ground_floor"
+  },
+  {
+    "id": "master_bedroom",
+    "value": "master_bedroom",
+    "label": "Master Bedroom",
+    "parentId": "first_floor"
+  },
+  {
+    "id": "master_ensuite",
+    "value": "master_ensuite",
+    "label": "Master En-suite",
+    "parentId": "master_bedroom"
+  },
+  {
+    "id": "master_dressing",
+    "value": "master_dressing",
+    "label": "Master Dressing Room",
+    "parentId": "master_bedroom"
+  },
+  {
+    "id": "bedroom_2",
+    "value": "bedroom_2",
+    "label": "Bedroom 2",
+    "parentId": "first_floor"
+  },
+  {
+    "id": "bedroom_3",
+    "value": "bedroom_3",
+    "label": "Bedroom 3",
+    "parentId": "first_floor"
+  },
+  {
+    "id": "bedroom_4",
+    "value": "bedroom_4",
+    "label": "Bedroom 4",
+    "parentId": "first_floor"
+  },
+  {
+    "id": "family_bathroom",
+    "value": "family_bathroom",
+    "label": "Family Bathroom",
+    "parentId": "first_floor"
+  },
+  {
+    "id": "landing",
+    "value": "landing",
+    "label": "Landing",
+    "parentId": "first_floor"
+  },
+  {
+    "id": "second_floor_bedroom_1",
+    "value": "second_floor_bedroom_1",
+    "label": "Second Floor Bedroom 1",
+    "parentId": "second_floor"
+  },
+  {
+    "id": "second_floor_bedroom_2",
+    "value": "second_floor_bedroom_2",
+    "label": "Second Floor Bedroom 2",
+    "parentId": "second_floor"
+  },
+  {
+    "id": "second_floor_bathroom",
+    "value": "second_floor_bathroom",
+    "label": "Second Floor Bathroom",
+    "parentId": "second_floor"
+  },
+  {
+    "id": "utility_room",
+    "value": "utility_room",
+    "label": "Utility Room",
+    "parentId": "basement"
+  },
+  {
+    "id": "storage",
+    "value": "storage",
+    "label": "Storage",
+    "parentId": "basement"
+  },
+  {
+    "id": "wine_cellar",
+    "value": "wine_cellar",
+    "label": "Wine Cellar",
+    "parentId": "basement"
+  },
+  {
+    "id": "plant_room",
+    "value": "plant_room",
+    "label": "Plant Room",
+    "parentId": "basement"
+  },
+  {
+    "id": "front_facade",
+    "value": "front_facade",
+    "label": "Front Façade",
+    "parentId": "exterior"
+  },
+  {
+    "id": "rear_facade",
+    "value": "rear_facade",
+    "label": "Rear Façade",
+    "parentId": "exterior"
+  },
+  {
+    "id": "left_elevation",
+    "value": "left_elevation",
+    "label": "Left Elevation",
+    "parentId": "exterior"
+  },
+  {
+    "id": "right_elevation",
+    "value": "right_elevation",
+    "label": "Right Elevation",
+    "parentId": "exterior"
+  },
+  {
+    "id": "roof",
+    "value": "roof",
+    "label": "Roof",
+    "parentId": "exterior"
+  },
+  {
+    "id": "roof_void",
+    "value": "roof_void",
+    "label": "Roof Void",
+    "parentId": "roof"
+  },
+  {
+    "id": "chimney",
+    "value": "chimney",
+    "label": "Chimney",
+    "parentId": "roof"
+  },
+  {
+    "id": "guttering",
+    "value": "guttering",
+    "label": "Guttering",
+    "parentId": "exterior"
+  },
+  {
+    "id": "garden",
+    "value": "garden",
+    "label": "Garden",
+    "parentId": "exterior"
+  },
+  {
+    "id": "front_garden",
+    "value": "front_garden",
+    "label": "Front Garden",
+    "parentId": "garden"
+  },
+  {
+    "id": "rear_garden",
+    "value": "rear_garden",
+    "label": "Rear Garden",
+    "parentId": "garden"
+  },
+  {
+    "id": "side_garden",
+    "value": "side_garden",
+    "label": "Side Garden",
+    "parentId": "garden"
+  },
+  {
+    "id": "driveway",
+    "value": "driveway",
+    "label": "Driveway",
+    "parentId": "exterior"
+  },
+  {
+    "id": "garage",
+    "value": "garage",
+    "label": "Garage",
+    "parentId": "exterior"
+  },
+  {
+    "id": "outbuilding",
+    "value": "outbuilding",
+    "label": "Outbuilding",
+    "parentId": "exterior"
+  },
+  {
+    "id": "patio",
+    "value": "patio",
+    "label": "Patio",
+    "parentId": "exterior"
+  },
+  {
+    "id": "decking",
+    "value": "decking",
+    "label": "Decking",
+    "parentId": "exterior"
+  },
+  {
+    "id": "boundary_walls",
+    "value": "boundary_walls",
+    "label": "Boundary Walls",
+    "parentId": "exterior"
+  },
+  {
+    "id": "fencing",
+    "value": "fencing",
+    "label": "Fencing",
+    "parentId": "exterior"
+  },
+  {
+    "id": "gates",
+    "value": "gates",
+    "label": "Gates",
+    "parentId": "exterior"
+  }
+]

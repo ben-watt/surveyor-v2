@@ -4,6 +4,8 @@ import { BuildingSurveyFormData } from '../surveys/building-survey-reports/Build
 
 import { useEffect, useState } from "react";
 import { Draft, produce } from "immer";
+import { Err, Ok, Result } from 'ts-results';
+import { getErrorMessage } from '../utils/handleError';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -91,7 +93,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     return [hydrated, data];
   };
 
-  const syncWithServer = async () => {
+  const syncWithServer = async (): Promise<Result<void, Error>> => {
     console.debug("[syncWithServer] Syncing with server");
 
     try {
@@ -123,8 +125,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       }
 
       console.debug("[syncWithServer] Synced with server successfully"); 
-    } catch (error) {
+      return Ok(undefined);
+    } catch (error: any) {
       console.error("[syncWithServer] Error syncing with server", error);
+      return Err(new Error(getErrorMessage(error)));
     }
   };
 

@@ -10,33 +10,32 @@ import 'react-json-view-lite/dist/index.css';
 import { matchSorter } from 'match-sorter';
 import bankOfDefects from "./defects.json";
 import elements from "./elements.json";
+import seedLocationData from "./locations.json";
 import { componentStore, elementStore, phraseStore, locationStore } from "../clients/Database";
 import { Component, SyncStatus } from "../clients/Dexie";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { getErrorMessage } from "../utils/handleError";
 
 // Type definitions
 type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section"> & { id: string };
 type ComponentData = Omit<Component, "owner" | "createdAt" | "updatedAt" | "syncStatus"> & { id: string };
 type PhraseData = Omit<Schema["Phrases"]["type"], "owner" | "createdAt" | "updatedAt"> & { id: string };
+type LocationData = {
+  id: string;
+  value: string;
+  label: string;
+  parentId?: string | null;
+  syncStatus?: string;
+};
 
 const seedElementData: Omit<ElementData, "id">[] = elements;
-
-// Add this constant with your initial location data
-const seedLocationData = [
-  {
-    id: crypto.randomUUID(),
-    value: "exterior",
-    label: "Exterior",
-    syncStatus: "IMPORTED" as SyncStatus,
-  },
-  {
-    id: crypto.randomUUID(),
-    value: "front",
-    label: "Front Elevation",
-    parentId: "exterior",
-    syncStatus: "IMPORTED" as SyncStatus,
-  },
-  // ... continue with all your location data ...
-];
 
 // Data mapping functions
 function mapBodToPhraseData(bod: typeof bankOfDefects, elements: ElementData[], components: ComponentData[]): PhraseData[] {
@@ -176,6 +175,15 @@ function StatusBadge({
   );
 }
 
+// Add this function to prepare location data
+function prepareLocationData(locations: LocationData[]) {
+  return locations.map(location => ({
+    ...location,
+    parentId: location.parentId || undefined,
+    syncStatus: "IMPORTED" as SyncStatus
+  }));
+}
+
 export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -198,6 +206,36 @@ export default function Page() {
   const [phraseData, setPhraseData] = useState<PhraseData[]>([]);
   const [filters, setFilters] = useState<FilterState>({});
   const [selectedEntity, setSelectedEntity] = useState<EntityType | null>(null);
+  const [syncDialog, setSyncDialog] = useState(false);
+  const [entitiesToSync, setEntitiesToSync] = useState({
+    elements: true,
+    components: true,
+    phrases: true,
+    locations: true,
+  });
+  const [seedDialog, setSeedDialog] = useState(false);
+  const [entitiesToSeed, setEntitiesToSeed] = useState({
+    elements: true,
+    components: true,
+    phrases: true,
+    locations: true,
+  });
+
+  // Add counts from JSON files
+  const availableCounts = {
+    elements: seedElementData.length,
+    locations: seedLocationData.length,
+    components: 0, // This is derived from bankOfDefects
+    phrases: 0, // This is derived from bankOfDefects
+  };
+
+  // Calculate derived counts
+  useEffect(() => {
+    const mappedComponents = mapBodToComponentData(bankOfDefects, elements);
+    const mappedPhrases = mapBodToPhraseData(bankOfDefects, elements, mappedComponents);
+    availableCounts.components = mappedComponents.length;
+    availableCounts.phrases = mappedPhrases.length;
+  }, []);
 
   // Data mapping effects
   useEffect(() => {
@@ -237,43 +275,61 @@ export default function Page() {
     try {
       setIsLoading(true);
       
-      // Clear existing data
-      await removeAllData();
+      // Clear existing data for selected entities
+      await Promise.all([
+        entitiesToSeed.elements && elementStore.removeAll(),
+        entitiesToSeed.components && componentStore.removeAll(),
+        entitiesToSeed.phrases && phraseStore.removeAll(),
+        entitiesToSeed.locations && locationStore.removeAll()
+      ].filter(Boolean));
 
-      // Add locations to your seeding process
-      await Promise.all(
-        seedLocationData.map(location => locationStore.add(location))
-      );
+      // Seed locations if selected
+      if (entitiesToSeed.locations) {
+        const preparedLocations = prepareLocationData(seedLocationData);
+        await Promise.all(
+          preparedLocations.map(location => locationStore.add(location))
+        );
+      }
 
-      // Seed elements
-      const elementTasks = seedElementData.map(async (element) => {
-        const elementWithId = {
-          ...element,
-          id: crypto.randomUUID(),
-        };
-        await elementStore.add(elementWithId);
-        return elementWithId;
-      });
-      const newElements = await Promise.all(elementTasks);
+      let newElements: ElementData[] = [];
+      // Seed elements if selected
+      if (entitiesToSeed.elements) {
+        const elementTasks = seedElementData.map(async (element) => {
+          const elementWithId = {
+            ...element,
+            id: crypto.randomUUID(),
+          };
+          await elementStore.add(elementWithId);
+          return elementWithId;
+        });
+        newElements = await Promise.all(elementTasks);
+      } else {
+        newElements = elements;
+      }
 
-      // Seed components
-      const newComponents = mapBodToComponentData(bankOfDefects, newElements);
-      await Promise.all(
-        newComponents.map(component => componentStore.add(component))
-      );
-      setComponentData(newComponents);
+      // Seed components if selected
+      if (entitiesToSeed.components) {
+        const newComponents = mapBodToComponentData(bankOfDefects, newElements);
+        await Promise.all(
+          newComponents.map(component => componentStore.add(component))
+        );
+        setComponentData(newComponents);
+      }
 
-      // Seed phrases
-      const newPhrases = mapBodToPhraseData(bankOfDefects, newElements, newComponents);
-      await Promise.all(
-        newPhrases.map(phrase => client.models.Phrases.create(phrase))
-      );
-      setPhraseData(newPhrases);
+      // Seed phrases if selected
+      if (entitiesToSeed.phrases) {
+        const newPhrases = mapBodToPhraseData(bankOfDefects, newElements, componentData);
+        await Promise.all(
+          newPhrases.map(phrase => phraseStore.add(phrase))
+        );
+        setPhraseData(newPhrases);
+      }
 
-      toast.success("Successfully seeded all data");
+      setSeedDialog(false);
+      toast.success("Successfully seeded selected data");
     } catch (error) {
       console.error("Failed to seed data", error);
-      toast.error("Failed to seed data");
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -283,31 +339,55 @@ export default function Page() {
     try {
       setIsSyncing(true);
       setSyncingEntities({
-        elements: true,
-        components: true,
-        phrases: true,
-        locations: true,
+        elements: entitiesToSync.elements,
+        components: entitiesToSync.components,
+        phrases: entitiesToSync.phrases,
+        locations: entitiesToSync.locations,
       });
+      
+      const syncTasks = [];
+      
+      if (entitiesToSync.elements) {
+        syncTasks.push(
+          elementStore.syncWithServer().finally(() => 
+            setSyncingEntities(prev => ({ ...prev, elements: false }))
+          )
+        );
+      }
+      if (entitiesToSync.components) {
+        syncTasks.push(
+          componentStore.syncWithServer().finally(() => 
+            setSyncingEntities(prev => ({ ...prev, components: false }))
+          )
+        );
+      }
+      if (entitiesToSync.phrases) {
+        syncTasks.push(
+          phraseStore.syncWithServer().finally(() => 
+            setSyncingEntities(prev => ({ ...prev, phrases: false }))
+          )
+        );
+      }
+      if (entitiesToSync.locations) {
+        syncTasks.push(
+          locationStore.syncWithServer().finally(() => 
+            setSyncingEntities(prev => ({ ...prev, locations: false }))
+          )
+        );
+      }
 
-      await Promise.all([
-        elementStore.syncWithServer().finally(() => 
-          setSyncingEntities(prev => ({ ...prev, elements: false }))
-        ),
-        componentStore.syncWithServer().finally(() => 
-          setSyncingEntities(prev => ({ ...prev, components: false }))
-        ),
-        phraseStore.syncWithServer().finally(() => 
-          setSyncingEntities(prev => ({ ...prev, phrases: false }))
-        ),
-        locationStore.syncWithServer().finally(() => 
-          setSyncingEntities(prev => ({ ...prev, locations: false }))
-        )
-      ]);
+      const results = await Promise.all(syncTasks);
 
-      toast.success("Successfully synced with server");
+      if(results.some(x => x.err)) {
+        toast.error("Failed to sync with server");  
+      } else {
+        toast.success("Successfully synced with server");
+      }
+
+      setSyncDialog(false);
     } catch (error) {
       console.error("Failed to sync with server", error);
-      toast.error("Failed to sync with server");
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSyncing(false);
       setSyncingEntities({
@@ -316,6 +396,28 @@ export default function Page() {
         phrases: false,
         locations: false,
       });
+    }
+  }
+
+  async function seedLocationsFromJson() {
+    try {
+      setIsLoading(true);
+      
+      // Clear existing locations
+      await locationStore.removeAll();
+
+      // Prepare and add locations
+      const preparedLocations = prepareLocationData(locations);
+      await Promise.all(
+        preparedLocations.map(location => locationStore.add(location))
+      );
+
+      toast.success("Successfully imported locations");
+    } catch (error) {
+      console.error("Failed to import locations", error);
+      toast.error("Failed to import locations");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -365,27 +467,172 @@ export default function Page() {
             <h2 className="text-2xl dark:text-white">Data Management</h2>
             <div className="flex gap-4">
               <Button
-                onClick={syncWithServer}
+                onClick={seedLocationsFromJson}
                 variant="outline"
-                disabled={isSyncing || isLoading}
-                className="min-w-[140px]"
+                disabled={isLoading}
               >
-                {isSyncing ? (
-                  <span className="inline-flex items-center gap-2">
-                    <LoadingSpinner />
-                    Syncing...
-                  </span>
-                ) : (
-                  "Sync with Server"
-                )}
+                Import Locations
               </Button>
-              <Button
-                onClick={seedAllData}
-                variant="default"
-                disabled={isLoading || elements.length > 0}
-              >
-                Seed All Data
-              </Button>
+              <Dialog open={syncDialog} onOpenChange={setSyncDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    disabled={isSyncing || isLoading}
+                    className="min-w-[140px]"
+                  >
+                    {isSyncing ? (
+                      <span className="inline-flex items-center gap-2">
+                        <LoadingSpinner />
+                        Syncing...
+                      </span>
+                    ) : (
+                      "Sync with Server"
+                    )}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Select Entities to Sync</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="elements"
+                        checked={entitiesToSync.elements}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSync(prev => ({ ...prev, elements: !!checked }))
+                        }
+                      />
+                      <label htmlFor="elements" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Elements ({elements.length} / {availableCounts.elements} available)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="components"
+                        checked={entitiesToSync.components}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSync(prev => ({ ...prev, components: !!checked }))
+                        }
+                      />
+                      <label htmlFor="components" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Components ({components.length} / {availableCounts.components} available)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="phrases"
+                        checked={entitiesToSync.phrases}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSync(prev => ({ ...prev, phrases: !!checked }))
+                        }
+                      />
+                      <label htmlFor="phrases" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Phrases ({phrases.length} / {availableCounts.phrases} available)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="locations"
+                        checked={entitiesToSync.locations}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSync(prev => ({ ...prev, locations: !!checked }))
+                        }
+                      />
+                      <label htmlFor="locations" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Locations ({locations.length} / {availableCounts.locations} available)
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-4">
+                    <Button variant="outline" onClick={() => setSyncDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={syncWithServer}
+                      disabled={!Object.values(entitiesToSync).some(Boolean)}
+                    >
+                      Sync Selected
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={seedDialog} onOpenChange={setSeedDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="default"
+                    disabled={isLoading}
+                  >
+                    Seed Data
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Select Data to Seed</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="seed-elements"
+                        checked={entitiesToSeed.elements}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSeed(prev => ({ ...prev, elements: !!checked }))
+                        }
+                      />
+                      <label htmlFor="seed-elements" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Elements ({elements.length} / {availableCounts.elements} available)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="seed-components"
+                        checked={entitiesToSeed.components}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSeed(prev => ({ ...prev, components: !!checked }))
+                        }
+                      />
+                      <label htmlFor="seed-components" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Components ({components.length} / {availableCounts.components} available)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="seed-phrases"
+                        checked={entitiesToSeed.phrases}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSeed(prev => ({ ...prev, phrases: !!checked }))
+                        }
+                      />
+                      <label htmlFor="seed-phrases" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Phrases ({phrases.length} / {availableCounts.phrases} available)
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="seed-locations"
+                        checked={entitiesToSeed.locations}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSeed(prev => ({ ...prev, locations: !!checked }))
+                        }
+                      />
+                      <label htmlFor="seed-locations" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Locations ({locations.length} / {availableCounts.locations} available)
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-4">
+                    <Button variant="outline" onClick={() => setSeedDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={seedAllData}
+                      disabled={!Object.values(entitiesToSeed).some(Boolean)}
+                    >
+                      Seed Selected
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button
                 onClick={removeAllData}
                 variant="destructive"

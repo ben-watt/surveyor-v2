@@ -96,7 +96,7 @@ export function Combobox({
   }, [flatData, search]);
 
   const handleSelect = React.useCallback((label: string, item?: ComboboxDataItem) => {
-    if (item?.children) {
+    if (item?.children && item.children.length > 0) {
       setNavigationStack(prev => [...prev, item.children!]);
       setBreadcrumbs(prev => [...prev, item.label]);
       return;
@@ -193,7 +193,7 @@ export function Combobox({
   }, [field.value, isMulti]);
 
   return (
-    <div>
+    <div className="w-full">
       <Label text={labelTitle} />
       <Popover open={open} onOpenChange={(isOpen) => {
         setOpen(isOpen);
@@ -267,7 +267,7 @@ export function Combobox({
                         className="flex items-center"
                       >
                         {item.label}
-                        {item.children ? (
+                        {item.children && item.children.length > 0 ? (
                           <ChevronRight className="ml-auto h-4 w-4" />
                         ) : (
                           <CheckIcon
