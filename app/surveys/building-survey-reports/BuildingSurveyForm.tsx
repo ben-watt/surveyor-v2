@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import {
   Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
-  SurveySection,
 } from "./BuildingSurveyReportSchema";
 
 import {
@@ -14,8 +13,6 @@ import { PrimaryBtn } from "@/app/components/Buttons";
 import InputError from "@/app/components/InputError";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Schema } from "@/amplify/data/resource";
-import { SelectionSet } from "aws-amplify/api";
 import { MultiFormSection } from "@/app/components/FormSection";
 import { surveyStore } from "@/app/clients/Database";
 import { fetchUserAttributes } from "aws-amplify/auth";
@@ -191,6 +188,8 @@ const createDefaultFormValues = async (
 
 export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   const [isHydrated, report] = surveyStore.useGet(id);
+
+  console.debug("[ReportWrapper] isHydrated", isHydrated, report);
 
   const throwError = useAsyncError();
 

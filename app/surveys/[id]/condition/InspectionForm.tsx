@@ -13,6 +13,7 @@ import { useDynamicDrawer } from "@/app/components/Drawer";
 import toast from "react-hot-toast";
 import { Location } from "@/app/clients/Dexie";
 import { Edit } from "lucide-react";
+import ElementForm from "./ElementForm";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -49,7 +50,7 @@ interface InspectionFormProps {
 }
 
 export default function InspectionForm({ surveyId }: InspectionFormProps) {
-  const [isHydrated, components] = componentStore.useList();
+  const [componentsHydrated, components] = componentStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
   const [locationsHydrated, locations] = locationStore.useList();
@@ -159,13 +160,14 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
       }
 
       let elementSection = surveySection.elementSections.find(
-        (element: ElementSection) => element.name === data.element.id
+        (element: ElementSection) => element.id === data.element.id
       );
+
       if (!elementSection) {
         elementSection = {
           name: data.element.name,
           components: [],
-          id: crypto.randomUUID(),
+          id: data.element.id,
           isPartOfSurvey: true,
           description: "",
           images: []
@@ -280,8 +282,24 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
                 required: "Element is required"
               }}
             />
-            <Button className="flex-none" variant="outline" disabled={formValues.element.id === ""}>
-              <Edit  className="w-4 h-4" />
+            <Button 
+              className="flex-none" 
+              variant="outline" 
+              disabled={formValues.element.id === ""}
+              onClick={(e) => {
+                e.preventDefault();
+                drawer.openDrawer({
+                  title: `Edit Element - ${formValues.element.name}`,
+                  description: `Edit the ${formValues.element.name} element for survey`,
+                  content: <ElementForm
+                    surveyId={surveyId}
+                    sectionName={formValues.surveySection}
+                    elementId={formValues.element.id}
+                  />
+                });
+              }}
+            >
+              <Edit className="w-4 h-4" />
             </Button>
           </div>
         </FormSection>
