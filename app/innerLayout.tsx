@@ -6,7 +6,6 @@ import "@aws-amplify/ui-react/styles.css";
 import "instantsearch.css/themes/satellite.css";
 import { Authenticator } from "@aws-amplify/ui-react";
 import { Toaster } from "react-hot-toast";
-import SecureNav from "./components/Navbar";
 import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { DynamicDrawerProvider } from "./components/Drawer";
@@ -19,6 +18,7 @@ import { componentStore, elementStore, surveyStore } from "./clients/Database";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export default function RootLayout({
   children,
@@ -65,7 +65,7 @@ export default function RootLayout({
                   <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
                     <div className="flex items-center gap-2 px-4 w-full">
                       <SidebarTrigger className="-ml-1" />
-                      <Separator orientation="vertical" className="mr-2 h-4" />
+                      <Breadcrumbs />
                       {/* <SecureNav /> */}
                     </div>
                   </header>
