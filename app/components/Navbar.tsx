@@ -4,12 +4,9 @@ import { useAuthenticator } from "@aws-amplify/ui-react";
 import {
   CircleUserRound,
   LogOut,
-  Menu,
   NotebookPen,
   Settings,
-  X,
 } from "lucide-react";
-import Link from "next/link";
 import {
   Command,
   CommandEmpty,
@@ -22,13 +19,7 @@ import {
 } from "@/components/ui/command";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import dynamic from "next/dynamic";
-import {
-  fetchUserAttributes,
-  FetchUserAttributesOutput,
-} from "aws-amplify/auth";
-import { getUrl } from "aws-amplify/storage";
 import { v4 } from "uuid";
 
 const NetworkStatus = dynamic(
@@ -51,9 +42,7 @@ export const NavContainer = ({ children }: React.PropsWithChildren<{}>) => {
 
 export default function SecureNav() {
   const [isOpen, setIsOpen] = useState(false);
-  const [profileHref, setProfileHref] = useState<string | undefined>();
   const cmdBarRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     if (isOpen && cmdBarRef.current) {
@@ -61,70 +50,9 @@ export default function SecureNav() {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    async function getProfilePic() {
-      try {
-        const userAttributes = await fetchUserAttributes();
-        const pPic = userAttributes?.profile;
-        if (pPic) {
-          const presignedUrl = await getUrl({
-            path: pPic,
-          });
-
-          setProfileHref(presignedUrl.url.href);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user profile picture", error);
-      }
-    }
-
-    getProfilePic();
-  }, []);
-
   return (
-    <div>
-      <NavContainer>
-        <div className="hidden md:block">
-          <Link
-            className="flex-none text-xl font-semibold dark:text-white"
-            href="/"
-          >
-            SURVEYOR
-          </Link>
-        </div>
-        <div className="m-auto w-full md:max-w-96 hidden md:block">
-          <CommandBar />
-        </div>
-        <div className="md:hidden">
-          {isOpen ? (
-            <X onClick={(ev) => setIsOpen((p) => !p)} />
-          ) : (
-            <Menu onClick={(ev) => setIsOpen((p) => !p)} />
-          )}
-        </div>
-        <div className="relative w-10">
-          <Link href="/profile">
-            <Avatar>
-              <AvatarImage src={profileHref} />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <div className="absolute -top-1 -right-1">
-              <NetworkStatus />
-            </div>
-          </Link>
-        </div>
-      </NavContainer>
-      {isOpen && (
-        <div className="bg-color-white z-10">
-          <div className="md:hidden w-full p-2">
-            <CommandBar
-              ref={cmdBarRef}
-              onSelected={() => setIsOpen(false)}
-              onBlur={() => setIsOpen(false)}
-            />
-          </div>
-        </div>
-      )}
+    <div className="flex-1">
+      <CommandBar />
     </div>
   );
 }

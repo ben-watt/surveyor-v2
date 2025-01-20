@@ -16,6 +16,9 @@ import { useRouter, usePathname } from "next/navigation";
 import Error from "./error";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { componentStore, elementStore, surveyStore } from "./clients/Database";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function RootLayout({
   children,
@@ -55,26 +58,35 @@ export default function RootLayout({
       <Authenticator.Provider>
         <DynamicDrawerProvider>
           <TooltipProvider>
-            <div className="print:hidden">
-              {isAuthenticated && <SecureNav />}
-              <Toaster position="top-right" />
-            </div>
-            <div className="m-auto max-w-[85rem] print:max-w-max">
-              <div className="m-2 md:m-10 print:m-0">
-                <ErrorBoundary
-                  fallbackRender={(props) => (
-                    <Error
-                      error={props.error}
-                      reset={props.resetErrorBoundary}
-                    />
-                  )}
-                >
-                  <Suspense fallback={<div>Loading...</div>}>
-                    {children}
-                  </Suspense>
-                </ErrorBoundary>
-              </div>
-            </div>
+            {isAuthenticated && (
+              <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                  <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                    <div className="flex items-center gap-2 px-4 w-full">
+                      <SidebarTrigger className="-ml-1" />
+                      <Separator orientation="vertical" className="mr-2 h-4" />
+                      {/* <SecureNav /> */}
+                    </div>
+                  </header>
+                  <div className="flex flex-1 flex-col gap-4 p-4">
+                    <ErrorBoundary
+                      fallbackRender={(props) => (
+                        <Error
+                          error={props.error}
+                          reset={props.resetErrorBoundary}
+                        />
+                      )}
+                    >
+                      <Suspense fallback={<div>Loading...</div>}>
+                        {children}
+                      </Suspense>
+                    </ErrorBoundary>
+                  </div>
+                </SidebarInset>
+              </SidebarProvider>
+            )}
+            <Toaster position="top-right" />
           </TooltipProvider>
         </DynamicDrawerProvider>
       </Authenticator.Provider>
