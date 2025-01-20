@@ -6,6 +6,7 @@ import {
   SyncStatus,
   CreateDexieHooks,
   Phrase,
+  Location,
 } from "./Dexie";
 import client from "./AmplifyDataClient";
 
@@ -149,3 +150,38 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
     await client.models.Phrases.delete({ id });
   },
 });
+
+const mapToLocation = (data: any): Location => ({
+  id: data.id,
+  syncStatus: SyncStatus.Synced,
+  updatedAt: data.updatedAt,
+  createdAt: data.createdAt,
+  value: data.value,
+  label: data.label,
+  parentId: data.parentId,
+});
+
+export type UpdateLocation = Partial<Location> & { id: string };
+export type CreateLocation = Omit<Location, "updatedAt" | "createdAt">;
+
+export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLocation>(
+  db,
+  "locations",
+  {
+    list: async () => {
+      const response = await client.models.Locations.list();
+      return response.data.map(mapToLocation);
+    },
+    create: async (data) => {
+      const response = await client.models.Locations.create(data);
+      return mapToLocation(response.data);
+    },
+    update: async (data) => {
+      const response = await client.models.Locations.update(data);
+      return mapToLocation(response.data);
+    },
+    delete: async (id) => {
+      await client.models.Locations.delete({ id });
+    },
+  }
+);

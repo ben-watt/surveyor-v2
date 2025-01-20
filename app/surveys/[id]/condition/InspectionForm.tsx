@@ -4,126 +4,14 @@ import { FormSection } from "@/app/components/FormSection";
 import { RagStatus, Component, ElementSection } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { componentStore, elementStore, phraseStore, surveyStore } from "@/app/clients/Database";
+import { componentStore, elementStore, phraseStore, surveyStore, locationStore } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import surveySections from "@/app/settings/surveySections.json";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { useDynamicDrawer } from "@/app/components/Drawer";
 import toast from "react-hot-toast";
-
-const LOCATION_OPTIONS = [
-  {
-    value: "exterior",
-    label: "Exterior",
-    children: [
-      {
-        value: "front",
-        label: "Front Elevation",
-        children: [
-          { value: "front-wall", label: "Front Wall" },
-          { value: "front-windows", label: "Front Windows" },
-          { value: "front-door", label: "Front Door" },
-          { value: "front-roof", label: "Front Roof Line" }
-        ]
-      },
-      {
-        value: "rear",
-        label: "Rear Elevation",
-        children: [
-          { value: "rear-wall", label: "Rear Wall" },
-          { value: "rear-windows", label: "Rear Windows" },
-          { value: "rear-door", label: "Rear Door" },
-          { value: "rear-roof", label: "Rear Roof Line" }
-        ]
-      },
-      {
-        value: "sides",
-        label: "Side Elevations",
-        children: [
-          {
-            value: "left-side",
-            label: "Left Side",
-            children: [
-              { value: "left-wall", label: "Left Wall" },
-              { value: "left-windows", label: "Left Windows" }
-            ]
-          },
-          {
-            value: "right-side",
-            label: "Right Side",
-            children: [
-              { value: "right-wall", label: "Right Wall" },
-              { value: "right-windows", label: "Right Windows" }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    value: "interior",
-    label: "Interior",
-    children: [
-      {
-        value: "ground-floor",
-        label: "Ground Floor",
-        children: [
-          {
-            value: "living-areas",
-            label: "Living Areas",
-            children: [
-              { value: "living-room", label: "Living Room" },
-              { value: "dining-room", label: "Dining Room" },
-              { value: "kitchen", label: "Kitchen" }
-            ]
-          },
-          {
-            value: "utility",
-            label: "Utility Areas",
-            children: [
-              { value: "hallway", label: "Hallway" },
-              { value: "wc", label: "WC" },
-              { value: "storage", label: "Storage" }
-            ]
-          }
-        ]
-      },
-      {
-        value: "first-floor",
-        label: "First Floor",
-        children: [
-          {
-            value: "bedrooms",
-            label: "Bedrooms",
-            children: [
-              { value: "master-bedroom", label: "Master Bedroom" },
-              { value: "bedroom-2", label: "Bedroom 2" },
-              { value: "bedroom-3", label: "Bedroom 3" }
-            ]
-          },
-          {
-            value: "bathrooms",
-            label: "Bathrooms",
-            children: [
-              { value: "main-bathroom", label: "Main Bathroom" },
-              { value: "en-suite", label: "En-suite" }
-            ]
-          },
-          { value: "landing", label: "Landing" }
-        ]
-      },
-      {
-        value: "loft",
-        label: "Loft",
-        children: [
-          { value: "loft-space", label: "Loft Space" },
-          { value: "loft-access", label: "Loft Access" }
-        ]
-      }
-    ]
-  }
-];
+import { Location } from "@/app/clients/Dexie";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -163,6 +51,7 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
   const [isHydrated, components] = componentStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
+  const [locationsHydrated, locations] = locationStore.useList();
 
   const drawer = useDynamicDrawer();
   const defaultValues : InspectionFormData = {
@@ -340,13 +229,28 @@ export default function InspectionForm({ surveyId }: InspectionFormProps) {
     label: section.name
   }));
 
+  const locationOptions = useMemo(() => {
+    const buildLocationTree = (items: Location[], parentId?: string): any[] => {
+      return items
+        .filter(item => item.parentId === parentId)
+        .map(item => ({
+          value: item.value,
+          label: item.label,
+          children: buildLocationTree(items, item.id)
+        }))
+        .filter(item => item.children.length > 0 || !parentId); // Only include leaf nodes at root level
+    };
+
+    return buildLocationTree(locations);
+  }, [locations]);
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValid, onInvalid)} className="space-y-6">
         <FormSection title="Basic Information">
           <Combobox
             labelTitle="Location"
-            data={LOCATION_OPTIONS}
+            data={locationOptions}
             name="location"
             control={control}
             errors={errors}

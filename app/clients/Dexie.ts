@@ -19,6 +19,7 @@ export type DeleteSurvey = Schema['Surveys']['deleteType']
 export type Component = Omit<Schema['Components']['type'], "element">;
 export type Element = Omit<Schema['Elements']['type'], "components">;
 export type Phrase = Schema['Phrases']['type'];
+export type Location = Schema['Locations']['type'];
 
 type TableEntity = {
   id: string;
@@ -191,6 +192,7 @@ const db = new Dexie('Surveys') as Dexie & {
   components: EntityTable<Component, "id">;
   elements: EntityTable<Element, "id">;
   phrases: EntityTable<Phrase, "id">;
+  locations: EntityTable<Location, "id">;
 };
 
 db.version(1).stores({
@@ -198,6 +200,7 @@ db.version(1).stores({
   components: '&id, updatedAt, syncStatus',
   elements: '&id, updatedAt, syncStatus',
   phrases: '&id, updatedAt, syncStatus',
+  locations: '&id, updatedAt, syncStatus',
 });
 
 

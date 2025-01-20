@@ -10,7 +10,7 @@ import 'react-json-view-lite/dist/index.css';
 import { matchSorter } from 'match-sorter';
 import bankOfDefects from "./defects.json";
 import elements from "./elements.json";
-import { componentStore, elementStore, phraseStore } from "../clients/Database";
+import { componentStore, elementStore, phraseStore, locationStore } from "../clients/Database";
 import { Component, SyncStatus } from "../clients/Dexie";
 
 // Type definitions
@@ -19,6 +19,24 @@ type ComponentData = Omit<Component, "owner" | "createdAt" | "updatedAt" | "sync
 type PhraseData = Omit<Schema["Phrases"]["type"], "owner" | "createdAt" | "updatedAt"> & { id: string };
 
 const seedElementData: Omit<ElementData, "id">[] = elements;
+
+// Add this constant with your initial location data
+const seedLocationData = [
+  {
+    id: crypto.randomUUID(),
+    value: "exterior",
+    label: "Exterior",
+    syncStatus: "IMPORTED" as SyncStatus,
+  },
+  {
+    id: crypto.randomUUID(),
+    value: "front",
+    label: "Front Elevation",
+    parentId: "exterior",
+    syncStatus: "IMPORTED" as SyncStatus,
+  },
+  // ... continue with all your location data ...
+];
 
 // Data mapping functions
 function mapBodToPhraseData(bod: typeof bankOfDefects, elements: ElementData[], components: ComponentData[]): PhraseData[] {
@@ -115,7 +133,7 @@ function SyncStatusBadge({ status, isLoading }: { status: string; isLoading?: bo
   );
 }
 
-type EntityType = "elements" | "components" | "phrases";
+type EntityType = "elements" | "components" | "phrases" | "locations";
 type FilterState = {
   [key in EntityType]?: SyncStatus;
 };
@@ -165,14 +183,17 @@ export default function Page() {
     elements: boolean;
     components: boolean;
     phrases: boolean;
+    locations: boolean;
   }>({
     elements: false,
     components: false,
     phrases: false,
+    locations: false,
   });
   const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
+  const [locationsHydrated, locations] = locationStore.useList();
   const [componentData, setComponentData] = useState<ComponentData[]>([]);
   const [phraseData, setPhraseData] = useState<PhraseData[]>([]);
   const [filters, setFilters] = useState<FilterState>({});
@@ -198,7 +219,8 @@ export default function Page() {
       await Promise.all([
         elementStore.removeAll(),
         componentStore.removeAll(),
-        phraseStore.removeAll()
+        phraseStore.removeAll(),
+        locationStore.removeAll()
       ]);
       toast.success("Successfully removed all data");
       setComponentData([]);
@@ -217,6 +239,11 @@ export default function Page() {
       
       // Clear existing data
       await removeAllData();
+
+      // Add locations to your seeding process
+      await Promise.all(
+        seedLocationData.map(location => locationStore.add(location))
+      );
 
       // Seed elements
       const elementTasks = seedElementData.map(async (element) => {
@@ -259,6 +286,7 @@ export default function Page() {
         elements: true,
         components: true,
         phrases: true,
+        locations: true,
       });
 
       await Promise.all([
@@ -270,6 +298,9 @@ export default function Page() {
         ),
         phraseStore.syncWithServer().finally(() => 
           setSyncingEntities(prev => ({ ...prev, phrases: false }))
+        ),
+        locationStore.syncWithServer().finally(() => 
+          setSyncingEntities(prev => ({ ...prev, locations: false }))
         )
       ]);
 
@@ -283,6 +314,7 @@ export default function Page() {
         elements: false,
         components: false,
         phrases: false,
+        locations: false,
       });
     }
   }
@@ -291,6 +323,7 @@ export default function Page() {
   const filteredElements = elements.filter(e => !filters.elements || e.syncStatus === filters.elements);
   const filteredComponents = components.filter(c => !filters.components || c.syncStatus === filters.components);
   const filteredPhrases = phrases.filter(p => !filters.phrases || p.syncStatus === filters.phrases);
+  const filteredLocations = locations.filter(l => !filters.locations || l.syncStatus === filters.locations);
 
   const toggleFilter = (entityType: EntityType, status: SyncStatus) => {
     setFilters(prev => {
@@ -363,7 +396,7 @@ export default function Page() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div 
               className={`p-4 border rounded-lg transition-colors cursor-pointer
                 ${selectedEntity === "elements" ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/10' : 'hover:border-gray-400'}
@@ -495,6 +528,50 @@ export default function Page() {
                 />
               </div>
             </div>
+
+            <div 
+              className={`p-4 border rounded-lg transition-colors cursor-pointer
+                ${selectedEntity === "locations" ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/10' : 'hover:border-gray-400'}
+              `}
+              onClick={() => handleCardClick("locations")}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-medium">Locations</h3>
+                <SyncStatusBadge 
+                  status={locationsHydrated ? SyncStatus.Synced : "loading"} 
+                  isLoading={syncingEntities.locations || isLoading}
+                />
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Count: {filters.locations ? filteredLocations.length : locations.length}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <StatusBadge
+                  status={SyncStatus.Draft}
+                  count={locations.filter(l => l.syncStatus === SyncStatus.Draft).length}
+                  isActive={filters.locations === SyncStatus.Draft}
+                  onClick={() => toggleFilter("locations", SyncStatus.Draft)}
+                />
+                <StatusBadge
+                  status={SyncStatus.Queued}
+                  count={locations.filter(l => l.syncStatus === SyncStatus.Queued).length}
+                  isActive={filters.locations === SyncStatus.Queued}
+                  onClick={() => toggleFilter("locations", SyncStatus.Queued)}
+                />
+                <StatusBadge
+                  status={SyncStatus.Failed}
+                  count={locations.filter(l => l.syncStatus === SyncStatus.Failed).length}
+                  isActive={filters.locations === SyncStatus.Failed}
+                  onClick={() => toggleFilter("locations", SyncStatus.Failed)}
+                />
+                <StatusBadge
+                  status={SyncStatus.Synced}
+                  count={locations.filter(l => l.syncStatus === SyncStatus.Synced).length}
+                  isActive={filters.locations === SyncStatus.Synced}
+                  onClick={() => toggleFilter("locations", SyncStatus.Synced)}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -515,7 +592,9 @@ export default function Page() {
                 data={
                   selectedEntity === "elements" ? filteredElements :
                   selectedEntity === "components" ? filteredComponents :
-                  filteredPhrases
+                  selectedEntity === "phrases" ? filteredPhrases :
+                  selectedEntity === "locations" ? filteredLocations :
+                  []
                 } 
                 style={defaultStyles} 
                 clickToExpandNode={true} 
