@@ -130,7 +130,7 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
         <FormSection title="Components">
           <div className="space-y-4">
             {elementData?.components.map((component) => (
-              <div key={component.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={component.id} className="flex items-center justify-between p-1 pl-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className={`w-4 h-4 rounded-sm ${
                     component.ragStatus === "Red" ? "bg-red-500" :
@@ -141,7 +141,7 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
                   <span>{component.name}</span>
                 </div>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={(e) => {
                     e.preventDefault();
                     drawer.openDrawer({
@@ -160,12 +160,20 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
             ))}
             {(!elementData?.components || elementData.components.length === 0) && (
               <div className="text-center text-gray-500 py-4">
-                No components added yet. Add components through the inspection form.
+                No components added yet.
+                <Button variant="link" onClick={() => {
+                  drawer.openDrawer({
+                    title: `Inspect Component`,
+                    description: `Inspect a component`,
+                    content: <InspectionForm
+                      surveyId={surveyId}
+                    />
+                  });
+                }}>Inspect Component</Button>
               </div>
             )}
           </div>
         </FormSection>
-
         <Button type="submit" className="w-full">
           Save Element Details
         </Button>
