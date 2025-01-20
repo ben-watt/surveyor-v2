@@ -31,19 +31,6 @@ interface BuildingSurveyFormProps {
   id: string;
 }
 
-const selectionSetElement = [
-  "id",
-  "name",
-  "description",
-  "components.*",
-  "order",
-  "section",
-] as const;
-type ElementData = SelectionSet<
-  Schema["Elements"]["type"],
-  typeof selectionSetElement
->;
-
 const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
   type: "checkbox",
   placeholder: "",
@@ -55,17 +42,13 @@ const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
 const createDefaultFormValues = async (
   id: string
 ): Promise<Result<BuildingSurveyForm, Error>> => {
-  const fetchElements = async (): Promise<SurveySection[]> => {
-    return [];
-  };
-
-  const surveySections = await fetchElements();
   const user = await fetchUserAttributes();
 
   if (!user.sub || !user.name || !user.email || !user.picture) {
-    toast.custom(
-      "Some user information is missing. Please check you've added all your profile information."
+    toast(
+      "Your profile is missing some information. Please check you've added all your profile information."
     );
+    console.error(user);
   }
 
   return Ok({
@@ -176,7 +159,7 @@ const createDefaultFormValues = async (
       },
       status: { status: "incomplete", errors: [] },
     },
-    sections: surveySections,
+    sections: [],
     checklist: {
       items: [
         shouldBeTrueCheckBox("Have you checked for asbestos?"),

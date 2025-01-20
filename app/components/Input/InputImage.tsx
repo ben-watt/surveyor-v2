@@ -10,7 +10,8 @@ import {
     LoadServerConfigFunction,
     RestoreServerConfigFunction,
     FetchServerConfigFunction,
-    RemoveServerConfigFunction
+    RemoveServerConfigFunction,
+    FileStatus
 } from 'filepond';
 
 // AWS Amplify
@@ -55,8 +56,12 @@ interface InputImagePropsWithRegister extends InputImageProps {
     labelText?: string;
 }
 
+interface CreateServerConfigProps {
+    path: string;
+}
+
 // 4. Extract server configuration to a separate function for better readability
-const createServerConfig = (path: string, handleRemoveFile: (path: string) => Promise<boolean>) => ({
+const createServerConfig = ({ path }: CreateServerConfigProps) => ({
     process: ((fieldName, file, metadata, load, error, progress, abort) => {
         const uploadTask = uploadData({
             data: file,
@@ -138,8 +143,11 @@ const createServerConfig = (path: string, handleRemoveFile: (path: string) => Pr
     revert: null,
     remove: ((source, load, error) => {
         console.debug("[FilePond Remove] Removing file:", source);
-        handleRemoveFile(source);
-        load();
+        remove({
+            path: path,
+        }).then(
+            () => load()
+        )
     }) as RemoveServerConfigFunction
 });
 
@@ -208,15 +216,10 @@ export const InputImage = ({
     const handleRemoveFile = async (path: string) => {
         try {
             console.debug("[InputImage] handleRemoveFile", path);
-            await remove({
-                path: path,
-            });
             setPondFiles(current => current.filter(f => f.source !== path));
             onDeleted?.({ name: path.split('/').pop() || '' });
-            return true;
         } catch (error) {
             console.error("[InputImage] Failed to delete file:", error);
-            return false;
         }
     };
 
@@ -230,10 +233,35 @@ export const InputImage = ({
             instantUpload={true}
             allowImagePreview={true}
             imagePreviewHeight={100}
-            server={createServerConfig(path, handleRemoveFile)}
+            server={createServerConfig({ path })}
             files={pondFiles}
             onupdatefiles={(fileItems) => {
                 console.debug('[FilePond] Files updated:', fileItems);
+
+                // Get the current files in pond
+                const currentFiles = fileItems.map(fileItem => fileItem.source);
+                
+                // Find removed files by comparing with previous pondFiles
+                pondFiles.forEach(prevFile => {
+                    if (!currentFiles.includes(prevFile.source)) {
+                        console.debug('[FilePond] File removed:', prevFile.source);
+                        onDeleted?.({ name: prevFile.source.split('/').pop() || '' });
+                    }
+                });
+
+                // Find new files and trigger onUploaded
+                fileItems.forEach(fileItem => {
+                    if (fileItem.status === FileStatus.PROCESSING_COMPLETE) {
+                        const fileName = fileItem.filename || fileItem.file.name;
+                        console.debug('[FilePond] File uploaded:', fileName);
+                        onUploaded?.({ name: fileName });
+                    }
+                });
+
+                // Update the pondFiles state
+                setPondFiles(fileItems.map(fileItem => ({
+                    source: fileItem.source
+                })));
             }}
             labelFileProcessingError={(error) => {
                 return error?.body || 'Upload failed';

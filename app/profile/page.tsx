@@ -10,54 +10,64 @@ import {
 } from "aws-amplify/auth";
 import { useEffect, useState } from "react";
 import InputText from "../components/Input/InputText";
-import { FieldValues, FormProvider, UseControllerProps, useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { FieldValues, FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import dynamic from "next/dynamic";
-import { StorageImage } from "@aws-amplify/ui-react-storage";
-import { Edit } from "lucide-react";
-import { Label } from "../components/Input/Label";
 import { InputImageComponent } from "../components/Input/InputImage";
+import { PrimaryBtn } from "../components/Buttons";
 
-interface ImageUploadWithPreviewProps {
-    labelText? : string;
-    path: string;
-    initImage: string | undefined;
-    rhfProps: UseControllerProps;
+
+type ProfileFormData = {
+  name: string;
+  nickname: string;
+  profile: string;
+  picture: string;
+  sub: string;
+  email: string;
 }
 
 function Page() {
-  const [userAttributes, setUserAttributes] =
-    useState<FetchUserAttributesOutput>();
-  const methods = useForm();
-  const { register, handleSubmit } = methods;
+  const methods = useForm<ProfileFormData>();
+  const { register, handleSubmit, reset, watch } = methods;
   const [enableForm, setEnableForm] = useState(false);
 
   useEffect(() => {
     fetchUserAttributes().then((attributes) => {
-      setUserAttributes(attributes);
+      reset({
+        name: attributes.name,
+        nickname: attributes.nickname,
+        profile: attributes.profile,
+        picture: attributes.picture,
+        sub: attributes.sub,
+        email: attributes.email,
+      });
       setEnableForm(true);
     });
-  }, []);
+  }, [reset]);
 
   async function handleUpdateUserAttribute(form: FieldValues) {
-    setEnableForm(false);
-    Object.keys(form).forEach(async (k) => {
+    setEnableForm(false);    
+    async function handleUpdateUserAttribute(attributeKey: string, value: string) {
       try {
-
-        let value = form[k];
-        if(k === "profile" || k === "picture") {
-            value = form[k][0];
-        }
-
         const output = await updateUserAttribute({
           userAttribute: {
-            attributeKey: k,
-            value: value,
-          },
+            attributeKey,
+            value
+          }
         });
-
         handleUpdateUserAttributeNextSteps(output);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    Object.keys(form).filter(k => (k !== "email" && k !== "sub")).forEach(async (k) => {
+      try {
+        if(k === "profile" || k === "picture") {
+          console.log(form[k]);
+          form[k] = form[k][0];
+        }
+
+        handleUpdateUserAttribute(k, form[k]);
         setEnableForm(true);
       } catch (error) {
         console.log(error);
@@ -84,6 +94,10 @@ function Page() {
     }
   }
 
+  if(!enableForm) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
       <FormProvider {...methods}>
@@ -92,29 +106,27 @@ function Page() {
             <InputText
               labelTitle="Email"
               placeholder="Email Address"
-              defaultValue={userAttributes?.email}
+              register={() => register("email", { required: true })}
               disabled
             />
             <InputText
               register={() => register("name", { required: true })}
               labelTitle="Name"
               placeholder="Enter your name"
-              defaultValue={userAttributes?.name}
             />
             <InputText
               register={() => register("nickname", { required: true })}
               labelTitle="Signature Text"
               placeholder="Enter you signed name"
-              defaultValue={userAttributes?.nickname}
             />
-            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${userAttributes?.sub}/profilePicture/`} rhfProps={{name: "profile"}} labelText="Profile Picture" />
-            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${userAttributes?.sub}/signatureImage/`} rhfProps={{name: "picture"}} labelText="Signature Image" />
-            <Button
-              role="submit"
+            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${watch()?.sub}/profilePicture/`} rhfProps={{name: "profile" }} labelText="Profile Picture" />
+            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${watch()?.sub}/signatureImage/`} rhfProps={{name: "picture" }} labelText="Signature Image" />
+            <PrimaryBtn 
+              type="submit"
               disabled={!enableForm}
             >
               Update
-            </Button>
+            </PrimaryBtn>
           </div>
         </form>
       </FormProvider>
