@@ -18,12 +18,14 @@ import { DataTable, SortableHeader } from "@/app/components/DataTable";
 import { SelectionSet } from "aws-amplify/api";
 import { componentStore, elementStore } from "../clients/Database";
 import { Component, Element } from "../clients/Dexie";
+import { useRouter } from "next/navigation";
 
 type TableData = Component & {
   element: Element;
 }
 
 export default function Page() {
+  const router = useRouter();
   const [isHydrated, components] = componentStore.useList();
   const [data, setData] = useState<TableData[]>([]);
 
@@ -70,7 +72,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`building-components/edit/${id}`}>
+              <Link href={`building-components/${id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
               <DropdownMenuItem
@@ -103,12 +105,10 @@ export default function Page() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Components</h1>
+          <p className="text-sm text-muted-foreground">Components are are the priamary items inspected during a building survey.</p>
         </div>
-        <Link href="/building-components/create">
-          <CopyMarkupBtn>Create</CopyMarkupBtn>
-        </Link>
       </div>
-      <DataTable columns={columns} data={data} />
+      <DataTable columns={columns} data={data} onCreate={() => router.push("/building-components/create")} />
     </div>
   );
 }

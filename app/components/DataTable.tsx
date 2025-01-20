@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, PlusIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 import {
@@ -40,6 +40,7 @@ type DataTableProps<TData> = {
   data: TData[];
   asyncData?: Promise<TData[]>;
   isLoading?: boolean;
+  onCreate?: () => void;
 };
 
 export function DataTable<TData>({
@@ -47,6 +48,7 @@ export function DataTable<TData>({
   columns,
   data,
   isLoading,
+  onCreate,
 }: DataTableProps<TData>) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -76,16 +78,23 @@ export function DataTable<TData>({
   return (
     <div>
       <div className="mb-3">
-        <div className="flex items-center py-4">
+        <div className="flex items-center py-4 space-x-2 justify-between">
           <DebouncedInput
             value={globalFilter ?? ""}
             onChange={(value) => setGlobalFilter(String(value))}
             className="max-w-sm"
             placeholder="Filter..."
           />
+          <div className="flex items-center space-x-2">
+            {onCreate && (
+              <Button variant="default" onClick={() => onCreate()}>
+                Create
+                <PlusIcon className="size-4"  />
+              </Button>
+            )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
+              <Button variant="outline">
                 Columns
               </Button>
             </DropdownMenuTrigger>
@@ -109,6 +118,7 @@ export function DataTable<TData>({
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </div>
       <div className="rounded-md border">

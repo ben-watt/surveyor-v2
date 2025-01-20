@@ -16,12 +16,14 @@ import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
 import { useAsyncArrayState } from "../hooks/useAsyncState";
 import { SelectionSet } from "aws-amplify/api";
+import { useRouter } from "next/navigation";
 
 type ElementData = Schema["Elements"]["type"];
 const selectionSet = ["id", "name", "order", "createdAt", "components.id"] as const;
 type SelectedElementData = SelectionSet<ElementData, typeof selectionSet>;
 
 export default function Page() {
+  const router = useRouter();
   const [isLoading, elementData, setElementData] = useAsyncArrayState(fetchReports);
 
   const columns: ColumnDef<SelectedElementData>[] = [
@@ -114,16 +116,15 @@ export default function Page() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Elements</h1>
+          <p className="text-sm text-muted-foreground">Elements are the top level parts of a building and are used to group components.</p>
         </div>
-        <Link href="/elements/create">
-          <CopyMarkupBtn>Create</CopyMarkupBtn>
-        </Link>
       </div>
       <DataTable
         initialState={{ sorting: [{ id: "order", desc: false }] }}
         columns={columns}
         data={elementData}
         isLoading={isLoading}
+        onCreate={() => router.push("/elements/create")}
       />
     </div>
   );

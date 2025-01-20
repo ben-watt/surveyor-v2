@@ -15,12 +15,14 @@ import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
-import { componentStore, elementStore, phraseStore } from "../clients/Database";
-import { Component, Element, Phrase } from "../clients/Dexie";
+import { phraseStore } from "../clients/Database";
+import { Phrase } from "../clients/Dexie";
+import { useRouter } from "next/navigation";
 
 type TableData = Phrase
 
 export default function Page() {
+  const router = useRouter();
   const [isHydrated, phrases] = phraseStore.useList();
 
   const columns: ColumnDef<TableData>[] = [
@@ -64,7 +66,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`phrases/edit/${id}`}>
+              <Link href={`phrases/${id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
             </DropdownMenuContent>
@@ -79,12 +81,10 @@ export default function Page() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Phrases</h1>
+          <p className="text-sm text-muted-foreground">Phrases are used to generate standard text for surveys and can be used for Conditions or Defects.</p>
         </div>
-        <Link href="/phrases/create">
-          <CopyMarkupBtn>Create</CopyMarkupBtn>
-        </Link>
       </div>
-      <DataTable columns={columns} data={phrases} />
+      <DataTable columns={columns} data={phrases} onCreate={() => router.push("/phrases/create")} />
     </div>
   );
 }

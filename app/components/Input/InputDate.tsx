@@ -19,24 +19,24 @@ import { useEffect } from "react";
 
 interface InputDateProps {
   labelTitle: string;
-  ref: React.Ref<HTMLInputElement>;
   controllerProps: UseControllerProps<FieldValues>;
 }
 
-const InputDate = ({ labelTitle, controllerProps }: InputDateProps, ref : React.LegacyRef<HTMLDivElement>) => {
+const InputDate = React.forwardRef<HTMLDivElement, InputDateProps>(
+  ({ labelTitle, controllerProps }, ref) => {
   const { field, formState } = useController(controllerProps);
-  const date = field?.value?.toString();
+  const date = field.value ? new Date(field.value) : undefined;
 
   const handleSelect = (d: Date | undefined) => {
     field.onChange(d);
   };
 
-  // Default value only set once.
+  // Initialize date from field value if it exists
   useEffect(() => {
-    if(date) {
-      field.onChange(new Date(date));
+    if (field.value && !date) {
+      field.onChange(new Date(field.value));
     }
-  }, []);
+  }, [field.value]);
 
   return (
     <>
@@ -60,10 +60,10 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps, ref : React.
               {date ? format(date, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start" ref={ref}>
+          <PopoverContent className="w-auto p-0 z-50" align="start" ref={ref}>
             <Calendar
               mode="single"
-              selected={field.value}
+              selected={date}
               onSelect={handleSelect}
               initialFocus
             />
@@ -78,6 +78,8 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps, ref : React.
       />
     </>
   );
-};
+});
 
-export default React.forwardRef(InputDate);
+InputDate.displayName = "InputDate";
+
+export default InputDate;

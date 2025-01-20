@@ -4,7 +4,7 @@ import { CopyMarkupBtn } from "@/app/components/Buttons";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
-
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { v4 } from "uuid";
@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 type TableData = BuildingSurveyFormData;
 
 function HomePage() {
+  const router = useRouter();
   const [isHydrated, data] = surveyStore.useList();
   const [createId, setCreateId] = useState<string>("");
 
@@ -49,11 +50,7 @@ function HomePage() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Surveys</h1>
-        </div>
-        <div>
-          <Link href={`/surveys/${createId}`}>
-            <CopyMarkupBtn>Create</CopyMarkupBtn>
-          </Link>
+          <p className="text-sm text-muted-foreground">Surveys are used to generate reports for building inspections.</p>
         </div>
       </div>
       <div>
@@ -145,7 +142,7 @@ function HomePage() {
       },
     ];
 
-    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={data.map(x => x.content)} />
+    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={data.map(x => x.content)} onCreate={() => router.push("/surveys/create")} />
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { DataForm } from "../../form";
+import { DataForm } from "../form";
 import { useRouter } from "next/navigation";
 
 export default function Page({ params }: { params: { slug: string }}) {

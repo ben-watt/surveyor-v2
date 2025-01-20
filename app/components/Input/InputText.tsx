@@ -7,6 +7,7 @@ import {
 import { Label } from "./Label";
 import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
+import { cn } from "@/lib/utils";
 
 interface InputTextProps {
   labelTitle?: string;
@@ -38,7 +39,7 @@ function Input({
     <div>
       {labelTitle && <Label text={labelTitle} />}
       <ShadInput
-        className="focus:ring-0 focus:border-none h-auto"
+        className={cn("focus:ring-0 focus:border-none", className)}
         type={type}
         defaultValue={defaultValue}
         placeholder={placeholder}
