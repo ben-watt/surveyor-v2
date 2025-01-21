@@ -281,9 +281,10 @@ export function Combobox({
                 )}
               </CommandGroup>
             </CommandList>
-            {onCreateNew && !search && navigationStack.length === 1 && (
+            <hr />
+            {onCreateNew && navigationStack.length === 1 && (
               <CommandGroup forceMount>
-                <CommandItem className="font-semibold" value="Create new..." onSelect={onCreateNew}>
+                <CommandItem value="create" onSelect={onCreateNew}>
                   Create new...
                 </CommandItem>
               </CommandGroup>

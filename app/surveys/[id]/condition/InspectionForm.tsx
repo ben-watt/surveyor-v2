@@ -17,6 +17,7 @@ import ElementForm from "./ElementForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataForm as ElementDataForm } from "@/app/elements/form";
 import { DataForm as ComponentDataForm } from "@/app/building-components/form";
+import { DataForm as PhraseDataForm } from "@/app/phrases/form";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -389,6 +390,20 @@ export default function InspectionForm({
               control={control}
               errors={errors}
               isMulti={true}
+              onCreateNew={() => {
+                drawer.openDrawer({
+                  title: `Create a new condition phrase`,
+                  description: `Create a new condition phrase for any component`,
+                  content: <PhraseDataForm onSave={() => {
+                    drawer.closeDrawer();
+                    }}
+                   defaultValues={{
+                    type: "Condition",
+                    associatedComponentIds: [formValues.component.id],
+                    associatedElementIds: [formValues.element.id]
+                  }} />
+                });
+              }}
             />
             {["Red", "Amber"].includes(watch("ragStatus")) && (
               <Combobox

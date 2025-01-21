@@ -20,13 +20,13 @@ type UpdateForm = Omit<
 
 interface DataFormProps {
   id?: string;
-  defaultValues?: UpdateForm;
+  defaultValues?: Partial<UpdateForm>;
   onSave?: () => void;
 }
 
 export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const methods = useForm<UpdateForm>({ defaultValues: defaultValues });
-  const { register, handleSubmit, control } = methods;
+  const { register, handleSubmit, control, watch } = methods;
   const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
 
@@ -41,20 +41,31 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     load();
   }, [id, methods]);
 
-  const onSubmit = (data: UpdateForm) => {
-    phraseStore.add(data);
-    onSave?.();
-
+  const onSubmit = async (data: UpdateForm) => {
+    
+    
     if(id) {
+      await phraseStore.update(id, (draft) => {
+        draft.name = data.name;
+        draft.type = data.type;
+        draft.phrase = data.phrase;
+        draft.associatedElementIds = data.associatedElementIds;
+        draft.associatedComponentIds = data.associatedComponentIds;
+      });
       toast.success("Phrase updated");
     } else {
+      await phraseStore.add(data);
       toast.success("Phrase created");
     }
+
+    onSave?.();
   };
 
   if(!elementsHydrated || !componentsHydrated) {
     return <div>Loading...</div>;
   }
+
+  console.log("[form]", watch());
 
   return (
     <FormProvider {...methods}>
