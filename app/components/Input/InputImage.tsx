@@ -1,10 +1,11 @@
 // 1. Group and organize imports
 // React and FilePond
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
 import FilePondPluginFilePoster from 'filepond-plugin-file-poster';
+import FilePondPluginImageResize from 'filepond-plugin-image-resize';
 import {
     ProcessServerConfigFunction,
     LoadServerConfigFunction,
@@ -37,7 +38,8 @@ import { join } from 'path';
 registerPlugin(
     FilePondPluginFilePoster,
     FilePondPluginImagePreview,
-    FilePondPluginImageExifOrientation
+    FilePondPluginImageExifOrientation,
+    FilePondPluginImageResize
 );
 
 // 3. Type definitions
@@ -47,6 +49,7 @@ interface InputImageProps {
     initFiles?: string[];
     onUploaded?: (file: { name: string }) => void;
     onDeleted?: (file: { name: string }) => void;
+    onLoad?: (files: File[]) => void;
     minNumberOfFiles?: number;
     maxNumberOfFiles?: number;
 }
@@ -63,8 +66,10 @@ interface CreateServerConfigProps {
 // 4. Extract server configuration to a separate function for better readability
 const createServerConfig = ({ path }: CreateServerConfigProps) => ({
     process: ((fieldName, file, metadata, load, error, progress, abort) => {
+        console.debug("[FilePond Process] Uploading file:", file);
+
         const uploadTask = uploadData({
-            data: file,
+            data: file, 
             path: join(path, file.name),
             options: {
                 onProgress: (p: TransferProgressEvent) => {
@@ -144,10 +149,16 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => ({
     remove: ((source, load, error) => {
         console.debug("[FilePond Remove] Removing file:", source);
         remove({
-            path: path,
+            path: source,
         }).then(
-            () => load()
-        )
+            (removed) => {
+                load();
+                console.debug("[FilePond Success] File deleted:", removed);
+            }
+        ).catch((err) => {
+            console.error("[FilePond Err] Failed to delete file:", err);
+            error('Failed to delete file');
+        })
     }) as RemoveServerConfigFunction
 });
 
@@ -157,6 +168,7 @@ export const InputImage = ({
     path,
     onUploaded,
     onDeleted,
+    onLoad,
     minNumberOfFiles = 0,
     maxNumberOfFiles = 10
 }: InputImageProps) => {
@@ -204,24 +216,22 @@ export const InputImage = ({
                     );
                     console.debug('[InputImage] Setting pond files:', signedUrls);
                     setPondFiles(signedUrls);
+                    onLoad?.(items.map(item => new File([], item.path.split('/').pop() || '')));
+                } else {
+                    // Reset pond files and call onLoad with empty array when no files exist
+                    setPondFiles([]);
+                    onLoad?.([]);
                 }
             } catch (error) {
                 console.error('[InputImage] Error loading files:', error);
+                // Reset on error as well
+                setPondFiles([]);
+                onLoad?.([]);
             }
         };
 
         loadInitialFiles();
-    }, [path]);
-
-    const handleRemoveFile = async (path: string) => {
-        try {
-            console.debug("[InputImage] handleRemoveFile", path);
-            setPondFiles(current => current.filter(f => f.source !== path));
-            onDeleted?.({ name: path.split('/').pop() || '' });
-        } catch (error) {
-            console.error("[InputImage] Failed to delete file:", error);
-        }
-    };
+    }, [path, onLoad]);
 
     return (
         <FilePond
@@ -233,6 +243,12 @@ export const InputImage = ({
             instantUpload={true}
             allowImagePreview={true}
             imagePreviewHeight={100}
+
+            allowImageResize={true}
+            imageResizeTargetWidth={10}
+            imageResizeTargetHeight={10}
+            imageResizeMode="contain"
+            
             server={createServerConfig({ path })}
             files={pondFiles}
             onupdatefiles={(fileItems) => {
@@ -277,6 +293,12 @@ export const RhfInputImage = ({
     ...props
 }: InputImagePropsWithRegister) => {
     const { field, formState } = useController(rhfProps);
+    console.log(formState);
+
+    const onLoad = useMemo(() => (files: File[]) => {
+        console.debug("[RhfInputImage] onLoad", files);
+        field.onChange(files.map(file => path + file.name));
+    }, [path]);
 
     const onUploaded = (file: { name: string }) => {
         console.log("[RhfInputImage] onUploaded", file);
@@ -303,6 +325,7 @@ export const RhfInputImage = ({
                 path={path}
                 onUploaded={onUploaded}
                 onDeleted={onDeleted}
+                onLoad={onLoad}
                 {...props}
             />
             <ErrorMessage

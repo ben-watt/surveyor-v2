@@ -80,16 +80,6 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
     }));
   };
 
-  const AtLeastOneImageValidator = (v: any) => {
-    if (!v) {
-      return "At least one image is required";
-    } else if (v.length > 1) {
-      return "Only one image is required";
-    } else {
-      return true;
-    }
-  };
-
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValidHandler, onInvalidHandler)}>
@@ -162,11 +152,11 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
               rhfProps={{
                 name: "moneyShot",
                 rules: {
-                  validate: AtLeastOneImageValidator,
+                  required: true,
+                  validate: (v) => v.length === 1 || "Only one image is required",
                 },
               }}
               minNumberOfFiles={1}
-              maxNumberOfFiles={1}
               path={`report-images/${survey.id}/moneyShot/`}
             />
           </div>
@@ -176,9 +166,11 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
               rhfProps={{
                 name: "frontElevationImagesUri",
                 rules: {
-                  validate: AtLeastOneImageValidator,
+                  required: true,
+                  validate: (v) => v.length > 0 || "One or more images are required",
                 },
               }}
+              minNumberOfFiles={1}
               path={`report-images/${survey.id}/frontElevationImages/`}
             />
           </div>
