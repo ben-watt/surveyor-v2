@@ -161,15 +161,6 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
             {(!elementData?.components || elementData.components.length === 0) && (
               <div className="text-center text-gray-500 py-4">
                 No components added yet.
-                <Button variant="link" onClick={() => {
-                  drawer.openDrawer({
-                    title: `Inspect Component`,
-                    description: `Inspect a component`,
-                    content: <InspectionForm
-                      surveyId={surveyId}
-                    />
-                  });
-                }}>Inspect Component</Button>
               </div>
             )}
           </div>
