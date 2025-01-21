@@ -393,7 +393,7 @@ export default function InspectionForm({
               onCreateNew={() => {
                 drawer.openDrawer({
                   title: `Create a new condition phrase`,
-                  description: `Create a new condition phrase for any component`,
+                  description: `Create a new condition phrase for any surveys`,
                   content: <PhraseDataForm onSave={() => {
                     drawer.closeDrawer();
                     }}
@@ -413,6 +413,20 @@ export default function InspectionForm({
                 control={control}
                 errors={errors}
                 isMulti={true}
+                onCreateNew={() => {
+                  drawer.openDrawer({
+                    title: `Create a new defect phrase`,
+                    description: `Create a new defect phrase for any surveys`,
+                    content: <PhraseDataForm onSave={() => {
+                      drawer.closeDrawer();
+                      }}
+                     defaultValues={{
+                      type: "Defect",
+                      associatedComponentIds: [formValues.component.id],
+                      associatedElementIds: [formValues.element.id]
+                    }} />
+                  });
+                }}
             />
             )}
             {
