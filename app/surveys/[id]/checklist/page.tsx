@@ -15,6 +15,7 @@ import { surveyStore } from "@/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import { useRouter } from "next/navigation";
+import { useDynamicDrawer } from "@/app/components/Drawer";
 
 interface ChecklistPageProps {
   params: {
@@ -47,8 +48,9 @@ interface ChecklistFormProps {
 
 const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
   const methods = useForm<Checklist>({ defaultValues: initValues });
-  const { register, handleSubmit } = methods;
+  const { register, handleSubmit, control } = methods;
   const router = useRouter();
+  const drawer = useDynamicDrawer();
 
   // TODO: Need to ensure I don't overwrite the existing data
   // for the property data fields.
@@ -65,6 +67,7 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
     });
 
     router.push(`/surveys/${id}`);
+    drawer.closeDrawer();
   };
 
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = (errors) => {
@@ -86,7 +89,7 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
             return (
               <div className="mt-4 mb-4" key={index}>
                 <div>
-                  {mapToInputType(checklist, `items.${index}.value`, register)}
+                  {mapToInputType(checklist, `items.${index}.value`, register, control)}
                 </div>
               </div>
             );
