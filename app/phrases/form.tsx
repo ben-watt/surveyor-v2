@@ -12,6 +12,7 @@ import TextAreaInput from "../components/Input/TextAreaInput";
 import { componentStore, elementStore, phraseStore } from "../clients/Database";
 import toast from "react-hot-toast";
 import { useEffect } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
 type UpdateForm = Omit<
   Phrase,
@@ -54,7 +55,15 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
       });
       toast.success("Phrase updated");
     } else {
-      await phraseStore.add(data);
+      await phraseStore.add({
+        id: uuidv4(),
+        name: data.name,
+        type: data.type,
+        phrase: data.phrase,
+        associatedElementIds: data.associatedElementIds,
+        associatedComponentIds: data.associatedComponentIds,
+        associatedMaterialIds: data.associatedMaterialIds,
+      });
       toast.success("Phrase created");
     }
 

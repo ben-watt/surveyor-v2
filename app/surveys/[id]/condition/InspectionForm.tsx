@@ -251,10 +251,37 @@ export default function InspectionForm({
     console.log(errors);
   };
 
-  const surveySectionOptions = surveySections.map(section => ({
-    value: section.name,
-    label: section.name
-  }));
+  const surveySectionOptions = useMemo(() => {
+    // If no element is selected, show all sections
+    if (!formValues.element.id) {
+      return surveySections.map(section => ({
+        value: section.name,
+        label: section.name
+      }));
+    }
+
+    // Find the element in the elements list to get its section
+    const selectedElement = elements.find(e => e.id === formValues.element.id);
+    if (!selectedElement) return [];
+
+    // Filter survey sections to only show the one matching the element's section
+    return surveySections
+      .filter(section => section.name === selectedElement.section)
+      .map(section => ({
+        value: section.name,
+        label: section.name
+      }));
+  }, [formValues.element.id, elements]);
+
+  // Reset survey section when element changes
+  useEffect(() => {
+    if (formValues.element.id) {
+      const selectedElement = elements.find(e => e.id === formValues.element.id);
+      if (selectedElement) {
+        setValue("surveySection", selectedElement.section);
+      }
+    }
+  }, [formValues.element.id, elements, setValue]);
 
   const locationOptions = useMemo(() => {
     const buildLocationTree = (items: Location[], parentId?: string): any[] => {
@@ -292,27 +319,6 @@ export default function InspectionForm({
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValid, onInvalid)} className="space-y-6">
         <FormSection title="Basic Information">
-          <Combobox
-            labelTitle="Location"
-            data={locationOptions}
-            name="location"
-            control={control}
-            errors={errors}
-            showParentLabels={true}
-            rules={{
-              required: "Location is required"
-            }}
-          />
-          <Combobox
-            labelTitle="Survey Section"
-            data={surveySectionOptions}
-            name="surveySection"
-            control={control}
-            errors={errors}
-            rules={{
-              required: "Survey section is required"
-            }}
-          />
           <div className="flex items-end gap-2 justify-between">
             <Combobox
               labelTitle="Element"
@@ -331,7 +337,7 @@ export default function InspectionForm({
                 required: "Element is required"
               }}
             />
-            <Button 
+              <Button 
               className="flex-none" 
               variant="outline" 
               disabled={formValues.element.id === ""}
@@ -351,9 +357,29 @@ export default function InspectionForm({
               <Edit className="w-4 h-4" />
             </Button>
           </div>
+          <Combobox
+              labelTitle="Survey Section"
+              data={surveySectionOptions}
+              name="surveySection"
+              control={control}
+              errors={errors}
+              rules={{
+                required: "Survey section is required"
+              }}
+            />
         </FormSection>
-
         <FormSection title="Component Details">
+          <Combobox
+              labelTitle="Location"
+              data={locationOptions}
+              name="location"
+              control={control}
+              errors={errors}
+              showParentLabels={true}
+              rules={{
+                required: "Location is required"
+              }}
+            />
           <Combobox
               labelTitle="Component"
               data={componentOptions}
