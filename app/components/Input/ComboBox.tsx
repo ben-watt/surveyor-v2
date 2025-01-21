@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CheckIcon, ArrowDownNarrowWide, ChevronRight, ArrowLeft } from "lucide-react";
+import { CheckIcon, ArrowDownNarrowWide, ChevronRight, ArrowLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -210,12 +210,38 @@ export function Combobox({
           >
             <div className="flex justify-between items-center w-full min-w-0">
               <span className="flex-1 text-start truncate min-w-0 max-w-72">{selectedLabels || "Select..."}</span>
+              {isMulti && selectedItems.length > 0 && 
+              <span className="text-xs text-muted-foreground bg-secondary rounded-md px-2 py-1">{selectedItems.length}</span>}
               <ArrowDownNarrowWide className="flex-none ml-2 h-4 w-4 opacity-50 shrink-0" />
             </div>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="p-0" align="start">
           <Command>
+            {isMulti && selectedItems.length > 0 && (
+              <div className="border-b px-2 py-2">
+                <div className="flex flex-wrap gap-1">
+                  {selectedItems.filter(Boolean).map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-secondary text-secondary-foreground rounded-md px-2 py-1 text-sm"
+                    >
+                      <span>{item?.label}</span>
+                      <button
+                        type="button"
+                        className="h-4 w-4 hover:bg-secondary-foreground/20 rounded-sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSelect(item?.label || "");
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <CommandInput
               placeholder="Search..."
               value={search}
