@@ -313,29 +313,17 @@ function Report({ initFormValues }: ReportProps) {
     {
       title: "Property Description",
       href: `/surveys/${initFormValues.id}/property-description`,
-      status: initFormValues.propertyDescription.status.status,
-      drawer: {
-        description: "Edit Property Description",
-        content: <PropertyDescriptionPage params={{ id: initFormValues.id }} />
-      }
+      status: initFormValues.propertyDescription.status.status
     },
     {
       title: "Property Condition",
       href: `/surveys/${initFormValues.id}/condition`,
-      status: initFormValues.propertyDescription.status.status,
-      drawer: {
-        description: "Edit Property Condition",
-        content: <ConditionPage params={{ id: initFormValues.id }} />
-      }
+      status: initFormValues.propertyDescription.status.status
     },
     {
       title: "Checklist",
       href: `/surveys/${initFormValues.id}/checklist`,
-      status: initFormValues.checklist.status.status,
-      drawer: {
-        description: "Edit Checklist",
-        content: <ChecklistPage params={{ id: initFormValues.id }} />
-      }
+      status: initFormValues.checklist.status.status
     },
   ];
 
@@ -350,7 +338,6 @@ function Report({ initFormValues }: ReportProps) {
                 title={section.title}
                 href={section.href}
                 status={section.status}
-                drawer={section.drawer != null ? { ...section.drawer, title: section.title } : undefined}
               />
             ))}
           </div>

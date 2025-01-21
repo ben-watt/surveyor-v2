@@ -15,7 +15,8 @@ import { surveyStore } from "@/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import { useRouter } from "next/navigation";
-import { useDynamicDrawer } from "@/app/components/Drawer";
+import { DynamicDrawer } from "@/app/components/Drawer";
+import { useEffect, useState } from "react";
 
 interface ChecklistPageProps {
   params: {
@@ -27,14 +28,36 @@ export const ChecklistPage = ({
   params: { id },
 }: ChecklistPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleClose = () => {
+    setIsOpen(false);
+    router.back();
+  };
+
+  useEffect(() => {
+    if (isHydrated) {
+      setIsOpen(true);
+    }
+  }, [isHydrated]);
 
   return (
     <div>
       {!isHydrated && <div>Loading...</div>}
       {isHydrated && survey && (
-        <ChecklistForm
-          id={id}
-          initValues={survey.content.checklist}
+        <DynamicDrawer
+          drawerId={id + "/checklist"}
+          isOpen={isOpen}
+          handleClose={handleClose}
+          title="Checklist"
+          description="Checklist"
+          content={
+            <ChecklistForm
+              id={id}
+              initValues={survey.content.checklist}
+            />
+          }
         />
       )}
     </div>
@@ -50,7 +73,6 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
   const methods = useForm<Checklist>({ defaultValues: initValues });
   const { register, handleSubmit, control } = methods;
   const router = useRouter();
-  const drawer = useDynamicDrawer();
 
   // TODO: Need to ensure I don't overwrite the existing data
   // for the property data fields.
@@ -67,7 +89,6 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
     });
 
     router.push(`/surveys/${id}`);
-    drawer.closeDrawer();
   };
 
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = (errors) => {

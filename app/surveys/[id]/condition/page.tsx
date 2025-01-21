@@ -6,7 +6,7 @@ import { ElementSection, SurveySection } from "../../building-survey-reports/Bui
 import { componentStore, surveyStore } from "@/app/clients/Database";
 import { ClipboardList, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useDynamicDrawer } from "@/app/components/Drawer";
+import { DynamicDrawer, useDynamicDrawer } from "@/app/components/Drawer";
 import InspectionForm from "./InspectionForm";
 import ElementForm from "./ElementForm";
 
@@ -28,16 +28,32 @@ interface ConditionPageProps {
 
 export const ConditionPage = ({ params: { id } }: ConditionPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleClose = () => {
+    setIsOpen(false);
+    router.back();
+  };
 
   useEffect(() => {
-    console.log("[Condition Page] isHydrated", isHydrated, survey);
-  }, [isHydrated, survey]);
+    if (isHydrated) {
+      setIsOpen(true);
+    }
+  }, [isHydrated]);
 
   return (
     <div>
       {!isHydrated && <div>Loading...</div>}
       {isHydrated && survey && (
-        <ConditionForm id={id} initValues={survey.content.sections} />
+        <DynamicDrawer
+          drawerId={id + "/condition"}
+          isOpen={isOpen}
+          handleClose={handleClose}
+          title="Property Condition"
+          description="Property Condition"
+          content={<ConditionForm id={id} initValues={survey.content.sections} />}
+        />
       )}
     </div>
   );

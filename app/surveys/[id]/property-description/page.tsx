@@ -9,7 +9,8 @@ import { surveyStore } from "@/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { DynamicDrawer } from "@/app/components/Drawer";
 
 function isInputT<T>(input: any): input is Input<T> {
   return input.type !== undefined;
@@ -25,18 +26,36 @@ export const PropertyDescriptionPage = ({
   params: { id },
 }: PropertyDescriptionPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleClose = () => {
+    setIsOpen(false);
+    router.back();
+  };
 
   useEffect(() => {
-    console.log("[PropertyDescriptionPage] isHydrated", isHydrated, survey);
-  }, [isHydrated, survey])
+    if (isHydrated) {
+      setIsOpen(true);
+    }
+  }, [isHydrated]);
 
   return (
     <div>
       {!isHydrated && <div>Loading...</div>}
       {isHydrated && survey && (
-        <PropertyDescriptionForm
-          id={id}
-          initValues={survey.content.propertyDescription}
+        <DynamicDrawer
+          drawerId={id + "/property-description"}
+          isOpen={isOpen}
+          handleClose={handleClose}
+          title="Property Description"
+          description="Property Description"
+          content={
+            <PropertyDescriptionForm
+              id={id}
+              initValues={survey.content.propertyDescription}
+            />
+          }
         />
       )}
     </div>
@@ -56,10 +75,6 @@ const PropertyDescriptionForm = ({
   const { register, handleSubmit, control } = methods;
   const router = useRouter();
 
-  console.log("[PropertyDescriptionForm] initValues", initValues);
-
-  // TODO: Need to ensure I don't overwrite the existing data
-  // for the property data fields.
   const onValidSubmit: SubmitHandler<PropertyDescription> = (data) => {
     surveyStore.update(id, (currentState) => {
       currentState.content.propertyDescription = {
@@ -87,13 +102,11 @@ const PropertyDescriptionForm = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValidSubmit, onInvalidSubmit)}>
-          {Object.keys(initValues)
+        {Object.keys(initValues)
           .map((key) => {
             const propKey = key as keyof Omit<PropertyDescription, "status">;
             const property = initValues[propKey] as Input<any>;
 
-
-            console.log("[PropertyDescriptionForm] property", property);
             if (isInputT(property)) {
               const reqName = `${propKey}.value` as const;
 
