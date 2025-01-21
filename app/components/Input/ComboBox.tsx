@@ -55,7 +55,8 @@ export function Combobox({
   const { field } = useController({
     name,
     control,
-    rules
+    rules,
+    defaultValue: isMulti ? [] : ""
   });
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -107,7 +108,7 @@ export function Combobox({
       const currentValues = Array.isArray(field.value) ? field.value : [];
       const valueExists = currentValues.some(v => {
         if (typeof v === 'object' && v !== null && typeof selectedItem.value === 'object' && selectedItem.value !== null) {
-          return JSON.stringify(v) === JSON.stringify(selectedItem.value);
+          return v.id === selectedItem.value.id;
         }
         return v === selectedItem.value;
       });
@@ -115,7 +116,7 @@ export function Combobox({
       field.onChange(valueExists 
         ? currentValues.filter(v => {
             if (typeof v === 'object' && v !== null && typeof selectedItem.value === 'object' && selectedItem.value !== null) {
-              return JSON.stringify(v) !== JSON.stringify(selectedItem.value);
+              return v.id !== selectedItem.value.id;
             }
             return v !== selectedItem.value;
           })
@@ -148,11 +149,24 @@ export function Combobox({
   const selectedItems = React.useMemo(() => {
     if (!field.value) return [];
     
+    console.log("[ComboBox] field.value:", field.value);
+    console.log("[ComboBox] flatData:", flatData);
+    
     if (isMulti && Array.isArray(field.value)) {
       return field.value.map(value => 
         flatData.find(item => {
+          // For debugging
+          console.log("[ComboBox] Comparing:", {
+            value,
+            itemValue: item.value,
+            valueType: typeof value,
+            itemType: typeof item.value
+          });
+
           if (typeof value === 'object' && value !== null && typeof item.value === 'object' && item.value !== null) {
-            return JSON.stringify(value) === JSON.stringify(item.value);
+            // Compare specific properties that should match instead of full objects
+            // Adjust these properties based on your object structure
+            return value.id === item.value.id; // Example: comparing by ID
           }
           return value === item.value;
         })
@@ -161,7 +175,8 @@ export function Combobox({
     
     const item = flatData.find(item => {
       if (typeof field.value === 'object' && field.value !== null && typeof item.value === 'object' && item.value !== null) {
-        return JSON.stringify(field.value) === JSON.stringify(item.value);
+        // Same here - compare specific properties
+        return field.value.id === item.value.id; // Example: comparing by ID
       }
       return field.value === item.value;
     });
@@ -190,6 +205,8 @@ export function Combobox({
     return field.value === itemValue;
   }, [field.value, isMulti]);
 
+  console.log("[ComboBox] selectedItems", selectedItems, field);
+
   return (
     <div className="w-full">
       <Label text={labelTitle} />
@@ -210,8 +227,7 @@ export function Combobox({
           >
             <div className="flex justify-between items-center w-full min-w-0">
               <span className="flex-1 text-start truncate min-w-0 max-w-72">{selectedLabels || "Select..."}</span>
-              {isMulti && selectedItems.length > 0 && 
-              <span className="text-xs text-muted-foreground bg-secondary rounded-md px-2 py-1">{selectedItems.length}</span>}
+              {isMulti && selectedItems.length > 0 && <span className="text-xs text-muted-foreground bg-secondary rounded-md px-2 py-1">{selectedItems.length}</span>}
               <ArrowDownNarrowWide className="flex-none ml-2 h-4 w-4 opacity-50 shrink-0" />
             </div>
           </Button>
