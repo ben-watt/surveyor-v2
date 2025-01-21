@@ -16,6 +16,7 @@ import { Edit } from "lucide-react";
 import ElementForm from "./ElementForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataForm as ElementDataForm } from "@/app/elements/form";
+import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -358,6 +359,15 @@ export default function InspectionForm({
               name="component"
               control={control}
               errors={errors}
+              onCreateNew={() => {
+                drawer.openDrawer({
+                  title: `Create a new component`,
+                  description: `Create a new component for any element`,
+                  content: <ComponentDataForm defaultValues={{
+                    elementId: formValues.element.id
+                  }} />
+                });
+              }}
               rules={{
                 required: "Component is required"
               }}

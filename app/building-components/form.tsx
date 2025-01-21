@@ -6,38 +6,35 @@ import {
   FormProvider,
   useForm,
 } from "react-hook-form";
-import reportClient from "@/app/clients/AmplifyDataClient";
+import { componentStore, elementStore } from "@/app/clients/Database";
+import type { Component } from "@/app/clients/Dexie";
 import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import toast from "react-hot-toast";
-
-type ComponentData = Schema["Components"]["type"];
-type ComponentDataUpdate = Omit<
-  ComponentData,
-  "createdAt" | "updatedAt" | "element" | "owner"
->;
+import { useDynamicDrawer } from "../components/Drawer";
+import { v4 as uuidv4 } from "uuid";
 
 interface DataFormProps {
   id?: string;
-  defaultValues?: ComponentDataUpdate;
+  defaultValues?: Partial<Component>;
   onSave?: () => void;
 }
 
 export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
-  const methods = useForm<ComponentDataUpdate>({ defaultValues: defaultValues });
+  const methods = useForm<Component>({ defaultValues: defaultValues });
   const { register, handleSubmit, control } = methods;
   const [isLoading, setIsLoading] = useState(true);
+  const drawer = useDynamicDrawer();
 
-  const [elements, setElements] = useState<Schema["Elements"]["type"][]>([]);
+  const [ready, elements] = elementStore.useList();
 
   useEffect(() => {
     if (id) {
       const fetchData = async () => {
         try {
-          const response = await reportClient.models.Components.get({ id });
-          console.log(response.data);
-          methods.reset(response.data as ComponentDataUpdate);
+          const data = await componentStore.get(id);
+          methods.reset(data);
           setIsLoading(false);
         } catch (error) {
           console.error("Failed to fetch data", error);
@@ -49,43 +46,36 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   }, [methods, id]);
 
   useEffect(() => {
-    const fetchElements = async () => {
-      try {
-        const response = await reportClient.models.Elements.list();
-        setElements(response.data);
+    if (!id && ready) {
+      setIsLoading(false);
+    }
+  }, [id, ready]);
 
-        if(!id) {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Failed to fetch elements", error);
-      }
-    };
-
-    fetchElements();
-  }, [id]);
-
-  const onSubmit = (data: ComponentDataUpdate) => {
+  const onSubmit = (data: Component) => {
     const saveData = async () => {
       try {
         if (!data.id) {
-          await reportClient.models.Components.create(data);
-        } else {
-          await reportClient.models.Components.update({
-            id: data.id,
+          await componentStore.add({
+            id: uuidv4(),
             name: data.name,
             elementId: data.elementId,
-            materials: data.materials,
+            materials: data.materials
+          });
+        } else {
+          await componentStore.update(data.id, (draft) => {
+            draft.name = data.name;
+            draft.elementId = data.elementId;
+            draft.materials = data.materials;
           });
         }
 
         toast.success("Saved");
+        drawer.closeDrawer();
+        onSave && onSave();
       } catch (error) {
         console.error("Failed to save data", error);
-        toast.custom(`Error unable to save data.`);
+        toast.error("Error unable to save data.");
       }
-
-      onSave && onSave();
     };
 
     saveData();
