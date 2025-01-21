@@ -50,23 +50,18 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   }
 ) {
   const table = db.table<T>(tableName);
-
   const useList = (): [boolean, T[]] => {
-    const data = useLiveQuery(
-      async () => await table.toArray(),
-      []
-    );
-    
-    return [data !== undefined, data ?? []];
+    const data = useLiveQuery(async () => await table.toArray(), []);
+    return [data === undefined ? false : true, data ?? []];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
-    const data = useLiveQuery(
-      async () => await table.get(id),
+    const result = useLiveQuery(
+      async () => ({ value: await table.get(id) }),
       [id]
     );
     
-    return [data !== undefined, data];
+    return [result !== undefined, result?.value];
   };
 
   const syncWithServer = async (): Promise<Result<void, Error>> => {

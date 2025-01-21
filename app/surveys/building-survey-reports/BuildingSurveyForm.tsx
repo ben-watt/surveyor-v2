@@ -18,10 +18,6 @@ import { surveyStore } from "@/app/clients/Database";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/hooks/useAsyncError";
-import ReportDetailFormPage from "../[id]/report-details/page";
-import PropertyDescriptionPage from "../[id]/property-description/page";
-import ChecklistPage from "../[id]/checklist/page";
-import ConditionPage from "../[id]/condition/page";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 
@@ -189,6 +185,7 @@ const createDefaultFormValues = async (
 
 export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   const [isHydrated, report] = surveyStore.useGet(id);
+  const router = useRouter();
 
   console.debug("[ReportWrapper] isHydrated", isHydrated, report);
 
@@ -196,6 +193,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   
   useEffect(() => {
     async function createNewForm() {
+      console.log("[ReportWrapper] createNewForm");
       const newId = uuidv4();
       const formResult = await createDefaultFormValues(newId);
 
@@ -204,13 +202,15 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
           id: newId,
           content: formResult.val,
         });
-        // Todo: May be worth saving and re-directing here so we don't create a new form on refresh
-        // or simply updating the browser history
+
+        router.push(`/surveys/${newId}`);
       } else {
         throwError(formResult.val);
       }
     }
 
+    console.log("[ReportWrapper] isHydrated", isHydrated);
+    console.log("[ReportWrapper] report", report);
     if (isHydrated && !report) {
       createNewForm();
     }
@@ -239,8 +239,6 @@ function Report({ initFormValues }: ReportProps) {
   const { handleSubmit, watch, formState } = methods;
 
   const router = useRouter();
-
-  const sections = watch("sections") as BuildingSurveyForm["sections"];
 
   // useDebouncedEffect(
   //   () => {
