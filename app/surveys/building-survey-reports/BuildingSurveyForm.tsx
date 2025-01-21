@@ -193,7 +193,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   console.debug("[ReportWrapper] isHydrated", isHydrated, report);
 
   const throwError = useAsyncError();
-
+  
   useEffect(() => {
     async function createNewForm() {
       const newId = uuidv4();
