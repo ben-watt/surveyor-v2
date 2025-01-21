@@ -3,6 +3,7 @@ import React, { PropsWithChildren } from "react";
 import { motion } from "framer-motion"
 import Link from "next/link";
 import { DynamicDrawer, useDynamicDrawer } from "./Drawer";
+import { useRouter } from "next/navigation";
 
 interface FormSectionProps {
   title?: string;
@@ -55,9 +56,9 @@ export const FormSection = ({
 
 interface FormSectionLinkProps {
   title: string;
-  href: string;
+  href?: string;
   status: "complete" | "incomplete" | "error" | "warning";
-  drawer: DrawerProps;
+  drawer?: DrawerProps;
 }
 
 interface DrawerContentProps {
@@ -72,14 +73,23 @@ interface DrawerProps {
 
 export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLinkProps) => {
   const { openDrawer } = useDynamicDrawer();
+  const router = useRouter();
 
-  return (
-    <div>
-      <div className="border border-grey-600 mt-2 mb-2 rounded p-2" onClick={() => openDrawer({
+  const handleClick = () => {
+    if(drawer) {
+      openDrawer({
         title: drawer.title,
         description: drawer.description,
         content: drawer.content,
-      })}>
+      });
+    } else if(href) {
+      router.push(href);
+    }
+  }
+
+  return (
+    <div>
+        <div className="border border-grey-600 mt-2 mb-2 rounded p-2" onClick={handleClick}>
         <div className="flex justify-between items-center">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
           {status === "complete" && <div className="bg-green-700 px-2 text-white rounded-sm">Complete</div>}

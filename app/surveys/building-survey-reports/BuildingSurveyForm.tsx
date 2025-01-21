@@ -309,10 +309,6 @@ function Report({ initFormValues }: ReportProps) {
       title: "Report Details",
       href: `/surveys/${initFormValues.id}/report-details`,
       status: initFormValues.reportDetails.status.status,
-      drawer: {
-        description: "Edit Report Details",
-        content: <ReportDetailFormPage params={{ id: initFormValues.id }}  />
-      }
     },
     {
       title: "Property Description",
@@ -354,11 +350,7 @@ function Report({ initFormValues }: ReportProps) {
                 title={section.title}
                 href={section.href}
                 status={section.status}
-                drawer={{
-                  title: section.title,
-                  description: section.drawer.description,
-                  content: section.drawer.content,
-                }}
+                drawer={section.drawer != null ? { ...section.drawer, title: section.title } : undefined}
               />
             ))}
           </div>

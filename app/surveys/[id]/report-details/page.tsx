@@ -9,11 +9,11 @@ import { FormProvider, SubmitErrorHandler, useForm } from "react-hook-form";
 import { ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { PrimaryBtn } from "@/app/components/Buttons";
 import { surveyStore } from "@/app/clients/Database";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Survey } from "@/app/clients/Dexie";
 import { InputImageComponent } from "@/app/components/Input/InputImage";
-import { useDynamicDrawer } from "@/app/components/Drawer";
+import { DynamicDrawer, useDynamicDrawer } from "@/app/components/Drawer";
 
 interface ReportDetailsFormPageProps {
   params: {
@@ -22,12 +22,29 @@ interface ReportDetailsFormPageProps {
 }
 
 export const ReportDetailFormPage = ({ params: { id } }: ReportDetailsFormPageProps) => {
-  const [isHydrated, survey] = surveyStore.useGet(id); 
+  const [isHydrated, survey] = surveyStore.useGet(id);
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleClose = () => {
+    setIsOpen(false);
+    router.back();
+  }
+
+  useEffect(() => {
+    if(isHydrated) {
+      setIsOpen(true);
+    }
+  }, [isHydrated]);
 
   return (
     <div>
       {!isHydrated && <div>Loading...</div>}
-      {isHydrated && survey && <ReportDetailsForm survey={survey} />}
+      {isHydrated && survey && 
+        <DynamicDrawer 
+        drawerId={id + "/report-details"} 
+        isOpen={isOpen} handleClose={handleClose} title="Report Details" description="Report Details" content={<ReportDetailsForm survey={survey} />} />
+      }
     </div>
   );
 };
