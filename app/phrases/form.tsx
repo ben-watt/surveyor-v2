@@ -87,14 +87,14 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         />
         <Combobox
           labelTitle="Associated Elements"
-          name="elementId"
+          name="associatedElementIds"
           control={control}
           data={elements.map((x) => ({ label: x.name, value: x.id }))}
           isMulti={true}
         />
         <Combobox
           labelTitle="Associated Components"
-          name="componentId"
+          name="associatedComponentIds"
           control={control}
           data={components.map((x) => ({ label: x.name, value: x.id }))}
           isMulti={true}
