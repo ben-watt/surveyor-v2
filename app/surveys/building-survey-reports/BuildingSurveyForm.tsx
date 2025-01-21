@@ -23,6 +23,7 @@ import PropertyDescriptionPage from "../[id]/property-description/page";
 import ChecklistPage from "../[id]/checklist/page";
 import ConditionPage from "../[id]/condition/page";
 import toast from "react-hot-toast";
+import { v4 as uuidv4 } from "uuid";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -195,11 +196,12 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
 
   useEffect(() => {
     async function createNewForm() {
-      const formResult = await createDefaultFormValues(id);
+      const newId = uuidv4();
+      const formResult = await createDefaultFormValues(newId);
 
       if (formResult.ok) {
         surveyStore.add({
-          id: id,
+          id: newId,
           content: formResult.val,
         });
         // Todo: May be worth saving and re-directing here so we don't create a new form on refresh
