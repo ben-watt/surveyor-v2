@@ -121,14 +121,11 @@ export default function InspectionForm({
 
   // Memoize the filtered elements based on selected survey section
   const elementOptions = useMemo(() => {
-    const filteredElements = elements.filter(
-      element => !formValues.surveySection || element.section === formValues.surveySection
-    );
-    return filteredElements.map(element => ({
+    return elements.map(element => ({
       value: { id: element.id, name: element.name },
       label: element.name
     }));
-  }, [elements, formValues.surveySection]);
+  }, [elements]);
 
   // Memoize the filtered components based on selected element
   const componentOptions = useMemo(() => {
