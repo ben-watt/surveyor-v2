@@ -410,7 +410,7 @@ export default function InspectionForm({
           </div>
         </FormSection>
         <Button type="submit" className="w-full">
-          Save Inspection
+          Save
         </Button>
       </form>
     </FormProvider>

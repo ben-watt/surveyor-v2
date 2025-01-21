@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { Draft, produce } from "immer";
 import { Err, Ok, Result } from 'ts-results';
 import { getErrorMessage } from '../utils/handleError';
+import { liveQuery } from "dexie";
+import { useLiveQuery } from "dexie-react-hooks";
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -50,47 +52,21 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   const table = db.table<T>(tableName);
 
   const useList = (): [boolean, T[]] => {
-    const [data, setData] = useState<T[]>([]);
-    const [hydrated, setHydrated] = useState(false);
-
-    useEffect(() => {
-      const fetchLocal = async () => {
-        const localData = await table.toArray();
-
-        table.hook("creating", (primKey, obj, transaction) => { setData(prev => [...prev, obj]); });
-        table.hook("updating", (mods, primKey, obj, transaction) => { setData(prev => prev.map((d) => d.id === obj.id ? obj : d)); });
-        table.hook("deleting", (primKey, obj, transaction) => { setData(prev => prev.filter((d) => d.id !== obj.id)); });
-
-        setData(localData);
-        setHydrated(true);
-      };
-
-      fetchLocal();
-    }, []);
-
-    return [hydrated, data];
+    const data = useLiveQuery(
+      async () => await table.toArray(),
+      []
+    );
+    
+    return [data !== undefined, data ?? []];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
-    const [data, setData] = useState<T | undefined>(undefined);
-    const [hydrated, setHydrated] = useState(false);
-
-    useEffect(() => {
-      const fetchLocal = async () => {
-        const localData = await table.get(id);
-
-        table.hook("creating", (primKey, obj, transaction) => { setData(obj); });
-        table.hook("updating", (mods, primKey, obj, transaction) => { setData(obj); });
-        table.hook("deleting", (primKey, obj, transaction) => { setData(undefined); });
-
-        setData(localData);
-        setHydrated(true);
-      };
-
-      fetchLocal();
-    }, [id]);
-
-    return [hydrated, data];
+    const data = useLiveQuery(
+      async () => await table.get(id),
+      [id]
+    );
+    
+    return [data !== undefined, data];
   };
 
   const syncWithServer = async (): Promise<Result<void, Error>> => {

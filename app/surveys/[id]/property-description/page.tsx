@@ -29,6 +29,13 @@ export const PropertyDescriptionPage = ({
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
+  console.log("[PropertyDescriptionPage] isHydrated", isHydrated);
+  
+
+  useEffect(() => {
+    console.log("[PropertyDescriptionPage] survey", survey);
+  }, []);
+
   const handleClose = () => {
     setIsOpen(false);
     router.back();
@@ -72,8 +79,13 @@ const PropertyDescriptionForm = ({
   initValues,
 }: PropertyDescriptionFormProps) => {
   const methods = useForm<PropertyDescription>({ defaultValues: initValues });
-  const { register, handleSubmit, control } = methods;
+  const { register, handleSubmit, control, reset } = methods;
   const router = useRouter();
+
+  // Reset form when initValues change
+  useEffect(() => {
+    reset(initValues);
+  }, [initValues, reset]);
 
   const onValidSubmit: SubmitHandler<PropertyDescription> = (data) => {
     surveyStore.update(id, (currentState) => {
