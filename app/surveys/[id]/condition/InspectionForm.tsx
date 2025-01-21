@@ -15,6 +15,7 @@ import { Location } from "@/app/clients/Dexie";
 import { Edit } from "lucide-react";
 import ElementForm from "./ElementForm";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataForm as ElementDataForm } from "@/app/elements/form";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -317,6 +318,13 @@ export default function InspectionForm({
               name="element"
               control={control}
               errors={errors}
+              onCreateNew={() => {
+                drawer.openDrawer({
+                  title: `Create a new element`,
+                  description: `Create a new element for any survey`,
+                  content: <ElementDataForm />
+                });
+              }}
               rules={{
                 required: "Element is required"
               }}

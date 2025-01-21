@@ -4,33 +4,33 @@ import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "@/app/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import reportClient from "@/app/clients/AmplifyDataClient";
 import { useEffect } from "react";
-import { Schema } from "@/amplify/data/resource";
 import { Combobox } from "../components/Input/ComboBox";
 import toast from "react-hot-toast";
-
-type ElementsData = Schema["Elements"]["type"];
-type ElementsDataUpdate = Omit<ElementsData, "createdAt" | "updatedAt">;
+import { useDynamicDrawer } from "../components/Drawer";
+import { elementStore, type CreateElement, type UpdateElement } from "../clients/Database";
+import { Element } from "../clients/Dexie";
+import { v4 as uuidv4 } from "uuid";
 
 interface DataFormProps {
   id?: string;
 }
 
 export function DataForm({ id }: DataFormProps) {
-  const form = useForm<ElementsDataUpdate>({});
+  const form = useForm<Element>({});
+  const drawer = useDynamicDrawer();
   const { register, handleSubmit, control } = form;
-  const router = useRouter();
 
   useEffect(() => {
     if (id) {
       const fetch = async () => {
         try {
-          const response = await reportClient.models.Elements.get({ id });
-          form.reset(response.data as ElementsDataUpdate);
-          console.debug("fetched existing data", response.data);
+          const response = await elementStore.get(id);
+          form.reset(response);
+          console.debug("fetched existing data", response);
         } catch (error) {
-          console.error("Failed to fetch defect", error);
+          console.error("Failed to fetch element", error);
+          toast.error("Failed to fetch element");
         }
       };
 
@@ -38,27 +38,32 @@ export function DataForm({ id }: DataFormProps) {
     }
   }, [form, id]);
 
-  const onSubmit = (data: ElementsDataUpdate) => {
+  const onSubmit = (data: Element) => {
     const save = async () => {
       try {
         if (!data.id) {
-          await reportClient.models.Elements.create(data);
+          await elementStore.add({
+            id: uuidv4(),
+            name: data.name,
+            section: data.section,
+            order: data.order,
+            description: data.description,
+          });
           toast.success("Created Element");
         } else {
-          await reportClient.models.Elements.update({
-            id: data.id,
-            name: data.name,
-            order: data.order,
-            section: data.section,
-            description: data.description,
+          await elementStore.update(data.id, (draft) => {
+            draft.name = data.name;
+            draft.order = data.order;
+            draft.section = data.section;
+            draft.description = data.description;
           });
           toast.success("Updated Element");
         }
-
-        router.push("/elements");
       } catch (error) {
-        toast.error("Error");
+        toast.error("Error saving element");
         console.error("Failed to save", error);
+      } finally {
+        drawer.closeDrawer();
       }
     };
 

@@ -29,13 +29,6 @@ export const PropertyDescriptionPage = ({
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
-  console.log("[PropertyDescriptionPage] isHydrated", isHydrated);
-  
-
-  useEffect(() => {
-    console.log("[PropertyDescriptionPage] survey", survey);
-  }, []);
-
   const handleClose = () => {
     setIsOpen(false);
     router.back();
@@ -82,13 +75,12 @@ const PropertyDescriptionForm = ({
   const { register, handleSubmit, control, reset } = methods;
   const router = useRouter();
 
-  // Reset form when initValues change
   useEffect(() => {
     reset(initValues);
   }, [initValues, reset]);
 
-  const onValidSubmit: SubmitHandler<PropertyDescription> = (data) => {
-    surveyStore.update(id, (currentState) => {
+  const onValidSubmit: SubmitHandler<PropertyDescription> = async (data) => {
+    await surveyStore.update(id, (currentState) => {
       currentState.content.propertyDescription = {
         ...currentState.content.propertyDescription,
         ...data,
@@ -102,8 +94,8 @@ const PropertyDescriptionForm = ({
     router.push(`/surveys/${id}`);
   };
 
-  const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = (errors) => {
-    surveyStore.update(id, (currentState) => {
+  const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = async (errors) => {
+    await surveyStore.update(id, (currentState) => {
       currentState.content.propertyDescription.status = {
         status: "incomplete",
         errors: Object.values(errors).map((error) => error.message ?? ""),
