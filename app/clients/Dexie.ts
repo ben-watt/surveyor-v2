@@ -91,11 +91,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
             }
             
           } catch(error: any) {
-            if(Array.isArray(error)) {
-              await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.map(e => e.message).join(", ") });
-            } else {
               await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.message });
-            }
           }
         }
       }

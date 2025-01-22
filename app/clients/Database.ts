@@ -9,6 +9,7 @@ import {
   Location,
 } from "./Dexie";
 import client from "./AmplifyDataClient";
+import { Schema } from "@/amplify/data/resource";
 
 const mapToSurvey = (data: any): Survey => ({
   id: data.id,
@@ -160,8 +161,8 @@ const mapToLocation = (data: any): Location => ({
   parentId: data.parentId,
 });
 
-export type UpdateLocation = Partial<Location> & { id: string };
-export type CreateLocation = Omit<Location, "updatedAt" | "createdAt">;
+export type CreateLocation = Schema['Locations']['createType'];
+export type UpdateLocation = Schema['Locations']['updateType'];
 
 export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLocation>(
   db,
@@ -169,18 +170,30 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
   {
     list: async () => {
       const response = await client.models.Locations.list();
+      if(response.errors) {
+        throw new Error(response.errors.map(e => e.message).join(", "));
+      }
       return response.data.map(mapToLocation);
     },
     create: async (data) => {
       const response = await client.models.Locations.create(data);
+      if(response.errors) {
+        throw new Error(response.errors.map(e => e.message).join(", "));
+      }
       return mapToLocation(response.data);
     },
     update: async (data) => {
       const response = await client.models.Locations.update(data);
+      if(response.errors) {
+        throw new Error(response.errors.map(e => e.message).join(", "));
+      }
       return mapToLocation(response.data);
     },
     delete: async (id) => {
-      await client.models.Locations.delete({ id });
+      const response = await client.models.Locations.delete({ id });
+      if(response.errors) {
+        throw new Error(response.errors.map(e => e.message).join(", "));
+      }
     },
   }
 );
