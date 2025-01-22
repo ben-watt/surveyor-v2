@@ -22,7 +22,25 @@ export default function Page() {
   const router = useRouter();
   const [isHydrated, locations] = locationStore.useList();
 
+  // Helper function to get full location path
+  const getLocationPath = (locationId: string): string => {
+    const path: string[] = [];
+    let current = locations.find(l => l.id === locationId);
+    
+    while (current) {
+      path.unshift(current.name);
+      current = locations.find(l => l.id === current?.parentId);
+    }
+    
+    return path.join(" > ");
+  };
+
   const columns: ColumnDef<TableData>[] = [
+    {
+        id: "hierarchy",
+        header: "Hierarchy",
+        cell: (props) => getLocationPath(props.row.original.id),
+    },
     {
       header: "Name",
       accessorKey: "name",

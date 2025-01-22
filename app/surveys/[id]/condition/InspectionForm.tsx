@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataForm as ElementDataForm } from "@/app/elements/form";
 import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/phrases/form";
+import { DataForm as LocationDataForm } from "@/app/locations/form";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -365,6 +366,15 @@ export default function InspectionForm({
               showParentLabels={true}
               rules={{
                 required: "Location is required"
+              }}
+              onCreateNew={() => {
+                drawer.openDrawer({
+                  title: `Create a new location`,
+                  description: `Create a new location for any surveys`,
+                  content: <LocationDataForm defaultValues={{
+                    parentId: formValues.location
+                  }} />
+                });
               }}
             />
           <Combobox

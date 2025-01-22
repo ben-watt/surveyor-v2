@@ -199,7 +199,13 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
 );
 
 // Add utility method for building location tree
-export const buildLocationTree = (items: Location[], parentId?: string): any[] => {
+export type LocationTree = {
+  value: string;
+  label: string;
+  children: LocationTree[];
+}
+
+export const buildLocationTree = (items: Location[], parentId?: string): LocationTree[] => {
   return items
     .filter(item => item.parentId === parentId || (!parentId && item.parentId == null))
     .map(item => ({
