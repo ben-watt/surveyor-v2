@@ -44,18 +44,23 @@ function mapBodToPhraseData(bod: typeof bankOfDefects, elements: ElementData[], 
     if (!matchingElement?.id) return;
 
     sheet.defects.forEach(d => {
+      // Find the matching component by name and material
       const matchingComponent = components.find(c => 
         c.name === d.type && 
         c.materials.some(m => m.name === d.specification)
       );
 
-      if (!matchingComponent) return;
+      if (!matchingComponent) {
+        console.warn(`No matching component found for type: ${d.type} and specification: ${d.specification}`);
+        return;
+      }
 
       const phraseName = `${d.defect}`;
       const level2 = (d.level2Wording || "") as string;
       const level3 = (d.level3Wording || "") as string;
       const phraseText = level2.trim() || level3.trim() || "No description available";
 
+      // Only add if we haven't seen this phrase name before
       if (!phrases.some(p => p.name === phraseName)) {
         phrases.push({
           id: crypto.randomUUID(),
@@ -76,9 +81,18 @@ function mapBodToPhraseData(bod: typeof bankOfDefects, elements: ElementData[], 
 
 function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[]): ComponentData[] {
   const componentData: ComponentData[] = [];
+  const componentIds = new Map<string, string>();
   
   bod.forEach((sheet) => {
     sheet.defects.forEach(d => {
+      const componentKey = `${d.type}:${d.specification}`;
+      // Get or create a consistent ID for this component
+      let componentId = componentIds.get(componentKey);
+      if (!componentId) {
+        componentId = crypto.randomUUID();
+        componentIds.set(componentKey, componentId);
+      }
+
       const existingComponent = componentData.find(c => c.name === d.type);
       if (existingComponent) {
         const existingMaterial = existingComponent.materials.find(m => m.name === d.specification);
@@ -88,7 +102,7 @@ function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[
       } else {
         const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
         componentData.push({
-          id: crypto.randomUUID(),
+          id: componentId,
           elementId: matchingElement?.id || "",
           name: d.type,
           materials: [{ name: d.specification }],
@@ -203,7 +217,7 @@ export default function Page() {
   const [locationsHydrated, locations] = locationStore.useList();
   const [componentData, setComponentData] = useState<ComponentData[]>([]);
   const [phraseData, setPhraseData] = useState<PhraseData[]>([]);
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<{ [key in EntityType]?: SyncStatus }>({});
   const [selectedEntity, setSelectedEntity] = useState<EntityType | null>(null);
   const [syncDialog, setSyncDialog] = useState(false);
   const [entitiesToSync, setEntitiesToSync] = useState({
@@ -215,8 +229,8 @@ export default function Page() {
   const [seedDialog, setSeedDialog] = useState(false);
   const [entitiesToSeed, setEntitiesToSeed] = useState({
     elements: true,
-    components: true,
-    phrases: true,
+    components: false,
+    phrases: false,
     locations: true,
   });
 
@@ -270,6 +284,34 @@ export default function Page() {
     }
   }
 
+  async function removeEntityData(entityType: EntityType) {
+    try {
+      setIsLoading(true);
+      switch (entityType) {
+        case "elements":
+          await elementStore.removeAll();
+          break;
+        case "components":
+          await componentStore.removeAll();
+          setComponentData([]);
+          break;
+        case "phrases":
+          await phraseStore.removeAll();
+          setPhraseData([]);
+          break;
+        case "locations":
+          await locationStore.removeAll();
+          break;
+      }
+      toast.success(`Successfully removed ${entityType} data`);
+    } catch (error) {
+      console.error(`Failed to remove ${entityType} data`, error);
+      toast.error(`Failed to remove ${entityType} data`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function seedAllData() {
     try {
       setIsLoading(true);
@@ -282,7 +324,7 @@ export default function Page() {
         entitiesToSeed.locations && locationStore.removeAll()
       ].filter(Boolean));
 
-      // Seed locations if selected
+      // Seed locations if selected (independent)
       if (entitiesToSeed.locations) {
         const preparedLocations = prepareLocationData(seedLocationData);
         await Promise.all(
@@ -306,8 +348,8 @@ export default function Page() {
         newElements = elements;
       }
 
-      // Seed components if selected
-      if (entitiesToSeed.components) {
+      // Only seed components if elements exist
+      if (entitiesToSeed.components && newElements.length > 0) {
         const newComponents = mapBodToComponentData(bankOfDefects, newElements);
         await Promise.all(
           newComponents.map(component => componentStore.add(component))
@@ -315,8 +357,8 @@ export default function Page() {
         setComponentData(newComponents);
       }
 
-      // Seed phrases if selected
-      if (entitiesToSeed.phrases) {
+      // Only seed phrases if both elements and components exist
+      if (entitiesToSeed.phrases && newElements.length > 0 && componentData.length > 0) {
         const newPhrases = mapBodToPhraseData(bankOfDefects, newElements, componentData);
         await Promise.all(
           newPhrases.map(phrase => phraseStore.add(phrase))
@@ -333,6 +375,11 @@ export default function Page() {
       setIsLoading(false);
     }
   }
+
+  // Dependency checks for seeding
+  const canSeedComponents = elements.length > 0 || entitiesToSeed.elements;
+  const canSeedPhrases = (elements.length > 0 || entitiesToSeed.elements) && 
+                        (components.length > 0 || entitiesToSeed.components);
 
   async function syncWithServer() {
     try {
@@ -439,106 +486,23 @@ export default function Page() {
       </div>
 
       <div className="space-y-6">
+        {/* Import Data Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl dark:text-white">Data Management</h2>
+            <h2 className="text-2xl dark:text-white">Import Data</h2>
             <div className="flex gap-4">
-              <Dialog open={syncDialog} onOpenChange={setSyncDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    disabled={isSyncing || isLoading}
-                    className="min-w-[140px]"
-                  >
-                    {isSyncing ? (
-                      <span className="inline-flex items-center gap-2">
-                        <LoadingSpinner />
-                        Syncing...
-                      </span>
-                    ) : (
-                      "Sync with Server"
-                    )}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Select Entities to Sync</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="elements"
-                        checked={entitiesToSync.elements}
-                        onCheckedChange={(checked) => 
-                          setEntitiesToSync(prev => ({ ...prev, elements: !!checked }))
-                        }
-                      />
-                      <label htmlFor="elements" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Elements ({elements.length} / {availableCounts.elements} available)
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="components"
-                        checked={entitiesToSync.components}
-                        onCheckedChange={(checked) => 
-                          setEntitiesToSync(prev => ({ ...prev, components: !!checked }))
-                        }
-                      />
-                      <label htmlFor="components" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Components ({components.length} / {availableCounts.components} available)
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="phrases"
-                        checked={entitiesToSync.phrases}
-                        onCheckedChange={(checked) => 
-                          setEntitiesToSync(prev => ({ ...prev, phrases: !!checked }))
-                        }
-                      />
-                      <label htmlFor="phrases" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Phrases ({phrases.length} / {availableCounts.phrases} available)
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="locations"
-                        checked={entitiesToSync.locations}
-                        onCheckedChange={(checked) => 
-                          setEntitiesToSync(prev => ({ ...prev, locations: !!checked }))
-                        }
-                      />
-                      <label htmlFor="locations" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Locations ({locations.length} / {availableCounts.locations} available)
-                      </label>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-4">
-                    <Button variant="outline" onClick={() => setSyncDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={syncWithServer}
-                      disabled={!Object.values(entitiesToSync).some(Boolean)}
-                    >
-                      Sync Selected
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
               <Dialog open={seedDialog} onOpenChange={setSeedDialog}>
                 <DialogTrigger asChild>
                   <Button
                     variant="default"
                     disabled={isLoading}
                   >
-                    Seed Data
+                    Import Data
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Select Data to Seed</DialogTitle>
+                    <DialogTitle>Select Data to Import</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="flex items-center space-x-2">
@@ -546,7 +510,13 @@ export default function Page() {
                         id="seed-elements"
                         checked={entitiesToSeed.elements}
                         onCheckedChange={(checked) => 
-                          setEntitiesToSeed(prev => ({ ...prev, elements: !!checked }))
+                          setEntitiesToSeed(prev => ({ 
+                            ...prev, 
+                            elements: !!checked,
+                            // Reset dependent entities if elements are unchecked
+                            components: !!checked && prev.components,
+                            phrases: !!checked && prev.phrases
+                          }))
                         }
                       />
                       <label htmlFor="seed-elements" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -557,24 +527,33 @@ export default function Page() {
                       <Checkbox 
                         id="seed-components"
                         checked={entitiesToSeed.components}
+                        disabled={!canSeedComponents}
                         onCheckedChange={(checked) => 
-                          setEntitiesToSeed(prev => ({ ...prev, components: !!checked }))
+                          setEntitiesToSeed(prev => ({ 
+                            ...prev, 
+                            components: !!checked,
+                            // Reset phrases if components are unchecked
+                            phrases: !!checked && prev.phrases
+                          }))
                         }
                       />
-                      <label htmlFor="seed-components" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      <label htmlFor="seed-components" className={`text-sm font-medium leading-none ${!canSeedComponents ? 'text-gray-400' : ''}`}>
                         Components ({components.length} / {availableCounts.components} available)
+                        {!canSeedComponents && <span className="ml-2 text-xs text-yellow-600">(Requires Elements)</span>}
                       </label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="seed-phrases"
                         checked={entitiesToSeed.phrases}
+                        disabled={!canSeedPhrases}
                         onCheckedChange={(checked) => 
                           setEntitiesToSeed(prev => ({ ...prev, phrases: !!checked }))
                         }
                       />
-                      <label htmlFor="seed-phrases" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      <label htmlFor="seed-phrases" className={`text-sm font-medium leading-none ${!canSeedPhrases ? 'text-gray-400' : ''}`}>
                         Phrases ({phrases.length} / {availableCounts.phrases} available)
+                        {!canSeedPhrases && <span className="ml-2 text-xs text-yellow-600">(Requires Elements & Components)</span>}
                       </label>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -585,7 +564,7 @@ export default function Page() {
                           setEntitiesToSeed(prev => ({ ...prev, locations: !!checked }))
                         }
                       />
-                      <label htmlFor="seed-locations" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      <label htmlFor="seed-locations" className="text-sm font-medium leading-none">
                         Locations ({locations.length} / {availableCounts.locations} available)
                       </label>
                     </div>
@@ -598,7 +577,7 @@ export default function Page() {
                       onClick={seedAllData}
                       disabled={!Object.values(entitiesToSeed).some(Boolean)}
                     >
-                      Seed Selected
+                      Import Selected
                     </Button>
                   </div>
                 </DialogContent>
@@ -606,11 +585,106 @@ export default function Page() {
               <Button
                 onClick={removeAllData}
                 variant="destructive"
-                disabled={isLoading || elements.length === 0}
+                disabled={isLoading || (elements.length === 0 && components.length === 0 && phrases.length === 0 && locations.length === 0)}
               >
                 Remove All Data
               </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Imported Data Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl dark:text-white">Imported Data</h2>
+            <Dialog open={syncDialog} onOpenChange={setSyncDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isSyncing || isLoading}
+                  className="min-w-[140px]"
+                >
+                  {isSyncing ? (
+                    <span className="inline-flex items-center gap-2">
+                      <LoadingSpinner />
+                      Syncing...
+                    </span>
+                  ) : (
+                    "Sync with Server"
+                  )}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Select Entities to Sync</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="elements"
+                      checked={entitiesToSync.elements}
+                      disabled={elements.length === 0}
+                      onCheckedChange={(checked) => 
+                        setEntitiesToSync(prev => ({ ...prev, elements: !!checked }))
+                      }
+                    />
+                    <label htmlFor="elements" className={`text-sm font-medium leading-none ${elements.length === 0 ? 'text-gray-400' : ''}`}>
+                      Elements ({elements.length})
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="components"
+                      checked={entitiesToSync.components}
+                      disabled={components.length === 0}
+                      onCheckedChange={(checked) => 
+                        setEntitiesToSync(prev => ({ ...prev, components: !!checked }))
+                      }
+                    />
+                    <label htmlFor="components" className={`text-sm font-medium leading-none ${components.length === 0 ? 'text-gray-400' : ''}`}>
+                      Components ({components.length})
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="phrases"
+                      checked={entitiesToSync.phrases}
+                      disabled={phrases.length === 0}
+                      onCheckedChange={(checked) => 
+                        setEntitiesToSync(prev => ({ ...prev, phrases: !!checked }))
+                      }
+                    />
+                    <label htmlFor="phrases" className={`text-sm font-medium leading-none ${phrases.length === 0 ? 'text-gray-400' : ''}`}>
+                      Phrases ({phrases.length})
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="locations"
+                      checked={entitiesToSync.locations}
+                      disabled={locations.length === 0}
+                      onCheckedChange={(checked) => 
+                        setEntitiesToSync(prev => ({ ...prev, locations: !!checked }))
+                      }
+                    />
+                    <label htmlFor="locations" className={`text-sm font-medium leading-none ${locations.length === 0 ? 'text-gray-400' : ''}`}>
+                      Locations ({locations.length})
+                    </label>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-4">
+                  <Button variant="outline" onClick={() => setSyncDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={syncWithServer}
+                    disabled={!Object.values(entitiesToSync).some(Boolean)}
+                  >
+                    Sync Selected
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           <div className="grid grid-cols-4 gap-4">
@@ -621,11 +695,38 @@ export default function Page() {
               onClick={() => handleCardClick("elements")}
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-medium">Elements</h3>
-                <SyncStatusBadge 
-                  status={elementsHydrated ? SyncStatus.Synced : "loading"} 
-                  isLoading={syncingEntities.elements || isLoading}
-                />
+                <div className="flex items-center gap-4">
+                  <h3 className="text-lg font-medium">Elements</h3>
+                  <SyncStatusBadge 
+                    status={elementsHydrated ? SyncStatus.Synced : "loading"} 
+                    isLoading={syncingEntities.elements || isLoading}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCardClick("elements");
+                    }}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-8"
+                    disabled={isLoading || elements.length === 0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeEntityData("elements");
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Count: {filters.elements ? filteredElements.length : elements.length}
@@ -665,11 +766,38 @@ export default function Page() {
               onClick={() => handleCardClick("components")}
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-medium">Components</h3>
-                <SyncStatusBadge 
-                  status={componentsHydrated ? SyncStatus.Synced : "loading"} 
-                  isLoading={syncingEntities.components || isLoading}
-                />
+                <div className="flex items-center gap-4">
+                  <h3 className="text-lg font-medium">Components</h3>
+                  <SyncStatusBadge 
+                    status={componentsHydrated ? SyncStatus.Synced : "loading"} 
+                    isLoading={syncingEntities.components || isLoading}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCardClick("components");
+                    }}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-8"
+                    disabled={isLoading || components.length === 0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeEntityData("components");
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Count: {filters.components ? filteredComponents.length : components.length}
@@ -709,11 +837,38 @@ export default function Page() {
               onClick={() => handleCardClick("phrases")}
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-medium">Phrases</h3>
-                <SyncStatusBadge 
-                  status={phrasesHydrated ? SyncStatus.Synced : "loading"} 
-                  isLoading={syncingEntities.phrases || isLoading}
-                />
+                <div className="flex items-center gap-4">
+                  <h3 className="text-lg font-medium">Phrases</h3>
+                  <SyncStatusBadge 
+                    status={phrasesHydrated ? SyncStatus.Synced : "loading"} 
+                    isLoading={syncingEntities.phrases || isLoading}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCardClick("phrases");
+                    }}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-8"
+                    disabled={isLoading || phrases.length === 0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeEntityData("phrases");
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Count: {filters.phrases ? filteredPhrases.length : phrases.length}
@@ -753,11 +908,38 @@ export default function Page() {
               onClick={() => handleCardClick("locations")}
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-medium">Locations</h3>
-                <SyncStatusBadge 
-                  status={locationsHydrated ? SyncStatus.Synced : "loading"} 
-                  isLoading={syncingEntities.locations || isLoading}
-                />
+                <div className="flex items-center gap-4">
+                  <h3 className="text-lg font-medium">Locations</h3>
+                  <SyncStatusBadge 
+                    status={locationsHydrated ? SyncStatus.Synced : "loading"} 
+                    isLoading={syncingEntities.locations || isLoading}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCardClick("locations");
+                    }}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-8"
+                    disabled={isLoading || locations.length === 0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeEntityData("locations");
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Count: {filters.locations ? filteredLocations.length : locations.length}
