@@ -8,6 +8,7 @@ import { Err, Ok, Result } from 'ts-results';
 import { getErrorMessage } from '../utils/handleError';
 import { liveQuery } from "dexie";
 import { useLiveQuery } from "dexie-react-hooks";
+import { UtensilsIcon } from 'lucide-react';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -90,7 +91,11 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
             }
             
           } catch(error: any) {
-            await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.message });
+            if(Array.isArray(error)) {
+              await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.map(e => e.message).join(", ") });
+            } else {
+              await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.message });
+            }
           }
         }
       }

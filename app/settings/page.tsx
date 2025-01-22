@@ -10,7 +10,7 @@ import { matchSorter } from 'match-sorter';
 import bankOfDefects from "./defects.json";
 import elements from "./elements.json";
 import seedLocationData from "./locations.json";
-import { componentStore, elementStore, phraseStore, locationStore } from "../clients/Database";
+import { componentStore, elementStore, phraseStore, locationStore, CreateLocation } from "../clients/Database";
 import { Component, SyncStatus } from "../clients/Dexie";
 import {
   Dialog,
@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getErrorMessage } from "../utils/handleError";
-
 // Type definitions
 type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section"> & { id: string };
 type ComponentData = Omit<Component, "owner" | "createdAt" | "updatedAt" | "syncStatus"> & { id: string };
@@ -175,10 +174,11 @@ function StatusBadge({
 }
 
 // Add this function to prepare location data
-function prepareLocationData(locations: LocationData[]) {
+function prepareLocationData(locations: LocationData[]) : CreateLocation[] {
   return locations.map(location => ({
-    ...location,
-    parentId: location.parentId || undefined,
+    id: location.id,
+    name: location.label,
+    parentId: location.parentId || null,
     syncStatus: "IMPORTED" as SyncStatus
   }));
 }
