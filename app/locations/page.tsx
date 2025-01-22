@@ -28,20 +28,6 @@ export default function Page() {
       accessorKey: "name",
     },
     {
-      header: "Type",
-      accessorKey: "type",
-    },
-    {
-      header: "Description",
-      accessorKey: "description",
-      cell: (props) => {
-        const description = props.getValue() as string;
-        return description ? (
-          <div className="text-wrap">{description.substring(0, 100) + "..."}</div>
-        ) : null;
-      },
-    },
-    {
       id: "created",
       header: ({ column }) => (
         <SortableHeader column={column} header="Created" />
