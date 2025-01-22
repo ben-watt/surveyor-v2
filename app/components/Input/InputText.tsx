@@ -18,6 +18,7 @@ interface InputTextProps {
   disabled?: boolean;
   register?: () => UseFormRegisterReturn<string>;
   errors?: FieldErrors<FieldValues>;
+  hidden?: boolean;
 }
 
 function Input({
@@ -29,6 +30,7 @@ function Input({
   disabled = false,
   register,
   errors,
+  hidden = false,
 }: InputTextProps) {
   let reg = null;
   if (register) {
@@ -36,7 +38,7 @@ function Input({
   }
 
   return (
-    <div>
+    <div className={cn(hidden && "hidden")}>
       {labelTitle && <Label text={labelTitle} />}
       <ShadInput
         className={cn("focus:ring-0 focus:border-none", className)}
