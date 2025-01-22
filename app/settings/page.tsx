@@ -233,6 +233,13 @@ export default function Page() {
     phrases: false,
     locations: true,
   });
+  const [removeDialog, setRemoveDialog] = useState(false);
+  const [entitiesToRemove, setEntitiesToRemove] = useState({
+    elements: true,
+    components: true,
+    phrases: true,
+    locations: true,
+  });
 
   // Add counts from JSON files
   const availableCounts = {
@@ -445,6 +452,35 @@ export default function Page() {
     }
   }
 
+  async function removeSelectedData() {
+    try {
+      setIsLoading(true);
+      
+      // Remove data for selected entities
+      await Promise.all([
+        entitiesToRemove.elements && elementStore.removeAll(),
+        entitiesToRemove.components && componentStore.removeAll(),
+        entitiesToRemove.phrases && phraseStore.removeAll(),
+        entitiesToRemove.locations && locationStore.removeAll()
+      ].filter(Boolean));
+
+      if (entitiesToRemove.components) {
+        setComponentData([]);
+      }
+      if (entitiesToRemove.phrases) {
+        setPhraseData([]);
+      }
+
+      setRemoveDialog(false);
+      toast.success("Successfully removed selected data");
+    } catch (error) {
+      console.error("Failed to remove data", error);
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   // Filter data based on selected status
   const filteredElements = elements.filter(e => !filters.elements || e.syncStatus === filters.elements);
   const filteredComponents = components.filter(c => !filters.components || c.syncStatus === filters.components);
@@ -583,11 +619,11 @@ export default function Page() {
                 </DialogContent>
               </Dialog>
               <Button
-                onClick={removeAllData}
+                onClick={() => setRemoveDialog(true)}
                 variant="destructive"
                 disabled={isLoading || (elements.length === 0 && components.length === 0 && phrases.length === 0 && locations.length === 0)}
               >
-                Remove All Data
+                Remove Data
               </Button>
             </div>
           </div>
@@ -702,31 +738,6 @@ export default function Page() {
                     isLoading={syncingEntities.elements || isLoading}
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCardClick("elements");
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="h-8"
-                    disabled={isLoading || elements.length === 0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeEntityData("elements");
-                    }}
-                  >
-                    Clear
-                  </Button>
-                </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Count: {filters.elements ? filteredElements.length : elements.length}
@@ -772,31 +783,6 @@ export default function Page() {
                     status={componentsHydrated ? SyncStatus.Synced : "loading"} 
                     isLoading={syncingEntities.components || isLoading}
                   />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCardClick("components");
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="h-8"
-                    disabled={isLoading || components.length === 0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeEntityData("components");
-                    }}
-                  >
-                    Clear
-                  </Button>
                 </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -844,31 +830,6 @@ export default function Page() {
                     isLoading={syncingEntities.phrases || isLoading}
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCardClick("phrases");
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="h-8"
-                    disabled={isLoading || phrases.length === 0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeEntityData("phrases");
-                    }}
-                  >
-                    Clear
-                  </Button>
-                </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Count: {filters.phrases ? filteredPhrases.length : phrases.length}
@@ -914,31 +875,6 @@ export default function Page() {
                     status={locationsHydrated ? SyncStatus.Synced : "loading"} 
                     isLoading={syncingEntities.locations || isLoading}
                   />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCardClick("locations");
-                    }}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="h-8"
-                    disabled={isLoading || locations.length === 0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeEntityData("locations");
-                    }}
-                  >
-                    Clear
-                  </Button>
                 </div>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -1001,6 +937,80 @@ export default function Page() {
             </div>
           </div>
         )}
+
+        <Dialog open={removeDialog} onOpenChange={setRemoveDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Select Data to Remove</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remove-elements"
+                  checked={entitiesToRemove.elements}
+                  disabled={elements.length === 0}
+                  onCheckedChange={(checked) => 
+                    setEntitiesToRemove(prev => ({ ...prev, elements: !!checked }))
+                  }
+                />
+                <label htmlFor="remove-elements" className={`text-sm font-medium leading-none ${elements.length === 0 ? 'text-gray-400' : ''}`}>
+                  Elements ({elements.length})
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remove-components"
+                  checked={entitiesToRemove.components}
+                  disabled={components.length === 0}
+                  onCheckedChange={(checked) => 
+                    setEntitiesToRemove(prev => ({ ...prev, components: !!checked }))
+                  }
+                />
+                <label htmlFor="remove-components" className={`text-sm font-medium leading-none ${components.length === 0 ? 'text-gray-400' : ''}`}>
+                  Components ({components.length})
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remove-phrases"
+                  checked={entitiesToRemove.phrases}
+                  disabled={phrases.length === 0}
+                  onCheckedChange={(checked) => 
+                    setEntitiesToRemove(prev => ({ ...prev, phrases: !!checked }))
+                  }
+                />
+                <label htmlFor="remove-phrases" className={`text-sm font-medium leading-none ${phrases.length === 0 ? 'text-gray-400' : ''}`}>
+                  Phrases ({phrases.length})
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remove-locations"
+                  checked={entitiesToRemove.locations}
+                  disabled={locations.length === 0}
+                  onCheckedChange={(checked) => 
+                    setEntitiesToRemove(prev => ({ ...prev, locations: !!checked }))
+                  }
+                />
+                <label htmlFor="remove-locations" className={`text-sm font-medium leading-none ${locations.length === 0 ? 'text-gray-400' : ''}`}>
+                  Locations ({locations.length})
+                </label>
+              </div>
+            </div>
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setRemoveDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={removeSelectedData}
+                disabled={!Object.values(entitiesToRemove).some(Boolean)}
+              >
+                Remove Selected
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
