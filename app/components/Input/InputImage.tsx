@@ -95,6 +95,7 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => ({
         return {
             abort: () => {
                 uploadTask.cancel("Upload cancelled");
+                abort();
             }
         }
     }) as ProcessServerConfigFunction,
@@ -118,6 +119,7 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => ({
         }
     }) as LoadServerConfigFunction,
     restore: ((uniqueFileId, load, error, progress, abort, headers) => {
+        console.debug("[FilePond Restore] Restoring file:", uniqueFileId);
         try {
             getUrl({ path: uniqueFileId })
             .then(({ url }) => {
@@ -136,6 +138,7 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => ({
         }
     }) as RestoreServerConfigFunction,
     fetch: ((url, load, error, progress, abort, headers) => {
+        console.debug("[FilePond Fetch] Fetching file:", url);
         try {
             fetch(url)
             .then(response => {
@@ -174,9 +177,9 @@ export const InputImage = ({
     maxNumberOfFiles = 10
 }: InputImageProps) => {
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
-
     useEffect(() => {
-        const loadInitialFiles = async () => {
+        const loadInitialFiles = async (): Promise<void> => {
+            console.debug("[FilePond] loadInitialFiles");
             try {
                 const trailingPath = path.endsWith('/') ? path : path + '/';
                 const { items } = await list({
@@ -235,8 +238,11 @@ export const InputImage = ({
             allowImageResize={true}
             imageResizeTargetWidth={10}
             imageResizeTargetHeight={10}
-            imageResizeMode="contain"
+            imageResizeMode="force"
             credits={false}
+            onremovefile={(err, file) => {
+                setInitialFiles(prev => prev.filter(f => f.source !== file.source));
+            }}
             onupdatefiles={(files) => {
                 console.debug("[FilePond] onupdatefiles", files);
                 const fileSources = files.map(file => 
@@ -244,6 +250,7 @@ export const InputImage = ({
                     typeof file.source === 'string' ? file.source :
                     file.filename
                 );
+                
                 onChange?.(fileSources);
             }}
             server={createServerConfig({ path })}
