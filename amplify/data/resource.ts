@@ -62,8 +62,7 @@ const schema = a.schema({
     ]),
   Locations: a.model({
     id: a.id().required(),
-    value: a.string().required(),
-    label: a.string().required(),
+    name: a.string().required(),
     parentId: a.string(), // Optional field for hierarchical structure
     syncStatus: a.string().required(),
   }).authorization((allow) => [

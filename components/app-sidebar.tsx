@@ -6,6 +6,7 @@ import {
   Bot,
   Frame,
   GalleryVerticalEnd,
+  MapPin,
   Settings2,
   SquareTerminal,
   Worm,
@@ -52,6 +53,11 @@ const configurationNavData = {
       title: "Phrases",
       url: "/phrases",
       icon: Bot,
+    },
+    {
+      title: "Locations",
+      url: "/locations",
+      icon: MapPin,
     },
     {
       title: "Settings",

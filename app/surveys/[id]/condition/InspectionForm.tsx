@@ -4,7 +4,7 @@ import { FormSection } from "@/app/components/FormSection";
 import { RagStatus, Component, ElementSection, Phrase } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { componentStore, elementStore, phraseStore, surveyStore, locationStore } from "@/app/clients/Database";
+import { componentStore, elementStore, phraseStore, surveyStore, locationStore, buildLocationTree } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import surveySections from "@/app/settings/surveySections.json";
@@ -281,16 +281,6 @@ export default function InspectionForm({
   }, [formValues.element.id, elements, setValue]);
 
   const locationOptions = useMemo(() => {
-    const buildLocationTree = (items: Location[], parentId?: string): any[] => {
-      return items
-        .filter(item => item.parentId === parentId || (!parentId && item.parentId == null))
-        .map(item => ({
-          value: item.value,
-          label: item.label,
-          children: buildLocationTree(items, item.id)
-        }))
-    };
-
     return buildLocationTree(locations);
   }, [locations]);
 

@@ -156,8 +156,7 @@ const mapToLocation = (data: any): Location => ({
   syncStatus: SyncStatus.Synced,
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
-  value: data.value,
-  label: data.label,
+  name: data.name,
   parentId: data.parentId,
 });
 
@@ -185,3 +184,14 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
     },
   }
 );
+
+// Add utility method for building location tree
+export const buildLocationTree = (items: Location[], parentId?: string): any[] => {
+  return items
+    .filter(item => item.parentId === parentId || (!parentId && item.parentId == null))
+    .map(item => ({
+      value: item.id,
+      label: item.name,
+      children: buildLocationTree(items, item.id)
+    }));
+};
