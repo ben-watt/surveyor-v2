@@ -12,14 +12,16 @@ import {
     RestoreServerConfigFunction,
     FetchServerConfigFunction,
     RemoveServerConfigFunction,
-    FileStatus
+    FileStatus,
+    FilePondFile,
+    FilePondInitialFile
 } from 'filepond';
 
 // AWS Amplify
 import { TransferProgressEvent, uploadData, getUrl, remove, list } from "aws-amplify/storage";
 
 // Form handling
-import { FieldValues, useController, UseControllerProps } from "react-hook-form";
+import { FieldValues, useController, UseControllerProps, useFormContext } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 
 // Components
@@ -46,10 +48,7 @@ registerPlugin(
 interface InputImageProps {
     id?: string;
     path: string;
-    initFiles?: string[];
-    onUploaded?: (file: { name: string }) => void;
-    onDeleted?: (file: { name: string }) => void;
-    onLoad?: (files: File[]) => void;
+    onChange?: (fileSources: string[]) => void;
     minNumberOfFiles?: number;
     maxNumberOfFiles?: number;
 }
@@ -61,6 +60,12 @@ interface InputImagePropsWithRegister extends InputImageProps {
 
 interface CreateServerConfigProps {
     path: string;
+}
+
+// Add this type near other interfaces
+interface RhfInputImageProps extends InputImageProps {
+    rhfProps: UseControllerProps<FieldValues>;
+    labelText?: string;
 }
 
 // 4. Extract server configuration to a separate function for better readability
@@ -150,12 +155,10 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => ({
         console.debug("[FilePond Remove] Removing file:", source);
         remove({
             path: source,
-        }).then(
-            (removed) => {
-                load();
-                console.debug("[FilePond Success] File deleted:", removed);
-            }
-        ).catch((err) => {
+        }).then(() => {
+            load();
+            console.debug("[FilePond Remove] File deleted:", source);
+        }).catch((err) => {
             console.error("[FilePond Err] Failed to delete file:", err);
             error('Failed to delete file');
         })
@@ -166,41 +169,30 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => ({
 export const InputImage = ({ 
     id,
     path,
-    onUploaded,
-    onDeleted,
-    onLoad,
+    onChange,
     minNumberOfFiles = 0,
     maxNumberOfFiles = 10
 }: InputImageProps) => {
-    const [pondFiles, setPondFiles] = React.useState<any[]>([]);
+    const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
 
     useEffect(() => {
         const loadInitialFiles = async () => {
             try {
-                // Ensure the path ends with a slash so it matches all subpaths
                 const trailingPath = path.endsWith('/') ? path : path + '/';
                 const { items } = await list({
                     path: trailingPath,
-                    options: {
-                        listAll: true
-                    }
+                    options: { listAll: true }
                 });
 
-                console.debug("[InputImage] Fetched existing files:", items);
-                
                 if (items.length > 0) {
-                    const signedUrls = await Promise.all(
-                        items.map(async (item, i) => {
+                    const loadedFiles = await Promise.all(
+                        items.map(async (item) => {
                             const filename = item.path.split('/').pop() || '';
-                            console.debug('[InputImage] Getting URL for:', item.path);
-                            const { url } = await getUrl({
-                                path: item.path
-                            });
-                            console.debug('[InputImage] Got signed URL:', url);
+                            const { url } = await getUrl({ path: item.path });
                             return {
                                 source: item.path,
                                 options: {
-                                    type: 'local',
+                                    type: 'local' as const,
                                     metadata: {
                                         filename,
                                         poster: url.href
@@ -214,24 +206,21 @@ export const InputImage = ({
                             };
                         })
                     );
-                    console.debug('[InputImage] Setting pond files:', signedUrls);
-                    setPondFiles(signedUrls);
-                    onLoad?.(items.map(item => new File([], item.path.split('/').pop() || '')));
+                    setInitialFiles(loadedFiles);
+                    onChange?.(loadedFiles.map(file => file.options.metadata.filename));
                 } else {
-                    // Reset pond files and call onLoad with empty array when no files exist
-                    setPondFiles([]);
-                    onLoad?.([]);
+                    setInitialFiles([]);
+                    onChange?.([]);
                 }
             } catch (error) {
                 console.error('[InputImage] Error loading files:', error);
-                // Reset on error as well
-                setPondFiles([]);
-                onLoad?.([]);
+                setInitialFiles([]);
+                onChange?.([]);
             }
         };
 
         loadInitialFiles();
-    }, [path, onLoad]);
+    }, [onChange, path]);
 
     return (
         <FilePond
@@ -243,45 +232,23 @@ export const InputImage = ({
             instantUpload={true}
             allowImagePreview={true}
             imagePreviewHeight={100}
-
             allowImageResize={true}
             imageResizeTargetWidth={10}
             imageResizeTargetHeight={10}
             imageResizeMode="contain"
-            
+            credits={false}
+            onupdatefiles={(files) => {
+                console.debug("[FilePond] onupdatefiles", files);
+                const fileSources = files.map(file => 
+                    typeof file.serverId === 'string' ? file.serverId :
+                    typeof file.source === 'string' ? file.source :
+                    file.filename
+                );
+                onChange?.(fileSources);
+            }}
             server={createServerConfig({ path })}
-            files={pondFiles}
-            onupdatefiles={(fileItems) => {
-                console.debug('[FilePond] Files updated:', fileItems);
-
-                // Get the current files in pond
-                const currentFiles = fileItems.map(fileItem => fileItem.source);
-                
-                // Find removed files by comparing with previous pondFiles
-                pondFiles.forEach(prevFile => {
-                    if (!currentFiles.includes(prevFile.source)) {
-                        console.debug('[FilePond] File removed:', prevFile.source);
-                        onDeleted?.({ name: prevFile.source.split('/').pop() || '' });
-                    }
-                });
-
-                // Find new files and trigger onUploaded
-                fileItems.forEach(fileItem => {
-                    if (fileItem.status === FileStatus.PROCESSING_COMPLETE) {
-                        const fileName = fileItem.filename || fileItem.file.name;
-                        console.debug('[FilePond] File uploaded:', fileName);
-                        onUploaded?.({ name: fileName });
-                    }
-                });
-
-                // Update the pondFiles state
-                setPondFiles(fileItems.map(fileItem => ({
-                    source: fileItem.source
-                })));
-            }}
-            labelFileProcessingError={(error) => {
-                return error?.body || 'Upload failed';
-            }}
+            files={initialFiles}
+            labelFileProcessingError={(error) => error?.body || 'Upload failed'}
         />
     );
 };
@@ -291,46 +258,30 @@ export const RhfInputImage = ({
     rhfProps,
     labelText,
     ...props
-}: InputImagePropsWithRegister) => {
-    const { field, formState } = useController(rhfProps);
-    console.log(formState);
+}: RhfInputImageProps) => {
+    const { setValue, register, formState } = useFormContext();
 
-    const onLoad = useMemo(() => (files: File[]) => {
-        console.debug("[RhfInputImage] onLoad", files);
-        field.onChange(files.map(file => path + file.name));
-    }, [path]);
+    useEffect(() => {
+        register(rhfProps.name, rhfProps.rules);
+    }, [register, rhfProps.name, rhfProps.rules]);
 
-    const onUploaded = (file: { name: string }) => {
-        console.log("[RhfInputImage] onUploaded", file);
-        // Initialize as empty array if field.value is undefined
-        const currentFiles = Array.isArray(field.value) ? field.value : [];
-        const newFile = path + file.name;
-        
-        // Only add if not already present
-        if (!currentFiles.includes(newFile)) {
-            field.onChange([...currentFiles, newFile]);
-        }
-    };
-
-    const onDeleted = (file: { name: string }) => {
-        const currentFiles = Array.isArray(field.value) ? field.value : [];
-        field.onChange(currentFiles.filter((fk: string) => fk !== path + file.name));
-    };
+    const onChange = useMemo(() => (fileSources: string[]) => {
+        console.debug("[RhfInputImage] onLoad", fileSources);
+        setValue(rhfProps.name, fileSources, { shouldDirty: true });
+    }, [rhfProps.name, setValue]);
 
     return (
-        <div {...field}>
+        <div>
             {labelText && <Label text={labelText} />}
             <InputImage
                 id={path}
                 path={path}
-                onUploaded={onUploaded}
-                onDeleted={onDeleted}
-                onLoad={onLoad}
+                onChange={onChange}
                 {...props}
             />
             <ErrorMessage
                 errors={formState.errors}
-                name={field.name}
+                name={rhfProps.name}
                 render={({ message }) => InputError({ message })}
             />
         </div>
