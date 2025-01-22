@@ -18,9 +18,17 @@ export type Checklist = {
     status: FormSectionStatus
 }
 
+export type Address = {
+    formatted: string;
+    location: {
+        lat: number;
+        lng: number;
+    };
+}
+
 export type ReportDetails = {
     level: "2" | "3"
-    address: string,
+    address: Address,
     clientName: string,
     reportDate: Date,
     inspectionDate: Date,

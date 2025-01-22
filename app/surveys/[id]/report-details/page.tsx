@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { Survey } from "@/app/clients/Dexie";
 import { InputImageComponent } from "@/app/components/Input/InputImage";
 import { DynamicDrawer, useDynamicDrawer } from "@/app/components/Drawer";
+import AddressInput from "@/app/components/Input/AddressInput";
 
 interface ReportDetailsFormPageProps {
   params: {
@@ -55,7 +56,7 @@ interface ReportDetailsFormProps {
 
 const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
   const methods = useForm<ReportDetails>({ defaultValues: survey.content.reportDetails });
-  const { register, handleSubmit, control } = methods;
+  const { register, handleSubmit, control, formState: { errors } } = methods;
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
@@ -113,10 +114,13 @@ const ReportDetailsForm = ({ survey }: ReportDetailsFormProps) => {
             />
           </div>
           <div>
-            <Input
+            <AddressInput
               labelTitle="Address"
               placeholder="123 Main St, London, UK"
-              register={() => register("address", { required: true })}
+              name="address"
+              control={control}
+              rules={{ required: true }}
+              errors={errors}
             />
           </div>
           <div>
