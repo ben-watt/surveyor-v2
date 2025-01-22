@@ -27,6 +27,7 @@ import { DataForm as ElementDataForm } from "@/app/elements/form";
 import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/phrases/form";
 import Input from "@/app/components/Input/InputText";
+import { Survey } from "@/app/clients/Dexie";
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -51,7 +52,6 @@ type InspectionFormData = {
   additionalDescription: string;
   images: string[];
   ragStatus: RagStatus;
-  defects: Phrase[];
   conditions: Phrase[];
 };
 
@@ -85,7 +85,6 @@ export default function InspectionForm({
     additionalDescription: "",
     images: [],
     ragStatus: "N/I",
-    defects: [],
     conditions: [],
   };
 
@@ -117,7 +116,6 @@ export default function InspectionForm({
               nameOverride: component.nameOverride || component.name,
               useNameOverride: component.useNameOverride || false,
               ragStatus: component.ragStatus,
-              defects: component.defects || [],
               conditions: component.conditions || [],
               additionalDescription: component.additionalDescription || "",
               images: component.images || [],
@@ -164,29 +162,16 @@ export default function InspectionForm({
   }, [components, formValues.element]);
 
   // Memoize the filtered phrases for conditions and defects
-  const conditionOptions = useMemo(() => {
+  const phrasesOptions = useMemo(() => {
     const filteredPhrases = phrases.filter(
       (phrase) =>
-        phrase.type === "Condition" &&
-        phrase.associatedComponentIds.includes(formValues.component.id)
-    );
-    return filteredPhrases.map((phrase) => ({
-      value: phrase.id,
-      label: phrase.name,
-    }));
-  }, [phrases, formValues.component.id]);
-
-  const defectOptions = useMemo(() => {
-    const filteredPhrases = phrases.filter(
-      (phrase) =>
-        phrase.type === "Defect" &&
         phrase.associatedComponentIds.includes(formValues.component.id)
     );
     return filteredPhrases.map((phrase) => ({
       value: phrase,
       label: phrase.name,
     }));
-  }, [formValues.component.id, phrases]);
+  }, [phrases, formValues.component.id]);
 
   // Reset dependent fields when survey section changes
   useEffect(() => {
@@ -239,7 +224,7 @@ export default function InspectionForm({
   const onValid = async (data: InspectionFormData) => {
     console.log("[InspectionForm] onValid", data);
 
-    await surveyStore.update(surveyId, (survey) => {
+    await surveyStore.update(surveyId, (survey: Survey) => {
       let surveySection = survey.content.sections.find(
         (section) => section.name === data.surveySection
       );
@@ -277,12 +262,6 @@ export default function InspectionForm({
           additionalDescription: data.additionalDescription,
           images: data.images,
           conditions: (data.conditions || []).map((p) => ({
-            id: p.id,
-            name: p.name,
-            phrase: p.description || "",
-            description: p.description || "",
-          })),
-          defects: (data.defects || []).map((p) => ({
             id: p.id,
             name: p.name,
             phrase: p.description || "",
@@ -471,7 +450,7 @@ export default function InspectionForm({
           />
           <Combobox
             labelTitle="Condition"
-            data={conditionOptions}
+            data={phrasesOptions}
             name="conditions"
             control={control}
             errors={errors}
@@ -495,40 +474,12 @@ export default function InspectionForm({
               });
             }}
           />
-          {["Red", "Amber"].includes(watch("ragStatus")) && (
-            <Combobox
-              labelTitle="Defects"
-              data={defectOptions}
-              name="defects"
-              control={control}
-              errors={errors}
-              isMulti={true}
-              onCreateNew={() => {
-                drawer.openDrawer({
-                  title: `Create a new defect phrase`,
-                  description: `Create a new defect phrase for any surveys`,
-                  content: (
-                    <PhraseDataForm
-                      onSave={() => {
-                        drawer.closeDrawer();
-                      }}
-                      defaultValues={{
-                        type: "Defect",
-                        associatedComponentIds: [formValues.component.id],
-                        associatedElementIds: [formValues.element.id],
-                      }}
-                    />
-                  ),
-                });
-              }}
-            />
-          )}
-          {Array.isArray(formValues.defects) &&
-            formValues.defects.map((defect, index) => {
-              const phrase = phrases.find((p) => p.id === defect.id);
+          {Array.isArray(formValues.conditions) &&
+            formValues.conditions.map((condition, index) => {
+              const phrase = phrases.find((p) => p.id === condition.id);
               return (
                 <div
-                  key={`${defect.id}-${index}`}
+                  key={`${condition.id}-${index}`}
                   className="space-y-2 border-b border-gray-200 p-4 text-xs"
                 >
                   <p>{phrase?.phrase}</p>
@@ -536,7 +487,7 @@ export default function InspectionForm({
               );
             })}
           <TextAreaInput
-            labelTitle="Additional Description"
+            labelTitle="Additional Comments"
             register={() => register("additionalDescription")}
             placeholder="Enter component description"
           />

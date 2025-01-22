@@ -93,7 +93,6 @@ export type Component = {
     id: string,
     name: string,
     conditions: Phrase[],
-    defects: Phrase[],
     ragStatus: RagStatus,
     useNameOverride: boolean,
     nameOverride: string,
