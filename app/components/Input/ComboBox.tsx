@@ -227,8 +227,10 @@ export function Combobox({
           >
             <div className="flex justify-between items-center w-full min-w-0">
               <span className="flex-1 text-start truncate min-w-0 max-w-72">{selectedLabels || "Select..."}</span>
-              {isMulti && selectedItems.length > 0 && <span className="text-xs text-muted-foreground bg-secondary rounded-md px-2 py-1">{selectedItems.length}</span>}
-              <ArrowDownNarrowWide className="flex-none ml-2 h-4 w-4 opacity-50 shrink-0" />
+              <div className="flex items-center">
+                {isMulti && selectedItems.length > 0 && <span className="text-xs text-muted-foreground bg-secondary rounded-md px-2 py-1">{selectedItems.length}</span>}
+                <ArrowDownNarrowWide className="flex-none ml-2 h-4 w-4 opacity-50 shrink-0" />
+              </div>
             </div>
           </Button>
         </PopoverTrigger>
