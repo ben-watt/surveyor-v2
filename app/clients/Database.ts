@@ -112,6 +112,7 @@ const mapToElement = (data: any): BuildingSurveyElement => ({
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
   name: data.name,
+  order: data.order,
   sectionId: data.sectionId,
   description: data.description,
 });

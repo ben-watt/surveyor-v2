@@ -1,17 +1,21 @@
 [
     {
+      "id": "external-condition-of-property",
       "name": "External Condition of Property",
       "order": 1
     },
     {
+      "id": "internal-condition-of-property",
       "name": "Internal Condition of Property",
       "order": 2
     },
     {
+      "id": "services",
       "name": "Services",
       "order": 3
     },
     {
+      "id": "grounds",
       "name": "Grounds (External Areas)",
       "order": 4
     }

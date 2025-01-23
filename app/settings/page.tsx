@@ -10,8 +10,10 @@ import { matchSorter } from 'match-sorter';
 import bankOfDefects from "./defects.json";
 import elements from "./elements.json";
 import seedLocationData from "./locations.json";
-import { componentStore, elementStore, phraseStore, locationStore, CreateLocation } from "../clients/Database";
-import { Component, SyncStatus } from "../clients/Dexie";
+import seedSectionData from "./sections.json";
+import seedElementData from "./elements.json";
+import { componentStore, elementStore, phraseStore, locationStore, sectionStore, CreateSection, CreateElement, CreateLocation } from "../clients/Database";
+import { Component, Element, SyncStatus } from "../clients/Dexie";
 import {
   Dialog,
   DialogContent,
@@ -22,61 +24,18 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { getErrorMessage } from "../utils/handleError";
 // Type definitions
-type ElementData = Pick<Schema["Elements"]["type"], "name" | "description" | "order" | "section"> & { id: string };
+type ElementData = Omit<Element, "owner" | "createdAt" | "updatedAt" | "syncStatus"> & { id: string };
 type ComponentData = Omit<Component, "owner" | "createdAt" | "updatedAt" | "syncStatus"> & { id: string };
 type PhraseData = Omit<Schema["Phrases"]["type"], "owner" | "createdAt" | "updatedAt"> & { id: string };
-type LocationData = {
-  id: string;
-  value: string;
-  label: string;
-  parentId?: string | null;
-  syncStatus?: string;
-};
+type LocationData = Pick<Schema["Locations"]["type"], "id" | "name" | "parentId">;
 
-const seedElementData: Omit<ElementData, "id">[] = elements;
-
-// Data mapping functions
-function mapBodToPhraseData(bod: typeof bankOfDefects, elements: ElementData[], components: ComponentData[]): PhraseData[] {
-  const phrases: PhraseData[] = [];
-  
-  bod.forEach((sheet) => {
-    const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
-    if (!matchingElement?.id) return;
-
-    sheet.defects.forEach(d => {
-      // Find the matching component by name and material
-      const matchingComponent = components.find(c => 
-        c.name === d.type && 
-        c.materials.some(m => m.name === d.specification)
-      );
-
-      if (!matchingComponent) {
-        console.warn(`No matching component found for type: ${d.type} and specification: ${d.specification}`);
-        return;
-      }
-
-      const phraseName = `${d.defect}`;
-      const level2 = (d.level2Wording || "") as string;
-      const level3 = (d.level3Wording || "") as string;
-      const phraseText = level2.trim() || level3.trim() || "No description available";
-
-      // Only add if we haven't seen this phrase name before
-      if (!phrases.some(p => p.name === phraseName)) {
-        phrases.push({
-          id: crypto.randomUUID(),
-          syncStatus: "IMPORTED",
-          name: phraseName,
-          type: "Defect",
-          associatedMaterialIds: [d.specification],
-          associatedElementIds: [matchingElement.id],
-          associatedComponentIds: [matchingComponent.id],
-          phrase: phraseText,
-        });
-      }
-    });
-  });
-
-  return phrases;
+function mapElementsToElementData(elements: typeof seedElementData): ElementData[] {
+  return elements.map(element => ({
+    id: element.id,
+    name: element.name,
+    description: element.description || null,
+    sectionId: element.sectionId || ""
+  }));
 }
 
 function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[]): ComponentData[] {
@@ -114,6 +73,50 @@ function mapBodToComponentData(bod: typeof bankOfDefects, elements: ElementData[
   return componentData;
 }
 
+function mapBodToPhraseData(bod: typeof bankOfDefects, elements: ElementData[], components: ComponentData[]): PhraseData[] {
+  const phrases: PhraseData[] = [];
+  
+  bod.forEach((sheet) => {
+    const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
+    if (!matchingElement?.id) return;
+
+    sheet.defects.forEach(d => {
+      // Find the matching component by name and material
+      const matchingComponent = components.find(c => 
+        c.name === d.type && 
+        c.materials.some(m => m.name === d.specification)
+      );
+
+      if (!matchingComponent) {
+        console.warn(`No matching component found for type: ${d.type} and specification: ${d.specification}`);
+        return;
+      }
+
+      const phraseName = `${d.defect}`;
+      const level2 = (d.level2Wording || "") as string;
+      const level3 = (d.level3Wording || "") as string;
+      const phraseText = level2.trim() || level3.trim() || "No description available";
+
+      // Only add if we haven't seen this phrase name before
+      if (!phrases.some(p => p.name === phraseName)) {
+        phrases.push({
+          id: crypto.randomUUID(),
+          syncStatus: "IMPORTED",
+          name: phraseName,
+          type: "Condition",
+          associatedMaterialIds: [d.specification],
+          associatedElementIds: [matchingElement.id],
+          associatedComponentIds: [matchingComponent.id],
+          phrase: phraseText,
+        });
+      }
+    });
+  });
+
+  return phrases;
+}
+
+
 function LoadingSpinner() {
   return (
     <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600" />
@@ -144,10 +147,7 @@ function SyncStatusBadge({ status, isLoading }: { status: string; isLoading?: bo
   );
 }
 
-type EntityType = "elements" | "components" | "phrases" | "locations";
-type FilterState = {
-  [key in EntityType]?: SyncStatus;
-};
+type EntityType = "elements" | "components" | "phrases" | "locations" | "sections";
 
 function StatusBadge({ 
   status, 
@@ -187,11 +187,11 @@ function StatusBadge({
   );
 }
 
-// Add this function to prepare location data
-function prepareLocationData(locations: LocationData[]) : CreateLocation[] {
+
+function prepareLocationData(locations: { id: string; value: string; label: string; parentId?: string | null }[]) : CreateLocation[] {
   return locations.map(location => ({
     id: location.id,
-    name: location.label,
+    name: location.label, 
     parentId: location.parentId || null,
     syncStatus: "IMPORTED" as SyncStatus
   }));
@@ -205,16 +205,19 @@ export default function Page() {
     components: boolean;
     phrases: boolean;
     locations: boolean;
+    sections: boolean;
   }>({
     elements: false,
     components: false,
     phrases: false,
     locations: false,
+    sections: false,
   });
   const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
   const [locationsHydrated, locations] = locationStore.useList();
+  const [sectionsHydrated, sections] = sectionStore.useList();
   const [componentData, setComponentData] = useState<ComponentData[]>([]);
   const [phraseData, setPhraseData] = useState<PhraseData[]>([]);
   const [filters, setFilters] = useState<{ [key in EntityType]?: SyncStatus }>({});
@@ -225,6 +228,7 @@ export default function Page() {
     components: true,
     phrases: true,
     locations: true,
+    sections: true,
   });
   const [seedDialog, setSeedDialog] = useState(false);
   const [entitiesToSeed, setEntitiesToSeed] = useState({
@@ -232,6 +236,7 @@ export default function Page() {
     components: false,
     phrases: false,
     locations: true,
+    sections: true,
   });
   const [removeDialog, setRemoveDialog] = useState(false);
   const [entitiesToRemove, setEntitiesToRemove] = useState({
@@ -239,12 +244,14 @@ export default function Page() {
     components: true,
     phrases: true,
     locations: true,
+    sections: true,
   });
 
   // Add counts from JSON files
   const availableCounts = {
     elements: seedElementData.length,
     locations: seedLocationData.length,
+    sections: seedSectionData.length,
     components: 0, // This is derived from bankOfDefects
     phrases: 0, // This is derived from bankOfDefects
   };
@@ -270,113 +277,76 @@ export default function Page() {
     }
   }, [componentData, elements]);
 
-  // Data operations
-  async function removeAllData() {
-    try {
-      setIsLoading(true);
-      await Promise.all([
-        elementStore.removeAll(),
-        componentStore.removeAll(),
-        phraseStore.removeAll(),
-        locationStore.removeAll()
-      ]);
-      toast.success("Successfully removed all data");
-      setComponentData([]);
-      setPhraseData([]);
-    } catch (error) {
-      console.error("Failed to remove data", error);
-      toast.error("Failed to remove data");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function removeEntityData(entityType: EntityType) {
-    try {
-      setIsLoading(true);
-      switch (entityType) {
-        case "elements":
-          await elementStore.removeAll();
-          break;
-        case "components":
-          await componentStore.removeAll();
-          setComponentData([]);
-          break;
-        case "phrases":
-          await phraseStore.removeAll();
-          setPhraseData([]);
-          break;
-        case "locations":
-          await locationStore.removeAll();
-          break;
-      }
-      toast.success(`Successfully removed ${entityType} data`);
-    } catch (error) {
-      console.error(`Failed to remove ${entityType} data`, error);
-      toast.error(`Failed to remove ${entityType} data`);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
   async function seedAllData() {
     try {
       setIsLoading(true);
-      
-      // Clear existing data for selected entities
+
+      // Clear existing data first
       await Promise.all([
         entitiesToSeed.elements && elementStore.removeAll(),
         entitiesToSeed.components && componentStore.removeAll(),
         entitiesToSeed.phrases && phraseStore.removeAll(),
-        entitiesToSeed.locations && locationStore.removeAll()
+        entitiesToSeed.locations && locationStore.removeAll(),
+        entitiesToSeed.sections && sectionStore.removeAll()
       ].filter(Boolean));
 
-      // Seed locations if selected (independent)
-      if (entitiesToSeed.locations) {
-        const preparedLocations = prepareLocationData(seedLocationData);
-        await Promise.all(
-          preparedLocations.map(location => locationStore.add(location))
-        );
+      // Seed sections first since elements depend on them
+      if (entitiesToSeed.sections) {
+        for (const section of seedSectionData) {
+          await sectionStore.add({
+            id: section.id,
+            name: section.name,
+            order: section.order
+          });
+        }
       }
 
-      let newElements: ElementData[] = [];
-      // Seed elements if selected
+      // Seed elements
       if (entitiesToSeed.elements) {
-        const elementTasks = seedElementData.map(async (element) => {
-          const elementWithId = {
-            ...element,
-            id: crypto.randomUUID(),
-          };
-          await elementStore.add(elementWithId);
-          return elementWithId;
-        });
-        newElements = await Promise.all(elementTasks);
-      } else {
-        newElements = elements;
+        for (const element of seedElementData) {
+          await elementStore.add({
+            id: element.id,
+            name: element.name,
+            order: element.order,
+            description: element.description || null,
+            sectionId: element.sectionId || ""
+          });
+        }
       }
 
-      // Only seed components if elements exist
-      if (entitiesToSeed.components && newElements.length > 0) {
-        const newComponents = mapBodToComponentData(bankOfDefects, newElements);
-        await Promise.all(
-          newComponents.map(component => componentStore.add(component))
-        );
-        setComponentData(newComponents);
+      // Seed locations
+      if (entitiesToSeed.locations) {
+        const locationData = prepareLocationData(seedLocationData);
+        for (const location of locationData) {
+          await locationStore.add({
+            id: location.id,
+            name: location.name,
+            parentId: location.parentId || null
+          });
+        }
       }
 
-      // Only seed phrases if both elements and components exist
-      if (entitiesToSeed.phrases && newElements.length > 0 && componentData.length > 0) {
-        const newPhrases = mapBodToPhraseData(bankOfDefects, newElements, componentData);
-        await Promise.all(
-          newPhrases.map(phrase => phraseStore.add(phrase))
-        );
-        setPhraseData(newPhrases);
+      const mappedElements = mapElementsToElementData(seedElementData);
+
+      // Prepare and seed components
+      if (entitiesToSeed.components && elements.length > 0) {
+        const components = mapBodToComponentData(bankOfDefects, mappedElements);
+        for (const component of components) {
+          await componentStore.add(component);
+        }
       }
 
-      setSeedDialog(false);
-      toast.success("Successfully seeded selected data");
+      // Prepare and seed phrases
+      if (entitiesToSeed.phrases && elements.length > 0 && components.length > 0) {
+        const phrases = mapBodToPhraseData(bankOfDefects, mappedElements, components);
+        for (const phrase of phrases) {
+          await phraseStore.add(phrase);
+        }
+      }
+
+      toast.success("Successfully seeded data");
     } catch (error) {
-      console.error("Failed to seed data", error);
+      console.error("Error seeding data:", error);
       toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
@@ -396,6 +366,7 @@ export default function Page() {
         components: entitiesToSync.components,
         phrases: entitiesToSync.phrases,
         locations: entitiesToSync.locations,
+        sections: entitiesToSync.sections,
       });
 
       const syncTasks = [];
@@ -428,6 +399,13 @@ export default function Page() {
           )
         );
       }
+      if (entitiesToSync.sections) {
+        syncTasks.push(
+          sectionStore.syncWithServer().finally(() => 
+            setSyncingEntities(prev => ({ ...prev, sections: false }))
+          )
+        );
+      }
 
       const results = await Promise.all(syncTasks);
 
@@ -448,6 +426,7 @@ export default function Page() {
         components: false,
         phrases: false,
         locations: false,
+        sections: false,
       });
     }
   }
@@ -461,7 +440,8 @@ export default function Page() {
         entitiesToRemove.elements && elementStore.removeAll(),
         entitiesToRemove.components && componentStore.removeAll(),
         entitiesToRemove.phrases && phraseStore.removeAll(),
-        entitiesToRemove.locations && locationStore.removeAll()
+        entitiesToRemove.locations && locationStore.removeAll(),
+        entitiesToRemove.sections && sectionStore.removeAll()
       ].filter(Boolean));
 
       if (entitiesToRemove.components) {
@@ -551,7 +531,8 @@ export default function Page() {
                             elements: !!checked,
                             // Reset dependent entities if elements are unchecked
                             components: !!checked && prev.components,
-                            phrases: !!checked && prev.phrases
+                            phrases: !!checked && prev.phrases,
+                            sections: !!checked && prev.sections
                           }))
                         }
                       />
@@ -569,7 +550,8 @@ export default function Page() {
                             ...prev, 
                             components: !!checked,
                             // Reset phrases if components are unchecked
-                            phrases: !!checked && prev.phrases
+                            phrases: !!checked && prev.phrases,
+                            sections: !!checked && prev.sections
                           }))
                         }
                       />
@@ -604,6 +586,18 @@ export default function Page() {
                         Locations ({locations.length} / {availableCounts.locations} available)
                       </label>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="seed-sections"
+                        checked={entitiesToSeed.sections}
+                        onCheckedChange={(checked) => 
+                          setEntitiesToSeed(prev => ({ ...prev, sections: !!checked }))
+                        }
+                      />
+                      <label htmlFor="seed-sections" className="text-sm font-medium leading-none">
+                        Sections ({sections.length} / {availableCounts.sections} available)
+                      </label>
+                    </div>
                   </div>
                   <div className="flex justify-end gap-4">
                     <Button variant="outline" onClick={() => setSeedDialog(false)}>
@@ -621,7 +615,7 @@ export default function Page() {
               <Button
                 onClick={() => setRemoveDialog(true)}
                 variant="destructive"
-                disabled={isLoading || (elements.length === 0 && components.length === 0 && phrases.length === 0 && locations.length === 0)}
+                disabled={isLoading || (elements.length === 0 && components.length === 0 && phrases.length === 0 && locations.length === 0 && sections.length === 0)}
               >
                 Remove Data
               </Button>
@@ -705,6 +699,19 @@ export default function Page() {
                     />
                     <label htmlFor="locations" className={`text-sm font-medium leading-none ${locations.length === 0 ? 'text-gray-400' : ''}`}>
                       Locations ({locations.length})
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="sections"
+                      checked={entitiesToSync.sections}
+                      disabled={sections.length === 0}
+                      onCheckedChange={(checked) => 
+                        setEntitiesToSync(prev => ({ ...prev, sections: !!checked }))
+                      }
+                    />
+                    <label htmlFor="sections" className={`text-sm font-medium leading-none ${sections.length === 0 ? 'text-gray-400' : ''}`}>
+                      Sections ({sections.length})
                     </label>
                   </div>
                 </div>
@@ -907,6 +914,52 @@ export default function Page() {
                 />
               </div>
             </div>
+
+            <div 
+              className={`p-4 border rounded-lg transition-colors cursor-pointer
+                ${selectedEntity === "sections" ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/10' : 'hover:border-gray-400'}
+              `}
+              onClick={() => handleCardClick("sections")}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-lg font-medium">Sections</h3>
+                  <SyncStatusBadge 
+                    status={sectionsHydrated ? SyncStatus.Synced : "loading"} 
+                    isLoading={syncingEntities.sections || isLoading}
+                  />
+                </div>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Count: {filters.sections ? sections.length : sections.length}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <StatusBadge
+                  status={SyncStatus.Draft}
+                  count={sections.filter(s => s.syncStatus === SyncStatus.Draft).length}
+                  isActive={filters.sections === SyncStatus.Draft}
+                  onClick={() => toggleFilter("sections", SyncStatus.Draft)}
+                />
+                <StatusBadge
+                  status={SyncStatus.Queued}
+                  count={sections.filter(s => s.syncStatus === SyncStatus.Queued).length}
+                  isActive={filters.sections === SyncStatus.Queued}
+                  onClick={() => toggleFilter("sections", SyncStatus.Queued)}
+                />
+                <StatusBadge
+                  status={SyncStatus.Failed}
+                  count={sections.filter(s => s.syncStatus === SyncStatus.Failed).length}
+                  isActive={filters.sections === SyncStatus.Failed}
+                  onClick={() => toggleFilter("sections", SyncStatus.Failed)}
+                />
+                <StatusBadge
+                  status={SyncStatus.Synced}
+                  count={sections.filter(s => s.syncStatus === SyncStatus.Synced).length}
+                  isActive={filters.sections === SyncStatus.Synced}
+                  onClick={() => toggleFilter("sections", SyncStatus.Synced)}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -929,6 +982,7 @@ export default function Page() {
                   selectedEntity === "components" ? filteredComponents :
                   selectedEntity === "phrases" ? filteredPhrases :
                   selectedEntity === "locations" ? filteredLocations :
+                  selectedEntity === "sections" ? sections :
                   []
                 } 
                 style={defaultStyles} 
@@ -994,6 +1048,19 @@ export default function Page() {
                 />
                 <label htmlFor="remove-locations" className={`text-sm font-medium leading-none ${locations.length === 0 ? 'text-gray-400' : ''}`}>
                   Locations ({locations.length})
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="remove-sections"
+                  checked={entitiesToRemove.sections}
+                  disabled={sections.length === 0}
+                  onCheckedChange={(checked) => 
+                    setEntitiesToRemove(prev => ({ ...prev, sections: !!checked }))
+                  }
+                />
+                <label htmlFor="remove-sections" className={`text-sm font-medium leading-none ${sections.length === 0 ? 'text-gray-400' : ''}`}>
+                  Sections ({sections.length})
                 </label>
               </div>
             </div>

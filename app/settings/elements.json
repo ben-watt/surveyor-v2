@@ -1,129 +1,149 @@
 [
-    
   {
+    "id": "foundations-and-substructure",
     "name": "Foundations and Substructure",
-    "description": "",
+    "description": "Traditional strip foundations supporting load-bearing walls. Suspended timber ground floor construction with ventilated sub-floor void. Damp proof course (DPC) visible at base of external walls.",
     "order": 1,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "roof-coverings",
     "name": "Roof Coverings",
-    "description": "",
+    "description": "Gable main roof, covered with traditional slate, cement-fixed concrete ridge tiles and cement verges. Lead flashings are present to the valleys and wall abutments. There is a lower-level mono pitched roof serving the utility area with slate coverings and lead flashings",
     "order": 2,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "chimneys",
     "name": "Chimneys",
-    "description": "",
+    "description": "Brick-built chimney stacks with concrete flaunching, terracotta pots, and lead flashings at roof junction. Multiple flues serving fireplaces on different floor levels.",
     "order": 3,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "rainwater-disposal-system",
     "name": "Rainwater Disposal System",
-    "description": "",
+    "description": "PVC guttering and downpipes fixed to fascia boards. Underground drainage connections to soakaways and main drainage system. Includes hoppers and brackets.",
     "order": 4,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "sofits-and-fascias",
     "name": "Sofits and Fascias",
-    "description": "",
+    "description": "UPVC soffit and fascia boards with ventilation slots. Includes barge boards to gable ends and decorative features where present.",
     "order": 5,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "main-walls",
     "name": "Main Walls",
-    "description": "",
+    "description": "Solid brick construction with cavity wall to more recent extensions. Includes pointing, render where present, and decorative features such as string courses and corbelling.",
     "order": 6,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "windows-and-doors",
     "name": "Windows and Doors",
-    "description": "",
+    "description": "Mix of UPVC double-glazed windows and traditional wooden sash windows. External doors include main entrance door, rear access, and French doors where present. Includes frames, glazing, and security features.",
     "order": 7,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "roof-structure",
     "name": "Roof Structure",
-    "description": "",
+    "description": "Traditional timber roof trusses with purlins and rafters. Includes roof void insulation, ventilation, and structural timbers supporting roof coverings.",
     "order": 8,
-    "section": "External Condition of Property"
+    "sectionId": "external-condition-of-property"
   },
   {
+    "id": "ceilings",
     "name": "Ceilings",
-    "description": "",
+    "description": "Mixture of lath and plaster and plasterboard ceilings. Includes cornicing, ceiling roses, and access hatches where present. Various heights and finishes throughout property.",
     "order": 9,
-    "section": "Internal Condition of Property"
+    "sectionId": "internal-condition-of-property"
   },
   {
+    "id": "walls-and-partitions",
     "name": "Walls and Partitions",
-    "description": "",
+    "description": "Mix of solid masonry and timber stud partitions with plasterboard finish. Includes wall tiles in wet areas, picture rails, and dado rails where present.",
     "order": 10,
-    "section": "Internal Condition of Property"
+    "sectionId": "internal-condition-of-property"
   },
   {
+    "id": "floors",
     "name": "Floors",
-    "description": "",
+    "description": "Combination of suspended timber floors and solid concrete construction. Various floor finishes including carpets, tiles, and timber boards. Includes underfloor access where present.",
     "order": 11,
-    "section": "Internal Condition of Property"
+    "sectionId": "internal-condition-of-property"
   },
   {
+    "id": "internal-joinery",
     "name": "Internal Joinery",
-    "description": "",
+    "description": "Internal doors, architraves, skirting boards, and built-in storage units. Includes staircases, handrails, and balustrades where present.",
     "order": 12,
-    "section": "Internal Condition of Property"
+    "sectionId": "internal-condition-of-property"
   },
   {
+    "id": "sanitaryware-and-kitchen",
     "name": "Sanitaryware & Kitchen",
-    "description": "",
+    "description": "Bathroom suites including WCs, basins, baths, and shower enclosures. Kitchen units, worktops, and integrated appliances where present. Includes all associated plumbing fixtures.",
     "order": 13,
-    "section": "Internal Condition of Property"
+    "sectionId": "internal-condition-of-property"
   },
   {
+    "id": "fireplaces",
     "name": "Fireplaces",
-    "description": "",
+    "description": "Original and converted fireplaces, including surrounds, hearths, and flues. Gas fire points and electric fire installations where present.",
     "order": 14,
-    "section": "Internal Condition of Property"
+    "sectionId": "internal-condition-of-property"
   },
   {
+    "id": "cellar",
     "name": "Cellar",
-    "description": "",
+    "description": "Below-ground storage area with masonry walls and concrete floor. Includes access stairs, lighting, ventilation, and any tanking systems present.",
     "order": 15,
-    "section": "Internal Condition of Property"
+    "sectionId": "internal-condition-of-property"
   },
   {
+    "id": "electrical-installation",
     "name": "Electrical Installation",
-    "description": "",
+    "description": "Consumer unit, wiring system, power outlets, and lighting circuits. Includes external power points, security lighting, and any supplementary electrical installations.",
     "order": 16,
-    "section": "Services"
+    "sectionId": "services"
   },
   {
+    "id": "gas-installations",
     "name": "Gas Installations",
-    "description": "",
+    "description": "Gas meter, supply pipework, and distribution system. Includes gas appliance connections and safety devices. All installations comply with current Gas Safety regulations.",
     "order": 17,
-    "section": "Services"
+    "sectionId": "services"
   },
   {
+    "id": "cold-water-supply",
     "name": "Cold Water Supply",
-    "description": "",
+    "description": "Mains water supply, stop cock, internal distribution pipework, and storage tanks where present. Includes insulation and frost protection measures.",
     "order": 18,
-    "section": "Services"
+    "sectionId": "services"
   },
   {
+    "id": "hot-water-supply-heating-installations",
     "name": "Hot Water Supply / Heating Installations",
-    "description": "",
+    "description": "Boiler system, hot water cylinder, heating controls, and radiator circuit. Includes programmers, thermostats, and zone control valves.",
     "order": 19,
-    "section": "Services"
+    "sectionId": "services"
   },
   {
+    "id": "surface-water-and-soil-drainage",
     "name": "Surface water & Soil drainage",
-    "description": "",
+    "description": "Underground drainage system including inspection chambers, gullies, and connection to main sewer. Surface water drainage including soakaways and land drainage where present.",
     "order": 20,
-    "section": "Services"
+    "sectionId": "services"
   },
   {
+    "id": "boundaries-fencing-drives-lawn",
     "name": "Boundaries, Fencing, Drives, Lawn, etc",
-    "description": "",
+    "description": "Property boundaries marked by fencing, walls, or hedges. Includes driveways, paths, patios, and landscaped areas. Garden features such as sheds, greenhouses, and external storage.",
     "order": 21,
-    "section": "Grounds (External Areas)"
+    "sectionId": "grounds"
   }
 ]

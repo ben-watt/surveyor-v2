@@ -1,9 +1,6 @@
 "use client";
 
-import client from "@/app/clients/AmplifyDataClient";
-import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
-import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   DropdownMenu,
@@ -14,22 +11,29 @@ import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/components/DataTable";
-import { useAsyncArrayState } from "../hooks/useAsyncState";
-import { SelectionSet } from "aws-amplify/api";
 import { useRouter } from "next/navigation";
-
-type ElementData = Schema["Elements"]["type"];
-const selectionSet = ["id", "name", "order", "createdAt", "components.id"] as const;
-type SelectedElementData = SelectionSet<ElementData, typeof selectionSet>;
+import { componentStore, elementStore, sectionStore } from "../clients/Database";
+import { Element as ElementData } from "../clients/Dexie";
 
 export default function Page() {
   const router = useRouter();
-  const [isLoading, elementData, setElementData] = useAsyncArrayState(fetchReports);
+  const [elementsHydrated, elements] = elementStore.useList();
+  const [componentsHydrated, components] = componentStore.useList();
+  const [sectionsHydrated, sections] = sectionStore.useList();
 
-  const columns: ColumnDef<SelectedElementData>[] = [
+  const columns: ColumnDef<ElementData>[] = [
     {
       header: "Name",
       accessorKey: "name",
+    },
+    {
+      header: "Section",
+      accessorKey: "sectionId",
+      cell: (props) => {
+        const sectionId = props.getValue() as string;
+        const section = sections.find(s => s.id === sectionId);
+        return section ? section.name : "Unknown";
+      }
     },
     {
       id: "order",
@@ -45,7 +49,7 @@ export default function Page() {
     {
       id: "component count",
       header: "Component Count",
-      accessorFn: (v) => v.components.length, 
+      accessorFn: (v) => components.filter(c => c.elementId === v.id).length, 
       meta: {
         tw: {
           headerClassName: "text-right",
@@ -94,27 +98,10 @@ export default function Page() {
     },
   ];
 
-  async function fetchReports() {
-    try {
-      const response = await client.models.Elements.list({
-        selectionSet: selectionSet,
-      });
-      if (response.data) {
-        return response.data;
-      }
-      return [];
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   function deleteFn(id: string): void {
     async function deleteAsync() {
       try {
-        const response = await client.models.Elements.delete({ id });
-        if (!response.errors && response.data != null) {
-          setElementData(elementData.filter((r) => r.id !== id));
-        }
+        await elementStore.remove(id);
       } catch (error) {
         console.error(error);
       }
@@ -134,8 +121,8 @@ export default function Page() {
       <DataTable
         initialState={{ sorting: [{ id: "order", desc: false }] }}
         columns={columns}
-        data={elementData}
-        isLoading={isLoading}
+        data={elements}
+        isLoading={elementsHydrated && componentsHydrated && sectionsHydrated}
         onCreate={() => router.push("/elements/create")}
       />
     </div>
