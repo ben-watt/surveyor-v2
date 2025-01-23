@@ -11,6 +11,7 @@ import { PrimaryBtn } from "@/app/components/Buttons";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DynamicDrawer } from "@/app/components/Drawer";
+import { Button } from "@/components/ui/button";
 
 function isInputT<T>(input: any): input is Input<T> {
   return input.type !== undefined;
@@ -123,7 +124,7 @@ const PropertyDescriptionForm = ({
               return null;
             }
           })}
-        <PrimaryBtn type="submit">Save</PrimaryBtn>
+        <Button variant="default" className="w-full mt-2" type="submit">Save</Button>
       </form>
     </FormProvider>
   );
