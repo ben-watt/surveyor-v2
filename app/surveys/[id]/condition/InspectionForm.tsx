@@ -252,7 +252,7 @@ export default function InspectionForm({
           components: [],
           id: data.element.id,
           isPartOfSurvey: true,
-          description: "",
+          description: elements.find(e => e.id === data.element.id)?.description || "",
           images: [],
         } as ElementSection;
         surveySection.elementSections.push(elementSection);

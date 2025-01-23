@@ -1,9 +1,8 @@
 "use client";
 
 import { FormSection } from "@/app/components/FormSection";
-import { useForm, UseFormRegister } from "react-hook-form";
 import { ElementSection, SurveySection } from "../../building-survey-reports/BuildingSurveyReportSchema";
-import { componentStore, surveyStore } from "@/app/clients/Database";
+import { surveyStore } from "@/app/clients/Database";
 import { ClipboardList, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -106,7 +105,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
         ))}
         <div className="space-y-2">
         <Button className="w-full" variant="default" onClick={onStartNewInspection}>
-          Inspect Item
+          Inspect Component
         </Button>
         </div>
     </div>

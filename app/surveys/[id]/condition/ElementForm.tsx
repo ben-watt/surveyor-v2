@@ -11,7 +11,7 @@ import { useDynamicDrawer } from "@/app/components/Drawer";
 import toast from "react-hot-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import InspectionForm from "./InspectionForm";
-import { Edit } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 
 type ElementFormData = {
   description: string;
@@ -86,6 +86,38 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
     toast.success("Element details saved");
   };
 
+  const handleRemoveComponent = async (componentId: string) => {
+    try {
+      await surveyStore.update(surveyId, (survey) => {
+        const surveySection = survey.content.sections.find(section => section.name === sectionName);
+        if (!surveySection) return survey;
+
+        const elementSection = surveySection.elementSections.find(
+          (element: ElementSection) => element.id === elementId
+        );
+        if (!elementSection) return survey;
+
+        elementSection.components = elementSection.components.filter(
+          component => component.id !== componentId
+        );
+
+        return survey;
+      });
+
+      // Update local state to reflect the removal
+      if (elementData) {
+        setElementData({
+          ...elementData,
+          components: elementData.components.filter(component => component.id !== componentId)
+        });
+      }
+
+      toast.success("Component removed successfully");
+    } catch (error) {
+      toast.error("Failed to remove component");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -135,22 +167,34 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
                   }`} />
                   <span className="text-sm truncate" >{component.useNameOverride ? component.nameOverride : component.name}</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    drawer.openDrawer({
-                      title: `Inspect Component - ${component.name}`,
-                      description: `Inspect the ${component.name} component`,
-                      content: <InspectionForm
-                        surveyId={surveyId}
-                        componentId={component.id}
-                      />
-                    });
-                  }}
-                >
-                  <Edit  className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      drawer.openDrawer({
+                        title: `Inspect Component - ${component.name}`,
+                        description: `Inspect the ${component.name} component`,
+                        content: <InspectionForm
+                          surveyId={surveyId}
+                          componentId={component.id}
+                        />
+                      });
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-red-500 hover:text-red-700"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRemoveComponent(component.id);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             ))}
             {(!elementData?.components || elementData.components.length === 0) && (
