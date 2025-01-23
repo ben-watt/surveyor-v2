@@ -72,8 +72,11 @@ interface RhfInputImageProps extends InputImageProps {
 }
 
 // 4. Extract server configuration to a separate function for better readability
-const createServerConfig = ({ path }: CreateServerConfigProps) => {
-    const { queueUpload } = useImageUpload();
+const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfigProps & {
+    initialFiles: FilePondInitialFile[];
+    onCancel: (uploadId: string) => Promise<boolean>;
+}) => {
+    const { queueUpload, cancelUpload } = useImageUpload();
 
     return {
         process: ((fieldName, file, metadata, load, error, progress, abort) => {
@@ -91,6 +94,8 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => {
             });
 
             uploadTask.then((id) => {
+                // Store the upload ID in the file metadata
+                metadata.uploadId = id;
                 load(file.name);
                 console.debug("[FilePond Process] Upload queued:", id);
             }).catch((err) => {
@@ -100,7 +105,14 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => {
 
             return {
                 abort: () => {
-                    // TODO: Implement abort for queued uploads
+                    // If we have an upload ID, try to cancel it
+                    if (metadata.uploadId) {
+                        cancelUpload(metadata.uploadId).then((cancelled) => {
+                            if (cancelled) {
+                                console.debug("[FilePond Process] Upload cancelled:", metadata.uploadId);
+                            }
+                        });
+                    }
                     abort();
                 }
             }
@@ -162,15 +174,37 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => {
         revert: null,
         remove: ((source, load, error) => {
             console.debug("[FilePond Remove] Removing file:", source);
-            remove({
-                path: source,
-            }).then(() => {
-                load();
-                console.debug("[FilePond Remove] File deleted:", source);
-            }).catch((err) => {
-                console.error("[FilePond Err] Failed to delete file:", err);
-                error('Failed to delete file');
-            })
+            
+            // First check if this is a queued upload that needs to be cancelled
+            const metadata = initialFiles.find((f: FilePondInitialFile) => 
+                f.source === source || f.options?.file?.name === source
+            )?.options?.metadata;
+
+            if (metadata?.uploadId) {
+                // This is a queued upload, cancel it
+                onCancel(metadata.uploadId).then((cancelled) => {
+                    if (cancelled) {
+                        load();
+                        console.debug("[FilePond Remove] Upload cancelled:", metadata.uploadId);
+                    } else {
+                        error('Failed to cancel upload');
+                    }
+                }).catch((err) => {
+                    console.error("[FilePond Err] Failed to cancel upload:", err);
+                    error('Failed to cancel upload');
+                });
+            } else {
+                // This is a remote file, remove it from S3
+                remove({
+                    path: source,
+                }).then(() => {
+                    load();
+                    console.debug("[FilePond Remove] File deleted:", source);
+                }).catch((err) => {
+                    console.error("[FilePond Err] Failed to delete file:", err);
+                    error('Failed to delete file');
+                });
+            }
         }) as RemoveServerConfigFunction
     };
 };
@@ -184,6 +218,7 @@ export const InputImage = ({
     maxNumberOfFiles = 10
 }: InputImageProps) => {
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
+    const { cancelUpload } = useImageUpload();
 
     useEffect(() => {
         const loadInitialFiles = async (): Promise<void> => {
@@ -307,6 +342,13 @@ export const InputImage = ({
                 if (typeof file.source === 'string' && file.source.startsWith('blob:')) {
                     URL.revokeObjectURL(file.source);
                 }
+
+                // Try to cancel upload if it's still pending
+                const uploadId = file.getMetadata('uploadId');
+                if (uploadId) {
+                    cancelUpload(uploadId).catch(console.error);
+                }
+
                 setInitialFiles(prev => prev.filter(f => {
                     if (typeof f.source === 'string') {
                         return f.source !== file.source;
@@ -325,7 +367,11 @@ export const InputImage = ({
                 
                 onChange?.(fileSources);
             }}
-            server={createServerConfig({ path })}
+            server={createServerConfig({ 
+                path,
+                initialFiles,
+                onCancel: cancelUpload
+            })}
             files={initialFiles}
             labelTapToRetry="Tap to retry upload"
             labelFileProcessing="Uploading..."

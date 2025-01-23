@@ -44,7 +44,23 @@ export function useImageUpload() {
     return id;
   }, []);
 
-  return { queueUpload };
+  const cancelUpload = useCallback(async (id: string) => {
+    try {
+      const upload = await db.imageUploads.get(id);
+      if (upload) {
+        // If the upload is in progress in the service worker, we can't really stop it
+        // But we can remove it from the queue if it hasn't started yet
+        await db.imageUploads.delete(id);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to cancel upload:', error);
+      return false;
+    }
+  }, []);
+
+  return { queueUpload, cancelUpload };
 }
 
 async function handleFallbackUpload(id: string, onProgress?: (progress: number) => void) {
