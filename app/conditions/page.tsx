@@ -31,10 +31,6 @@ export default function Page() {
       accessorKey: "name",
     },
     {
-        header: "Type",
-        accessorKey: "type",
-      },
-    {
         header: "Phrase",
         accessorKey: "phrase",
         cell: (props) => {
@@ -66,7 +62,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`phrases/${id}`}>
+              <Link href={`conditions/${id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
             </DropdownMenuContent>
@@ -80,11 +76,11 @@ export default function Page() {
     <div>
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
-          <h1 className="text-3xl dark:text-white">Phrases</h1>
-          <p className="text-sm text-muted-foreground">Phrases are used to generate standard text for surveys and can be used for Conditions or Defects.</p>
+          <h1 className="text-3xl dark:text-white">Conditions</h1>
+          <p className="text-sm text-muted-foreground">Conditions are used to generate standard text for surveys.</p>
         </div>
       </div>
-      <DataTable columns={columns} data={phrases} onCreate={() => router.push("/phrases/create")} />
+      <DataTable columns={columns} data={phrases} onCreate={() => router.push("/conditions/create")} />
     </div>
   );
 }

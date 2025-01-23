@@ -128,7 +128,7 @@ export function DataTable<TData>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className={header.column.columnDef.meta?.tw.headerClassName}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(

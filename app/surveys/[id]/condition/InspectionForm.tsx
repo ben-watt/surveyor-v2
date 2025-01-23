@@ -24,7 +24,7 @@ import ElementForm from "./ElementForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataForm as ElementDataForm } from "@/app/elements/form";
 import { DataForm as ComponentDataForm } from "@/app/building-components/form";
-import { DataForm as PhraseDataForm } from "@/app/phrases/form";
+import { DataForm as PhraseDataForm } from "@/app/conditions/form";
 import Input from "@/app/components/Input/InputText";
 import { Survey } from "@/app/clients/Dexie";
 import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-survey-reports/Survey";
@@ -101,7 +101,7 @@ export default function InspectionForm({
 
     if (componentId && survey) {
       const { component, elementSection, sectionName } = findComponent(survey, componentId);
-      
+
       if (component && elementSection && sectionName) {
         let restoredValues = {
           location: component.location || "",

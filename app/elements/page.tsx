@@ -35,11 +35,23 @@ export default function Page() {
       id: "order",
       header: ({ column }) => <SortableHeader column={column} header="Order" />,
       accessorFn: (v) => (v.order ? v.order : 0),
+      meta: {
+        tw: {
+          headerClassName: "text-right",
+          cellClassName: "text-right",
+        },
+      },
     },
     {
       id: "component count",
       header: "Component Count",
-      accessorFn: (v) => v.components.length,
+      accessorFn: (v) => v.components.length, 
+      meta: {
+        tw: {
+          headerClassName: "text-right",
+          cellClassName: "text-right",
+        },
+      },
     },
     {
       id: "created",

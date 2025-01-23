@@ -50,14 +50,9 @@ const configurationNavData = {
       icon: SquareTerminal,
     },
     {
-      title: "Phrases",
-      url: "/phrases",
+      title: "Conditions",
+      url: "/conditions",
       icon: Bot,
-    },
-    {
-      title: "Locations",
-      url: "/locations",
-      icon: MapPin,
     },
     {
       title: "Settings",
