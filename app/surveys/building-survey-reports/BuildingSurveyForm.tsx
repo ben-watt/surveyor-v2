@@ -266,66 +266,26 @@ function Report({ initFormValues }: ReportProps) {
     defaultValues: initFormValues,
   });
 
-  const { handleSubmit, watch, formState } = methods;
+  const { handleSubmit, formState } = methods;
 
   const router = useRouter();
 
-  // useDebouncedEffect(
-  //   () => {
-  //     const autoSave = async () => {
-  //       await db.surveys.upsert(
-  //         {
-  //           id: initFormValues.id,
-  //           content: JSON.stringify(allFields),
-  //         },
-  //         { localOnly: true }
-  //       );
-
-  //       toast.success("Autosaved");
-  //     };
-
-  //     if (formState.isDirty) {
-  //       autoSave();
-  //     }
-  //   },
-  //   [allFields],
-  //   10000
-  // );
-
-  const saveAsDraft = async () => {
-    try {
-      let form = watch();
-
-      form.status = "draft";
-      surveyStore.add({
-        id: form.id,
-        content: form,
-      });
-
-      toast.success("Saved as Draft");
-
-      router.push("/surveys");
-    } catch (error) {
-      toast.error("Failed to save report");
-      console.error(error);
-    }
+  const saveAsDraft = async (ev: React.FormEvent<HTMLButtonElement>) => {
+    ev.preventDefault();
+    console.log("[BuildingSurveyForm] saveAsDraft", methods.getValues());
+    toast.success("Saved As Draft");
+    router.push("/surveys");
   };
 
   const onSubmit = async () => {
-    // try {
-    //   let form = watch();
-    //   form.status = "created";
-    //   console.log("[BuildingSurveyForm]", "Submitting form", form);
-    //   let _ = await db.surveys.upsert({
-    //     id: form.id,
-    //     content: JSON.stringify(form),
-    //   });
-    //   toast.success("Survey Saved");
-    //   router.push("/surveys");
-    // } catch (error) {
-    //   toast.error("Failed to save report");
-    //   console.error(error);
-    // }
+    console.log("[BuildingSurveyForm] onSubmit", methods.getValues());
+    
+    surveyStore.update(initFormValues.id, (survey) => {
+      survey.status = "created";
+    });
+
+    toast.success("Saved");
+    router.push("/surveys");
   };
 
   const onError = (errors: any) => {
