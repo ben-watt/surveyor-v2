@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
+import { AddressDisplay } from "@/app/components/Address/AddressDisplay";
 
 import { v4 } from "uuid";
 
@@ -23,6 +24,11 @@ import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
 import { surveyStore } from "@/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type TableData = BuildingSurveyFormData;
 
@@ -70,6 +76,10 @@ function HomePage() {
       {
         header: "Address",
         accessorKey: "reportDetails.address.formatted",
+        cell: (props) => {
+          const address = props.getValue() as string;
+          return <AddressDisplay address={address} />;
+        },
       },
       {
         header: "Owner",
