@@ -34,7 +34,7 @@ export default function SectionForm({ initialData }: SectionFormProps) {
       } else {
         await client.models.Sections.create(data);
       }
-      router.push("/elements/sections");
+      router.push("/sections");
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -65,16 +65,9 @@ export default function SectionForm({ initialData }: SectionFormProps) {
         />
       </div>
 
-      <div className="flex gap-2">
-        <Button type="submit">
+      <div>
+        <Button className="w-full" variant="default" type="submit">
           {initialData ? "Update" : "Create"} Section
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => router.push("/elements/sections")}
-        >
-          Cancel
         </Button>
       </div>
     </form>

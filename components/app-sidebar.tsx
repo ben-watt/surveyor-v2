@@ -6,6 +6,7 @@ import {
   Bot,
   Frame,
   GalleryVerticalEnd,
+  Layers,
   MapPin,
   Settings2,
   SquareTerminal,
@@ -40,9 +41,9 @@ const applicationNavData = {
 const configurationNavData = {
   items: [
     {
-      title: "Components",
-      url: "/building-components",
-      icon: Frame,
+      title: "Sections",
+      url: "/sections",
+      icon: Layers,
     },
     {
       title: "Elements",
@@ -50,10 +51,16 @@ const configurationNavData = {
       icon: SquareTerminal,
     },
     {
+      title: "Components",
+      url: "/building-components",
+      icon: Frame,
+    },
+    {
       title: "Conditions",
       url: "/conditions",
       icon: Bot,
     },
+
     {
       title: "Settings",
       url: "/settings",
