@@ -27,6 +27,15 @@ export type Phrase = Schema['Phrases']['type'];
 export type Location = Schema['Locations']['type'];
 export type Section = Omit<Schema['Sections']['type'], "elements">;
 
+export interface ImageUpload extends TableEntity {
+  id: string;
+  file: Blob;
+  path: string;
+  metadata?: Record<string, string>;
+  updatedAt: string;
+  syncStatus: string;
+  syncError?: string;
+}
 
 type TableEntity = {
   id: string;
@@ -172,6 +181,7 @@ const db = new Dexie('Surveys') as Dexie & {
   phrases: EntityTable<Phrase, "id">;
   locations: EntityTable<Location, "id">;
   sections: EntityTable<Section, "id">;
+  imageUploads: EntityTable<ImageUpload, "id">;
 };
 
 db.version(1).stores({
@@ -181,6 +191,7 @@ db.version(1).stores({
   phrases: '&id, updatedAt, syncStatus',
   locations: '&id, updatedAt, syncStatus',
   sections: '&id, updatedAt, syncStatus',
+  imageUploads: '&id, path, updatedAt, syncStatus',
 });
 
 

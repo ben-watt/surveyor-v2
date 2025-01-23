@@ -35,6 +35,9 @@ import 'filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css';
 
 // Utils
 import { join } from 'path';
+import { useImageUpload } from '@/app/hooks/useImageUpload';
+import { db } from '@/app/clients/Dexie';
+import { ImageUpload } from '@/app/clients/Dexie';
 
 // 2. Register plugins at the top level
 registerPlugin(
@@ -53,13 +56,13 @@ interface InputImageProps {
     maxNumberOfFiles?: number;
 }
 
-interface InputImagePropsWithRegister extends InputImageProps {
-    rhfProps: UseControllerProps<FieldValues>;
-    labelText?: string;
-}
-
 interface CreateServerConfigProps {
     path: string;
+}
+
+// Add this type near other interfaces
+interface ExtendedImageUpload extends ImageUpload {
+    progress?: number;
 }
 
 // Add this type near other interfaces
@@ -69,42 +72,81 @@ interface RhfInputImageProps extends InputImageProps {
 }
 
 // 4. Extract server configuration to a separate function for better readability
-const createServerConfig = ({ path }: CreateServerConfigProps) => ({
-    process: ((fieldName, file, metadata, load, error, progress, abort) => {
-        console.debug("[FilePond Process] Uploading file:", file);
+const createServerConfig = ({ path }: CreateServerConfigProps) => {
+    const { queueUpload } = useImageUpload();
 
-        const uploadTask = uploadData({
-            data: file, 
-            path: join(path, file.name),
-            options: {
-                onProgress: (p: TransferProgressEvent) => {
-                    progress(true, p.transferredBytes, Math.floor(p.totalBytes || 0))
-                },
+    return {
+        process: ((fieldName, file, metadata, load, error, progress, abort) => {
+            console.debug("[FilePond Process] Uploading file:", file);
+
+            const uploadTask = queueUpload(file, {
+                path: join(path, file.name),
                 metadata: {
                     ...metadata,
                     filename: file.name
+                },
+                onProgress: (percentage) => {
+                    progress(true, percentage, 100);
                 }
-            },
-        });
+            });
 
-        uploadTask.result.then((uploadedFile) => {
-            load(file.name);
-            console.debug("[FilePond Process] Upload successful:", uploadedFile);
-        });
+            uploadTask.then((id) => {
+                load(file.name);
+                console.debug("[FilePond Process] Upload queued:", id);
+            }).catch((err) => {
+                error('Failed to queue upload');
+                console.error("[FilePond Process] Upload failed:", err);
+            });
 
-        return {
-            abort: () => {
-                uploadTask.cancel("Upload cancelled");
-                abort();
+            return {
+                abort: () => {
+                    // TODO: Implement abort for queued uploads
+                    abort();
+                }
             }
-        }
-    }) as ProcessServerConfigFunction,
-    load: ((source, load, error, progress, abort, headers) => {
-        try {
-            getUrl({ path: source })
-            .then(({ url }) => {
-                const finalUrl = source.includes('amazonaws.com') ? source : url.href;
-                fetch(finalUrl)
+        }) as ProcessServerConfigFunction,
+        load: ((source, load, error, progress, abort, headers) => {
+            try {
+                getUrl({ path: source })
+                .then(({ url }) => {
+                    const finalUrl = source.includes('amazonaws.com') ? source : url.href;
+                    fetch(finalUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response;
+                    })
+                    .then((response) => {
+                        response.blob().then((value) => load(value));
+                    });
+                });
+            } catch (err) {
+                console.error("[Load Err] Could not load image:", err);
+                error('Could not load image');
+            }
+        }) as LoadServerConfigFunction,
+        restore: ((uniqueFileId, load, error, progress, abort, headers) => {
+            console.debug("[FilePond Restore] Restoring file:", uniqueFileId);
+            try {
+                getUrl({ path: uniqueFileId })
+                .then(({ url }) => {
+                    fetch(url.href)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response;
+                    })
+                    .then((response) => {
+                        response.blob().then((value) => load(value as File));
+                    });
+                });
+            } catch (err) {
+                console.error("[Restore Err] Could not restore file:", err);
+                error('Could not restore file');
+            }
+        }) as RestoreServerConfigFunction,
+        fetch: ((url, load, error, progress, abort, headers) => {
+            console.debug("[FilePond Fetch] Fetching file:", url);
+            try {
+                fetch(url)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
                     return response;
@@ -112,61 +154,26 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => ({
                 .then((response) => {
                     response.blob().then((value) => load(value));
                 });
-            });
-        } catch (err) {
-            console.error("[Load Err] Could not load image:", err);
-            error('Could not load image');
-        }
-    }) as LoadServerConfigFunction,
-    restore: ((uniqueFileId, load, error, progress, abort, headers) => {
-        console.debug("[FilePond Restore] Restoring file:", uniqueFileId);
-        try {
-            getUrl({ path: uniqueFileId })
-            .then(({ url }) => {
-                fetch(url.href)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response;
-                })
-                .then((response) => {
-                    response.blob().then((value) => load(value as File));
-                });
-            });
-        } catch (err) {
-            console.error("[Restore Err] Could not restore file:", err);
-            error('Could not restore file');
-        }
-    }) as RestoreServerConfigFunction,
-    fetch: ((url, load, error, progress, abort, headers) => {
-        console.debug("[FilePond Fetch] Fetching file:", url);
-        try {
-            fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response;
+            } catch (err) {
+                console.error("[Fetch Err] Could not fetch file:", err);
+                error('Could not fetch file');
+            }
+        }) as FetchServerConfigFunction,
+        revert: null,
+        remove: ((source, load, error) => {
+            console.debug("[FilePond Remove] Removing file:", source);
+            remove({
+                path: source,
+            }).then(() => {
+                load();
+                console.debug("[FilePond Remove] File deleted:", source);
+            }).catch((err) => {
+                console.error("[FilePond Err] Failed to delete file:", err);
+                error('Failed to delete file');
             })
-            .then((response) => {
-                response.blob().then((value) => load(value));
-            });
-        } catch (err) {
-            console.error("[Fetch Err] Could not fetch file:", err);
-            error('Could not fetch file');
-        }
-    }) as FetchServerConfigFunction,
-    revert: null,
-    remove: ((source, load, error) => {
-        console.debug("[FilePond Remove] Removing file:", source);
-        remove({
-            path: source,
-        }).then(() => {
-            load();
-            console.debug("[FilePond Remove] File deleted:", source);
-        }).catch((err) => {
-            console.error("[FilePond Err] Failed to delete file:", err);
-            error('Failed to delete file');
-        })
-    }) as RemoveServerConfigFunction
-});
+        }) as RemoveServerConfigFunction
+    };
+};
 
 // 5. Export the component
 export const InputImage = ({ 
@@ -177,18 +184,29 @@ export const InputImage = ({
     maxNumberOfFiles = 10
 }: InputImageProps) => {
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
+
     useEffect(() => {
         const loadInitialFiles = async (): Promise<void> => {
             console.debug("[FilePond] loadInitialFiles");
             try {
+                // Load remote files from S3
                 const trailingPath = path.endsWith('/') ? path : path + '/';
                 const { items } = await list({
                     path: trailingPath,
                     options: { listAll: true }
                 });
 
+                // Load local pending uploads from IndexedDB
+                const pendingUploads = await db.imageUploads
+                    .where('path')
+                    .startsWith(trailingPath)
+                    .toArray() as ExtendedImageUpload[];
+
+                const files: FilePondInitialFile[] = [];
+
+                // Add remote files
                 if (items.length > 0) {
-                    const loadedFiles = await Promise.all(
+                    const remoteFiles = await Promise.all(
                         items.map(async (item) => {
                             const filename = item.path.split('/').pop() || '';
                             const { url } = await getUrl({ path: item.path });
@@ -198,7 +216,8 @@ export const InputImage = ({
                                     type: 'local' as const,
                                     metadata: {
                                         filename,
-                                        poster: url.href
+                                        poster: url.href,
+                                        status: 'synced'
                                     },
                                     file: {
                                         name: filename,
@@ -209,12 +228,46 @@ export const InputImage = ({
                             };
                         })
                     );
-                    setInitialFiles(loadedFiles);
-                    onChange?.(loadedFiles.map(file => file.options.metadata.filename));
-                } else {
-                    setInitialFiles([]);
-                    onChange?.([]);
+                    files.push(...remoteFiles);
                 }
+
+                // Add pending uploads
+                if (pendingUploads.length > 0) {
+                    const pendingFiles = await Promise.all(pendingUploads.map(async (upload) => {
+                        // Convert Blob to object URL for FilePond
+                        const objectUrl = URL.createObjectURL(upload.file);
+                        return {
+                            source: objectUrl,
+                            options: {
+                                type: 'local' as const,
+                                metadata: {
+                                    ...upload.metadata,
+                                    status: upload.syncStatus,
+                                    error: upload.syncError,
+                                    progress: upload.progress,
+                                    originalFile: upload.file // Store original file for later use
+                                },
+                                file: {
+                                    name: upload.path.split('/').pop() || '',
+                                    size: (upload.file as File).size,
+                                    type: 'image/*'
+                                }
+                            }
+                        };
+                    }));
+                    files.push(...pendingFiles);
+                }
+
+                setInitialFiles(files);
+                const validFileSources = files
+                    .map(file => {
+                        if (typeof file.source === 'string') return file.source;
+                        const name = file.options?.file?.name;
+                        return name || null;
+                    })
+                    .filter((source): source is string => source !== null);
+                
+                onChange?.(validFileSources);
             } catch (error) {
                 console.error('[InputImage] Error loading files:', error);
                 setInitialFiles([]);
@@ -223,6 +276,15 @@ export const InputImage = ({
         };
 
         loadInitialFiles();
+
+        // Cleanup object URLs on unmount
+        return () => {
+            initialFiles.forEach(file => {
+                if (typeof file.source === 'string' && file.source.startsWith('blob:')) {
+                    URL.revokeObjectURL(file.source);
+                }
+            });
+        };
     }, [onChange, path]);
 
     return (
@@ -241,7 +303,17 @@ export const InputImage = ({
             imageResizeMode="force"
             credits={false}
             onremovefile={(err, file) => {
-                setInitialFiles(prev => prev.filter(f => f.source !== file.source));
+                // Cleanup object URL if it exists
+                if (typeof file.source === 'string' && file.source.startsWith('blob:')) {
+                    URL.revokeObjectURL(file.source);
+                }
+                setInitialFiles(prev => prev.filter(f => {
+                    if (typeof f.source === 'string') {
+                        return f.source !== file.source;
+                    }
+                    const name = f.options?.file?.name;
+                    return name ? name !== file.filename : false;
+                }));
             }}
             onupdatefiles={(files) => {
                 console.debug("[FilePond] onupdatefiles", files);
@@ -249,13 +321,18 @@ export const InputImage = ({
                     typeof file.serverId === 'string' ? file.serverId :
                     typeof file.source === 'string' ? file.source :
                     file.filename
-                );
+                ).filter((source): source is string => source !== undefined);
                 
                 onChange?.(fileSources);
             }}
             server={createServerConfig({ path })}
             files={initialFiles}
-            labelFileProcessingError={(error) => error?.body || 'Upload failed'}
+            labelTapToRetry="Tap to retry upload"
+            labelFileProcessing="Uploading..."
+            labelFileProcessingComplete="Upload complete"
+            labelFileProcessingAborted="Upload cancelled"
+            labelFileLoadError="Error loading file"
+            labelFileProcessingError={(error) => error?.body || 'Upload failed, tap to retry'}
         />
     );
 };
