@@ -27,6 +27,7 @@ import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/phrases/form";
 import Input from "@/app/components/Input/InputText";
 import { Survey } from "@/app/clients/Dexie";
+import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-survey-reports/Survey";
 
 import { Phrase } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
@@ -99,36 +100,29 @@ export default function InspectionForm({
     if (!isHydrated) return;
 
     if (componentId && survey) {
-      // Find the component in the survey data
-      for (const section of survey.content.sections) {
-        for (const elementSection of section.elementSections) {
-          const component = elementSection.components.find(
-            (c) => c.id === componentId
-          );
-          if (component) {
-            let restoredValues = {
-              location: component.location || "",
-              surveySection: section.name,
-              element: {
-                id: elementSection.id,
-                name: elementSection.name,
-              },
-              component: {
-                id: component.id,
-                name: component.name,
-              },
-              nameOverride: component.nameOverride || component.name,
-              useNameOverride: component.useNameOverride || false,
-              ragStatus: component.ragStatus,
-              conditions: component.conditions || [],
-              additionalDescription: component.additionalDescription || "",
-              images: component.images || [],
-            };
+      const { component, elementSection, sectionName } = findComponent(survey, componentId);
+      
+      if (component && elementSection && sectionName) {
+        let restoredValues = {
+          location: component.location || "",
+          surveySection: sectionName,
+          element: {
+            id: elementSection.id,
+            name: elementSection.name,
+          },
+          component: {
+            id: component.id,
+            name: component.name,
+          },
+          nameOverride: component.nameOverride || component.name,
+          useNameOverride: component.useNameOverride || false,
+          ragStatus: component.ragStatus,
+          conditions: component.conditions || [],
+          additionalDescription: component.additionalDescription || "",
+          images: component.images || [],
+        };
 
-            reset(restoredValues);
-            break;
-          }
-        }
+        reset(restoredValues);
       }
     }
   }, [isHydrated, survey, componentId, reset]);
@@ -230,43 +224,14 @@ export default function InspectionForm({
   const onValid = async (data: InspectionFormData) => {
     console.log("[InspectionForm] onValid", data);
 
-    await surveyStore.update(surveyId, (survey: Survey) => {
-      let surveySection = survey.content.sections.find(
-        (section) => section.name === data.surveySection
-      );
-      if (!surveySection) {
-        surveySection = {
-          name: data.surveySection,
-          elementSections: [],
-        };
-        survey.content.sections.push(surveySection);
-      }
-
-      let elementSection = surveySection.elementSections.find(
-        (element: ElementSection) => element.id === data.element.id
-      );
-
-      if (!elementSection) {
-        elementSection = {
-          name: data.element.name,
-          components: [],
-          id: data.element.id,
-          isPartOfSurvey: true,
-          description: elements.find(e => e.id === data.element.id)?.description || "",
-          images: [],
-        } as ElementSection;
-        surveySection.elementSections.push(elementSection);
-      }
-
-      if (elementSection) {
-        // Check if a component with the same name or nameOverride exists
-        const existingComponentIndex = elementSection.components.findIndex(
-          (c) => c.id === data.component.id || 
-                (data.useNameOverride && data.nameOverride && c.nameOverride === data.nameOverride) ||
-                (!data.useNameOverride && c.name === data.component.name)
-        );
-
-        const componentData = {
+    await surveyStore.update(surveyId, (survey) => {
+      return addOrUpdateComponent(
+        survey,
+        data.surveySection,
+        data.element.id,
+        data.element.name,
+        elements.find(e => e.id === data.element.id)?.description || "",
+        {
           id: data.component.id,
           name: data.component.name,
           nameOverride: data.nameOverride,
@@ -274,25 +239,10 @@ export default function InspectionForm({
           location: data.location,
           additionalDescription: data.additionalDescription,
           images: data.images,
-          conditions: (data.conditions || []).map((p) => ({
-            id: p.id,
-            name: p.name,
-            phrase: p.description || "",
-            description: p.description || "",
-          })),
+          conditions: data.conditions,
           ragStatus: data.ragStatus,
-        };
-
-        if (existingComponentIndex !== -1) {
-          // Update existing component
-          elementSection.components[existingComponentIndex] = componentData;
-        } else {
-          // Add new component
-          elementSection.components.push(componentData);
         }
-      }
-
-      return survey;
+      );
     });
 
     drawer.closeDrawer();

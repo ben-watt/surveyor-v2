@@ -53,7 +53,7 @@ export const PropertyDescriptionPage = ({
           content={
             <PropertyDescriptionForm
               id={id}
-              initValues={survey.content.propertyDescription}
+              initValues={survey.propertyDescription}
             />
           }
         />
@@ -81,8 +81,8 @@ const PropertyDescriptionForm = ({
 
   const onValidSubmit: SubmitHandler<PropertyDescription> = async (data) => {
     await surveyStore.update(id, (currentState) => {
-      currentState.content.propertyDescription = {
-        ...currentState.content.propertyDescription,
+      currentState.propertyDescription = {
+        ...currentState.propertyDescription,
         ...data,
         status: {
           status: "complete",
@@ -96,7 +96,7 @@ const PropertyDescriptionForm = ({
 
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = async (errors) => {
     await surveyStore.update(id, (currentState) => {
-      currentState.content.propertyDescription.status = {
+      currentState.propertyDescription.status = {
         status: "incomplete",
         errors: Object.values(errors).map((error) => error.message ?? ""),
       };

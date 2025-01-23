@@ -55,7 +55,7 @@ export const ChecklistPage = ({
           content={
             <ChecklistForm
               id={id}
-              initValues={survey.content.checklist}
+              initValues={survey.checklist}
             />
           }
         />
@@ -78,8 +78,8 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
   // for the property data fields.
   const onValidSubmit: SubmitHandler<Checklist> = (data) => {
     surveyStore.update(id, (currentState) => {
-      currentState.content.checklist = {
-        ...currentState.content.checklist,
+      currentState.checklist = {
+        ...currentState.checklist,
         ...data,
         status: {
           status: "complete",
@@ -93,12 +93,9 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
 
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = (errors) => {
     surveyStore.update(id, (currentState) => {
-      currentState.content.checklist = {
-        ...currentState.content.checklist,
-        status: {
-          status: "error",
-          errors: Object.values(errors).map((error) => error.message ?? ""),
-        },
+      currentState.checklist.status = {
+        status: "error",
+        errors: Object.values(errors).map((error) => error.message ?? ""),
       };
     });
   };

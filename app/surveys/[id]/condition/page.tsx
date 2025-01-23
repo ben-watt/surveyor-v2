@@ -51,7 +51,7 @@ export const ConditionPage = ({ params: { id } }: ConditionPageProps) => {
           handleClose={handleClose}
           title="Property Condition"
           description="Property Condition"
-          content={<ConditionForm id={id} initValues={survey.content.sections} />}
+          content={<ConditionForm id={id} initValues={survey.sections} />}
         />
       )}
     </div>

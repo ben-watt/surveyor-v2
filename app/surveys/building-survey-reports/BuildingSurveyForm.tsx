@@ -45,7 +45,7 @@ const createDefaultFormValues = async (
     console.error(user);
   }
 
-  return Ok({
+  return Ok<BuildingSurveyForm>({
     id: id,
     status: "draft",
     owner: {
@@ -56,7 +56,13 @@ const createDefaultFormValues = async (
     },
     reportDetails: {
       level: "2",
-      address: "",
+      address: {
+        formatted: "",
+        location: {
+          lat: 0,
+          lng: 0,
+        },
+      },
       clientName: "",
       reportDate: new Date(),
       inspectionDate: new Date(),
@@ -214,12 +220,12 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
     if (isHydrated && !report) {
       createNewForm();
     }
-  }, [id, isHydrated, report, throwError]);
+  }, [id, isHydrated, report, router, throwError]);
 
   return (
     <>
       {report ? (
-        <Report initFormValues={report.content} />
+        <Report initFormValues={report} />
       ) : (
         <div>Loading...</div>
       )}

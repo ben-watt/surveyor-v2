@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import InspectionForm from "./InspectionForm";
 import { Edit, Trash2 } from "lucide-react";
+import { getElementSection, updateElementDetails, removeComponent } from "@/app/surveys/building-survey-reports/Survey";
 
 type ElementFormData = {
   description: string;
@@ -44,11 +45,8 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
       if(!isHydrated || !survey) return;
 
       try {
-        const surveySection = survey.content.sections.find(section => section.name === sectionName);
-        const elementSection = surveySection?.elementSections.find(
-          (element: ElementSection) => element.id === elementId
-        );
-
+        const elementSection = getElementSection(survey, sectionName, elementId);
+        
         if (elementSection) {
           setElementData(elementSection);
           reset({
@@ -68,18 +66,10 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
 
   const onValid = async (data: ElementFormData) => {
     await surveyStore.update(surveyId, (survey) => {
-      const surveySection = survey.content.sections.find(section => section.name === sectionName);
-      if (!surveySection) return survey;
-
-      const elementSection = surveySection.elementSections.find(
-        (element: ElementSection) => element.id === elementId
-      );
-      if (!elementSection) return survey;
-
-      elementSection.description = data.description;
-      elementSection.images = data.images;
-
-      return survey;
+      return updateElementDetails(survey, sectionName, elementId, {
+        description: data.description,
+        images: data.images,
+      });
     });
 
     drawer.closeDrawer();
@@ -89,19 +79,11 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
   const handleRemoveComponent = async (componentId: string) => {
     try {
       await surveyStore.update(surveyId, (survey) => {
-        const surveySection = survey.content.sections.find(section => section.name === sectionName);
-        if (!surveySection) return survey;
-
-        const elementSection = surveySection.elementSections.find(
-          (element: ElementSection) => element.id === elementId
-        );
-        if (!elementSection) return survey;
-
-        elementSection.components = elementSection.components.filter(
-          component => component.id !== componentId
-        );
-
-        return survey;
+        const updatedSurvey = removeComponent(survey, sectionName, elementId, componentId);
+        if (updatedSurvey === survey) {
+          throw new Error("Failed to remove component");
+        }
+        return updatedSurvey;
       });
 
       // Update local state to reflect the removal

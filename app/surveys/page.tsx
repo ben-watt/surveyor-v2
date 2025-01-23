@@ -24,14 +24,12 @@ import { DataTable, SortableHeader } from "../components/DataTable";
 import { surveyStore } from "@/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
 
-
 type TableData = BuildingSurveyFormData;
 
 function HomePage() {
   const router = useRouter();
   const [isHydrated, data] = surveyStore.useList();
   const [createId, setCreateId] = useState<string>("");
-
 
   useEffect(() => {
     setCreateId(v4());
@@ -50,12 +48,12 @@ function HomePage() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Surveys</h1>
-          <p className="text-sm text-muted-foreground">Surveys are used to generate reports for building inspections.</p>
+          <p className="text-sm text-muted-foreground">
+            Surveys are used to generate reports for building inspections.
+          </p>
         </div>
       </div>
-      <div>
-        {RenderTable()}
-      </div>
+      <div>{RenderTable()}</div>
     </div>
   );
 
@@ -77,26 +75,24 @@ function HomePage() {
         header: "Owner",
         accessorKey: "owner.name",
         cell: (props) => {
-          return (
-            <Badge>{props.getValue() as string || "unknown"}</Badge>
-          )
-        }
+          return <Badge>{(props.getValue() as string) || "unknown"}</Badge>;
+        },
       },
       {
         header: "Status",
         accessorKey: "status",
         cell: (props) => {
-          return (
-            <Badge>{props.getValue() as string}</Badge>
-          )
-        }
+          return <Badge>{props.getValue() as string}</Badge>;
+        },
       },
       {
         id: "created",
-        header: ({ column }) => <SortableHeader column={column} header="Created" />,
+        header: ({ column }) => (
+          <SortableHeader column={column} header="Created" />
+        ),
         accessorFn: (v) => new Date(v.reportDetails.reportDate),
         cell: (props) => (props.getValue() as Date).toDateString(),
-        sortingFn: 'datetime',
+        sortingFn: "datetime",
       },
       {
         id: "actions",
@@ -121,16 +117,17 @@ function HomePage() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Link href={`surveys/${reportId}`}>
-                    Edit survey
-                  </Link>
+                  <Link href={`surveys/${reportId}`}>Edit survey</Link>
                 </DropdownMenuItem>
-                {showGenerate && (<DropdownMenuItem>
-                  <Link href={`/reports/reportv2/${reportId}`}>
-                    Generate report
-                  </Link>
-                </DropdownMenuItem>)}
-                <DropdownMenuItem className="text-red-500"
+                {showGenerate && (
+                  <DropdownMenuItem>
+                    <Link href={`/reports/reportv2/${reportId}`}>
+                      Generate report
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  className="text-red-500"
                   onClick={() => deleteSurvey(reportId)}
                 >
                   <span className="text-red-500">Delete survey</span>
@@ -142,7 +139,14 @@ function HomePage() {
       },
     ];
 
-    return <DataTable initialState={{ sorting: [{ id: "created", desc: true }]}} columns={columns} data={data.map(x => x.content)} onCreate={() => router.push("/surveys/create")} />
+    return (
+      <DataTable
+        initialState={{ sorting: [{ id: "created", desc: true }] }}
+        columns={columns}
+        data={data.map((x) => x)}
+        onCreate={() => router.push("/surveys/create")}
+      />
+    );
   }
 }
 

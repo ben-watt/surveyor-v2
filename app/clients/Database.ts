@@ -1,7 +1,7 @@
 import {
   Component,
   db,
-  Survey,
+  Survey as DexieSurvey,
   Element as BuildingSurveyElement,
   SyncStatus,
   CreateDexieHooks,
@@ -10,8 +10,10 @@ import {
 } from "./Dexie";
 import client from "./AmplifyDataClient";
 import { Schema } from "@/amplify/data/resource";
+import { BuildingSurveyFormData } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { Draft } from "immer";
 
-const mapToSurvey = (data: any): Survey => ({
+const mapToSurvey = (data: any): DexieSurvey => ({
   id: data.id,
   syncStatus: SyncStatus.Synced,
   content: data.content,
@@ -19,30 +21,54 @@ const mapToSurvey = (data: any): Survey => ({
   createdAt: data.createdAt,
 });
 
-type UpdateSurvey = Partial<Survey> & { id: string };
-type CreateSurvey = Omit<Survey, "updatedAt" | "createdAt">;
+type UpdateSurvey = Partial<DexieSurvey> & { id: string };
+type CreateSurvey = Omit<DexieSurvey, "updatedAt" | "createdAt">;
 
-export const surveyStore = CreateDexieHooks<Survey, CreateSurvey, UpdateSurvey>(
-  db,
-  "surveys",
-  {
-    list: async () => {
-      const response = await client.models.Surveys.list();
-      return response.data.map(mapToSurvey);
+// Create a wrapper for the survey store
+const createSurveyStore = () => {
+  const store = CreateDexieHooks<DexieSurvey, CreateSurvey, UpdateSurvey>(
+    db,
+    "surveys",
+    {
+      list: async () => {
+        const response = await client.models.Surveys.list();
+        return response.data.map(mapToSurvey);
+      },
+      create: async (data) => {
+        const response = await client.models.Surveys.create(data);
+        return mapToSurvey(response.data);
+      },
+      update: async (data) => {
+        const response = await client.models.Surveys.update(data);
+        return mapToSurvey(response.data);
+      },
+      delete: async (id) => {
+        await client.models.Surveys.delete({ id });
+      },
+    }
+  );
+
+  return {
+    ...store,
+    useGet: (id: string): [boolean, BuildingSurveyFormData | null] => {
+      const [isHydrated, survey] = store.useGet(id);
+      if (!isHydrated || !survey) return [isHydrated, null];
+      return [isHydrated, survey.content as BuildingSurveyFormData];
     },
-    create: async (data) => {
-      const response = await client.models.Surveys.create(data);
-      return mapToSurvey(response.data);
+    useList: (): [boolean, BuildingSurveyFormData[]] => {
+      const [isHydrated, surveys] = store.useList();
+      if (!isHydrated) return [isHydrated, []];
+      return [isHydrated, surveys.map(s => s.content as BuildingSurveyFormData)];
     },
-    update: async (data) => {
-      const response = await client.models.Surveys.update(data);
-      return mapToSurvey(response.data);
-    },
-    delete: async (id) => {
-      await client.models.Surveys.delete({ id });
-    },
-  }
-);
+    update: async (id: string, updater: (survey: Draft<BuildingSurveyFormData>) => void) => {
+      return store.update(id, (dexieSurvey: Draft<DexieSurvey>) => {
+        updater(dexieSurvey.content as BuildingSurveyFormData);
+      });
+    }
+  };
+};
+
+export const surveyStore = createSurveyStore();
 
 const mapToComponent = (data: any): Component => ({
   id: data.id,
