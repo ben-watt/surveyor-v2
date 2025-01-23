@@ -9,13 +9,11 @@ import { Label } from "./Label";
 import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { useJsApiLoader, GoogleMap, MarkerF } from "@react-google-maps/api";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { APIProvider, Map, Marker, useMapsLibrary } from '@vis.gl/react-google-maps';
 import React from "react";
 import { Address } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
-
-const GOOGLE_MAPS_LIBRARIES: ("places")[] = ["places"];
+import { debounce } from "lodash";
 
 interface AddressInputProps {
   labelTitle?: string;
@@ -36,12 +34,173 @@ const mapContainerStyle = {
   borderRadius: "0.375rem",
 };
 
-// Add styles to ensure autocomplete appears above other elements
-const autocompleteStyle = `
-  .pac-container {
-    z-index: 9999;
-  }
-`;
+function CustomPlacesAutocomplete({ 
+  inputRef, 
+  countryCode,
+  onPlaceSelect 
+}: { 
+  inputRef: React.RefObject<HTMLInputElement>,
+  countryCode?: string,
+  onPlaceSelect: (place: google.maps.places.PlaceResult) => void
+}) {
+  const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [showPredictions, setShowPredictions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const places = useMapsLibrary('places');
+  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
+
+  useEffect(() => {
+    if (!places) return;
+    autocompleteService.current = new places.AutocompleteService();
+    // Create a dummy div for PlacesService (required)
+    const dummyElement = document.createElement('div');
+    placesService.current = new places.PlacesService(dummyElement);
+  }, [places]);
+
+  const getPlacePredictions = useCallback(
+    async (input: string) => {
+      if (!autocompleteService.current || input.length < 3) {
+        setPredictions([]);
+        return;
+      }
+
+      const request: google.maps.places.AutocompletionRequest = {
+        input,
+        ...(countryCode && {
+          componentRestrictions: { country: countryCode }
+        })
+      };
+
+      try {
+        const response = await autocompleteService.current.getPlacePredictions(request);
+        setPredictions(response.predictions);
+        setShowPredictions(true);
+      } catch (error) {
+        console.error('Error fetching predictions:', error);
+        setPredictions([]);
+      }
+    },
+    [countryCode]
+  );
+
+  const handlePredictionClick = async (prediction: google.maps.places.AutocompletePrediction) => {
+    if (!placesService.current) return;
+
+    const request: google.maps.places.PlaceDetailsRequest = {
+      placeId: prediction.place_id,
+      fields: ['formatted_address', 'geometry']
+    };
+
+    placesService.current.getDetails(request, (place, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+        onPlaceSelect(place);
+        if (inputRef.current) {
+          inputRef.current.value = place.formatted_address || '';
+        }
+        setShowPredictions(false);
+      }
+    });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+        setShowPredictions(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!inputRef.current) return;
+
+    const handleInput = (e: Event) => {
+      const input = (e.target as HTMLInputElement).value;
+      getPlacePredictions(input);
+    };
+
+    const debouncedHandler = debounce(handleInput, 300);
+    inputRef.current.addEventListener('input', debouncedHandler);
+
+    return () => {
+      if (inputRef.current) {
+        inputRef.current.removeEventListener('input', debouncedHandler);
+      }
+    };
+  }, [getPlacePredictions]);
+
+  useEffect(() => {
+    if (!inputRef.current) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!showPredictions || predictions.length === 0) return;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedIndex(prev => 
+            prev < predictions.length - 1 ? prev + 1 : prev
+          );
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedIndex(prev => 
+            prev > 0 ? prev - 1 : -1
+          );
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0) {
+            handlePredictionClick(predictions[selectedIndex]);
+          }
+          break;
+        case 'Escape':
+          setShowPredictions(false);
+          setSelectedIndex(-1);
+          break;
+      }
+    };
+
+    inputRef.current.addEventListener('keydown', handleKeyDown);
+    return () => {
+      if (inputRef.current) {
+        inputRef.current.removeEventListener('keydown', handleKeyDown);
+      }
+    };
+  }, [showPredictions, predictions, selectedIndex]);
+
+  // Reset selected index when predictions change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [predictions]);
+
+  return (
+    <div className="relative">
+      {showPredictions && predictions.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+          {predictions.map((prediction, index) => (
+            <div
+              key={prediction.place_id}
+              className={cn(
+                "px-4 py-2 cursor-pointer text-sm",
+                selectedIndex === index 
+                  ? "bg-blue-100 hover:bg-blue-200" 
+                  : "hover:bg-gray-100"
+              )}
+              onClick={() => handlePredictionClick(prediction)}
+              onMouseEnter={() => setSelectedIndex(index)}
+            >
+              {prediction.description}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AddressInput({
   labelTitle,
@@ -54,16 +213,10 @@ function AddressInput({
   errors,
   countryCode: propCountryCode,
 }: AddressInputProps) {
-  const autoCompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [location, setLocation] = useState<google.maps.LatLng | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [countryCode, setCountryCode] = useState<string | undefined>(propCountryCode);
   
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
-
   const { field } = useController({
     name,
     control,
@@ -99,127 +252,74 @@ function AddressInput({
 
   // Handle initial value
   useEffect(() => {
-    if (!isLoaded || !field.value) return;
+    if (!field.value?.location) return;
+    setLocation(field.value.location);
+  }, [field.value]);
 
-    // If we already have location data in the field value, use it
-    if (field.value.location) {
-      const latLng = new google.maps.LatLng(
-        field.value.location.lat,
-        field.value.location.lng
-      );
-      setLocation(latLng);
+  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
+    console.log("[AddressInput] place_changed event", place);
+    if (place.formatted_address && place.geometry?.location) {
+      const newAddress: Address = {
+        formatted: place.formatted_address,
+        location: {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        }
+      };
+      field.onChange(newAddress);
+      setLocation(newAddress.location);
     }
-  }, [isLoaded, field.value]);
-
-  useEffect(() => {
-    if (!isLoaded || !inputRef.current) return;
-
-    // Initialize Google Places Autocomplete with country restriction if available
-    autoCompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-      fields: ["formatted_address", "geometry"],
-      ...(countryCode && {
-        componentRestrictions: { country: countryCode },
-      })
-    });
-
-    // Add listener for place selection
-    autoCompleteRef.current.addListener("place_changed", () => {
-      const place = autoCompleteRef.current?.getPlace();
-      if (place?.formatted_address && place.geometry?.location) {
-        const newAddress: Address = {
-          formatted: place.formatted_address,
-          location: {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng()
-          }
-        };
-        field.onChange(newAddress);
-        setLocation(place.geometry.location);
-      }
-    });
-
-    return () => {
-      // Cleanup
-      if (autoCompleteRef.current) {
-        google.maps.event.clearInstanceListeners(autoCompleteRef.current);
-      }
-    };
-  }, [isLoaded, field, countryCode]);
-
-  if (!isLoaded) {
-    return (
-      <div>
-        {labelTitle && <Label text={labelTitle} />}
-        <div className="flex items-center gap-2">
-          <ShadInput
-            disabled
-            placeholder="Loading Google Maps..."
-            className={cn("focus:ring-0 focus:border-none", className)}
-          />
-          <Loader2 className="h-4 w-4 animate-spin" />
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div>
-      <style>{autocompleteStyle}</style>
-      {labelTitle && <Label text={labelTitle} />}
-      <div className="relative">
-        <ShadInput
-          ref={inputRef}
-          className={cn("focus:ring-0 focus:border-none", className)}
-          placeholder={countryCode ? `Search in ${new Intl.DisplayNames([navigator.language], { type: 'region' }).of(countryCode.toUpperCase())}...` : placeholder}
-          disabled={disabled}
-          defaultValue={field.value?.formatted ?? ""}
-          onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const target = e.target as HTMLInputElement;
-            // Only update the formatted address on manual input
-            field.onChange({
-              ...field.value,
-              formatted: target.value
-            });
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-            }
-          }}
-        />
-      </div>
-      {location && location.lat() !== 0 && location.lng() !== 0 && (
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={{
-            lat: location.lat(),
-            lng: location.lng(),
-          }}
-          zoom={15}
-          options={{
-            draggable: false,
-            zoomControl: false,
-            scrollwheel: false,
-            disableDoubleClickZoom: true,
-            streetViewControl: false,
-            mapTypeControl: false,
-            clickableIcons: false,
-          }}
-        >
-          <MarkerF
-            position={{
-              lat: location.lat(),
-              lng: location.lng(),
+    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}>
+      <div>
+        {labelTitle && <Label text={labelTitle} />}
+        <div className="relative">
+          <ShadInput
+            ref={inputRef}
+            className={cn("focus:ring-0 focus:border-none", className)}
+            placeholder={countryCode ? `Search in ${new Intl.DisplayNames([navigator.language], { type: 'region' }).of(countryCode.toUpperCase())}...` : placeholder}
+            disabled={disabled}
+            defaultValue={field.value?.formatted ?? ""}
+            onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const target = e.target as HTMLInputElement;
+              field.onChange({
+                ...field.value,
+                formatted: target.value
+              });
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+              }
             }}
           />
-        </GoogleMap>
-      )}
-      <ErrorMessage
-        errors={errors}
-        name={field.name}
-        render={({ message }) => InputError({ message })}
-      />
-    </div>
+          <CustomPlacesAutocomplete 
+            inputRef={inputRef}
+            countryCode={countryCode}
+            onPlaceSelect={handlePlaceSelect}
+          />
+        </div>
+        {location && location.lat !== 0 && location.lng !== 0 && (
+          <div style={mapContainerStyle}>
+            <Map
+              zoom={15}
+              center={location}
+              gestureHandling="none"
+              disableDefaultUI={true}
+            >
+              <Marker position={location} />
+            </Map>
+          </div>
+        )}
+        <ErrorMessage
+          errors={errors}
+          name={field.name}
+          render={({ message }) => InputError({ message })}
+        />
+      </div>
+    </APIProvider>
   );
 }
 
