@@ -434,7 +434,7 @@ export default function InspectionForm({
                 });
               }}
               rules={{
-                required: "Component is required",
+                required: true,
               }}
             />
             <Button
