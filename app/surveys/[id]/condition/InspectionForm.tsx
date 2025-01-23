@@ -4,7 +4,6 @@ import { FormSection } from "@/app/components/FormSection";
 import {
   RagStatus,
   ElementSection,
-  Phrase,
 } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -28,6 +27,11 @@ import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/phrases/form";
 import Input from "@/app/components/Input/InputText";
 import { Survey } from "@/app/clients/Dexie";
+
+import { Phrase } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
+
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -253,7 +257,14 @@ export default function InspectionForm({
       }
 
       if (elementSection) {
-        elementSection.components.push({
+        // Check if a component with the same name or nameOverride exists
+        const existingComponentIndex = elementSection.components.findIndex(
+          (c) => c.id === data.component.id || 
+                (data.useNameOverride && data.nameOverride && c.nameOverride === data.nameOverride) ||
+                (!data.useNameOverride && c.name === data.component.name)
+        );
+
+        const componentData = {
           id: data.component.id,
           name: data.component.name,
           nameOverride: data.nameOverride,
@@ -268,7 +279,15 @@ export default function InspectionForm({
             description: p.description || "",
           })),
           ragStatus: data.ragStatus,
-        });
+        };
+
+        if (existingComponentIndex !== -1) {
+          // Update existing component
+          elementSection.components[existingComponentIndex] = componentData;
+        } else {
+          // Add new component
+          elementSection.components.push(componentData);
+        }
       }
 
       return survey;
@@ -422,6 +441,7 @@ export default function InspectionForm({
               disabled={formValues.component.name === undefined}
               onClick={(e) => {
                 e.preventDefault();
+                setValue("useNameOverride", !formValues.useNameOverride);
                 setShowNameOverride(!showNameOverride);
               }}
             >
@@ -474,18 +494,14 @@ export default function InspectionForm({
               });
             }}
           />
-          {Array.isArray(formValues.conditions) &&
-            formValues.conditions.map((condition, index) => {
-              const phrase = phrases.find((p) => p.id === condition.id);
-              return (
-                <div
-                  key={`${condition.id}-${index}`}
-                  className="space-y-2 border-b border-gray-200 p-4 text-xs"
-                >
-                  <p>{phrase?.phrase}</p>
-                </div>
-              );
-            })}
+          {Array.isArray(formValues.conditions) && (
+            <DraggableConditions
+              conditions={formValues.conditions}
+              control={control}
+              setValue={setValue}
+              watch={watch}
+            />
+          )}
           <TextAreaInput
             labelTitle="Additional Comments"
             register={() => register("additionalDescription")}
@@ -508,5 +524,67 @@ export default function InspectionForm({
         </Button>
       </form>
     </FormProvider>
+  );
+}
+
+
+interface DraggableConditionsProps {
+  conditions: Phrase[];
+  control: Control<any>;
+  setValue: UseFormSetValue<any>;
+  watch: UseFormWatch<any>;
+}
+
+export function DraggableConditions({
+  conditions,
+  setValue,
+}: DraggableConditionsProps) {
+  const [phrasesHydrated, phrases] = phraseStore.useList();
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const reorderedConditions = Array.from(conditions);
+    const [removed] = reorderedConditions.splice(result.source.index, 1);
+    reorderedConditions.splice(result.destination.index, 0, removed);
+
+    setValue('conditions', reorderedConditions, { shouldDirty: true });
+  };
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="conditions">
+        {(provided) => (
+          <div
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            className="space-y-2"
+          >
+            {conditions.map((condition, index) => {
+              const phrase = phrases.find((p) => p.id === condition.id);
+              return (
+                <Draggable
+                  key={condition.id}
+                  draggableId={condition.id}
+                  index={index}
+                >
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className="space-y-2 border-b border-gray-200 p-4 text-xs bg-white rounded-md shadow-sm hover:shadow-md transition-shadow cursor-move"
+                    >
+                      <p>{phrase?.phrase}</p>
+                    </div>
+                  )}
+                </Draggable>
+              );
+            })}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 }
