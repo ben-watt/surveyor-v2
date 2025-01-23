@@ -207,6 +207,7 @@ export default function InspectionForm({
 
     if (formValues.element && !componentExists && formValues.component.id) {
       setValue("component", defaultValues.component);
+      setValue("conditions", []); // Clear conditions when component is reset
     }
   }, [
     formValues.element,
@@ -216,10 +217,11 @@ export default function InspectionForm({
     defaultValues.component,
   ]);
 
-  // Reset nameOverride visibility when component changes
+  // Reset nameOverride visibility and conditions when component changes
   useEffect(() => {
     if (!formValues.component.id) {
       setShowNameOverride(false);
+      setValue("conditions", []); // Clear conditions when component is cleared
     } else if (showNameOverride) {
       setValue("nameOverride", formValues.component.name);
     }
