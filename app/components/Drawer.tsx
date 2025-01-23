@@ -115,9 +115,7 @@ export function DynamicDrawer({
 
   return (
     <Drawer open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DrawerContent className="max-h-lvh" style={{ 
-        transform: `translateY(calc(-${drawerId.length * 2}px))`
-      }}>
+      <DrawerContent className="max-h-lvh" >
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
@@ -125,11 +123,11 @@ export function DynamicDrawer({
         <div className="p-4 overflow-scroll">
             {content}
         </div>
-        <DrawerFooter className="pt-2">
+        {/* <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline">Close</Button>
           </DrawerClose>
-        </DrawerFooter>
+        </DrawerFooter> */}
       </DrawerContent>
     </Drawer>
   );

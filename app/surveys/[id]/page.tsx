@@ -6,7 +6,7 @@ import BuildingSurveyForm from "../building-survey-reports/BuildingSurveyForm";
 function Home({ params }: { params: { id: string } }) {
   return (
     <>
-      <div className="container mx-auto px-5 ">
+      <div className="container mx-auto p-0">
         <div className="flex justify-center">
           <h1 className="text-3xl dark:text-white mb-8 mt-8">
             Building Survey Report

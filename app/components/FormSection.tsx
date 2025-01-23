@@ -91,7 +91,7 @@ export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLin
 
   return (
     <div>
-        <div className="border border-grey-600 mt-2 mb-2 rounded p-2" onClick={handleClick}>
+        <div className="border border-grey-600 mt-2 mb-2 rounded p-2 text-sm" onClick={handleClick}>
         <div className="flex justify-between items-center">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
           {status === "complete" && <div className="bg-green-700 px-2 text-white rounded-sm">Complete</div>}
