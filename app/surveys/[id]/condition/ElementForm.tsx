@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
-import { ElementSection } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { ElementSection, SurveySection } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { surveyStore } from "@/app/clients/Database";
+import { surveyStore, elementStore, sectionStore } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { useDynamicDrawer } from "@/app/components/Drawer";
@@ -39,6 +39,8 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
   const { register, control, handleSubmit, reset } = methods;
   const [elementData, setElementData] = React.useState<ElementSection | null>(null);
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
+  const [elementsHydrated, elements] = elementStore.useList();
+  const [sectionsHydrated, surveySections] = sectionStore.useList();
 
   useEffect(() => {
     const loadElementData = async () => {
@@ -77,28 +79,17 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
     toast.success("Element details saved");
   };
 
-  const handleRemoveComponent = async (componentId: string) => {
-    try {
-      await surveyStore.update(surveyId, (survey) => {
-        const updatedSurvey = removeComponent(survey, sectionId, elementId, componentId);
-        if (updatedSurvey === survey) {
-          throw new Error("Failed to remove component");
-        }
-        return updatedSurvey;
-      });
-
-      // Update local state to reflect the removal
-      if (elementData) {
-        setElementData({
-          ...elementData,
-          components: elementData.components.filter(component => component.id !== componentId)
-        });
-      }
-
-      toast.success("Component removed successfully");
-    } catch (error) {
-      toast.error("Failed to remove component");
+  const handleRemoveComponent = async (inspectionId: string) => {
+    const section = surveySections.find(s => s.id === sectionId);
+    if (!section) {
+      toast.error("Section not found");
+      return;
     }
+    
+    await surveyStore.update(surveyId, (survey) => {
+      return removeComponent(survey, section.name, elementId, inspectionId);
+    });
+    toast.success("Component removed");
   };
 
   if (isLoading) {
@@ -171,7 +162,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
                     className="text-red-500 hover:text-red-700"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleRemoveComponent(component.id);
+                      handleRemoveComponent(component.inspectionId);
                     }}
                   >
                     <Trash2 className="w-4 h-4" />

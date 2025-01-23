@@ -1,4 +1,4 @@
-import { BuildingSurveyFormData, Component, ElementSection, Phrase, RagStatus, SurveySection } from "./BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection } from "./BuildingSurveyReportSchema";
 
 // Find or create a section
 function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
@@ -18,9 +18,7 @@ function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string):
 function findOrCreateElementSection(
   survey: BuildingSurveyFormData,
   sectionId: string,
-  elementId: string,
-  elementName: string,
-  elementDescription: string = ""
+  elementId: string
 ): ElementSection {
   const section = findOrCreateSection(survey, sectionId);
   let elementSection = section.elementSections.find(e => e.id === elementId);
@@ -28,9 +26,9 @@ function findOrCreateElementSection(
   if (!elementSection) {
     elementSection = {
       id: elementId,
-      name: elementName,
+      name: "",
       isPartOfSurvey: true,
-      description: elementDescription,
+      description: "",
       components: [],
       images: [],
     };
@@ -45,10 +43,9 @@ export function addOrUpdateComponent(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string,
-  elementName: string,
-  elementDescription: string,
   component: {
     id: string,
+    inspectionId: string,
     name: string,
     nameOverride?: string,
     useNameOverride?: boolean,
@@ -60,16 +57,15 @@ export function addOrUpdateComponent(
     budgetCost?: number,
   }
 ): BuildingSurveyFormData {
-  const elementSection = findOrCreateElementSection(survey, sectionId, elementId, elementName, elementDescription);
+  const elementSection = findOrCreateElementSection(survey, sectionId, elementId);
   
   const existingComponentIndex = elementSection.components.findIndex(
-    c => c.id === component.id || 
-        (component.useNameOverride && component.nameOverride && c.nameOverride === component.nameOverride) ||
-        (!component.useNameOverride && c.name === component.name)
+    c => c.inspectionId === component.inspectionId
   );
 
-  const componentData: Component = {
+  const componentData: Inspection = {
     id: component.id,
+    inspectionId: component.inspectionId,
     name: component.name,
     nameOverride: component.nameOverride || component.name,
     useNameOverride: component.useNameOverride || false,
@@ -99,7 +95,7 @@ export function removeComponent(
   survey: BuildingSurveyFormData,
   sectionName: string,
   elementId: string,
-  componentId: string
+  inspectionId: string
 ): BuildingSurveyFormData {
   const section = survey.sections.find(s => s.name === sectionName);
   if (!section) return survey;
@@ -107,7 +103,7 @@ export function removeComponent(
   const elementSection = section.elementSections.find(e => e.id === elementId);
   if (!elementSection) return survey;
 
-  elementSection.components = elementSection.components.filter(c => c.id !== componentId);
+  elementSection.components = elementSection.components.filter(c => c.inspectionId !== inspectionId);
   return survey;
 }
 
@@ -154,7 +150,7 @@ export function getElementComponents(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string
-): Component[] {
+): Inspection[] {
   const elementSection = getElementSection(survey, sectionId, elementId);
   return elementSection?.components || [];
 }
@@ -164,13 +160,15 @@ export function findComponent(
   survey: BuildingSurveyFormData,
   componentId: string
 ): { 
-  component: Component | null,
+  component: Inspection | null,
   elementSection: ElementSection | null,
   section: SurveySection | null 
 } {
   for (const section of survey.sections) {
     for (const elementSection of section.elementSections) {
-      const component = elementSection.components.find(c => c.id === componentId);
+      const component = elementSection.components.find(c => 
+        c.inspectionId === componentId || c.id === componentId
+      );
       if (component) {
         return {
           component,

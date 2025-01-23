@@ -7,6 +7,7 @@ export type FormPhrase = {
 };
 
 export type InspectionFormData = {
+  inspectionId: string;  // Unique identifier for this specific inspection
   location: string;
   surveySection: {
     id: string;

@@ -4,6 +4,7 @@ import { FormSection } from "@/app/components/FormSection";
 import { merge } from "lodash";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { v4 as uuidv4 } from "uuid";
 import {
   componentStore,
   elementStore,
@@ -25,8 +26,6 @@ import { DataForm as PhraseDataForm } from "@/app/conditions/form";
 import Input from "@/app/components/Input/InputText";
 import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-survey-reports/Survey";
 
-
-
 import { DraggableConditions } from "./DraggableConditions";
 import { FormPhrase, InspectionFormData, InspectionFormProps, RAG_OPTIONS } from "./types";
 
@@ -42,10 +41,10 @@ export default function InspectionForm({
   const [surveySectionsHydrated, surveySections] = sectionStore.useList();
 
   const drawer = useDynamicDrawer();
-  const [showNameOverride, setShowNameOverride] = useState(false);
 
   const initialValues = useMemo(() => {
     const baseValues: InspectionFormData = {
+      inspectionId: uuidv4(),
       location: "",
       surveySection: { id: "", name: "" },
       element: { id: "", name: "" },
@@ -64,6 +63,13 @@ export default function InspectionForm({
   const methods = useForm<InspectionFormData>({ defaultValues: initialValues });
   const { reset, register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
 
+  // Only watch specific fields we need instead of all form values
+  const surveySection = watch("surveySection");
+  const element = watch("element");
+  const component = watch("component");
+  const useNameOverride = watch("useNameOverride");
+  const conditions = watch("conditions");
+
   // Load existing component data if componentId is provided
   useEffect(() => {
     if (!isHydrated || !componentId || !survey) return;
@@ -72,6 +78,7 @@ export default function InspectionForm({
     if (!component || !elementSection || !section) return;
 
     reset({
+      inspectionId: component.inspectionId || uuidv4(),
       location: component.location || "",
       surveySection: { id: section.id, name: section.name },
       element: { id: elementSection.id, name: elementSection.name },
@@ -85,11 +92,8 @@ export default function InspectionForm({
     });
   }, [isHydrated, survey, componentId, reset]);
 
-  const formValues = watch();
-
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
-    // Always show all sections
     return surveySections.map(section => ({
       value: { id: section.id, name: section.name },
       label: section.name,
@@ -99,30 +103,30 @@ export default function InspectionForm({
   // Filter elements based on selected section
   const elementOptions = useMemo(() => 
     elements
-      .filter(element => !formValues.surveySection.id || element.sectionId === formValues.surveySection.id)
+      .filter(element => !surveySection.id || element.sectionId === surveySection.id)
       .map(element => ({
         value: { id: element.id, name: element.name },
         label: element.name,
       })), 
-    [elements, formValues.surveySection.id]
+    [elements, surveySection.id]
   );
 
   const componentOptions = useMemo(() => 
     components
-      .filter(component => component.elementId === formValues.element.id)
+      .filter(component => component.elementId === element.id)
       .map(component => ({
         value: { id: component.id, name: component.name },
         label: component.name,
       })),
-    [components, formValues.element.id]
+    [components, element.id]
   );
 
   const phrasesOptions = useMemo((): { value: FormPhrase, label: string }[] => 
     phrases
       .filter(phrase => 
         phrase.type === "Condition" && 
-        (phrase.associatedComponentIds.includes(formValues.component.id) ||
-         phrase.associatedElementIds.includes(formValues.element.id))
+        (phrase.associatedComponentIds.includes(component.id) ||
+         phrase.associatedElementIds.includes(element.id))
       )
       .map(phrase => ({
         value: {
@@ -132,44 +136,35 @@ export default function InspectionForm({
         },
         label: phrase.name,
       })),
-    [phrases, formValues.component.id, formValues.element.id]
+    [phrases, component.id, element.id]
   );
 
   // Reset dependent fields when parent fields change
   useEffect(() => {
     const elementExists = elements.some(
-      e => e.id === formValues.element.id && e.sectionId === formValues.surveySection.id
+      e => e.id === element.id && e.sectionId === surveySection.id
     );
 
-    if (formValues.surveySection.id && !elementExists && formValues.element.id) {
+    if (surveySection.id && !elementExists && element.id) {
       setValue("element", { id: "", name: "" });
       setValue("component", { id: "", name: "" });
     }
-  }, [formValues.surveySection.id, formValues.element.id, setValue, elements]);
+  }, [surveySection.id, element.id, setValue, elements]);
 
   useEffect(() => {
     const componentExists = components.some(
-      c => c.id === formValues.component.id && c.elementId === formValues.element.id
+      c => c.id === component.id && c.elementId === element.id
     );
 
-    if (formValues.element && !componentExists && formValues.component.id) {
+    if (element && !componentExists && component.id) {
       setValue("component", { id: "", name: "" });
       setValue("conditions", []);
     }
-  }, [formValues.element, formValues.component.id, components, setValue]);
+  }, [element, component.id, components, setValue]);
 
   useEffect(() => {
-    if (!formValues.component.id) {
-      setShowNameOverride(false);
-      setValue("conditions", []);
-    } else if (showNameOverride) {
-      setValue("nameOverride", formValues.component.name);
-    }
-  }, [formValues.component.id, formValues.component.name, showNameOverride, setValue]);
-
-  useEffect(() => {
-    if (formValues.element.id) {
-      const selectedElement = elements.find(e => e.id === formValues.element.id);
+    if (element.id) {
+      const selectedElement = elements.find(e => e.id === element.id);
       if (selectedElement) {
         setValue("surveySection", {
           id: selectedElement.sectionId,
@@ -177,18 +172,24 @@ export default function InspectionForm({
         });
       }
     }
-  }, [formValues.element.id, elements, surveySections, setValue]);
+  }, [element.id, elements, surveySections, setValue]);
+
+  // Memoize the image upload path to prevent re-renders
+  const imageUploadPath = useMemo(() => {
+    const inspectionId = watch("inspectionId");
+    return `report-images/${surveyId}/inspections/${inspectionId}`;
+  }, [surveyId, watch]);
 
   const onSubmit = async (data: InspectionFormData) => {
+    console.debug("[InspectionForm] Submitting form data:", data);
     await surveyStore.update(surveyId, (survey) => {
       return addOrUpdateComponent(
         survey,
         data.surveySection.id,
         data.element.id,
-        data.element.name,
-        elements.find(e => e.id === data.element.id)?.description || "",
         {
           id: data.component.id,
+          inspectionId: data.inspectionId,
           name: data.component.name,
           nameOverride: data.nameOverride,
           useNameOverride: data.useNameOverride,
@@ -258,17 +259,17 @@ export default function InspectionForm({
             <Button
               className="flex-none"
               variant="outline"
-              disabled={!formValues.element.id}
+              disabled={!element.id}
               onClick={(e) => {
                 e.preventDefault();
                 drawer.openDrawer({
-                  title: `Edit Element - ${formValues.element.name}`,
-                  description: `Edit the ${formValues.element.name} element for survey`,
+                  title: `Edit Element - ${element.name}`,
+                  description: `Edit the ${element.name} element for survey`,
                   content: (
                     <ElementForm
                       surveyId={surveyId}
-                      sectionId={formValues.surveySection.id}
-                      elementId={formValues.element.id}
+                      sectionId={surveySection.id}
+                      elementId={element.id}
                     />
                   ),
                 });
@@ -293,7 +294,7 @@ export default function InspectionForm({
                   description: "Create a new component for any element",
                   content: (
                     <ComponentDataForm
-                      defaultValues={{ elementId: formValues.element.id }}
+                      defaultValues={{ elementId: element.id }}
                     />
                   ),
                 });
@@ -303,24 +304,23 @@ export default function InspectionForm({
             <Button
               className="flex-none"
               variant="outline"
-              disabled={!formValues.component.name}
+              disabled={!component.name}
               onClick={(e) => {
                 e.preventDefault();
-                setValue("useNameOverride", !formValues.useNameOverride);
-                setShowNameOverride(!showNameOverride);
+                setValue("useNameOverride", !useNameOverride, { shouldValidate: true });
               }}
             >
               <PenLine className="w-4 h-4" />
             </Button>
           </div>
 
-          {showNameOverride && formValues.component.id && (
+          {useNameOverride && component.id && (
             <Input
               type="text"
               labelTitle="Component Name Override"
               register={() => register("nameOverride")}
               errors={errors}
-              defaultValue={formValues.component.name}
+              defaultValue={component.name}
               placeholder="Enter custom component name"
             />
           )}
@@ -353,8 +353,8 @@ export default function InspectionForm({
                     onSave={() => drawer.closeDrawer()}
                     defaultValues={{
                       type: "Condition",
-                      associatedComponentIds: [formValues.component.id],
-                      associatedElementIds: [formValues.element.id],
+                      associatedComponentIds: [component.id],
+                      associatedElementIds: [element.id],
                     }}
                   />
                 ),
@@ -362,9 +362,9 @@ export default function InspectionForm({
             }}
           />
 
-          {Array.isArray(formValues.conditions) && (
+          {Array.isArray(conditions) && (
             <DraggableConditions
-              conditions={formValues.conditions}
+              conditions={conditions}
               control={control}
               setValue={setValue}
               watch={watch}
@@ -380,12 +380,13 @@ export default function InspectionForm({
           <div className="space-y-2">
             <Label>Images</Label>
             <RhfInputImage
-              path={`report-images/${surveyId}/components/${formValues.component.id}`}
+              path={imageUploadPath}
               rhfProps={{
                 name: "images",
-                control: control as any,
+                rules: { 
+                  onChange: () => true 
+                }
               }}
-              maxNumberOfFiles={5}
             />
           </div>
         </FormSection>

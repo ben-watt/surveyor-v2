@@ -86,12 +86,13 @@ export type ElementSection = {
     name: string,
     isPartOfSurvey: boolean,
     description: string,
-    components: Component[],
+    components: Inspection[],
     images: string[],
 }
 
-export type Component = {
+export type Inspection = {
     id: string,
+    inspectionId: string,
     name: string,
     conditions: Phrase[],
     ragStatus: RagStatus,
