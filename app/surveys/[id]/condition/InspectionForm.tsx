@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useForm, FormProvider, FieldErrors } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
-import {
-  RagStatus,
-} from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { merge } from "lodash";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,6 +9,7 @@ import {
   elementStore,
   phraseStore,
   surveyStore,
+  sectionStore,
 } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
@@ -24,53 +23,17 @@ import { DataForm as ElementDataForm } from "@/app/elements/form";
 import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/conditions/form";
 import Input from "@/app/components/Input/InputText";
-import { Survey } from "@/app/clients/Dexie";
 import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-survey-reports/Survey";
 
-import { Phrase } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
-import { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
-
-import { sectionStore } from "@/app/clients/Database";
 
 
-const RAG_OPTIONS = [
-  { value: "Red", label: "Red" },
-  { value: "Amber", label: "Amber" },
-  { value: "Green", label: "Green" },
-  { value: "N/I", label: "Not Inspected" },
-];
-
-type InspectionFormData = {
-  location: string;
-  surveySection: {
-    id: string;
-    name: string;
-  };
-  element: {
-    id: string;
-    name: string;
-  };
-  component: {
-    id: string;
-    name: string;
-  };
-  nameOverride: string;
-  useNameOverride: boolean;
-  additionalDescription: string;
-  images: string[];
-  ragStatus: RagStatus;
-  conditions: Phrase[];
-};
-
-interface InspectionFormProps {
-  surveyId: string;
-  componentId?: string; // Optional - if provided, will pre-populate form from survey data
-}
+import { DraggableConditions } from "./DraggableConditions";
+import { InspectionFormData, InspectionFormProps, RAG_OPTIONS } from "./types";
 
 export default function InspectionForm({
   surveyId,
   componentId,
+  defaultValues,
 }: InspectionFormProps) {
   const [componentsHydrated, components] = componentStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
@@ -81,159 +44,142 @@ export default function InspectionForm({
   const drawer = useDynamicDrawer();
   const [showNameOverride, setShowNameOverride] = useState(false);
 
-  let defaultValues: InspectionFormData = {
-    location: "",
-    surveySection: {
-      id: "",
-      name: "",
-    },
-    element: { id: "", name: "" },
-    component: {
-      id: "",
-      name: "",
-    },
-    nameOverride: "",
-    useNameOverride: false,
-    additionalDescription: "",
-    images: [],
-    ragStatus: "N/I",
-    conditions: [],
-  };
+  const initialValues = useMemo(() => {
+    const baseValues: InspectionFormData = {
+      location: "",
+      surveySection: { id: "", name: "" },
+      element: { id: "", name: "" },
+      component: { id: "", name: "" },
+      nameOverride: "",
+      useNameOverride: false,
+      additionalDescription: "",
+      images: [],
+      ragStatus: "N/I",
+      conditions: [],
+    };
 
-  const methods = useForm<InspectionFormData>({ defaultValues });
-  const { reset } = methods;
+    return merge({}, baseValues, defaultValues);
+  }, [defaultValues]);
 
+  const methods = useForm<InspectionFormData>({ defaultValues: initialValues });
+  const { reset, register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
+
+  // Load existing component data if componentId is provided
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || !componentId || !survey) return;
 
-    if (componentId && survey) {
-      const { component, elementSection, section } = findComponent(survey, componentId);
+    const { component, elementSection, section } = findComponent(survey, componentId);
+    if (!component || !elementSection || !section) return;
 
-      if (component && elementSection && section) {
-        let restoredValues = {
-          location: component.location || "",
-          surveySection: {
-            id: section.id,
-            name: section.name,
-          },
-          element: {
-            id: elementSection.id,
-            name: elementSection.name,
-          },
-          component: {
-            id: component.id,
-            name: component.name,
-          },
-          nameOverride: component.nameOverride || component.name,
-          useNameOverride: component.useNameOverride || false,
-          ragStatus: component.ragStatus,
-          conditions: component.conditions || [],
-          additionalDescription: component.additionalDescription || "",
-          images: component.images || [],
-        };
-
-        reset(restoredValues);
-      }
-    }
+    reset({
+      location: component.location || "",
+      surveySection: { id: section.id, name: section.name },
+      element: { id: elementSection.id, name: elementSection.name },
+      component: { id: component.id, name: component.name },
+      nameOverride: component.nameOverride || component.name,
+      useNameOverride: component.useNameOverride || false,
+      ragStatus: component.ragStatus,
+      conditions: component.conditions || [],
+      additionalDescription: component.additionalDescription || "",
+      images: component.images || [],
+    });
   }, [isHydrated, survey, componentId, reset]);
 
-  const {
-    register,
-    watch,
-    setValue,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = methods;
   const formValues = watch();
 
-  // Memoize the filtered elements based on selected survey section
-  const elementOptions = useMemo(() => {
-    return elements.map((element) => ({
-      value: { id: element.id, name: element.name },
-      label: element.name,
+  // Memoized options for select fields
+  const surveySectionOptions = useMemo(() => {
+    // Always show all sections
+    return surveySections.map(section => ({
+      value: { id: section.id, name: section.name },
+      label: section.name,
     }));
-  }, [elements]);
+  }, [surveySections]);
 
-  // Memoize the filtered components based on selected element
-  const componentOptions = useMemo(() => {
-    const filteredComponents = components.filter(
-      (component) => component.elementId === formValues.element.id
-    );
-    return filteredComponents.map((component) => ({
-      value: {
-        id: component.id,
-        name: component.name,
-      },
-      label: component.name,
-    }));
-  }, [components, formValues.element]);
+  // Filter elements based on selected section
+  const elementOptions = useMemo(() => 
+    elements
+      .filter(element => !formValues.surveySection.id || element.sectionId === formValues.surveySection.id)
+      .map(element => ({
+        value: { id: element.id, name: element.name },
+        label: element.name,
+      })), 
+    [elements, formValues.surveySection.id]
+  );
 
-  // Memoize the filtered phrases for conditions and defects
-  const phrasesOptions = useMemo(() => {
-    const filteredPhrases = phrases.filter(
-      (phrase) =>
-        phrase.associatedComponentIds.includes(formValues.component.id)
-    );
-    return filteredPhrases.map((phrase) => ({
-      value: phrase,
-      label: phrase.name,
-    }));
-  }, [phrases, formValues.component.id]);
+  const componentOptions = useMemo(() => 
+    components
+      .filter(component => component.elementId === formValues.element.id)
+      .map(component => ({
+        value: { id: component.id, name: component.name },
+        label: component.name,
+      })),
+    [components, formValues.element.id]
+  );
 
-  // Reset dependent fields when survey section changes
+  const phrasesOptions = useMemo(() => 
+    phrases
+      .filter(phrase => 
+        phrase.type === "Condition" && 
+        (phrase.associatedComponentIds.includes(formValues.component.id) ||
+         phrase.associatedElementIds.includes(formValues.element.id))
+      )
+      .map(phrase => ({
+        value: {
+          id: phrase.id,
+          name: phrase.name,
+          description: phrase.phrase,
+        },
+        label: phrase.name,
+      })),
+    [phrases, formValues.component.id, formValues.element.id]
+  );
+
+  // Reset dependent fields when parent fields change
   useEffect(() => {
     const elementExists = elements.some(
-      (e) =>
-        e.id === formValues.element.id && e.sectionId === formValues.surveySection.id
+      e => e.id === formValues.element.id && e.sectionId === formValues.surveySection.id
     );
 
-    if (formValues.surveySection && !elementExists && formValues.element.id) {
-      setValue("element", defaultValues.element, { shouldDirty: false });
-      setValue("component", defaultValues.component, { shouldDirty: false });
+    if (formValues.surveySection.id && !elementExists && formValues.element.id) {
+      setValue("element", { id: "", name: "" });
+      setValue("component", { id: "", name: "" });
     }
-  }, [
-    formValues.surveySection,
-    formValues.element.id,
-    setValue,
-    defaultValues.element,
-    defaultValues.component,
-    elements,
-  ]);
+  }, [formValues.surveySection.id, formValues.element.id, setValue, elements]);
 
-  // Reset component when element changes
   useEffect(() => {
     const componentExists = components.some(
-      (c) =>
-        c.id === formValues.component.id &&
-        c.elementId === formValues.element.id
+      c => c.id === formValues.component.id && c.elementId === formValues.element.id
     );
 
     if (formValues.element && !componentExists && formValues.component.id) {
-      setValue("component", defaultValues.component);
-      setValue("conditions", []); // Clear conditions when component is reset
+      setValue("component", { id: "", name: "" });
+      setValue("conditions", []);
     }
-  }, [
-    formValues.element,
-    formValues.component.id,
-    components,
-    setValue,
-    defaultValues.component,
-  ]);
+  }, [formValues.element, formValues.component.id, components, setValue]);
 
-  // Reset nameOverride visibility and conditions when component changes
   useEffect(() => {
     if (!formValues.component.id) {
       setShowNameOverride(false);
-      setValue("conditions", []); // Clear conditions when component is cleared
+      setValue("conditions", []);
     } else if (showNameOverride) {
       setValue("nameOverride", formValues.component.name);
     }
   }, [formValues.component.id, formValues.component.name, showNameOverride, setValue]);
 
-  const onValid = async (data: InspectionFormData) => {
-    console.log("[InspectionForm] onValid", data);
+  useEffect(() => {
+    if (formValues.element.id) {
+      const selectedElement = elements.find(e => e.id === formValues.element.id);
+      if (selectedElement) {
+        setValue("surveySection", {
+          id: selectedElement.sectionId,
+          name: surveySections.find(s => s.id === selectedElement.sectionId)?.name || "",
+        });
+      }
+    }
+  }, [formValues.element.id, elements, surveySections, setValue]);
 
+  const onSubmit = async (data: InspectionFormData) => {
     await surveyStore.update(surveyId, (survey) => {
       return addOrUpdateComponent(
         survey,
@@ -249,7 +195,12 @@ export default function InspectionForm({
           location: data.location,
           additionalDescription: data.additionalDescription,
           images: data.images,
-          conditions: data.conditions,
+          conditions: data.conditions.map(x => ({
+            id: x.id,
+            name: x.name,
+            description: x.description || "",
+            phrase: x.phrase,
+          })),
           ragStatus: data.ragStatus,
         }
       );
@@ -258,49 +209,6 @@ export default function InspectionForm({
     drawer.closeDrawer();
     toast.success("Inspection saved");
   };
-
-  const onInvalid = (errors: FieldErrors<InspectionFormData>) => {
-    console.log(errors);
-  };
-
-  const surveySectionOptions = useMemo(() => {
-    // If no element is selected, show all sections
-    if (!formValues.element.id) {
-      return surveySections.map((section) => ({
-        value: section.name,
-        label: section.name,
-      }));
-    }
-
-    // Find the element in the elements list to get its section
-    const selectedElement = elements.find(
-      (e) => e.id === formValues.element.id
-    );
-    if (!selectedElement) return [];
-
-    // Filter survey sections to only show the one matching the element's section
-    return surveySections
-      .filter((section) => section.id === selectedElement.sectionId)
-      .map((section) => ({
-        value: section.name,
-        label: section.name,
-      }));
-  }, [formValues.element.id, elements, surveySections]);
-
-  // Reset survey section when element changes
-  useEffect(() => {
-    if (formValues.element.id) {
-      const selectedElement = elements.find(
-        (e) => e.id === formValues.element.id
-      );
-      if (selectedElement) {
-        setValue("surveySection", {
-          id: selectedElement.sectionId,
-          name: surveySections.find(s => s.id === selectedElement.sectionId)?.name || "",
-        });
-      }
-    }
-  }, [formValues.element.id, elements, surveySections, setValue]);
 
   if (!isHydrated) {
     return (
@@ -322,8 +230,16 @@ export default function InspectionForm({
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onValid, onInvalid)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <FormSection title="Basic Information">
+          <Combobox
+            labelTitle="Survey Section"
+            data={surveySectionOptions}
+            name="surveySection"
+            control={control}
+            errors={errors}
+            rules={{ required: "Survey section is required" }}
+          />
           <div className="flex items-end gap-2 justify-between">
             <Combobox
               labelTitle="Element"
@@ -333,19 +249,17 @@ export default function InspectionForm({
               errors={errors}
               onCreateNew={() => {
                 drawer.openDrawer({
-                  title: `Create a new element`,
-                  description: `Create a new element for any survey`,
+                  title: "Create a new element",
+                  description: "Create a new element for any survey",
                   content: <ElementDataForm />,
                 });
               }}
-              rules={{
-                required: "Element is required",
-              }}
+              rules={{ required: "Element is required" }}
             />
             <Button
               className="flex-none"
               variant="outline"
-              disabled={formValues.element.id === ""}
+              disabled={!formValues.element.id}
               onClick={(e) => {
                 e.preventDefault();
                 drawer.openDrawer({
@@ -364,17 +278,8 @@ export default function InspectionForm({
               <Edit className="w-4 h-4" />
             </Button>
           </div>
-          <Combobox
-            labelTitle="Survey Section"
-            data={surveySectionOptions}
-            name="surveySection"
-            control={control}
-            errors={errors}
-            rules={{
-              required: "Survey section is required",
-            }}
-          />
         </FormSection>
+
         <FormSection title="Component Details">
           <div className="flex items-end gap-2 justify-between">
             <Combobox
@@ -385,25 +290,21 @@ export default function InspectionForm({
               errors={errors}
               onCreateNew={() => {
                 drawer.openDrawer({
-                  title: `Create a new component`,
-                  description: `Create a new component for any element`,
+                  title: "Create a new component",
+                  description: "Create a new component for any element",
                   content: (
                     <ComponentDataForm
-                      defaultValues={{
-                        elementId: formValues.element.id,
-                      }}
+                      defaultValues={{ elementId: formValues.element.id }}
                     />
                   ),
                 });
               }}
-              rules={{
-                required: true,
-              }}
+              rules={{ required: true }}
             />
             <Button
               className="flex-none"
               variant="outline"
-              disabled={formValues.component.name === undefined}
+              disabled={!formValues.component.name}
               onClick={(e) => {
                 e.preventDefault();
                 setValue("useNameOverride", !formValues.useNameOverride);
@@ -413,6 +314,7 @@ export default function InspectionForm({
               <PenLine className="w-4 h-4" />
             </Button>
           </div>
+
           {showNameOverride && formValues.component.id && (
             <Input
               type="text"
@@ -423,16 +325,19 @@ export default function InspectionForm({
               placeholder="Enter custom component name"
             />
           )}
+
           <Combobox
             labelTitle="RAG Status"
-            data={RAG_OPTIONS}
+            data={RAG_OPTIONS.map(x => ({
+              value: x.value,
+              label: x.label,
+            }))}
             name="ragStatus"
             control={control}
             errors={errors}
-            rules={{
-              required: "RAG status is required",
-            }}
+            rules={{ required: "RAG status is required" }}
           />
+
           <Combobox
             labelTitle="Condition"
             data={phrasesOptions}
@@ -442,13 +347,11 @@ export default function InspectionForm({
             isMulti={true}
             onCreateNew={() => {
               drawer.openDrawer({
-                title: `Create a new condition phrase`,
-                description: `Create a new condition phrase for any surveys`,
+                title: "Create a new condition phrase",
+                description: "Create a new condition phrase for any surveys",
                 content: (
                   <PhraseDataForm
-                    onSave={() => {
-                      drawer.closeDrawer();
-                    }}
+                    onSave={() => drawer.closeDrawer()}
                     defaultValues={{
                       type: "Condition",
                       associatedComponentIds: [formValues.component.id],
@@ -459,6 +362,7 @@ export default function InspectionForm({
               });
             }}
           />
+
           {Array.isArray(formValues.conditions) && (
             <DraggableConditions
               conditions={formValues.conditions}
@@ -467,11 +371,13 @@ export default function InspectionForm({
               watch={watch}
             />
           )}
+
           <TextAreaInput
             labelTitle="Additional Comments"
             register={() => register("additionalDescription")}
             placeholder="Enter component description"
           />
+
           <div className="space-y-2">
             <Label>Images</Label>
             <RhfInputImage
@@ -484,72 +390,11 @@ export default function InspectionForm({
             />
           </div>
         </FormSection>
+
         <Button type="submit" className="w-full">
           Save
         </Button>
       </form>
     </FormProvider>
-  );
-}
-
-
-interface DraggableConditionsProps {
-  conditions: Phrase[];
-  control: Control<any>;
-  setValue: UseFormSetValue<any>;
-  watch: UseFormWatch<any>;
-}
-
-export function DraggableConditions({
-  conditions,
-  setValue,
-}: DraggableConditionsProps) {
-  const [phrasesHydrated, phrases] = phraseStore.useList();
-
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-
-    const reorderedConditions = Array.from(conditions);
-    const [removed] = reorderedConditions.splice(result.source.index, 1);
-    reorderedConditions.splice(result.destination.index, 0, removed);
-
-    setValue('conditions', reorderedConditions, { shouldDirty: true });
-  };
-
-  return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="conditions">
-        {(provided) => (
-          <div
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-            className="space-y-2"
-          >
-            {conditions.map((condition, index) => {
-              const phrase = phrases.find((p) => p.id === condition.id);
-              return (
-                <Draggable
-                  key={condition.id}
-                  draggableId={condition.id}
-                  index={index}
-                >
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className="space-y-2 border-b border-gray-200 p-4 text-xs bg-white rounded-md shadow-sm hover:shadow-md transition-shadow cursor-move"
-                    >
-                      <p>{phrase?.phrase}</p>
-                    </div>
-                  )}
-                </Draggable>
-              );
-            })}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
   );
 }

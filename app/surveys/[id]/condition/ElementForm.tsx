@@ -119,6 +119,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
       <form onSubmit={handleSubmit(onValid)} className="space-y-6">
         <FormSection title="Element Details">
           <TextAreaInput
+            className="h-36"
             labelTitle="Description"
             register={() => register("description")}
             placeholder="Enter element description"

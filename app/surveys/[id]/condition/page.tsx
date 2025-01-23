@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { DynamicDrawer, useDynamicDrawer } from "@/app/components/Drawer";
 import InspectionForm from "./InspectionForm";
 import ElementForm from "./ElementForm";
+import { removeElementSection } from "../../building-survey-reports/Survey";
 
 interface ConditionPageProps {
   params: {
@@ -124,6 +125,14 @@ const ElementSectionComponent = ({
   surveyId,
 }: ElementSectionProps) => {
   const { openDrawer } = useDynamicDrawer();
+  const [isHydrated, survey] = surveyStore.useGet(surveyId);
+
+  const handleRemove = async () => {
+    if (!survey) return;
+    await surveyStore.update(surveyId, (draft) => {
+      removeElementSection(draft, sectionId, elementSection.id);
+    });
+  };
 
   return (
     <div className="border border-gray-200 p-2 rounded">
@@ -152,8 +161,23 @@ const ElementSectionComponent = ({
               })}>
                 Edit Element
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openDrawer({
+                title: `Inspect ${elementSection.name}`,
+                description: `Add or edit inspections for ${elementSection.name}`,
+                content: <InspectionForm
+                  surveyId={surveyId}
+                  defaultValues={{
+                    element: {
+                      id: elementSection.id,
+                      name: elementSection.name,
+                    },
+                  }}
+                />
+              })}>
+                Inspect Component
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleRemove}>
                 <span className="text-red-500">Remove</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

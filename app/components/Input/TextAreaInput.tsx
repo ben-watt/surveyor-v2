@@ -12,6 +12,7 @@ interface TextAreaInputProps {
   labelTitle?: string;
   defaultValue?: string;
   placeholder?: string;
+  className?: string;
   register: () => UseFormRegisterReturn<string>;
   errors?: FieldErrors<FieldValues>;
 }
@@ -22,6 +23,7 @@ export default function TextAreaInput({
   defaultValue = "",
   placeholder = "",
   errors,
+  className = "",
 }: TextAreaInputProps) {
   const reg = register();
   return (
@@ -29,6 +31,7 @@ export default function TextAreaInput({
       {labelTitle && <Label text={labelTitle} />}
       <Textarea
         {...reg}
+        className={className}
         placeholder={placeholder}
         defaultValue={defaultValue}
       />

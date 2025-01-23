@@ -185,4 +185,17 @@ export function findComponent(
     elementSection: null,
     section: null
   };
+}
+
+// Remove an element section
+export function removeElementSection(
+  survey: BuildingSurveyFormData,
+  sectionId: string,
+  elementId: string
+): BuildingSurveyFormData {
+  const section = survey.sections.find(s => s.id === sectionId);
+  if (!section) return survey;
+
+  section.elementSections = section.elementSections.filter(e => e.id !== elementId);
+  return survey;
 } 

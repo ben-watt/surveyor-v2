@@ -3,7 +3,6 @@
 import { PrimaryBtn } from "@/app/components/Buttons";
 import Input from "@/app/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Combobox } from "../components/Input/ComboBox";
 import toast from "react-hot-toast";
@@ -45,7 +44,7 @@ export function DataForm({ id }: DataFormProps) {
           await elementStore.add({
             id: uuidv4(),
             name: data.name,
-            section: data.section,
+            sectionId: data.sectionId,
             order: data.order,
             description: data.description,
           });
@@ -54,7 +53,7 @@ export function DataForm({ id }: DataFormProps) {
           await elementStore.update(data.id, (draft) => {
             draft.name = data.name;
             draft.order = data.order;
-            draft.section = data.section;
+            draft.sectionId = data.sectionId;
             draft.description = data.description;
           });
           toast.success("Updated Element");
