@@ -89,13 +89,13 @@ const createDefaultFormValues = async (
         required: true,
       },
       yearOfExtensions: {
-        type: "number",
+        type: "text",
         label: "Year of Extensions",
         placeholder: "2012",
         required: false,
       },
       yearOfConversions: {
-        type: "number",
+        type: "text",
         label: "Year of Conversions",
         placeholder: "2004",
         required: false,

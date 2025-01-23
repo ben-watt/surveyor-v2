@@ -69,7 +69,7 @@ function HomePage() {
       },
       {
         header: "Address",
-        accessorKey: "reportDetails.address",
+        accessorKey: "reportDetails.address.formatted",
       },
       {
         header: "Owner",

@@ -61,9 +61,9 @@ export type Tenure = "Freehold" | "Leasehold" | "Commonhold" | "Other" | "Unknow
 
 export type PropertyDescription = {
     propertyType: Input<string>,
-    yearOfConstruction: Input<Year>,
-    yearOfExtensions: Input<Year>,
-    yearOfConversions: Input<Year>,
+    yearOfConstruction: Input<string>,
+    yearOfExtensions: Input<string>,
+    yearOfConversions: Input<string>,
     constructionDetails: Input<description>,
     grounds: Input<description>,
     services: Input<string>,
