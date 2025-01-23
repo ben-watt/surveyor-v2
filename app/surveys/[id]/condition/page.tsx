@@ -159,7 +159,7 @@ const ElementSectionComponent = ({
                   elementId={elementSection.id}
                 />
               })}>
-                Edit Element
+                Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => openDrawer({
                 title: `Inspect ${elementSection.name}`,

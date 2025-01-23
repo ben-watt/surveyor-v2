@@ -106,7 +106,7 @@ export type Component = {
 export type Phrase = {
     id: string,
     name: string,
-    description: string,
+    phrase: string,
 }
 
 export type Material = {

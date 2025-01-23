@@ -3,7 +3,6 @@ import { RagStatus } from "@/app/surveys/building-survey-reports/BuildingSurveyR
 export type FormPhrase = {
   id: string;
   name: string;
-  description?: string;
   phrase: string;
 };
 

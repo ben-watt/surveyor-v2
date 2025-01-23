@@ -79,7 +79,7 @@ export function addOrUpdateComponent(
     conditions: (component.conditions || []).map(p => ({
       id: p.id,
       name: p.name,
-      description: p.description || "",
+      phrase: p.phrase || "",
     })),
     ragStatus: component.ragStatus || "N/I",
     budgetCost: component.budgetCost,

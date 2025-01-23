@@ -28,7 +28,7 @@ import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-surv
 
 
 import { DraggableConditions } from "./DraggableConditions";
-import { InspectionFormData, InspectionFormProps, RAG_OPTIONS } from "./types";
+import { FormPhrase, InspectionFormData, InspectionFormProps, RAG_OPTIONS } from "./types";
 
 export default function InspectionForm({
   surveyId,
@@ -117,7 +117,7 @@ export default function InspectionForm({
     [components, formValues.element.id]
   );
 
-  const phrasesOptions = useMemo(() => 
+  const phrasesOptions = useMemo((): { value: FormPhrase, label: string }[] => 
     phrases
       .filter(phrase => 
         phrase.type === "Condition" && 
@@ -128,7 +128,7 @@ export default function InspectionForm({
         value: {
           id: phrase.id,
           name: phrase.name,
-          description: phrase.phrase,
+          phrase: phrase.phrase,
         },
         label: phrase.name,
       })),
@@ -198,8 +198,7 @@ export default function InspectionForm({
           conditions: data.conditions.map(x => ({
             id: x.id,
             name: x.name,
-            description: x.description || "",
-            phrase: x.phrase,
+            phrase: x.phrase || "",
           })),
           ragStatus: data.ragStatus,
         }
