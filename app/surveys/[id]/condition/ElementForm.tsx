@@ -186,6 +186,23 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
               </div>
             )}
           </div>
+          <Button variant="secondary" type="button" className="w-full" onClick={() => {
+            drawer.openDrawer({
+              title: `Add Component`,
+              description: `Add a component to the element`,
+              content: <InspectionForm
+                surveyId={surveyId}
+                defaultValues={{
+                  element: {
+                    id: elementId,
+                    name: elementData?.name || "",
+                  }
+                }}
+              />
+            });
+          }}>
+          Add Component
+        </Button>
         </FormSection>
         <Button type="submit" className="w-full">
           Save Element Details
