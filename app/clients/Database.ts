@@ -7,6 +7,7 @@ import {
   CreateDexieHooks,
   Phrase,
   Location,
+  Section,
 } from "./Dexie";
 import client from "./AmplifyDataClient";
 import { Schema } from "@/amplify/data/resource";
@@ -142,15 +143,6 @@ export const elementStore = CreateDexieHooks<
     await client.models.Elements.delete({ id });
   },
 });
-
-export interface Section {
-  id: string;
-  syncStatus: SyncStatus;
-  updatedAt: string;
-  createdAt: string;
-  name: string;
-  order: number;
-}
 
 const mapToSection = (data: any): Section => ({
   id: data.id,
