@@ -65,8 +65,9 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
   }, [elementId, reset, isHydrated, survey, sectionId]);
 
   const onValid = async (data: ElementFormData) => {
+    console.debug("[ElementForm] onValid", data);
     await surveyStore.update(surveyId, (survey) => {
-      return updateElementDetails(survey, sectionId, elementId, {
+      updateElementDetails(survey, sectionId, elementId, {
         description: data.description,
         images: data.images,
       });
@@ -129,10 +130,8 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
             <RhfInputImage
               path={`report-images/${surveyId}/elements/${elementId}`}
               rhfProps={{
-                name: "images",
-                control: control as any
+                name: "images"
               }}
-              maxNumberOfFiles={5}
             />
           </div>
         </FormSection>

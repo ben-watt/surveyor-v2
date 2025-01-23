@@ -114,14 +114,14 @@ export function removeComponent(
 // Update element details
 export function updateElementDetails(
   survey: BuildingSurveyFormData,
-  sectionName: string,
+  sectionId: string,
   elementId: string,
   updates: {
     description?: string,
     images?: string[],
   }
 ): BuildingSurveyFormData {
-  const section = survey.sections.find(s => s.name === sectionName);
+  const section = survey.sections.find(s => s.id === sectionId);
   if (!section) return survey;
 
   const elementSection = section.elementSections.find(e => e.id === elementId);
@@ -152,10 +152,10 @@ export function getElementSection(
 // Get all components for an element
 export function getElementComponents(
   survey: BuildingSurveyFormData,
-  sectionName: string,
+  sectionId: string,
   elementId: string
 ): Component[] {
-  const elementSection = getElementSection(survey, sectionName, elementId);
+  const elementSection = getElementSection(survey, sectionId, elementId);
   return elementSection?.components || [];
 }
 
