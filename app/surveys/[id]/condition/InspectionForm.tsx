@@ -3,7 +3,6 @@ import { useForm, FormProvider, FieldErrors } from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
 import {
   RagStatus,
-  ElementSection,
 } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,7 +14,6 @@ import {
 } from "@/app/clients/Database";
 import { RhfInputImage } from "@/app/components/Input/InputImage";
 import TextAreaInput from "@/app/components/Input/TextAreaInput";
-import surveySections from "@/app/settings/surveySections.json";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { useDynamicDrawer } from "@/app/components/Drawer";
 import toast from "react-hot-toast";
@@ -33,6 +31,8 @@ import { Phrase } from "@/app/surveys/building-survey-reports/BuildingSurveyRepo
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { Control, UseFormSetValue, UseFormWatch } from "react-hook-form";
 
+import { sectionStore } from "@/app/clients/Database";
+
 
 const RAG_OPTIONS = [
   { value: "Red", label: "Red" },
@@ -43,7 +43,10 @@ const RAG_OPTIONS = [
 
 type InspectionFormData = {
   location: string;
-  surveySection: string;
+  surveySection: {
+    id: string;
+    name: string;
+  };
   element: {
     id: string;
     name: string;
@@ -73,13 +76,17 @@ export default function InspectionForm({
   const [elementsHydrated, elements] = elementStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
+  const [surveySectionsHydrated, surveySections] = sectionStore.useList();
 
   const drawer = useDynamicDrawer();
   const [showNameOverride, setShowNameOverride] = useState(false);
 
   let defaultValues: InspectionFormData = {
     location: "",
-    surveySection: "",
+    surveySection: {
+      id: "",
+      name: "",
+    },
     element: { id: "", name: "" },
     component: {
       id: "",
@@ -100,12 +107,15 @@ export default function InspectionForm({
     if (!isHydrated) return;
 
     if (componentId && survey) {
-      const { component, elementSection, sectionName } = findComponent(survey, componentId);
+      const { component, elementSection, section } = findComponent(survey, componentId);
 
-      if (component && elementSection && sectionName) {
+      if (component && elementSection && section) {
         let restoredValues = {
           location: component.location || "",
-          surveySection: sectionName,
+          surveySection: {
+            id: section.id,
+            name: section.name,
+          },
           element: {
             id: elementSection.id,
             name: elementSection.name,
@@ -175,7 +185,7 @@ export default function InspectionForm({
   useEffect(() => {
     const elementExists = elements.some(
       (e) =>
-        e.id === formValues.element.id && e.section === formValues.surveySection
+        e.id === formValues.element.id && e.sectionId === formValues.surveySection.id
     );
 
     if (formValues.surveySection && !elementExists && formValues.element.id) {
@@ -227,7 +237,7 @@ export default function InspectionForm({
     await surveyStore.update(surveyId, (survey) => {
       return addOrUpdateComponent(
         survey,
-        data.surveySection,
+        data.surveySection.id,
         data.element.id,
         data.element.name,
         elements.find(e => e.id === data.element.id)?.description || "",
@@ -270,12 +280,12 @@ export default function InspectionForm({
 
     // Filter survey sections to only show the one matching the element's section
     return surveySections
-      .filter((section) => section.name === selectedElement.section)
+      .filter((section) => section.id === selectedElement.sectionId)
       .map((section) => ({
         value: section.name,
         label: section.name,
       }));
-  }, [formValues.element.id, elements]);
+  }, [formValues.element.id, elements, surveySections]);
 
   // Reset survey section when element changes
   useEffect(() => {
@@ -284,10 +294,13 @@ export default function InspectionForm({
         (e) => e.id === formValues.element.id
       );
       if (selectedElement) {
-        setValue("surveySection", selectedElement.section);
+        setValue("surveySection", {
+          id: selectedElement.sectionId,
+          name: surveySections.find(s => s.id === selectedElement.sectionId)?.name || "",
+        });
       }
     }
-  }, [formValues.element.id, elements, setValue]);
+  }, [formValues.element.id, elements, surveySections, setValue]);
 
   if (!isHydrated) {
     return (
@@ -341,7 +354,7 @@ export default function InspectionForm({
                   content: (
                     <ElementForm
                       surveyId={surveyId}
-                      sectionName={formValues.surveySection}
+                      sectionId={formValues.surveySection.id}
                       elementId={formValues.element.id}
                     />
                   ),

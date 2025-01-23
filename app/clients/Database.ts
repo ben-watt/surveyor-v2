@@ -111,7 +111,7 @@ const mapToElement = (data: any): BuildingSurveyElement => ({
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
   name: data.name,
-  section: data.section,
+  sectionId: data.sectionId,
   description: data.description,
 });
 
@@ -142,6 +142,49 @@ export const elementStore = CreateDexieHooks<
     await client.models.Elements.delete({ id });
   },
 });
+
+export interface Section {
+  id: string;
+  syncStatus: SyncStatus;
+  updatedAt: string;
+  createdAt: string;
+  name: string;
+  order: number;
+}
+
+const mapToSection = (data: any): Section => ({
+  id: data.id,
+  syncStatus: SyncStatus.Synced,
+  updatedAt: data.updatedAt,
+  createdAt: data.createdAt,
+  name: data.name,
+  order: data.order || 0,
+});
+
+export type UpdateSection = Partial<Section> & { id: string };
+export type CreateSection = Omit<Section, "updatedAt" | "createdAt">;
+
+export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSection>(
+  db,
+  "sections",
+  {
+    list: async () => {
+      const response = await client.models.Sections.list();
+      return response.data.map(mapToSection);
+    },
+    create: async (data) => {
+      const response = await client.models.Sections.create(data);
+      return mapToSection(response.data);
+    },
+    update: async (data) => {
+      const response = await client.models.Sections.update(data);
+      return mapToSection(response.data);
+    },
+    delete: async (id) => {
+      await client.models.Sections.delete({ id });
+    },
+  }
+);
 
 const mapToPhrase = (data: any): Phrase => ({
   id: data.id,

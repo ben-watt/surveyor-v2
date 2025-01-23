@@ -76,6 +76,7 @@ export type PropertyDescription = {
 }
 
 export type SurveySection = {
+    id: string,
     name: string,
     elementSections: ElementSection[],
 }

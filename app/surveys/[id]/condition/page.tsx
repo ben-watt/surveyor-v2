@@ -97,7 +97,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
               <ElementSectionComponent
                 key={elementSection.name}
                 elementSection={elementSection}
-                sectionName={section.name}
+                sectionId={section.id}
                 surveyId={id}
               />
             ))}
@@ -114,13 +114,13 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
 
 interface ElementSectionProps {
   elementSection: ElementSection;
-  sectionName: string;
+  sectionId: string;
   surveyId: string;
 }
 
 const ElementSectionComponent = ({
   elementSection,
-  sectionName,
+  sectionId,
   surveyId,
 }: ElementSectionProps) => {
   const { openDrawer } = useDynamicDrawer();
@@ -146,7 +146,7 @@ const ElementSectionComponent = ({
                 description: `Edit the ${elementSection.name} element for survey`,
                 content: <ElementForm
                   surveyId={surveyId}
-                  sectionName={sectionName}
+                  sectionId={sectionId}
                   elementId={elementSection.id}
                 />
               })}>

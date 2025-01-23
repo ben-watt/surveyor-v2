@@ -22,7 +22,7 @@ export type CreateSurvey = ReplaceFieldType<Schema['Surveys']['createType'], "co
 export type DeleteSurvey = Schema['Surveys']['deleteType']
 
 export type Component = Omit<Schema['Components']['type'], "element">;
-export type Element = Omit<Schema['Elements']['type'], "components">;
+export type Element = Omit<Schema['Elements']['type'], "components" | "section">;
 export type Phrase = Schema['Phrases']['type'];
 export type Location = Schema['Locations']['type'];
 

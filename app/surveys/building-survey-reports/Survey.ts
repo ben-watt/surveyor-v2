@@ -1,11 +1,12 @@
 import { BuildingSurveyFormData, Component, ElementSection, Phrase, RagStatus, SurveySection } from "./BuildingSurveyReportSchema";
 
 // Find or create a section
-function findOrCreateSection(survey: BuildingSurveyFormData, sectionName: string): SurveySection {
-  let section = survey.sections.find(s => s.name === sectionName);
+function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
+  let section = survey.sections.find(s => s.id === sectionId);
   if (!section) {
     section = {
-      name: sectionName,
+      id: sectionId,
+      name: "",
       elementSections: [],
     };
     survey.sections.push(section);
@@ -16,12 +17,12 @@ function findOrCreateSection(survey: BuildingSurveyFormData, sectionName: string
 // Find or create an element section
 function findOrCreateElementSection(
   survey: BuildingSurveyFormData,
-  sectionName: string,
+  sectionId: string,
   elementId: string,
   elementName: string,
   elementDescription: string = ""
 ): ElementSection {
-  const section = findOrCreateSection(survey, sectionName);
+  const section = findOrCreateSection(survey, sectionId);
   let elementSection = section.elementSections.find(e => e.id === elementId);
   
   if (!elementSection) {
@@ -42,7 +43,7 @@ function findOrCreateElementSection(
 // Add or update a component
 export function addOrUpdateComponent(
   survey: BuildingSurveyFormData,
-  sectionName: string,
+  sectionId: string,
   elementId: string,
   elementName: string,
   elementDescription: string,
@@ -59,7 +60,7 @@ export function addOrUpdateComponent(
     budgetCost?: number,
   }
 ): BuildingSurveyFormData {
-  const elementSection = findOrCreateElementSection(survey, sectionName, elementId, elementName, elementDescription);
+  const elementSection = findOrCreateElementSection(survey, sectionId, elementId, elementName, elementDescription);
   
   const existingComponentIndex = elementSection.components.findIndex(
     c => c.id === component.id || 
@@ -139,10 +140,10 @@ export function updateElementDetails(
 // Get an element section
 export function getElementSection(
   survey: BuildingSurveyFormData,
-  sectionName: string,
+  sectionId: string,
   elementId: string
 ): ElementSection | null {
-  const section = survey.sections.find(s => s.name === sectionName);
+  const section = survey.sections.find(s => s.id === sectionId);
   if (!section) return null;
 
   return section.elementSections.find(e => e.id === elementId) || null;
@@ -165,7 +166,7 @@ export function findComponent(
 ): { 
   component: Component | null,
   elementSection: ElementSection | null,
-  sectionName: string | null 
+  section: SurveySection | null 
 } {
   for (const section of survey.sections) {
     for (const elementSection of section.elementSections) {
@@ -174,7 +175,7 @@ export function findComponent(
         return {
           component,
           elementSection,
-          sectionName: section.name
+          section
         };
       }
     }
@@ -182,6 +183,6 @@ export function findComponent(
   return {
     component: null,
     elementSection: null,
-    sectionName: null
+    section: null
   };
 } 

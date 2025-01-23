@@ -19,11 +19,22 @@ const schema = a.schema({
       allow.authenticated().to(["create", "read", "update"]),
       allow.owner().to(["create", "read", "update", "delete"]),
     ]),
+  Sections: a.model({
+    id: a.id().required(),
+    name: a.string().required(),
+    order: a.float(),
+    syncStatus: a.string().required(),
+    elements: a.hasMany("Elements", "sectionId"),
+  }).authorization((allow) => [
+    allow.owner().to(["create", "read", "update", "delete"]),
+    allow.authenticated().to(["create", "read", "update", "delete"]),
+  ]),
   Elements: a.model({
     id: a.id().required(),
     name: a.string().required(),
     order: a.float(),
-    section: a.string().required(),
+    sectionId: a.id().required(),
+    section: a.belongsTo("Sections", "sectionId"),
     description: a.string(),
     components: a.hasMany("Components", "elementId"),
     syncStatus: a.string().required(),

@@ -21,12 +21,12 @@ type ElementFormData = {
 
 interface ElementFormProps {
   surveyId: string;
-  sectionName: string;
+  sectionId: string;
   elementId: string;
 }
 
-export default function ElementForm({ surveyId, sectionName, elementId }: ElementFormProps) {  
-  console.debug("[ElementForm] props", surveyId, sectionName, elementId);
+export default function ElementForm({ surveyId, sectionId, elementId }: ElementFormProps) {  
+  console.debug("[ElementForm] props", surveyId, sectionId, elementId);
 
   const drawer = useDynamicDrawer();
   const [isLoading, setIsLoading] = React.useState(true);
@@ -45,7 +45,7 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
       if(!isHydrated || !survey) return;
 
       try {
-        const elementSection = getElementSection(survey, sectionName, elementId);
+        const elementSection = getElementSection(survey, sectionId, elementId);
         
         if (elementSection) {
           setElementData(elementSection);
@@ -62,11 +62,11 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
     };
 
     loadElementData();
-  }, [sectionName, elementId, reset, isHydrated, survey]);
+  }, [elementId, reset, isHydrated, survey, sectionId]);
 
   const onValid = async (data: ElementFormData) => {
     await surveyStore.update(surveyId, (survey) => {
-      return updateElementDetails(survey, sectionName, elementId, {
+      return updateElementDetails(survey, sectionId, elementId, {
         description: data.description,
         images: data.images,
       });
@@ -79,7 +79,7 @@ export default function ElementForm({ surveyId, sectionName, elementId }: Elemen
   const handleRemoveComponent = async (componentId: string) => {
     try {
       await surveyStore.update(surveyId, (survey) => {
-        const updatedSurvey = removeComponent(survey, sectionName, elementId, componentId);
+        const updatedSurvey = removeComponent(survey, sectionId, elementId, componentId);
         if (updatedSurvey === survey) {
           throw new Error("Failed to remove component");
         }
