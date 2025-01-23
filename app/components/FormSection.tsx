@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import React, { PropsWithChildren } from "react";
+import React, { PropsWithChildren, useEffect } from "react";
 import { motion } from "framer-motion"
 import Link from "next/link";
 import { DynamicDrawer, useDynamicDrawer } from "./Drawer";
@@ -18,6 +18,11 @@ export const FormSection = ({
   children,
 }: PropsWithChildren<FormSectionProps>) => {
   const [collapsed, setCollapsed] = React.useState(defaultCollapsed);
+  
+  useEffect(() => {
+    setCollapsed(defaultCollapsed);
+  }, [defaultCollapsed]);
+
   const variants = {
     open: { rotate: 90 },
     closed: { rotate: 0 },
@@ -61,9 +66,6 @@ interface FormSectionLinkProps {
   drawer?: DrawerProps;
 }
 
-interface DrawerContentProps {
-  setIsDrawerOpen: (isOpen: boolean) => void;
-}
 
 interface DrawerProps {
   title: string;

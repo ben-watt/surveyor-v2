@@ -3,7 +3,7 @@
 import { FormSection } from "@/app/components/FormSection";
 import { ElementSection, SurveySection } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/clients/Database";
-import { ClipboardList, MoreHorizontal } from "lucide-react";
+import { ClipboardList, MoreHorizontal, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -66,6 +66,7 @@ interface ConditionFormProps {
 
 const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
   const { openDrawer } = useDynamicDrawer();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const onStartNewInspection = () => {
     openDrawer({
@@ -90,10 +91,36 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
     )
   }
 
+  const filteredSections = initValues.map(section => ({
+    ...section,
+    elementSections: section.elementSections.filter(element =>
+      element.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })).filter(section => section.elementSections.length > 0);
+
   return (
     <div>
-        {initValues.map((section, sectionIndex) => (
-          <FormSection key={section.name} title={section.name} collapsable>
+        <div className="mb-4 relative">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search elements..."
+              className="w-full p-2 pl-9 border rounded-md bg-background hover:bg-accent/50 focus:bg-background transition-colors"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted-foreground">
+             <Search className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+        {filteredSections.map((section, sectionIndex) => (
+          <FormSection 
+            key={section.name} 
+            title={section.name} 
+            collapsable
+            defaultCollapsed={!(searchTerm.length > 0)}
+          >
             {section.elementSections.map((elementSection) => (
               <ElementSectionComponent
                 key={elementSection.name}
@@ -105,9 +132,9 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
           </FormSection>
         ))}
         <div className="space-y-2">
-        <Button className="w-full" variant="default" onClick={onStartNewInspection}>
-          Inspect Component
-        </Button>
+          <Button className="w-full" variant="default" onClick={onStartNewInspection}>
+            Inspect Component
+          </Button>
         </div>
     </div>
   );
