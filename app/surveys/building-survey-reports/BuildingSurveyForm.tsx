@@ -20,6 +20,8 @@ import { Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/hooks/useAsyncError";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
+import seedSectionData from "@/app/settings/sections.json";
+import seedElementData from "@/app/settings/elements.json";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -44,6 +46,28 @@ const createDefaultFormValues = async (
     );
     console.error(user);
   }
+
+  // Sort sections by order
+  const orderedSections = [...seedSectionData].sort((a, b) => a.order - b.order);
+  
+  // Sort elements by order and group by sectionId
+  const orderedElements = [...seedElementData].sort((a, b) => a.order - b.order);
+
+  // Create sections array with pre-populated elements
+  const sections = orderedSections.map(section => ({
+    id: section.id,
+    name: section.name,
+    elementSections: orderedElements
+      .filter(element => element.sectionId === section.id)
+      .map(element => ({
+        id: element.id,
+        name: element.name,
+        isPartOfSurvey: true,
+        description: element.description || "",
+        components: [],
+        images: [],
+      })),
+  }));
 
   return Ok<BuildingSurveyForm>({
     id: id,
@@ -159,7 +183,7 @@ const createDefaultFormValues = async (
       },
       status: { status: "incomplete", errors: [] },
     },
-    sections: [],
+    sections: sections,
     checklist: {
       items: [
         shouldBeTrueCheckBox("Have you checked for asbestos?"),
