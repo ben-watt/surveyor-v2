@@ -275,6 +275,7 @@ function Report({ initFormValues }: ReportProps) {
     console.log("[BuildingSurveyForm] saveAsDraft", methods.getValues());
     toast.success("Saved As Draft");
     router.push("/surveys");
+    router.refresh();
   };
   const isFormValid = () => {
     const defaultValues = formState.defaultValues;
@@ -294,6 +295,7 @@ function Report({ initFormValues }: ReportProps) {
 
     toast.success("Saved");
     router.push("/surveys");
+    router.refresh();
   };
 
   const onError = (errors: any) => {
