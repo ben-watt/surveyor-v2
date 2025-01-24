@@ -21,9 +21,13 @@ const moneyFormatter = Intl.NumberFormat("en-GB", {
   currencyDisplay: "symbol",
   currencySign: "standard",
   style: "currency",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
 });
+
+const formatValue = (value: string): string => {
+    return value ? moneyFormatter.format(Number(value)) : "£0.00";
+}
 
 const InputMoney = ({
   labelTitle,
@@ -44,20 +48,17 @@ const InputMoney = ({
     rules,
   });
 
-  const [displayValue, setDisplayValue] = useState(
-    field.value ? moneyFormatter.format(Number(field.value)) : "£0.00"
-  );
+  const [displayValue, setDisplayValue] = useState(formatValue(field.value));
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
     const digits = inputValue.replace(/\D/g, "");
-    field.onChange(digits);
+    const realValue = Number(digits) / 100;
+    field.onChange(realValue);
   };
 
   useEffect(() => {
-    if (field.value) {
-      setDisplayValue(moneyFormatter.format(Number(field.value)) + ".00");
-    }
+    setDisplayValue(formatValue(field.value));
   }, [field.value]);
 
   return (
