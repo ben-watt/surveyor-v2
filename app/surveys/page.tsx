@@ -120,18 +120,12 @@ function HomePage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => navigator.clipboard.writeText(reportId)}
-                >
-                  Copy report ID
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Link href={`surveys/${reportId}`}>Edit survey</Link>
                 </DropdownMenuItem>
                 {showGenerate && (
                   <DropdownMenuItem>
-                    <Link href={`/reports/reportv2/${reportId}`}>
+                    <Link href={`/editor/${reportId}`}>
                       Generate report
                     </Link>
                   </DropdownMenuItem>

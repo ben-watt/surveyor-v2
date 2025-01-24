@@ -139,11 +139,9 @@ export default function PDF({ form }: PdfProps) {
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>Of the premises known as</p>
             <p style={{ textAlign: "right" }}></p>
-            {address.split(",").map((word, i) => (
-              <p style={{ textAlign: "right" }} key={i} className="m-0">
-                <strong>{word}</strong>
-              </p>
-            ))}
+            <p style={{ textAlign: "right" }}  className="m-0">
+              <strong>{address.formatted}</strong>
+            </p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>For and on behalf of</p>
             <p style={{ textAlign: "right" }}></p>
@@ -868,7 +866,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
         </p>
         <p>{es.description}</p>
       </TableBlock>
-      {es.materialComponents
+      {es.components
         .map((mc) => ({ mc: mc, id: uuidv4() }))
         .map(({ mc, id }, i) => (
           <>
@@ -877,7 +875,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               <h3 data-add-toc-here-id={id}>
                 <strong>Component</strong>
               </h3>
-              <p>{mc.useNameOveride ? mc.name : mc.id}</p>
+              <p>{mc.useNameOverride ? mc.nameOverride : mc.name}</p>
               <p
                 style={{
                   fontWeight: "bold",
@@ -891,9 +889,9 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 <strong>Condition / Defect</strong>
               </p>
               <div>
-                {mc.defects.map((d) => (
+                {mc.conditions.map((d) => (
                   <p style={{ textAlign: "justify" }} key={d.name}>
-                    {d.description}
+                    {d.phrase}
                   </p>
                 ))}
               </div>
@@ -903,7 +901,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 <>
                   <p></p>
                   <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
-                  <p>£{mc.budgetCost}</p>
+                  <p>£{mc.costings[0].cost}</p>
                   <p></p>
                 </>
               )}

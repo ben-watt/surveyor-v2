@@ -1,6 +1,5 @@
 "use client";
 
-import reportClient from "@/app/clients/AmplifyDataClient";
 import { NewEditor } from "@/app/components/Input/BlockEditor";
 
 import { Previewer } from "pagedjs";
@@ -10,7 +9,7 @@ import { BuildingSurveyFormData } from "@/app/surveys/building-survey-reports/Bu
 import BuildingSurveyReport from "@/app/surveys/building-survey-reports/BuildingSurveyReportTipTap";
 import { renderToStaticMarkup } from "react-dom/server";
 import { getUrl } from "aws-amplify/storage";
-import toast from "react-hot-toast";
+import { surveyStore } from "@/app/clients/Database";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [editorContent, setEditorContent] = useState<string>("");
@@ -21,29 +20,10 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const getReport = async () => {
-      try {
-        let result = await reportClient.models.Surveys.get({ id: params.id });
-        console.log(result)
-
-        if (!result.errors && result.data != null) {
-          const formData = JSON.parse(
-            result.data.content.toString()
-          ) as BuildingSurveyFormData;
-  
-          console.debug("[BuildingSurveyReport]", "Fetched form data", formData);
-          setEditorData(formData);
-        } else {
-          console.error("[BuildingSurveyReport]", "Error fetching report", result);
-          toast.error("Error fetching report data");
-        }
-      } catch(e) {
-        toast.error("Error fetching report data");
-        console.error("[BuildingSurveyReport]", "Error fetching report", e);
-      }
-      
+      const survey = await surveyStore.get(params.id);
+      setEditorData(survey.content);
     };
 
-    console.debug("[BuildingSurveyReport]", "Getting report data", params.id);
     getReport();
   }, [params.id]);
 
@@ -141,7 +121,7 @@ const HeaderFooterHtml = ({ editorData }: HeaderFooterHtmlProps) => {
         height="400"
       />
       <div className="headerAddress">
-        <p>{editorData ? editorData.address : "Unknown"}</p>
+        <p>{editorData ? editorData.reportDetails.address.formatted : "Unknown"}</p>
       </div>
       <img
         className="footerImage"
@@ -162,13 +142,13 @@ async function mapFormDataToHtml(
   const newFormData = { ...formData };
 
   const topLevelImages = await Promise.all([
-    getImagesHref(formData.frontElevationImagesUri ?? []),
-    getImagesHref(formData.moneyShot ?? []),
+    getImagesHref(formData.reportDetails.frontElevationImagesUri ?? []),
+    getImagesHref(formData.reportDetails.moneyShot ?? []),
     getImagesHref(formData.owner.signaturePath ?? []),
   ]);
 
-  newFormData.frontElevationImagesUri = topLevelImages[0];
-  newFormData.moneyShot = topLevelImages[1];
+  newFormData.reportDetails.frontElevationImagesUri = topLevelImages[0];
+  newFormData.reportDetails.moneyShot = topLevelImages[1];
   newFormData.owner.signaturePath = topLevelImages[2];
 
   const preSignedUrlTasks = formData.sections.flatMap((section, si) => {
@@ -181,8 +161,8 @@ async function mapFormDataToHtml(
 
   await Promise.all([
     ...preSignedUrlTasks,
-    getImagesHref(formData.frontElevationImagesUri ?? []),
-    getImagesHref(formData.moneyShot ?? []),
+    getImagesHref(formData.reportDetails.frontElevationImagesUri ?? []),
+    getImagesHref(formData.reportDetails.moneyShot ?? []),
     getImagesHref(formData.owner.signaturePath ?? []),
   ]);
 
