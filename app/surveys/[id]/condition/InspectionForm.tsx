@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo } from "react";
-import { useForm, FormProvider, useFieldArray, useFormContext } from "react-hook-form";
+import {
+  useForm,
+  FormProvider,
+  useFieldArray,
+  useFormContext,
+} from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
 import { merge } from "lodash";
 import { Button } from "@/components/ui/button";
@@ -24,9 +29,18 @@ import { DataForm as ElementDataForm } from "@/app/elements/form";
 import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/conditions/form";
 import Input from "@/app/components/Input/InputText";
-import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-survey-reports/Survey";
+import {
+  addOrUpdateComponent,
+  findComponent,
+} from "@/app/surveys/building-survey-reports/Survey";
 import { DraggableConditions } from "./DraggableConditions";
-import { FormPhrase, InspectionFormData, InspectionFormProps, RAG_OPTIONS } from "./types";
+import {
+  FormPhrase,
+  InspectionFormData,
+  InspectionFormProps,
+  RAG_OPTIONS,
+} from "./types";
+import InputMoney from "@/app/components/Input/InputMoney";
 
 // Add this component before InspectionFormWrapper
 function CostingsFieldArray() {
@@ -41,30 +55,31 @@ function CostingsFieldArray() {
       {fields.map((field, index) => (
         <div key={field.id} className="border rounded-md p-2">
           <div className="flex items-end justify-between relative">
-            <Input
-              type="number"
-              labelTitle="Cost"
-              placeholder="£0.00"
-              register={() => register(`costings.${index}.cost` as const, { 
-                required: true,
-                valueAsNumber: true,
-                min: 0
-              })}
-            />
+          <InputMoney
+            name={`costings.${index}.cost`}
+            control={control}
+            labelTitle="Cost"
+            rules={{ required: "Amount is required" }}
+          />
             <Button
-             className="absolute top-0 right-0"
-            type="button"
-            variant="ghost"
-            onClick={() => remove(index)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+              className="absolute top-0 right-0"
+              type="button"
+              variant="ghost"
+              onClick={() => remove(index)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
           <div>
             <Input
               labelTitle="Reason"
               placeholder="Description of the cost"
-              register={() => register(`costings.${index}.description` as const, { required: true })}
+              register={() =>
+                register(`costings.${index}.description` as const, {
+                  required: true,
+                  validate: (value) => value.length > 0,
+                })
+              }
             />
           </div>
         </div>
@@ -94,7 +109,13 @@ export default function InspectionFormWrapper({
   const [surveySectionsHydrated, surveySections] = sectionStore.useList();
 
   // Wait for all data to be hydrated
-  if (!isHydrated || !componentsHydrated || !elementsHydrated || !phrasesHydrated || !surveySectionsHydrated) {
+  if (
+    !isHydrated ||
+    !componentsHydrated ||
+    !elementsHydrated ||
+    !phrasesHydrated ||
+    !surveySectionsHydrated
+  ) {
     return (
       <div className="space-y-6">
         <FormSection title="Basic Information">
@@ -115,7 +136,10 @@ export default function InspectionFormWrapper({
   // If we have a componentId, find the existing data
   let initialValues: InspectionFormData | undefined;
   if (componentId && survey) {
-    const { component, elementSection, section } = findComponent(survey, componentId);
+    const { component, elementSection, section } = findComponent(
+      survey,
+      componentId
+    );
     if (component && elementSection && section) {
       initialValues = {
         inspectionId: component.inspectionId || uuidv4(),
@@ -185,7 +209,14 @@ function InspectionFormContent({
 }) {
   const drawer = useDynamicDrawer();
   const methods = useForm<InspectionFormData>({ defaultValues: initialValues });
-  const { register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
+  const {
+    register,
+    watch,
+    setValue,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = methods;
 
   // Only watch specific fields we need
   const surveySection = watch("surveySection");
@@ -196,54 +227,61 @@ function InspectionFormContent({
 
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
-    return surveySections.map(section => ({
+    return surveySections.map((section) => ({
       value: { id: section.id, name: section.name },
       label: section.name,
     }));
   }, [surveySections]);
 
-  const elementOptions = useMemo(() => 
-    elements
-      .filter(element => !surveySection.id || element.sectionId === surveySection.id)
-      .map(element => ({
-        value: { id: element.id, name: element.name },
-        label: element.name,
-      })), 
+  const elementOptions = useMemo(
+    () =>
+      elements
+        .filter(
+          (element) =>
+            !surveySection.id || element.sectionId === surveySection.id
+        )
+        .map((element) => ({
+          value: { id: element.id, name: element.name },
+          label: element.name,
+        })),
     [elements, surveySection.id]
   );
 
-  const componentOptions = useMemo(() => 
-    components
-      .filter(component => component.elementId === element.id)
-      .map(component => ({
-        value: { id: component.id, name: component.name },
-        label: component.name,
-      })),
+  const componentOptions = useMemo(
+    () =>
+      components
+        .filter((component) => component.elementId === element.id)
+        .map((component) => ({
+          value: { id: component.id, name: component.name },
+          label: component.name,
+        })),
     [components, element.id]
   );
 
-  const phrasesOptions = useMemo((): { value: FormPhrase, label: string }[] => 
-    phrases
-      .filter(phrase => 
-        phrase.type === "Condition" && 
-        (phrase.associatedComponentIds.includes(component.id) ||
-         phrase.associatedElementIds.includes(element.id))
-      )
-      .map(phrase => ({
-        value: {
-          id: phrase.id,
-          name: phrase.name,
-          phrase: phrase.phrase,
-        },
-        label: phrase.name,
-      })),
+  const phrasesOptions = useMemo(
+    (): { value: FormPhrase; label: string }[] =>
+      phrases
+        .filter(
+          (phrase) =>
+            phrase.type === "Condition" &&
+            (phrase.associatedComponentIds.includes(component.id) ||
+              phrase.associatedElementIds.includes(element.id))
+        )
+        .map((phrase) => ({
+          value: {
+            id: phrase.id,
+            name: phrase.name,
+            phrase: phrase.phrase,
+          },
+          label: phrase.name,
+        })),
     [phrases, component.id, element.id]
   );
 
   // Reset dependent fields when parent fields change
   useEffect(() => {
     const elementExists = elements.some(
-      e => e.id === element.id && e.sectionId === surveySection.id
+      (e) => e.id === element.id && e.sectionId === surveySection.id
     );
 
     if (surveySection.id && !elementExists && element.id) {
@@ -254,7 +292,7 @@ function InspectionFormContent({
 
   useEffect(() => {
     const componentExists = components.some(
-      c => c.id === component.id && c.elementId === element.id
+      (c) => c.id === component.id && c.elementId === element.id
     );
 
     if (element && !componentExists && component.id) {
@@ -265,11 +303,13 @@ function InspectionFormContent({
 
   useEffect(() => {
     if (element.id) {
-      const selectedElement = elements.find(e => e.id === element.id);
+      const selectedElement = elements.find((e) => e.id === element.id);
       if (selectedElement) {
         setValue("surveySection", {
           id: selectedElement.sectionId,
-          name: surveySections.find(s => s.id === selectedElement.sectionId)?.name || "",
+          name:
+            surveySections.find((s) => s.id === selectedElement.sectionId)
+              ?.name || "",
         });
       }
     }
@@ -296,13 +336,13 @@ function InspectionFormContent({
           location: data.location,
           additionalDescription: data.additionalDescription,
           images: data.images,
-          conditions: data.conditions.map(x => ({
+          conditions: data.conditions.map((x) => ({
             id: x.id,
             name: x.name,
             phrase: x.phrase || "",
           })),
           ragStatus: data.ragStatus,
-          costings: data.costings.map(x => ({
+          costings: data.costings.map((x) => ({
             cost: x.cost,
             description: x.description,
           })),
@@ -393,7 +433,9 @@ function InspectionFormContent({
               disabled={!component.name}
               onClick={(e) => {
                 e.preventDefault();
-                setValue("useNameOverride", !useNameOverride, { shouldValidate: true });
+                setValue("useNameOverride", !useNameOverride, {
+                  shouldValidate: true,
+                });
               }}
             >
               <PenLine className="w-4 h-4" />
@@ -413,7 +455,7 @@ function InspectionFormContent({
 
           <Combobox
             labelTitle="RAG Status"
-            data={RAG_OPTIONS.map(x => ({
+            data={RAG_OPTIONS.map((x) => ({
               value: x.value,
               label: x.label,
             }))}
@@ -469,9 +511,9 @@ function InspectionFormContent({
               path={imageUploadPath}
               rhfProps={{
                 name: "images",
-                rules: { 
-                  onChange: () => true 
-                }
+                rules: {
+                  onChange: () => true,
+                },
               }}
             />
           </div>
