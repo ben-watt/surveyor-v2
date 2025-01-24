@@ -6,22 +6,22 @@ import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
 import FilePondPluginFilePoster from 'filepond-plugin-file-poster';
 import FilePondPluginImageResize from 'filepond-plugin-image-resize';
+import FilePondPluginImageTransform from 'filepond-plugin-image-transform';
 import {
     ProcessServerConfigFunction,
     LoadServerConfigFunction,
     RestoreServerConfigFunction,
     FetchServerConfigFunction,
     RemoveServerConfigFunction,
-    FileStatus,
-    FilePondFile,
-    FilePondInitialFile
+    FilePondInitialFile,
+    FilePondFile
 } from 'filepond';
 
 // AWS Amplify
-import { TransferProgressEvent, uploadData, getUrl, remove, list } from "aws-amplify/storage";
+import { getUrl, remove, list } from "aws-amplify/storage";
 
 // Form handling
-import { FieldValues, useController, UseControllerProps, useFormContext } from "react-hook-form";
+import { FieldValues, UseControllerProps, useFormContext } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 
 // Components
@@ -44,7 +44,8 @@ registerPlugin(
     FilePondPluginFilePoster,
     FilePondPluginImagePreview,
     FilePondPluginImageExifOrientation,
-    FilePondPluginImageResize
+    FilePondPluginImageResize,
+    FilePondPluginImageTransform
 );
 
 // 3. Type definitions
@@ -82,11 +83,20 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
         process: ((fieldName, file, metadata, load, error, progress, abort) => {
             console.debug("[FilePond Process] Uploading file:", file);
 
-            const uploadTask = queueUpload(file, {
-                path: join(path, file.name),
+            // We're using the transform plugin to create a thumbnail and medium version of the image
+            // So we need to upload the medium version if the file is an array
+            let fileToUpload = file;
+            if (Array.isArray(file)) {
+                fileToUpload = file.find(x => x.name == "medium_").file ?? file;
+            }
+
+            console.debug("[FilePond Process] Uploading file:", fileToUpload);
+
+            const uploadTask = queueUpload(fileToUpload, {
+                path: join(path, fileToUpload.name),
                 metadata: {
                     ...metadata,
-                    filename: file.name
+                    filename: fileToUpload.name
                 },
                 onProgress: (percentage) => {
                     progress(true, percentage, 100);
@@ -96,7 +106,7 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
             uploadTask.then((id) => {
                 // Store the upload ID in the file metadata
                 metadata.uploadId = id;
-                load(file.name);
+                load(fileToUpload.name);
                 console.debug("[FilePond Process] Upload queued:", id);
             }).catch((err) => {
                 error('Failed to queue upload');
@@ -333,9 +343,32 @@ export const InputImage = ({
             allowImagePreview={true}
             imagePreviewHeight={100}
             allowImageResize={true}
-            imageResizeTargetWidth={10}
-            imageResizeTargetHeight={10}
-            imageResizeMode="force"
+            imageResizeTargetWidth={1200}
+            imageResizeTargetHeight={1200}
+            imageResizeMode="contain"
+            imageTransformOutputQuality={80}
+            imageTransformOutputMimeType="image/jpeg"
+            allowImageTransform={true}
+            imageTransformVariants={{
+                'thumbnail_': (transforms: any) => {
+                    transforms.resize = {
+                        size: {
+                            width: 200,
+                            height: 200,
+                        },
+                    };
+                    return transforms;
+                },
+                'medium_': (transforms: any) => {
+                    transforms.resize = {
+                        size: {
+                            width: 800,
+                            height: 800,
+                        },
+                    };
+                    return transforms;
+                },
+            }}
             credits={false}
             onremovefile={(err, file) => {
                 // Cleanup object URL if it exists
