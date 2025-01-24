@@ -26,7 +26,7 @@ interface ConditionPageProps {
   };
 }
 
-export const ConditionPage = ({ params: { id } }: ConditionPageProps) => {
+const ConditionPage = ({ params: { id } }: ConditionPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();

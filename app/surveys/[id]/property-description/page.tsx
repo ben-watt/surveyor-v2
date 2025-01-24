@@ -23,7 +23,7 @@ interface PropertyDescriptionPageProps {
   };
 }
 
-export const PropertyDescriptionPage = ({
+const PropertyDescriptionPage = ({
   params: { id },
 }: PropertyDescriptionPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);

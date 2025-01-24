@@ -21,7 +21,7 @@ interface ReportDetailsFormPageProps {
   };
 }
 
-export const ReportDetailFormPage = ({
+const ReportDetailFormPage = ({
   params: { id },
 }: ReportDetailsFormPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);

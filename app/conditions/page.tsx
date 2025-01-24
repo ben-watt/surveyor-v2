@@ -1,10 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import client from "@/app/clients/AmplifyDataClient";
-import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
-import { CopyMarkupBtn } from "@/app/components/Buttons";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   DropdownMenu,
