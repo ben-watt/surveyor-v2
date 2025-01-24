@@ -1,6 +1,5 @@
 "use client";
 
-import { FormSection } from "@/app/app/components/FormSection";
 import { Combobox } from "@/app/app/components/Input/ComboBox";
 import InputDate from "@/app/app/components/Input/InputDate";
 import Input from "@/app/app/components/Input/InputText";
@@ -84,7 +83,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
       };
     });
 
-    router.push(`/surveys/${surveyId}`);
+    router.push(`/app/surveys/${surveyId}`);
     drawerContext.closeDrawer();
   };
 

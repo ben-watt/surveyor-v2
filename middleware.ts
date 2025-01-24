@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
   console.log("[Middleware] Authenticated:", authenticated, request.nextUrl);
 
   if (authenticated) {
-    if (request.nextUrl.pathname.includes("/app")) {
+    if (request.nextUrl.pathname.includes("/app/")) {
       console.log("[Middleware] Returning response");
       return response;
     }

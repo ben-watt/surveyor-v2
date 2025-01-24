@@ -34,7 +34,7 @@ function Home({ params }: { params: { id: string } }) {
           <h1 className="text-3xl dark:text-white text-center">Building Survey Report</h1>
           <div className="flex relative">
             <Link
-              href={`/surveys/${params.id}/photos`}
+              href={`/app/surveys/${params.id}/photos`}
               className="inline-flex flex-col items-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors group"
             >
                 <Images size={40} />

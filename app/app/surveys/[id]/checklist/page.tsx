@@ -87,7 +87,7 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
       };
     });
 
-    router.push(`/surveys/${id}`);
+    router.push(`/app/surveys/${id}`);
   };
 
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = (errors) => {

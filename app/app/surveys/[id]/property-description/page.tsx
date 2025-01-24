@@ -92,7 +92,7 @@ const PropertyDescriptionForm = ({
       };
     });
 
-    router.push(`/surveys/${id}`);
+    router.push(`/app/surveys/${id}`);
   };
 
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = async (errors) => {

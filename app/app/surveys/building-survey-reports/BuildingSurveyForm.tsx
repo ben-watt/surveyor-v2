@@ -233,7 +233,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
           content: formResult.val,
         });
 
-        router.push(`/surveys/${newId}`);
+        router.push(`/app/surveys/${newId}`);
       } else {
         throwError(formResult.val);
       }
@@ -274,7 +274,7 @@ function Report({ initFormValues }: ReportProps) {
     ev.preventDefault();
     console.log("[BuildingSurveyForm] saveAsDraft", methods.getValues());
     toast.success("Saved As Draft");
-    router.push("/surveys");
+    router.push("/app/surveys");
     router.refresh();
   };
   const isFormValid = () => {
@@ -294,7 +294,7 @@ function Report({ initFormValues }: ReportProps) {
     });
 
     toast.success("Saved");
-    router.push("/surveys");
+    router.push("/app/surveys");
     router.refresh();
   };
 
