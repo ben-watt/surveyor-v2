@@ -1,10 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import client from "@/app/app/clients/AmplifyDataClient";
-import { type Schema } from "@/amplify/data/resource";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CopyMarkupBtn } from "@/app/app/components/Buttons";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   DropdownMenu,
@@ -15,14 +12,13 @@ import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/app/components/DataTable";
-import { SelectionSet } from "aws-amplify/api";
 import { componentStore, elementStore } from "../clients/Database";
 import { Component, Element } from "../clients/Dexie";
 import { useRouter } from "next/navigation";
 
 type TableData = Component & {
   element: Element;
-}
+};
 
 export default function Page() {
   const router = useRouter();
@@ -49,7 +45,7 @@ export default function Page() {
       accessorFn: (v) => v.element.name,
     },
     {
-      id: "created", 
+      id: "created",
       header: ({ column }) => (
         <SortableHeader column={column} header="Created" />
       ),
@@ -89,15 +85,7 @@ export default function Page() {
   ];
 
   function deleteDefect(id: string): void {
-    async function deleteDefect() {
-      try {
-        await componentStore.remove(id);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    deleteDefect();
+    componentStore.remove(id);
   }
 
   return (
@@ -105,10 +93,18 @@ export default function Page() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Components</h1>
-          <p className="text-sm text-muted-foreground">Components are are the priamary items inspected during a building survey.</p>
+          <p className="text-sm text-muted-foreground">
+            Components are are the priamary items inspected during a building
+            survey.
+          </p>
         </div>
       </div>
-      <DataTable columns={columns} data={data} onCreate={() => router.push("/app/building-components/create")} />
+      <DataTable
+        columns={columns}
+        data={data}
+        isLoading={isHydrated}
+        onCreate={() => router.push("/app/building-components/create")}
+      />
     </div>
   );
 }

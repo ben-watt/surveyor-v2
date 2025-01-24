@@ -99,15 +99,7 @@ export default function Page() {
   ];
 
   function deleteFn(id: string): void {
-    async function deleteAsync() {
-      try {
-        await elementStore.remove(id);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    deleteAsync();
+    elementStore.remove(id);
   }
 
   return (

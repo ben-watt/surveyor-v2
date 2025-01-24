@@ -15,7 +15,7 @@ import { phraseStore } from "../clients/Database";
 import { Phrase } from "../clients/Dexie";
 import { useRouter } from "next/navigation";
 
-type TableData = Phrase
+type TableData = Phrase;
 
 export default function Page() {
   const router = useRouter();
@@ -27,15 +27,17 @@ export default function Page() {
       accessorKey: "name",
     },
     {
-        header: "Phrase",
-        accessorKey: "phrase",
-        cell: (props) => {
-          const phrase = props.getValue() as string;
-          return <div className="text-wrap">{phrase.substring(0, 100) + "..."}</div>;
-        },
+      header: "Phrase",
+      accessorKey: "phrase",
+      cell: (props) => {
+        const phrase = props.getValue() as string;
+        return (
+          <div className="text-wrap">{phrase.substring(0, 100) + "..."}</div>
+        );
+      },
     },
     {
-      id: "created", 
+      id: "created",
       header: ({ column }) => (
         <SortableHeader column={column} header="Created" />
       ),
@@ -73,10 +75,16 @@ export default function Page() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Conditions</h1>
-          <p className="text-sm text-muted-foreground">Conditions are used to generate standard text for surveys.</p>
+          <p className="text-sm text-muted-foreground">
+            Conditions are used to generate standard text for surveys.
+          </p>
         </div>
       </div>
-      <DataTable columns={columns} data={phrases} onCreate={() => router.push("/app/conditions/create")} />
+      <DataTable
+        columns={columns}
+        data={phrases}
+        onCreate={() => router.push("/app/conditions/create")}
+      />
     </div>
   );
 }

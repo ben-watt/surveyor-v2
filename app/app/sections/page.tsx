@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import client from "@/app/app/clients/AmplifyDataClient";
-import { type Schema } from "@/amplify/data/resource";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -14,19 +12,17 @@ import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/app/components/DataTable";
-import { useAsyncArrayState } from "../hooks/useAsyncState";
-import { SelectionSet } from "aws-amplify/api";
 import { useRouter } from "next/navigation";
-
-type SectionData = Schema["Sections"]["type"];
-const selectionSet = ["id", "name", "order", "createdAt", "elements.id"] as const;
-type SelectedSectionData = SelectionSet<SectionData, typeof selectionSet>;
+import { sectionStore } from "../clients/Database";
+import { Section } from "../clients/Dexie";
+import { elementStore } from "../clients/Database";
 
 export default function Page() {
   const router = useRouter();
-  const [isLoading, sectionData, setSectionData] = useAsyncArrayState(fetchSections);
+  const [isHydrated, sections] = sectionStore.useList();
+  const [elementsHydrated, elements] = elementStore.useList();
 
-  const columns: ColumnDef<SelectedSectionData>[] = [
+  const columns: ColumnDef<Section>[] = [
     {
       header: "Name",
       accessorKey: "name",
@@ -45,7 +41,7 @@ export default function Page() {
     {
       id: "element count",
       header: "Element Count",
-      accessorFn: (v) => v.elements.length,
+      accessorFn: (v) => elements.filter(e => e.sectionId === v.id).length,
       meta: {
         tw: {
           headerClassName: "text-right",
@@ -94,33 +90,8 @@ export default function Page() {
     },
   ];
 
-  async function fetchSections() {
-    try {
-      const response = await client.models.Sections.list({
-        selectionSet: selectionSet,
-      });
-      if (response.data) {
-        return response.data;
-      }
-      return [];
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   function deleteFn(id: string): void {
-    async function deleteAsync() {
-      try {
-        const response = await client.models.Sections.delete({ id });
-        if (!response.errors && response.data != null) {
-          setSectionData(sectionData.filter((r: SelectedSectionData) => r.id !== id));
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    deleteAsync();
+    sectionStore.remove(id);
   }
 
   return (
@@ -134,8 +105,8 @@ export default function Page() {
       <DataTable
         initialState={{ sorting: [{ id: "order", desc: false }] }}
         columns={columns}
-        data={sectionData}
-        isLoading={isLoading}
+        data={sections}
+        isLoading={isHydrated && elementsHydrated}
         onCreate={() => router.push("/app/sections/create")}
       />
     </div>

@@ -42,7 +42,6 @@ import {
 } from "./types";
 import InputMoney from "@/app/app/components/Input/InputMoney";
 
-// Add this component before InspectionFormWrapper
 function CostingsFieldArray() {
   const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
@@ -182,6 +181,7 @@ export default function InspectionFormWrapper({
   return (
     <InspectionFormContent
       surveyId={surveyId}
+      level={survey?.reportDetails?.level || ""}
       initialValues={mergedValues}
       components={components}
       elements={elements}
@@ -194,6 +194,7 @@ export default function InspectionFormWrapper({
 // The actual form component
 function InspectionFormContent({
   surveyId,
+  level,
   initialValues,
   components,
   elements,
@@ -201,6 +202,7 @@ function InspectionFormContent({
   surveySections,
 }: {
   surveyId: string;
+  level: string;
   initialValues: InspectionFormData;
   components: any[];
   elements: any[];
@@ -520,11 +522,11 @@ function InspectionFormContent({
             />
           </div>
         </FormSection>
-
-        <FormSection title="Costings">
-          <CostingsFieldArray />
-        </FormSection>
-
+        {level === "3" && (
+          <FormSection title="Costings">
+            <CostingsFieldArray />
+          </FormSection>
+        )}
         <Button type="submit" className="w-full">
           Save Changes
         </Button>
