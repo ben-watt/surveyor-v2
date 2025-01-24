@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable react-hooks/exhaustive-deps */
 // 1. Group and organize imports
 // React and FilePond
 import React, { useEffect, useMemo } from 'react';

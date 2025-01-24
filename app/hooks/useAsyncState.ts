@@ -47,7 +47,7 @@ export const useAsyncArrayState = <T>(
     }
 
     fetch();
-  }, []);
+  }, [fn]);
   // Ignore exhaustive dependencies here it causes mutliple requests over and over again.
 
   return [isLoading, state, setState];

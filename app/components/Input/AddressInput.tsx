@@ -84,7 +84,7 @@ function CustomPlacesAutocomplete({
     [countryCode]
   );
 
-  const handlePredictionClick = async (prediction: google.maps.places.AutocompletePrediction) => {
+  const handlePredictionClick = useCallback(async (prediction: google.maps.places.AutocompletePrediction) => {
     if (!placesService.current) return;
 
     const request: google.maps.places.PlaceDetailsRequest = {
@@ -101,7 +101,7 @@ function CustomPlacesAutocomplete({
         setShowPredictions(false);
       }
     });
-  };
+  }, [inputRef, onPlaceSelect]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -112,10 +112,11 @@ function CustomPlacesAutocomplete({
 
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+  }, [inputRef]);
 
   useEffect(() => {
     if (!inputRef.current) return;
+    const ref = inputRef.current
 
     const handleInput = (e: Event) => {
       const input = (e.target as HTMLInputElement).value;
@@ -126,14 +127,15 @@ function CustomPlacesAutocomplete({
     inputRef.current.addEventListener('input', debouncedHandler);
 
     return () => {
-      if (inputRef.current) {
-        inputRef.current.removeEventListener('input', debouncedHandler);
+      if (ref) {
+        ref.removeEventListener('input', debouncedHandler);
       }
     };
-  }, [getPlacePredictions]);
+  }, [getPlacePredictions, inputRef]);
 
   useEffect(() => {
     if (!inputRef.current) return;
+    const ref = inputRef.current
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!showPredictions || predictions.length === 0) return;
@@ -164,13 +166,13 @@ function CustomPlacesAutocomplete({
       }
     };
 
-    inputRef.current.addEventListener('keydown', handleKeyDown);
+    ref.addEventListener('keydown', handleKeyDown);
     return () => {
-      if (inputRef.current) {
-        inputRef.current.removeEventListener('keydown', handleKeyDown);
+      if (ref) {
+        ref.removeEventListener('keydown', handleKeyDown);
       }
     };
-  }, [showPredictions, predictions, selectedIndex]);
+  }, [showPredictions, predictions, selectedIndex, inputRef, handlePredictionClick]);
 
   // Reset selected index when predictions change
   useEffect(() => {

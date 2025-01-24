@@ -197,6 +197,14 @@ function prepareLocationData(locations: { id: string; value: string; label: stri
   }));
 }
 
+const availableCounts = {
+  elements: seedElementData.length,
+  locations: seedLocationData.length,
+  sections: seedSectionData.length,
+  components: 0, // This is derived from bankOfDefects
+  phrases: 0, // This is derived from bankOfDefects
+};
+
 export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -247,22 +255,13 @@ export default function Page() {
     sections: true,
   });
 
-  // Add counts from JSON files
-  const availableCounts = {
-    elements: seedElementData.length,
-    locations: seedLocationData.length,
-    sections: seedSectionData.length,
-    components: 0, // This is derived from bankOfDefects
-    phrases: 0, // This is derived from bankOfDefects
-  };
-
   // Calculate derived counts
   useEffect(() => {
     const mappedComponents = mapBodToComponentData(bankOfDefects, elements);
     const mappedPhrases = mapBodToPhraseData(bankOfDefects, elements, mappedComponents);
     availableCounts.components = mappedComponents.length;
     availableCounts.phrases = mappedPhrases.length;
-  }, []);
+  }, [elements]);
 
   // Data mapping effects
   useEffect(() => {

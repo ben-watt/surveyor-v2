@@ -23,8 +23,7 @@ interface InputDateProps {
 }
 
 const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
-  const { field, formState } = useController(controllerProps);
-  const date = field.value ? new Date(field.value) : undefined;
+  const { field, formState } = useController({ ...controllerProps, defaultValue: new Date() });
   const [open, setOpen] = React.useState(false);
   const handleSelect = (d: Date | undefined) => {
     field.onChange(d);
@@ -33,10 +32,10 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
 
   // Initialize date from field value if it exists
   useEffect(() => {
-    if (field.value && !date) {
+    if (field.value) {
       field.onChange(new Date(field.value));
     }
-  }, [field.value]);
+  }, [field, field.value]);
 
   return (
     <>
@@ -53,17 +52,17 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
               variant={"outline"}
               className={cn(
                 "w-[240px] justify-start text-left font-normal",
-                !date && "text-muted-foreground"
+                !field.value && "text-muted-foreground"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
+              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
-              selected={date}
+              selected={new Date(field.value)}
               onSelect={handleSelect}
               initialFocus
             />

@@ -7,10 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import client from "@/app/clients/AmplifyDataClient";
-import { type Schema } from "@/amplify/data/resource";
-import { SyncStatus } from "@/app/clients/Dexie";
-
-type SectionData = Schema["Sections"]["type"];
+import { SyncStatus, Section as SectionData } from "@/app/clients/Dexie";
 
 interface SectionFormProps {
   initialData?: SectionData;

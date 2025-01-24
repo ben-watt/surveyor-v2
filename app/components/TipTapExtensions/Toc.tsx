@@ -168,37 +168,38 @@ export const TocDataRepo = {
   },
 };
 
+const replaceNode = (
+  editor: Editor,
+  nodeType: string,
+  nodePos: NodePos,
+  attributes: Record<string, any>
+) => {
+  console.log("[replaceNode]", nodeType, nodePos, attributes);
+  editor.commands.deleteRange(nodePos.range);
+
+  const newContent = nodePos.textContent
+    ? [
+        {
+          type: "text",
+          text: nodePos.textContent,
+        },
+      ]
+    : [];
+
+  editor.commands.insertContentAt(nodePos.from, {
+    type: nodeType,
+    attrs: {
+      ...nodePos.node.attrs,
+      ...attributes,
+    },
+    content: newContent,
+  });
+};
+
 export const TocNodeView = ({ editor }: NodeViewProps) => {
   const [currentToc, setCurrentToc] = useState<
     TableOfContentsDataItemWithHierarchy[]
   >();
-
-  const replaceNode = (
-    nodeType: string,
-    nodePos: NodePos,
-    attributes: Record<string, any>
-  ) => {
-    console.log("[replaceNode]", nodeType, nodePos, attributes);
-    editor.commands.deleteRange(nodePos.range);
-
-    const newContent = nodePos.textContent
-      ? [
-          {
-            type: "text",
-            text: nodePos.textContent,
-          },
-        ]
-      : [];
-
-    editor.commands.insertContentAt(nodePos.from, {
-      type: nodeType,
-      attrs: {
-        ...nodePos.node.attrs,
-        ...attributes,
-      },
-      content: newContent,
-    });
-  };
 
   const updateToc = useCallback(
     () => {
@@ -216,7 +217,7 @@ export const TocNodeView = ({ editor }: NodeViewProps) => {
             return;
           }
 
-          replaceNode("paragraph", $addToThisNode, {
+          replaceNode(editor,"paragraph", $addToThisNode, {
             "data-toc-text": d.hierarchyText,
           });
           return;
@@ -227,7 +228,7 @@ export const TocNodeView = ({ editor }: NodeViewProps) => {
           return;
         }
 
-        replaceNode("heading", $header, {
+        replaceNode(editor,"heading", $header, {
           "data-toc-text": d.hierarchyText,
         });
       });

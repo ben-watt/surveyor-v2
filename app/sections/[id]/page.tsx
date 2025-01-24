@@ -4,6 +4,7 @@ import React from "react";
 import SectionForm from "../form";
 import client from "@/app/clients/AmplifyDataClient";
 import { notFound } from "next/navigation";
+import { sectionStore } from "@/app/clients/Database";
 
 interface EditSectionPageProps {
   params: {
@@ -11,10 +12,14 @@ interface EditSectionPageProps {
   };
 }
 
-export default async function EditSectionPage({ params }: EditSectionPageProps) {
-  const response = await client.models.Sections.get({ id: params.id });
-  
-  if (!response.data) {
+export default function EditSectionPage({ params }: EditSectionPageProps) {
+  const [isHydrated, section] = sectionStore.useGet(params.id);
+
+  if (!isHydrated) {
+    return <div>Loading...</div>;
+  }
+
+  if (!section) {
     notFound();
   }
 
@@ -24,7 +29,7 @@ export default async function EditSectionPage({ params }: EditSectionPageProps) 
         <h1 className="text-3xl dark:text-white">Edit Section</h1>
         <p className="text-sm text-muted-foreground">Edit an existing section used to group elements in a building survey report.</p>
       </div>
-      <SectionForm initialData={response.data} />
+      <SectionForm initialData={section} />
     </div>
   );
 } 
