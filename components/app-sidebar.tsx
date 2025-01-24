@@ -31,7 +31,7 @@ const applicationNavData = {
   items: [
     {
       title: "Surveys",
-      url: "/surveys",
+      url: "/app/surveys",
       icon: BookOpen,
       isActive: true,
     },
@@ -42,33 +42,33 @@ const configurationNavData = {
   items: [
     {
       title: "Sections",
-      url: "/sections",
+      url: "/app/sections",
       icon: Layers,
     },
     {
       title: "Elements",
-      url: "/elements",
+      url: "/app/elements",
       icon: SquareTerminal,
     },
     {
       title: "Components",
-      url: "/building-components",
+      url: "/app/building-components",
       icon: Frame,
     },
     {
       title: "Conditions",
-      url: "/conditions",
+      url: "/app/conditions",
       icon: Bot,
     },
 
     {
       title: "Settings",
-      url: "/settings",
+      url: "/app/settings",
       icon: Settings2,
       items: [
         {
           title: "Data Management",
-          url: "/settings",
+          url: "/app/settings",
         }
       ],
     },

@@ -138,7 +138,7 @@ export function NavUser() {
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
               </DropdownMenuItem>
-              <Link href="/profile">
+              <Link href="/app/profile">
                 <DropdownMenuItem>
                   <UserRoundPen  className="mr-2 h-4 w-4" />
                   Profile

@@ -3,7 +3,7 @@ import "./globals.css";
 import "@aws-amplify/ui-react/styles.css";
 import "instantsearch.css/themes/satellite.css";
 import { Metadata, Viewport } from "next";
-import InnerLayout from "./innerLayout";
+import { ClientSideDependencies } from "./dependencies";
 
 const APP_NAME = "Surveyor App";
 const APP_DEFAULT_TITLE = "Surveyor";
@@ -59,7 +59,8 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body className={inter.className}>
-        <InnerLayout>{children}</InnerLayout>
+        {children}
+        <ClientSideDependencies />
       </body>
     </html>
   );
