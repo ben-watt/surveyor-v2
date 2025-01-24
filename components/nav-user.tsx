@@ -6,6 +6,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
+  Router,
   Sparkles,
   UserRoundPen,
 } from "lucide-react"
@@ -34,6 +35,8 @@ import { useEffect, useState } from "react"
 import { fetchUserAttributes, signOut } from "aws-amplify/auth"
 import { getUrl } from "aws-amplify/storage"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+
 
 export function NavUser() {
   const { isMobile } = useSidebar()
@@ -42,7 +45,7 @@ export function NavUser() {
     name: string
     email: string
   }>({ name: "User", email: "user@example.com" })
-
+  const router = useRouter()
   useEffect(() => {
     async function getProfilePic() {
       try {
@@ -66,6 +69,11 @@ export function NavUser() {
 
     getProfilePic()
   }, [])
+
+  const handleSignOut = () => {
+    signOut()
+    router.push("/")
+  }
 
   return (
     <SidebarMenu>
@@ -138,7 +146,7 @@ export function NavUser() {
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
+            <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
             </DropdownMenuItem>

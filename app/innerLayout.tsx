@@ -14,7 +14,6 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { useRouter, usePathname } from "next/navigation";
 import Error from "./error";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { componentStore, elementStore, surveyStore } from "./clients/Database";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -38,7 +37,6 @@ export default function RootLayout({
         setIsAuthenticated(true);
       } catch (err) {
         console.warn("[RootLayout] Error fetching user: ", err);
-        router.push("/login");
       }
     }
 
@@ -80,6 +78,7 @@ export default function RootLayout({
                 </SidebarInset>
               </SidebarProvider>
             )}
+            {children}
             <Toaster position="top-right" />
           </TooltipProvider>
         </DynamicDrawerProvider>

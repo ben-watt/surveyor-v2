@@ -34,6 +34,7 @@
     "@radix-ui/react-tooltip": "^1.1.6",
     "@react-google-maps/api": "^2.20.5",
     "@serwist/next": "^9.0.11",
+    "@shadcn/ui": "^0.0.4",
     "@tanstack/react-table": "^8.20.6",
     "@tiptap-pro/extension-file-handler": "^2.17.1",
     "@tiptap-pro/extension-table-of-contents": "^2.17.1",
