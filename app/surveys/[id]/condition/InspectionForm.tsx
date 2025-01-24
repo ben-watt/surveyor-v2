@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
 import { merge } from "lodash";
@@ -25,11 +25,11 @@ import { DataForm as ComponentDataForm } from "@/app/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/conditions/form";
 import Input from "@/app/components/Input/InputText";
 import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-survey-reports/Survey";
-
 import { DraggableConditions } from "./DraggableConditions";
 import { FormPhrase, InspectionFormData, InspectionFormProps, RAG_OPTIONS } from "./types";
 
-export default function InspectionForm({
+// Data loading wrapper component
+export default function InspectionFormWrapper({
   surveyId,
   componentId,
   defaultValues,
@@ -40,10 +40,50 @@ export default function InspectionForm({
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
   const [surveySectionsHydrated, surveySections] = sectionStore.useList();
 
-  const drawer = useDynamicDrawer();
+  // Wait for all data to be hydrated
+  if (!isHydrated || !componentsHydrated || !elementsHydrated || !phrasesHydrated || !surveySectionsHydrated) {
+    return (
+      <div className="space-y-6">
+        <FormSection title="Basic Information">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </FormSection>
+        <FormSection title="Component Details">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </FormSection>
+      </div>
+    );
+  }
 
-  const initialValues = useMemo(() => {
-    const baseValues: InspectionFormData = {
+  // If we have a componentId, find the existing data
+  let initialValues: InspectionFormData | undefined;
+  if (componentId && survey) {
+    const { component, elementSection, section } = findComponent(survey, componentId);
+    if (component && elementSection && section) {
+      initialValues = {
+        inspectionId: component.inspectionId || uuidv4(),
+        location: component.location || "",
+        surveySection: { id: section.id, name: section.name },
+        element: { id: elementSection.id, name: elementSection.name },
+        component: { id: component.id, name: component.name },
+        nameOverride: component.nameOverride || component.name,
+        useNameOverride: component.useNameOverride || false,
+        ragStatus: component.ragStatus,
+        conditions: component.conditions || [],
+        additionalDescription: component.additionalDescription || "",
+        images: component.images || [],
+      };
+    }
+  }
+
+  // Merge with any provided default values
+  const mergedValues = merge(
+    {},
+    {
       inspectionId: uuidv4(),
       location: "",
       surveySection: { id: "", name: "" },
@@ -55,42 +95,49 @@ export default function InspectionForm({
       images: [],
       ragStatus: "N/I",
       conditions: [],
-    };
+    },
+    initialValues,
+    defaultValues
+  );
 
-    return merge({}, baseValues, defaultValues);
-  }, [defaultValues]);
+  return (
+    <InspectionFormContent
+      surveyId={surveyId}
+      initialValues={mergedValues}
+      components={components}
+      elements={elements}
+      phrases={phrases}
+      surveySections={surveySections}
+    />
+  );
+}
 
+// The actual form component
+function InspectionFormContent({
+  surveyId,
+  initialValues,
+  components,
+  elements,
+  phrases,
+  surveySections,
+}: {
+  surveyId: string;
+  initialValues: InspectionFormData;
+  components: any[];
+  elements: any[];
+  phrases: any[];
+  surveySections: any[];
+}) {
+  const drawer = useDynamicDrawer();
   const methods = useForm<InspectionFormData>({ defaultValues: initialValues });
-  const { reset, register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
+  const { register, watch, setValue, handleSubmit, control, formState: { errors } } = methods;
 
-  // Only watch specific fields we need instead of all form values
+  // Only watch specific fields we need
   const surveySection = watch("surveySection");
   const element = watch("element");
   const component = watch("component");
   const useNameOverride = watch("useNameOverride");
   const conditions = watch("conditions");
-
-  // Load existing component data if componentId is provided
-  useEffect(() => {
-    if (!isHydrated || !componentId || !survey) return;
-
-    const { component, elementSection, section } = findComponent(survey, componentId);
-    if (!component || !elementSection || !section) return;
-
-    reset({
-      inspectionId: component.inspectionId || uuidv4(),
-      location: component.location || "",
-      surveySection: { id: section.id, name: section.name },
-      element: { id: elementSection.id, name: elementSection.name },
-      component: { id: component.id, name: component.name },
-      nameOverride: component.nameOverride || component.name,
-      useNameOverride: component.useNameOverride || false,
-      ragStatus: component.ragStatus,
-      conditions: component.conditions || [],
-      additionalDescription: component.additionalDescription || "",
-      images: component.images || [],
-    });
-  }, [isHydrated, survey, componentId, reset]);
 
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
@@ -100,7 +147,6 @@ export default function InspectionForm({
     }));
   }, [surveySections]);
 
-  // Filter elements based on selected section
   const elementOptions = useMemo(() => 
     elements
       .filter(element => !surveySection.id || element.sectionId === surveySection.id)
@@ -174,11 +220,10 @@ export default function InspectionForm({
     }
   }, [element.id, elements, surveySections, setValue]);
 
-  // Memoize the image upload path to prevent re-renders
+  // Memoize the image upload path
   const imageUploadPath = useMemo(() => {
-    const inspectionId = watch("inspectionId");
-    return `report-images/${surveyId}/inspections/${inspectionId}`;
-  }, [surveyId, watch]);
+    return `report-images/${surveyId}/inspections/${initialValues.inspectionId}`;
+  }, [surveyId, initialValues.inspectionId]);
 
   const onSubmit = async (data: InspectionFormData) => {
     console.debug("[InspectionForm] Submitting form data:", data);
@@ -209,24 +254,6 @@ export default function InspectionForm({
     drawer.closeDrawer();
     toast.success("Inspection saved");
   };
-
-  if (!isHydrated) {
-    return (
-      <div className="space-y-6">
-        <FormSection title="Basic Information">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </FormSection>
-        <FormSection title="Component Details">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-        </FormSection>
-      </div>
-    );
-  }
 
   return (
     <FormProvider {...methods}>
