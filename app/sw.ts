@@ -25,19 +25,12 @@ interface ImageUpload {
 
 declare const self: ServiceWorkerGlobalScope;
 
-const customCache: RuntimeCaching[] = [
-  {
-    matcher: ({ url }) => url.pathname.includes('/login'),
-    handler: new NetworkOnly(),
-  }
-];
-
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [...customCache, ...defaultCache],
+  runtimeCaching: defaultCache,
 });
 
 // Register background sync

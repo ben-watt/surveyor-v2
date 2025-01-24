@@ -22,17 +22,13 @@ export async function middleware(request: NextRequest) {
 
   console.log("[Middleware] Authenticated:", authenticated, request.nextUrl);
 
-  if (authenticated) {
-    if (request.nextUrl.pathname.includes("/app/")) {
-      console.log("[Middleware] Returning response");
-      return response;
-    }
-
+  if (authenticated && request.nextUrl.pathname.includes("/login")) {
     return NextResponse.redirect(new URL("/app/surveys", request.url));
+  } else if (authenticated && request.nextUrl.pathname.includes("/app")) {
+    return response;
   }
 
-  console.log("[Middleware] User is not authenticated, redirecting to login");
-  return NextResponse.redirect(new URL("/login", request.url));
+  return response;
 }
 
 export const config = {
@@ -43,8 +39,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - login
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|login).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

@@ -305,21 +305,21 @@ function Report({ initFormValues }: ReportProps) {
   const formSections = [
     {
       title: "Report Details",
-      href: `/surveys/${initFormValues.id}/report-details`,
+      href: `/app/surveys/${initFormValues.id}/report-details`,
       status: initFormValues.reportDetails.status.status,
     },
     {
       title: "Property Description",
-      href: `/surveys/${initFormValues.id}/property-description`,
+      href: `/app/surveys/${initFormValues.id}/property-description`,
       status: initFormValues.propertyDescription.status.status
     },
     {
       title: "Property Condition",
-      href: `/surveys/${initFormValues.id}/condition`,
+      href: `/app/surveys/${initFormValues.id}/condition`,
     },
     {
       title: "Checklist",
-      href: `/surveys/${initFormValues.id}/checklist`,
+      href: `/app/surveys/${initFormValues.id}/checklist`,
       status: initFormValues.checklist.status.status
     },
   ];
