@@ -391,13 +391,8 @@ export const InputImage = ({
                 }));
             }}
             onupdatefiles={(files) => {
-                console.debug("[FilePond] onupdatefiles", files);
-                const fileSources = files.map(file => 
-                    typeof file.serverId === 'string' ? file.serverId :
-                    typeof file.source === 'string' ? file.source :
-                    file.filename
-                ).filter((source): source is string => source !== undefined);
-                
+                // Convert file names to full paths to update the form
+                const fileSources = files.map(file => join(path, file.filename))
                 onChange?.(fileSources);
             }}
             server={createServerConfig({ 
