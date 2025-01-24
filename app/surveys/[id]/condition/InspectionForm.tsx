@@ -225,6 +225,9 @@ function InspectionFormContent({
   const useNameOverride = watch("useNameOverride");
   const conditions = watch("conditions");
 
+  
+  console.log("[InspectionForm] Component:", component);
+
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
     return surveySections.map((section) => ({
@@ -446,9 +449,8 @@ function InspectionFormContent({
             <Input
               type="text"
               labelTitle="Component Name Override"
-              register={() => register("nameOverride")}
+              register={() => register("nameOverride", { required: true })}
               errors={errors}
-              defaultValue={component.name}
               placeholder="Enter custom component name"
             />
           )}

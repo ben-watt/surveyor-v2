@@ -62,7 +62,7 @@ export const FormSection = ({
 interface FormSectionLinkProps {
   title: string;
   href?: string;
-  status: "complete" | "incomplete" | "error" | "warning";
+  status: "complete" | "incomplete" | "error" | "warning" | "none";
   drawer?: DrawerProps;
 }
 

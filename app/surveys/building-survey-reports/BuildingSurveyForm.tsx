@@ -276,6 +276,14 @@ function Report({ initFormValues }: ReportProps) {
     toast.success("Saved As Draft");
     router.push("/surveys");
   };
+  const isFormValid = () => {
+    const defaultValues = formState.defaultValues;
+    if (!defaultValues) return false;
+
+    return defaultValues.reportDetails?.status?.status === "complete" &&
+      defaultValues.propertyDescription?.status?.status === "complete" &&
+      defaultValues.checklist?.status?.status === "complete";
+  }
 
   const onSubmit = async () => {
     console.log("[BuildingSurveyForm] onSubmit", methods.getValues());
@@ -306,7 +314,6 @@ function Report({ initFormValues }: ReportProps) {
     {
       title: "Property Condition",
       href: `/surveys/${initFormValues.id}/condition`,
-      status: initFormValues.propertyDescription.status.status
     },
     {
       title: "Checklist",
@@ -325,7 +332,7 @@ function Report({ initFormValues }: ReportProps) {
                 key={index}
                 title={section.title}
                 href={section.href}
-                status={section.status}
+                status={section.status || "none"}
               />
             ))}
           </div>
@@ -335,7 +342,7 @@ function Report({ initFormValues }: ReportProps) {
             )}
           </div>
           <div className="space-y-2">
-            <PrimaryBtn type="submit">
+            <PrimaryBtn type="submit" disabled={!isFormValid()}>
               Save
             </PrimaryBtn>
             {initFormValues.status === "draft" && (
