@@ -65,7 +65,7 @@ const schema = a.schema({
       materials: a.ref("Material").required().array().required(),
       syncStatus: a.string().required(),
       elementId: a.id().required(),
-      element: a.belongsTo("Elements", "elementId"),
+      element: a.belongsTo("Elements", "elementId")
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),

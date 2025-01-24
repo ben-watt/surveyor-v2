@@ -1,4 +1,4 @@
-import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection } from "./BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing } from "./BuildingSurveyReportSchema";
 
 // Find or create a section
 function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
@@ -54,7 +54,7 @@ export function addOrUpdateComponent(
     images?: string[],
     conditions?: Phrase[],
     ragStatus?: RagStatus,
-    budgetCost?: number,
+    costings?: Costing[],
   }
 ): BuildingSurveyFormData {
   const elementSection = findOrCreateElementSection(survey, sectionId, elementId);
@@ -78,7 +78,7 @@ export function addOrUpdateComponent(
       phrase: p.phrase || "",
     })),
     ragStatus: component.ragStatus || "N/I",
-    budgetCost: component.budgetCost,
+    costings: component.costings || [],
   };
 
   if (existingComponentIndex !== -1) {

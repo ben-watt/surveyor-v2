@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, useFieldArray, useFormContext } from "react-hook-form";
 import { FormSection } from "@/app/components/FormSection";
 import { merge } from "lodash";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import TextAreaInput from "@/app/components/Input/TextAreaInput";
 import { Combobox } from "@/app/components/Input/ComboBox";
 import { useDynamicDrawer } from "@/app/components/Drawer";
 import toast from "react-hot-toast";
-import { Edit, PenLine } from "lucide-react";
+import { Edit, PenLine, X } from "lucide-react";
 import ElementForm from "./ElementForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataForm as ElementDataForm } from "@/app/elements/form";
@@ -27,6 +27,59 @@ import Input from "@/app/components/Input/InputText";
 import { addOrUpdateComponent, findComponent } from "@/app/surveys/building-survey-reports/Survey";
 import { DraggableConditions } from "./DraggableConditions";
 import { FormPhrase, InspectionFormData, InspectionFormProps, RAG_OPTIONS } from "./types";
+
+// Add this component before InspectionFormWrapper
+function CostingsFieldArray() {
+  const { control, register } = useFormContext();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "costings",
+  });
+
+  return (
+    <div className="space-y-4">
+      {fields.map((field, index) => (
+        <div key={field.id} className="border rounded-md p-2">
+          <div className="flex items-end justify-between relative">
+            <Input
+              type="number"
+              labelTitle="Cost"
+              placeholder="£0.00"
+              register={() => register(`costings.${index}.cost` as const, { 
+                required: true,
+                valueAsNumber: true,
+                min: 0
+              })}
+            />
+            <Button
+             className="absolute top-0 right-0"
+            type="button"
+            variant="ghost"
+            onClick={() => remove(index)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          </div>
+          <div>
+            <Input
+              labelTitle="Reason"
+              placeholder="Description of the cost"
+              register={() => register(`costings.${index}.description` as const, { required: true })}
+            />
+          </div>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="secondary"
+        className="w-full"
+        onClick={() => append({ cost: 0, description: "" })}
+      >
+        Add Costing
+      </Button>
+    </div>
+  );
+}
 
 // Data loading wrapper component
 export default function InspectionFormWrapper({
@@ -76,6 +129,7 @@ export default function InspectionFormWrapper({
         conditions: component.conditions || [],
         additionalDescription: component.additionalDescription || "",
         images: component.images || [],
+        costings: component.costings || [],
       };
     }
   }
@@ -95,6 +149,7 @@ export default function InspectionFormWrapper({
       images: [],
       ragStatus: "N/I",
       conditions: [],
+      costings: [],
     },
     initialValues,
     defaultValues
@@ -247,12 +302,16 @@ function InspectionFormContent({
             phrase: x.phrase || "",
           })),
           ragStatus: data.ragStatus,
+          costings: data.costings.map(x => ({
+            cost: x.cost,
+            description: x.description,
+          })),
         }
       );
     });
 
+    toast.success("Changes saved successfully");
     drawer.closeDrawer();
-    toast.success("Inspection saved");
   };
 
   return (
@@ -418,8 +477,12 @@ function InspectionFormContent({
           </div>
         </FormSection>
 
+        <FormSection title="Costings">
+          <CostingsFieldArray />
+        </FormSection>
+
         <Button type="submit" className="w-full">
-          Save
+          Save Changes
         </Button>
       </form>
     </FormProvider>

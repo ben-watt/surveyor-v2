@@ -1,4 +1,4 @@
-import { RagStatus } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { Costing, RagStatus } from "@/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 
 export type FormPhrase = {
   id: string;
@@ -27,6 +27,7 @@ export type InspectionFormData = {
   images: string[];
   ragStatus: RagStatus;
   conditions: FormPhrase[];
+  costings: Costing[];
 };
 
 export interface InspectionFormProps {

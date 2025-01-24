@@ -98,10 +98,15 @@ export type Inspection = {
     ragStatus: RagStatus,
     useNameOverride: boolean,
     nameOverride: string,
-    budgetCost?: number,
     location: string,
     additionalDescription: string,
     images: string[],
+    costings: Costing[],
+}
+
+export type Costing = {
+    cost: number,
+    description: string
 }
 
 export type Phrase = {
