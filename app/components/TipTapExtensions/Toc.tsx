@@ -1,14 +1,11 @@
 import { Editor, Node, NodePos } from "@tiptap/core";
 import {
   mergeAttributes,
-  NodeViewContent,
   NodeViewProps,
   NodeViewWrapper,
   ReactNodeViewRenderer,
 } from "@tiptap/react";
 import { createContext, useCallback, useEffect, useState } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import DOMPurify from 'dompurify';
 import { renderReactToDomSpec } from "./Helper";
 
 interface TocDataItem {
@@ -30,13 +27,49 @@ export const TocContext = createContext<TocContext | undefined>({
   isCreate: false,
 });
 
+export class TocDataRepo {
+  private editor: Editor;
+  private data: TocContext = { data: [], isCreate: false };
+
+  constructor(editor: Editor) {
+    this.editor = editor;
+  }
+
+  getParsed(): TableOfContentsDataItemWithHierarchy[] {
+    return parseDataHierarchy(this.data.data);
+  }
+
+  get(): TocContext {
+    return this.data;
+  }
+
+  set(data: TocDataItem[], isCreate: boolean) {
+    this.data = { data, isCreate };
+    // Trigger an update to refresh the view
+    this.editor.view.dispatch(this.editor.state.tr);
+  }
+}
+
 export const TocNode = Node.create({
   name: "table-of-contents",
   group: "block",
   atom: true,
+
+  addStorage() {
+    return {
+      tocDataRepo: null as TocDataRepo | null,
+    };
+  },
+
+  onCreate() {
+    // Initialize the TocDataRepo with the editor instance
+    this.storage.tocDataRepo = new TocDataRepo(this.editor);
+  },
+
   addAttributes() {
     return {};
   },
+
   parseHTML() {
     return [
       {
@@ -44,8 +77,9 @@ export const TocNode = Node.create({
       },
     ];
   },
-  renderHTML({ HTMLAttributes }) {
-    const data = TocDataRepo.getParsed();
+
+  renderHTML({ HTMLAttributes, node }) {
+    const data = this.storage.tocDataRepo?.getParsed() || [];
     const domSpec = renderReactToDomSpec(<Toc data={data} />);
 
     return [
@@ -54,9 +88,11 @@ export const TocNode = Node.create({
       domSpec,
     ];
   },
+
   addNodeView() {
-    return ReactNodeViewRenderer(TocNodeView, { attrs: { id: "toc" } });
+    return ReactNodeViewRenderer(TocNodeView);
   },
+
   addGlobalAttributes() {
     return [
       {
@@ -150,24 +186,6 @@ function parseDataHierarchy(
   });
 }
 
-export const TocDataRepo = {
-  key: "surveyor-editor-toc-data",
-  getParsed: (): TableOfContentsDataItemWithHierarchy[] => {
-    const { data } = TocDataRepo.get();
-    return parseDataHierarchy(data);
-  },
-  get: (): TocContext => {
-    const data = localStorage.getItem(TocDataRepo.key);
-    if (data != undefined) {
-      return JSON.parse(data);
-    }
-    return { data: [], isCreate: false };
-  },
-  set: (data: TocDataItem[], isCreate: boolean) => {
-    localStorage.setItem(TocDataRepo.key, JSON.stringify({ data, isCreate }));
-  },
-};
-
 const replaceNode = (
   editor: Editor,
   nodeType: string,
@@ -196,47 +214,43 @@ const replaceNode = (
   });
 };
 
-export const TocNodeView = ({ editor }: NodeViewProps) => {
-  const [currentToc, setCurrentToc] = useState<
-    TableOfContentsDataItemWithHierarchy[]
-  >();
+export const TocNodeView = ({ editor, node, getPos }: NodeViewProps) => {
+  const [currentToc, setCurrentToc] = useState<TableOfContentsDataItemWithHierarchy[]>();
+  const tocDataRepo = (node.type.spec.storage as any).tocDataRepo;
 
-  const updateToc = useCallback(
-    () => {
-      const { data } = TocDataRepo.get();
-      console.log("[updateToc]", data);
-      const tocData = parseDataHierarchy(data);
-      tocData.map((d) => {
-        const $header = editor.$node("heading", { id: d.item.id });
+  const updateToc = useCallback(() => {
+    const { data } = tocDataRepo.get();
+    console.log("[updateToc]", data);
+    const tocData = parseDataHierarchy(data);
+    tocData.map((d) => {
+      const $header = editor.$node("heading", { id: d.item.id });
 
-        if ($header?.attributes["data-add-toc-here-id"] != null) {
-          const addHereId = $header.attributes["data-add-toc-here-id"];
-          const $addToThisNode = editor.$node("paragraph", { id: addHereId });
-          if (!$addToThisNode) {
-            console.error("Add here node not found", addHereId);
-            return;
-          }
-
-          replaceNode(editor,"paragraph", $addToThisNode, {
-            "data-toc-text": d.hierarchyText,
-          });
+      if ($header?.attributes["data-add-toc-here-id"] != null) {
+        const addHereId = $header.attributes["data-add-toc-here-id"];
+        const $addToThisNode = editor.$node("paragraph", { id: addHereId });
+        if (!$addToThisNode) {
+          console.error("Add here node not found", addHereId);
           return;
         }
 
-        if (!$header) {
-          console.error("Header not found for TOC", d.item.id);
-          return;
-        }
-
-        replaceNode(editor,"heading", $header, {
+        replaceNode(editor, "paragraph", $addToThisNode, {
           "data-toc-text": d.hierarchyText,
         });
-      });
+        return;
+      }
 
-      setCurrentToc(tocData);
-    },
-    [editor]
-  );
+      if (!$header) {
+        console.error("Header not found for TOC", d.item.id);
+        return;
+      }
+
+      replaceNode(editor, "heading", $header, {
+        "data-toc-text": d.hierarchyText,
+      });
+    });
+
+    setCurrentToc(tocData);
+  }, [editor, tocDataRepo]);
 
   useEffect(() => {
     updateToc();

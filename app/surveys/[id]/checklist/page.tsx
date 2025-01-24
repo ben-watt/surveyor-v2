@@ -1,6 +1,5 @@
 "use client";
 
-import { FormSection } from "@/app/components/FormSection";
 import {
   FormProvider,
   SubmitErrorHandler,
@@ -24,7 +23,7 @@ interface ChecklistPageProps {
   };
 }
 
-export const ChecklistPage = ({
+const ChecklistPage = ({
   params: { id },
 }: ChecklistPageProps) => {
   const [isHydrated, survey] = surveyStore.useGet(id);
