@@ -30,13 +30,6 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
     setOpen(false);
   };
 
-  // Initialize date from field value if it exists
-  useEffect(() => {
-    if (field.value) {
-      field.onChange(new Date(field.value));
-    }
-  }, [field, field.value]);
-
   return (
     <>
       <div>
