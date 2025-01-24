@@ -25,8 +25,7 @@ import {
 } from "@tiptap-pro/extension-table-of-contents";
 import { v4 } from "uuid";
 import { Node } from "@tiptap/core";
-import { TocContext, TocDataRepo, TocNode } from "../TipTapExtensions/Toc";
-import { useDebounceCallback } from "usehooks-ts";
+import { createTocRepo, TocContext, TocNode, TocRepo } from "../TipTapExtensions/Toc";
 
 function extendAttributesWithDefaults<T>(node: Node<T>, attrs: { [key: string]: string }, attrDefault?: string) {
   return node.extend({
@@ -53,6 +52,7 @@ function extendAttributesWithDefaults<T>(node: Node<T>, attrs: { [key: string]: 
 }
 
 interface NewEditorProps {
+  editorId?: string;
   content: Content;
   onUpdate?: (props: EditorEvents["update"]) => void;
   onCreate?: (props: EditorEvents["create"]) => void;
@@ -62,12 +62,19 @@ interface NewEditorProps {
 const ImageResizeWithAttributes = extendAttributesWithDefaults(ImageResize, { "style" : "width: 100%; height: auto; cursor: pointer;"});
 
 export const NewEditor = ({
+  editorId,
   onPrint,
   content,
   onUpdate,
   onCreate,
 }: NewEditorProps) => {
   const [tocData, setTocData] = React.useState<TocContext>();
+  const [editorIdentifier, setEditorIdentifier] = React.useState<string>(editorId ?? v4());
+  const [tocRepo, setTocRepo] = React.useState<TocRepo>();
+
+  useEffect(() => {
+    setTocRepo(createTocRepo(editorIdentifier));
+  }, [editorIdentifier]);
 
   const extensions = [
     FileHandler.configure({
@@ -144,10 +151,12 @@ export const NewEditor = ({
           itemIndex: d.itemIndex,
         }));
 
-        TocDataRepo.set(mappedData, isCreate ?? false);
+        tocRepo?.set(mappedData, isCreate ?? false);
       },
     }),
-    TocNode,
+    TocNode.configure({
+      repo: tocRepo ?? null,
+    }),
   ];
 
   const editor = useEditor({
@@ -155,13 +164,13 @@ export const NewEditor = ({
     content: content,
     onCreate: onCreate,
     onUpdate: onUpdate,
-  });
+  }, [tocRepo]);
   
   return (
     <div className="print:hidden border border-grey-200">
       <BlockMenuBar editor={editor} onPrint={onPrint} />
       <TocContext.Provider value={tocData}>
-        <EditorContent editor={editor} />
+        <EditorContent id={editorIdentifier} editor={editor} />
       </TocContext.Provider>
     </div>
   );

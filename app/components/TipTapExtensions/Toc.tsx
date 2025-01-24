@@ -31,9 +31,17 @@ export const TocNode = Node.create({
   name: "table-of-contents",
   group: "block",
   atom: true,
+
+  addOptions() {
+    return {
+      repo: null as TocRepo | null,
+    }
+  },
+
   addAttributes() {
     return {};
   },
+
   parseHTML() {
     return [
       {
@@ -41,19 +49,30 @@ export const TocNode = Node.create({
       },
     ];
   },
-  renderHTML({ HTMLAttributes }) {
-    const data = TocDataRepo.getParsed();
+
+  renderHTML(props: { 
+    node: Node;
+    HTMLAttributes: Record<string, any>;
+  }) {
+    const options = this.options;
+    if (!options.repo) {
+      console.error('TocNode: No repository configured');
+      return ['div', { 'data-type': 'table-of-contents' }, ''];
+    }
+    const data = options.repo.getParsed();
     const domSpec = renderReactToDomSpec(<Toc data={data} />);
 
     return [
       "div",
-      mergeAttributes(HTMLAttributes, { "data-type": "table-of-contents"}),
+      mergeAttributes(props.HTMLAttributes, { "data-type": "table-of-contents"}),
       domSpec,
     ];
   },
+
   addNodeView() {
     return ReactNodeViewRenderer(TocNodeView, { attrs: { id: "toc" } });
   },
+
   addGlobalAttributes() {
     return [
       {
@@ -147,23 +166,42 @@ function parseDataHierarchy(
   });
 }
 
-export const TocDataRepo = {
-  key: "surveyor-editor-toc-data",
-  getParsed: (): TableOfContentsDataItemWithHierarchy[] => {
-    const { data } = TocDataRepo.get();
+export interface TocRepo {
+  key: string;
+  getParsed: () => TableOfContentsDataItemWithHierarchy[];
+  get: () => TocContext;
+  set: (data: TocDataItem[], isCreate: boolean) => void;
+}
+
+export const createTocRepo = (key: string): TocRepo => {
+  if (localStorage.getItem(key) == null) {
+    localStorage.setItem(key, JSON.stringify({ data: [], isCreate: true }));
+  }
+
+  const getParsed = (): TableOfContentsDataItemWithHierarchy[] => {
+    const { data } = get();
     return parseDataHierarchy(data);
-  },
-  get: (): TocContext => {
-    const data = localStorage.getItem(TocDataRepo.key);
+  }
+
+  const get = (): TocContext => {
+    const data = localStorage.getItem(key);
     if (data != undefined) {
       return JSON.parse(data);
     }
     return { data: [], isCreate: false };
-  },
-  set: (data: TocDataItem[], isCreate: boolean) => {
-    localStorage.setItem(TocDataRepo.key, JSON.stringify({ data, isCreate }));
-  },
-};
+  }
+
+  const set = (data: TocDataItem[], isCreate: boolean) => {
+    localStorage.setItem(key, JSON.stringify({ data, isCreate }));
+  }
+
+  return {
+    key: key,
+    getParsed,
+    get,
+    set,
+  }
+}
 
 const replaceNode = (
   editor: Editor,
@@ -200,7 +238,12 @@ export const TocNodeView = ({ editor }: NodeViewProps) => {
 
   const updateToc = useCallback(
     () => {
-      const { data } = TocDataRepo.get();
+      const repo = (editor.extensionManager.extensions.find(ext => ext.name === 'table-of-contents')?.options as any).repo as TocRepo;
+      if (!repo) {
+        console.error('TocNode: No repository configured');
+        return;
+      }
+      const { data } = repo.get();
       console.log("[updateToc]", data);
       const tocData = parseDataHierarchy(data);
       tocData.map((d) => {
