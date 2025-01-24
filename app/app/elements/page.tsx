@@ -82,7 +82,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`/elements/${rowId}`}>
+              <Link href={`/app/elements/${rowId}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
               <DropdownMenuItem
@@ -123,7 +123,7 @@ export default function Page() {
         columns={columns}
         data={elements}
         isLoading={elementsHydrated && componentsHydrated && sectionsHydrated}
-        onCreate={() => router.push("/elements/create")}
+        onCreate={() => router.push("/app/elements/create")}
       />
     </div>
   );

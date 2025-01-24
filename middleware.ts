@@ -20,16 +20,18 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  console.log("[Middleware] Authenticated:", authenticated, request.nextUrl);
+
   if (authenticated) {
-    if(request.nextUrl.pathname === "/login") {
-      return NextResponse.redirect(new URL("/app/surveys", request.url));
-    } else {
+    if (request.nextUrl.pathname.includes("/app")) {
+      console.log("[Middleware] Returning response");
       return response;
     }
+
+    return NextResponse.redirect(new URL("/app/surveys", request.url));
   }
 
   console.log("[Middleware] User is not authenticated, redirecting to login");
-
   return NextResponse.redirect(new URL("/login", request.url));
 }
 
@@ -45,4 +47,4 @@ export const config = {
      */
     "/((?!api|_next/static|_next/image|favicon.ico|login).*)",
   ],
-}; 
+};

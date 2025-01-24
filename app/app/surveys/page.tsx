@@ -24,11 +24,6 @@ import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
 import { surveyStore } from "@/app/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 type TableData = BuildingSurveyFormData;
 
@@ -121,11 +116,11 @@ function HomePage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem>
-                  <Link href={`surveys/${reportId}`}>Edit survey</Link>
+                  <Link href={`/app/surveys/${reportId}`}>Edit survey</Link>
                 </DropdownMenuItem>
                 {showGenerate && (
                   <DropdownMenuItem>
-                    <Link href={`/editor/${reportId}`}>
+                    <Link href={`/app/editor/${reportId}`}>
                       Generate report
                     </Link>
                   </DropdownMenuItem>
@@ -148,7 +143,7 @@ function HomePage() {
         initialState={{ sorting: [{ id: "created", desc: true }] }}
         columns={columns}
         data={data.map((x) => x)}
-        onCreate={() => router.push("/surveys/create")}
+        onCreate={() => router.push("/app/surveys/create")}
       />
     );
   }

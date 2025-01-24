@@ -58,7 +58,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`conditions/${id}`}>
+              <Link href={`/app/conditions/${id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
             </DropdownMenuContent>
@@ -76,7 +76,7 @@ export default function Page() {
           <p className="text-sm text-muted-foreground">Conditions are used to generate standard text for surveys.</p>
         </div>
       </div>
-      <DataTable columns={columns} data={phrases} onCreate={() => router.push("/conditions/create")} />
+      <DataTable columns={columns} data={phrases} onCreate={() => router.push("/app/conditions/create")} />
     </div>
   );
 }

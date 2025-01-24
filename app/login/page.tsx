@@ -25,7 +25,8 @@ export default function SignIn() {
         username: email,
         password: password
       })
-      router.push("/app/surveys") // Redirect to dashboard after successful sign in
+      
+      router.push("/app/surveys")
     } catch (err: any) {
       setError(err.message || "Failed to sign in")
     } finally {

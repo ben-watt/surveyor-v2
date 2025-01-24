@@ -1,6 +1,6 @@
 import { defaultCache } from "@serwist/next/worker";
-import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist } from "serwist";
+import type { PrecacheEntry, SerwistGlobalConfig, RuntimeCaching } from "serwist";
+import { NetworkOnly, Serwist } from "serwist";
 import { TransferProgressEvent, uploadData } from "aws-amplify/storage";
 
 // This declares the value of `injectionPoint` to TypeScript.
@@ -25,12 +25,19 @@ interface ImageUpload {
 
 declare const self: ServiceWorkerGlobalScope;
 
+const customCache: RuntimeCaching[] = [
+  {
+    matcher: ({ url }) => url.pathname.includes('/login'),
+    handler: new NetworkOnly(),
+  }
+];
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching: [...customCache, ...defaultCache],
 });
 
 // Register background sync

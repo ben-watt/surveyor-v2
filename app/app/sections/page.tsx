@@ -78,7 +78,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`/sections/${rowId}`}>
+              <Link href={`/app/sections/${rowId}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
               <DropdownMenuItem
@@ -136,7 +136,7 @@ export default function Page() {
         columns={columns}
         data={sectionData}
         isLoading={isLoading}
-        onCreate={() => router.push("/sections/create")}
+        onCreate={() => router.push("/app/sections/create")}
       />
     </div>
   );

@@ -72,7 +72,7 @@ export default function Page() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <Link href={`building-components/${id}`}>
+              <Link href={`/app/building-components/${id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
               <DropdownMenuItem
@@ -108,7 +108,7 @@ export default function Page() {
           <p className="text-sm text-muted-foreground">Components are are the priamary items inspected during a building survey.</p>
         </div>
       </div>
-      <DataTable columns={columns} data={data} onCreate={() => router.push("/building-components/create")} />
+      <DataTable columns={columns} data={data} onCreate={() => router.push("/app/building-components/create")} />
     </div>
   );
 }
