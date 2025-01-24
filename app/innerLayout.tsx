@@ -45,12 +45,6 @@ export default function RootLayout({
     fetchUser();
   }, [router, path]);
 
-  useEffect(() => {
-    componentStore.syncWithServer();
-    surveyStore.syncWithServer();
-    elementStore.syncWithServer();
-  }, []);
-
   return (
     <>
       <ConfigureAmplifyClientSide />

@@ -50,10 +50,7 @@ export const TocNode = Node.create({
     ];
   },
 
-  renderHTML(props: { 
-    node: Node;
-    HTMLAttributes: Record<string, any>;
-  }) {
+  renderHTML({ HTMLAttributes }) {
     const options = this.options;
     if (!options.repo) {
       console.error('TocNode: No repository configured');
@@ -64,7 +61,7 @@ export const TocNode = Node.create({
 
     return [
       "div",
-      mergeAttributes(props.HTMLAttributes, { "data-type": "table-of-contents"}),
+      mergeAttributes(HTMLAttributes, { "data-type": "table-of-contents"}),
       domSpec,
     ];
   },

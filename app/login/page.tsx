@@ -23,19 +23,12 @@ const amplifyTheme = {
     }
   };
 
-
-  function Redirect({ path }: { path: string }) {
-    return (
-        redirect(path)
-    )
-  }
-
-  const WithRedirect = withAuthenticator(Redirect);
-
   export default function SignIn() {
+    const Authenticator = withAuthenticator((p) => p.user ? "/surveys" : "");
+
     return (
         <ThemeProvider theme={amplifyTheme}>
-          <WithRedirect path="/surveys"/>
+          <Authenticator />
         </ThemeProvider>
       )
   }
