@@ -16,7 +16,11 @@ function Home({ params }: { params: { id: string } }) {
     const frontElevation = survey.reportDetails?.frontElevationImagesUri?.length || 0;
     const sectionPhotos = survey.sections?.reduce((total, section) => {
       return total + (section.elementSections?.reduce((sectionTotal, element) => {
-        return sectionTotal + (element.images?.length || 0);
+        const elementImages = element.images?.length || 0;
+        const componentImages = element.components?.reduce((componentTotal, component) => {
+          return componentTotal + (component.images?.length || 0);
+        }, 0) || 0;
+        return sectionTotal + elementImages + componentImages;
       }, 0) || 0);
     }, 0) || 0;
 
