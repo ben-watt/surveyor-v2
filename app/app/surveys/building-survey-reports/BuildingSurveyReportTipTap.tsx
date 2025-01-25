@@ -185,12 +185,12 @@ export default function PDF({ form }: PdfProps) {
             width={400}
             height={200}
           />
-          <Image
+          <img
             style={{ width: "80mm" }}
-            src="https://placehold.co/600x400"
+            src="data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3Ctext x='300' y='200' font-family='Arial' font-size='24' fill='%23666666' text-anchor='middle' dominant-baseline='middle'%3EPlaceholder%3C/text%3E%3C/svg%3E"
             alt="signature"
-            width={400}
-            height={200}
+            width="400"
+            height="200"
           />
           <p>{form.owner.name}</p>
           <p>Jordan Clarke BSc (Hons) MRICS</p>
@@ -329,7 +329,7 @@ export default function PDF({ form }: PdfProps) {
         <p></p>
         <img
           style={{ margin: "0 auto", width: "180mm" }}
-          src="https://placehold.co/600x400"
+          src="data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3Ctext x='300' y='200' font-family='Arial' font-size='24' fill='%23666666' text-anchor='middle' dominant-baseline='middle'%3ELocation Plan Placeholder%3C/text%3E%3C/svg%3E"
           alt="placeholder"
           width="600"
           height="400"
@@ -557,7 +557,7 @@ export default function PDF({ form }: PdfProps) {
           description={`The presence of mature trees near a building can cause structural damage to foundations by directly displacing them,
 decreasing, or indeed increasing, the amount of moisture to be drawn from the certain types of soil causing it to shrink and
 expand, as well as negatively affecting drainage causing subsidence. The risk posed is subject to the following:
-* Proximity of the tree * the height, age and species of the tree *the design and depth of the building’s foundations *the type
+* Proximity of the tree * the height, age and species of the tree *the design and depth of the building's foundations *the type
 of sub-soil
 A mature tree is present in the rear garden, located close to the raised patio. The tree could be contrubiting to the movement
 observed to the wall. However, there was no evidence to suggest that this is causing any structural issues to the property.`}
@@ -604,7 +604,7 @@ commonly comprise overhead or subterranean high voltage electrical power cables.
 discharges from these high voltage cables upset the balance of minute electrical impulses employed by the human body to
 regulate itself in much the same way as television and radio signals can be disrupted. This subject is still largely controversial
 with further scientific research required. Further information on this matter can be found on the National Radiological Protection
-Board’s website. We have not undertaken any separate inquiries with the relevant statutory authority.`}
+Board's website. We have not undertaken any separate inquiries with the relevant statutory authority.`}
         />
       </Page>
       <Page>
@@ -634,7 +634,7 @@ Board’s website. We have not undertaken any separate inquiries with the releva
           <p style={{ textAlign: "justify" }}>
             We recommend that you obtain all testing and commissioning
             certificates relating to the electrical and gas installations etc.
-            and obtain Final Certificates and engineer’s calculations for the
+            and obtain Final Certificates and engineer's calculations for the
             structural alterations and extensions to confirm that they were
             designed and installed in compliance with the Building Regulations.
           </p>
