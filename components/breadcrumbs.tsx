@@ -26,18 +26,20 @@ export function Breadcrumbs() {
     <Breadcrumb>
       <BreadcrumbList>
         {getBreadcrumbs().map((crumb, index, array) => (
-          <BreadcrumbItem key={crumb.href} className="hidden md:block">
-            {index === array.length - 1 ? (
-              <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-            ) : (
-              <div className="flex items-center gap-2">
+          <React.Fragment key={crumb.href}>
+            <BreadcrumbItem className="hidden md:block">
+              {index === array.length - 1 ? (
+                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+              ) : (
                 <BreadcrumbLink href={crumb.href}>
                   {crumb.label}
                 </BreadcrumbLink>
-                <BreadcrumbSeparator />
-              </div>
+              )}
+            </BreadcrumbItem>
+            {index < array.length - 1 && (
+              <BreadcrumbSeparator className="hidden md:block" />
             )}
-          </BreadcrumbItem>
+          </React.Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>
