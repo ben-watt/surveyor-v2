@@ -51,8 +51,8 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
   }, [content]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between p-4 border-b">
+    <div>
+      <div className="flex items-center justify-between p-4 border-b print:!hidden">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Editor
