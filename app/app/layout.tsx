@@ -1,7 +1,7 @@
 "use client";
 
 import { Toaster } from "react-hot-toast";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { DynamicDrawerProvider } from "./components/Drawer";
 import Error from "./error";
