@@ -120,10 +120,10 @@
   --gray-3: #cbd5e0;
 }
 
-.tiptap p {
-  line-height: 24px;
-  min-height: 24px;
-}
+  /* .tiptap p { -- This is causing issues when rendering to print and I have no idea why
+    line-height: 24px;
+    min-height: 24px;
+  } */
 
 /* Basic editor styles */
 .tiptap {
@@ -234,7 +234,7 @@
 .tiptap table {
   border-collapse: collapse;
   margin: 0;
-  /* overflow: hidden; This causes no end of issues when rendering to print*/ 
+  overflow: hidden;
   table-layout: fixed;
   width: 100%;
   page-break-inside: avoid;

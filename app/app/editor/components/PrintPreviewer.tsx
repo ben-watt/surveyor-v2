@@ -67,7 +67,7 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
         </Button>
       </div>
       
-      <div className="pagedjs_print_preview">
+      <div className="pagedjs_print_preview tiptap">
         <div ref={previewRef} />
       </div>
     </div>
