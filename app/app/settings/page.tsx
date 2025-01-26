@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { JsonView, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
@@ -17,6 +17,7 @@ import { EntityDialog } from "./components/EntityDialog";
 import { EntityType, SyncingEntities, EntitiesToSync } from "./types";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData, prepareLocationData } from "./utils/mappers";
+import client from "../clients/AmplifyDataClient";
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
@@ -79,6 +80,15 @@ export default function Page() {
     sections: sections.length,
     surveys: surveys.length,
   };
+
+  const [serverCounts, setServerCounts] = useState<{ [key: string]: number }>({
+    elements: 0,
+    components: 0,
+    phrases: 0,
+    locations: 0,
+    sections: 0,
+    surveys: 0,
+  });
 
   const filteredElements = elements.filter(e => !filters.elements || e.syncStatus === filters.elements);
   const filteredComponents = components.filter(c => !filters.components || c.syncStatus === filters.components);
@@ -149,6 +159,42 @@ export default function Page() {
       return newFilters;
     });
   };
+
+  useEffect(() => {
+    async function fetchServerCounts() {
+      try {
+        const [
+          elementsResponse,
+          componentsResponse,
+          phrasesResponse,
+          locationsResponse,
+          sectionsResponse,
+          surveysResponse
+        ] = await Promise.all([
+          client.models.Elements.list(),
+          client.models.Components.list(),
+          client.models.Phrases.list(),
+          client.models.Locations.list(),
+          client.models.Sections.list(),
+          client.models.Surveys.list()
+        ]);
+
+        setServerCounts({
+          elements: elementsResponse.data.length,
+          components: componentsResponse.data.length,
+          phrases: phrasesResponse.data.length,
+          locations: locationsResponse.data.length,
+          sections: sectionsResponse.data.length,
+          surveys: surveysResponse.data.length,
+        });
+      } catch (error) {
+        console.error("Failed to fetch server counts:", error);
+        toast.error("Failed to fetch server counts");
+      }
+    }
+
+    fetchServerCounts();
+  }, []);
 
   async function seedAllData() {
     try {
@@ -395,6 +441,7 @@ export default function Page() {
                 type={type}
                 title={title}
                 count={data.length}
+                serverCount={serverCounts[type]}
                 isSelected={selectedEntity === type}
                 isHydrated={hydrated}
                 isSyncing={syncingEntities[type]}

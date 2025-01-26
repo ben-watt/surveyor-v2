@@ -107,6 +107,19 @@ export function EntityDialog({
               Sections ({entityCounts.sections})
             </label>
           </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="surveys"
+              checked={entities.surveys}
+              disabled={entityCounts.surveys === 0}
+              onCheckedChange={(checked) => 
+                onEntitiesChange({ ...entities, surveys: !!checked })
+              }
+            />
+            <label htmlFor="surveys" className={`text-sm font-medium leading-none ${entityCounts.surveys === 0 ? 'text-gray-400' : ''}`}>
+              Surveys ({entityCounts.surveys})
+            </label>
+          </div>
           {extraContent}
         </div>
         <div className="flex justify-end gap-4">

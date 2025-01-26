@@ -17,7 +17,7 @@ import { Draft } from "immer";
 const mapToSurvey = (data: any): DexieSurvey => ({
   id: data.id,
   syncStatus: SyncStatus.Synced,
-  content: data.content,
+  content: JSON.parse(data.content),
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
 });
@@ -36,11 +36,25 @@ const createSurveyStore = () => {
         return response.data.map(mapToSurvey);
       },
       create: async (data) => {
-        const response = await client.models.Surveys.create(data);
+        const serverData = {
+          id: data.id,
+          syncStatus: SyncStatus.Synced,
+          content: JSON.stringify(data.content),
+        }
+
+        console.log("[createSurveyStore] Creating survey", serverData);
+        const response = await client.models.Surveys.create(serverData);
         return mapToSurvey(response.data);
       },
       update: async (data) => {
-        const response = await client.models.Surveys.update(data);
+        const serverData = {
+          id: data.id,
+          syncStatus: SyncStatus.Synced,
+          content: JSON.stringify(data.content),
+        }
+
+        console.log("[createSurveyStore] Updating survey", serverData); 
+        const response = await client.models.Surveys.update(serverData);
         return mapToSurvey(response.data);
       },
       delete: async (id) => {

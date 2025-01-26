@@ -8,6 +8,7 @@ interface EntityCardProps {
   type: EntityType;
   title: string;
   count: number;
+  serverCount: number;
   isSelected: boolean;
   isHydrated: boolean;
   isSyncing: boolean;
@@ -22,6 +23,7 @@ export function EntityCard({
   type,
   title,
   count,
+  serverCount,
   isSelected,
   isHydrated,
   isSyncing,
@@ -47,8 +49,14 @@ export function EntityCard({
           />
         </div>
       </div>
-      <div className="text-sm text-gray-600 dark:text-gray-400">
-        Count: {count}
+      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+        <div>Local Count: {count}</div>
+        <div>Server Count: {serverCount}</div>
+        {count !== serverCount && (
+          <div className="text-yellow-600 dark:text-yellow-400">
+            ⚠️ Out of sync
+          </div>
+        )}
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
         {Object.values(SyncStatus).map((status) => (

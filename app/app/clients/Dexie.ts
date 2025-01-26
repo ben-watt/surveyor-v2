@@ -90,7 +90,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
       const allLocal = await table.toArray();
       for (const local of allLocal) {
-        if (local.syncStatus === SyncStatus.Queued) {
+        if (local.syncStatus === SyncStatus.Queued || local.syncStatus === SyncStatus.Failed) {
           try {
             const exists = remoteData.find(r => r.id === local.id);
             if(exists) {
