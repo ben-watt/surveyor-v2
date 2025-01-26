@@ -1575,7 +1575,7 @@
         "type": "Risks to the people",
         "specification": "Radon",
         "condition": "Green",
-        "defect": 0.01,
+        "defect": "",
         "level2Wording": "",
         "level3Wording": "From the Building Research Establishment Radon Maps, the site has been identified as being within an area with a maximum radon potential of 1% (lowest risk). "
       },
