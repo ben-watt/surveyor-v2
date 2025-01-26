@@ -7,12 +7,12 @@ interface HeaderFooterHtmlProps {
 export const HeaderFooterHtml = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <>
-      <div className="header-container relative h-[100px] mb-4">
+      <div className="header-container mb-4">
         <img
           className="headerImage object-contain"
           src="/cwbc-logo.webp"
           alt="CWBC Logo"
-          width="300"
+          width="150"
           height="80"
           style={{ maxWidth: '300px', height: 'auto' }}
         />
@@ -22,12 +22,12 @@ export const HeaderFooterHtml = ({ editorData }: HeaderFooterHtmlProps) => {
           </p>
         </div>
       </div>
-      <div className="footer-container relative h-[60px] mt-4">
+      <div className="footer-container mt-4">
         <img
           className="footerImage object-contain"
           src="/rics-purple-logo.jpg"
           alt="RICS Logo"
-          width="200"
+          width="150"
           height="40"
           style={{ maxWidth: '200px', height: 'auto' }}
         />

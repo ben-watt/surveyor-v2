@@ -2,6 +2,7 @@ import React from "react";
 import { Previewer } from "pagedjs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
+import { HeaderFooterHtml } from "./HeaderFooter";
 
 interface PrintPreviewerProps {
   content: string;
