@@ -818,7 +818,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
     tableRows.push(
       <tr key={elementSection.id + "." + i}>
         <td>
-          <Image
+          <img
             style={{ width: "500mm" }}
             key={i}
             src={es.images[i]}
@@ -829,7 +829,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
         </td>
         <td>
           {es.images.at(i + 1) && (
-            <Image
+            <img
               style={{ width: "500mm" }}
               key={i + 1}
               src={es.images[i + 1]}
