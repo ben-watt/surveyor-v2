@@ -153,10 +153,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     await table.delete(id);
   };
 
-  const removeAll = async () => {
+  const removeAll = async ({ options: deleteRemote = true }: { options: boolean }) => {
     const all = await table.toArray();
     for (const item of all) {
-      if (item.syncStatus === SyncStatus.Synced) {
+      if (item.syncStatus === SyncStatus.Synced && deleteRemote) {
         try {
           await remoteHandlers.delete(item.id);
         } catch (error) {

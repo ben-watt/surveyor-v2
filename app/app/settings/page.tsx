@@ -9,7 +9,7 @@ import bankOfDefects from "./defects.json";
 import seedLocationData from "./locations.json";
 import seedSectionData from "./sections.json";
 import seedElementData from "./elements.json";
-import { componentStore, elementStore, phraseStore, locationStore, sectionStore } from "../clients/Database";
+import { componentStore, elementStore, phraseStore, locationStore, sectionStore, surveyStore } from "../clients/Database";
 import { SyncStatus } from "../clients/Dexie";
 import { getErrorMessage } from "../utils/handleError";
 import { EntityCard } from "./components/EntityCard";
@@ -21,12 +21,14 @@ import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData, pr
 export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [localOnly, setLocalOnly] = useState(false);
   const [syncingEntities, setSyncingEntities] = useState<SyncingEntities>({
     elements: false,
     components: false,
     phrases: false,
     locations: false,
     sections: false,
+    surveys: false,
   });
 
   const [elementsHydrated, elements] = elementStore.useList();
@@ -34,6 +36,7 @@ export default function Page() {
   const [phrasesHydrated, phrases] = phraseStore.useList();
   const [locationsHydrated, locations] = locationStore.useList();
   const [sectionsHydrated, sections] = sectionStore.useList();
+  const [surveysHydrated, surveys] = surveyStore.useRawList();
 
   const [filters, setFilters] = useState<{ [key in EntityType]?: SyncStatus }>({});
   const [selectedEntity, setSelectedEntity] = useState<EntityType | null>(null);
@@ -47,6 +50,7 @@ export default function Page() {
     phrases: true,
     locations: true,
     sections: true,
+    surveys: true,
   });
 
   const [entitiesToSeed, setEntitiesToSeed] = useState<EntitiesToSync>({
@@ -55,6 +59,7 @@ export default function Page() {
     phrases: false,
     locations: true,
     sections: true,
+    surveys: false,
   });
 
   const [entitiesToRemove, setEntitiesToRemove] = useState<EntitiesToSync>({
@@ -63,6 +68,7 @@ export default function Page() {
     phrases: true,
     locations: true,
     sections: true,
+    surveys: true,
   });
 
   const entityCounts = {
@@ -71,12 +77,53 @@ export default function Page() {
     phrases: phrases.length,
     locations: locations.length,
     sections: sections.length,
+    surveys: surveys.length,
   };
 
   const filteredElements = elements.filter(e => !filters.elements || e.syncStatus === filters.elements);
   const filteredComponents = components.filter(c => !filters.components || c.syncStatus === filters.components);
   const filteredPhrases = phrases.filter(p => !filters.phrases || p.syncStatus === filters.phrases);
   const filteredLocations = locations.filter(l => !filters.locations || l.syncStatus === filters.locations);
+  const filteredSurveys = surveys.filter(s => !filters.surveys || s.syncStatus === filters.surveys);
+
+  const statusCounts = {
+    elements: {
+      [SyncStatus.Draft]: elements.filter(item => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: elements.filter(item => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: elements.filter(item => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: elements.filter(item => item.syncStatus === SyncStatus.Synced).length,
+    },
+    components: {
+      [SyncStatus.Draft]: components.filter(item => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: components.filter(item => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: components.filter(item => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: components.filter(item => item.syncStatus === SyncStatus.Synced).length,
+    },
+    phrases: {
+      [SyncStatus.Draft]: phrases.filter(item => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: phrases.filter(item => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: phrases.filter(item => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: phrases.filter(item => item.syncStatus === SyncStatus.Synced).length,
+    },
+    locations: {
+      [SyncStatus.Draft]: locations.filter(item => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: locations.filter(item => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: locations.filter(item => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: locations.filter(item => item.syncStatus === SyncStatus.Synced).length,
+    },
+    sections: {
+      [SyncStatus.Draft]: sections.filter(item => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: sections.filter(item => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: sections.filter(item => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: sections.filter(item => item.syncStatus === SyncStatus.Synced).length,
+    },
+    surveys: {
+      [SyncStatus.Draft]: surveys.filter(item => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: surveys.filter(item => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: surveys.filter(item => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: surveys.filter(item => item.syncStatus === SyncStatus.Synced).length,
+    },
+  };
 
   const toggleFilter = (entityType: EntityType, status: SyncStatus) => {
     setFilters(prev => {
@@ -108,11 +155,12 @@ export default function Page() {
       setIsLoading(true);
 
       await Promise.all([
-        entitiesToSeed.elements && elementStore.removeAll(),
-        entitiesToSeed.components && componentStore.removeAll(),
-        entitiesToSeed.phrases && phraseStore.removeAll(),
-        entitiesToSeed.locations && locationStore.removeAll(),
-        entitiesToSeed.sections && sectionStore.removeAll()
+        entitiesToSeed.elements && elementStore.removeAll({ options: false }),
+        entitiesToSeed.components && componentStore.removeAll({ options: false }),
+        entitiesToSeed.phrases && phraseStore.removeAll({ options: false }),
+        entitiesToSeed.locations && locationStore.removeAll({ options: false }),
+        entitiesToSeed.sections && sectionStore.removeAll({ options: false }),
+        entitiesToSeed.surveys && surveyStore.removeAll({ options: false })
       ].filter(Boolean));
 
       if (entitiesToSeed.sections) {
@@ -179,6 +227,7 @@ export default function Page() {
         phrases: entitiesToSync.phrases,
         locations: entitiesToSync.locations,
         sections: entitiesToSync.sections,
+        surveys: entitiesToSync.surveys,
       });
 
       const syncTasks = [];
@@ -218,6 +267,13 @@ export default function Page() {
           )
         );
       }
+      if (entitiesToSync.surveys) {
+        syncTasks.push(
+          surveyStore.syncWithServer().finally(() => 
+            setSyncingEntities(prev => ({ ...prev, surveys: false }))
+          )
+        );
+      }
 
       const results = await Promise.all(syncTasks);
 
@@ -239,6 +295,7 @@ export default function Page() {
         phrases: false,
         locations: false,
         sections: false,
+        surveys: false,
       });
     }
   }
@@ -248,11 +305,12 @@ export default function Page() {
       setIsLoading(true);
       
       await Promise.all([
-        entitiesToRemove.elements && elementStore.removeAll(),
-        entitiesToRemove.components && componentStore.removeAll(),
-        entitiesToRemove.phrases && phraseStore.removeAll(),
-        entitiesToRemove.locations && locationStore.removeAll(),
-        entitiesToRemove.sections && sectionStore.removeAll()
+        entitiesToRemove.elements && elementStore.removeAll({ options: !localOnly }),
+        entitiesToRemove.components && componentStore.removeAll({ options: !localOnly }),
+        entitiesToRemove.phrases && phraseStore.removeAll({ options: !localOnly }),
+        entitiesToRemove.locations && locationStore.removeAll({ options: !localOnly }),
+        entitiesToRemove.sections && sectionStore.removeAll({ options: !localOnly }),
+        entitiesToRemove.surveys && surveyStore.removeAll({ options: !localOnly })
       ].filter(Boolean));
 
       setRemoveDialog(false);
@@ -330,6 +388,7 @@ export default function Page() {
               { type: "phrases" as const, title: "Phrases", data: phrases, hydrated: phrasesHydrated },
               { type: "locations" as const, title: "Locations", data: locations, hydrated: locationsHydrated },
               { type: "sections" as const, title: "Sections", data: sections, hydrated: sectionsHydrated },
+              { type: "surveys" as const, title: "Surveys", data: surveys, hydrated: surveysHydrated },
             ].map(({ type, title, data, hydrated }) => (
               <EntityCard
                 key={type}
@@ -340,12 +399,7 @@ export default function Page() {
                 isHydrated={hydrated}
                 isSyncing={syncingEntities[type]}
                 isLoading={isLoading}
-                statusCounts={{
-                  [SyncStatus.Draft]: data.filter(item => item.syncStatus === SyncStatus.Draft).length,
-                  [SyncStatus.Queued]: data.filter(item => item.syncStatus === SyncStatus.Queued).length,
-                  [SyncStatus.Failed]: data.filter(item => item.syncStatus === SyncStatus.Failed).length,
-                  [SyncStatus.Synced]: data.filter(item => item.syncStatus === SyncStatus.Synced).length,
-                }}
+                statusCounts={statusCounts[type]}
                 selectedStatus={filters[type]}
                 onCardClick={() => handleCardClick(type)}
                 onStatusClick={(status) => toggleFilter(type, status)}
@@ -374,6 +428,7 @@ export default function Page() {
                   selectedEntity === "phrases" ? filteredPhrases :
                   selectedEntity === "locations" ? filteredLocations :
                   selectedEntity === "sections" ? sections :
+                  selectedEntity === "surveys" ? filteredSurveys :
                   []
                 } 
                 style={defaultStyles} 
@@ -394,6 +449,20 @@ export default function Page() {
           confirmVariant="destructive"
           entityCounts={entityCounts}
           isLoading={isLoading}
+          extraContent={
+            <div className="flex items-center space-x-2 mt-4">
+              <input
+                type="checkbox"
+                id="localOnly"
+                checked={localOnly}
+                onChange={(e) => setLocalOnly(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <label htmlFor="localOnly" className="text-sm text-gray-700 dark:text-gray-300">
+                Remove local data only (keep remote data)
+              </label>
+            </div>
+          }
         />
 
         <EntityDialog

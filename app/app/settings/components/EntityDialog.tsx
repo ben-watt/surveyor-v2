@@ -19,6 +19,7 @@ interface EntityDialogProps {
   confirmVariant?: "default" | "destructive";
   entityCounts: Record<keyof EntitiesToSync, number>;
   isLoading?: boolean;
+  extraContent?: React.ReactNode;
 }
 
 export function EntityDialog({
@@ -32,6 +33,7 @@ export function EntityDialog({
   confirmVariant = "default",
   entityCounts,
   isLoading,
+  extraContent,
 }: EntityDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,6 +107,7 @@ export function EntityDialog({
               Sections ({entityCounts.sections})
             </label>
           </div>
+          {extraContent}
         </div>
         <div className="flex justify-end gap-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

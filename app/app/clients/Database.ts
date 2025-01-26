@@ -61,6 +61,10 @@ const createSurveyStore = () => {
       if (!isHydrated) return [isHydrated, []];
       return [isHydrated, surveys.map(s => s.content as BuildingSurveyFormData)];
     },
+    useRawList: (): [boolean, DexieSurvey[]] => {
+      const [isHydrated, surveys] = store.useList();
+      return [isHydrated, surveys];
+    },
     update: async (id: string, updater: (survey: Draft<BuildingSurveyFormData>) => void) => {
       return store.update(id, (dexieSurvey: Draft<DexieSurvey>) => {
         updater(dexieSurvey.content as BuildingSurveyFormData);

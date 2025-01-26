@@ -1,23 +1,25 @@
 import { SyncStatus } from "../clients/Dexie";
 import type { CreateComponent, CreateElement, CreateLocation, CreatePhrase } from "../clients/Database";
 
-export type EntityType = "elements" | "components" | "phrases" | "locations" | "sections";
+export type EntityType = "elements" | "components" | "phrases" | "locations" | "sections" | "surveys";
 
-export interface SyncingEntities {
+export type SyncingEntities = {
   elements: boolean;
   components: boolean;
   phrases: boolean;
   locations: boolean;
   sections: boolean;
-}
+  surveys: boolean;
+};
 
-export interface EntitiesToSync {
+export type EntitiesToSync = {
   elements: boolean;
   components: boolean;
   phrases: boolean;
   locations: boolean;
   sections: boolean;
-}
+  surveys: boolean;
+};
 
 export interface EntityCounts {
   elements: number;
