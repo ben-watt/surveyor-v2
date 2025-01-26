@@ -51,17 +51,11 @@
     text-wrap: nowrap;
 }
 
-/* Move data-toc-text outside of flexbox ordering */
-[data-type="table-of-contents"] li p[data-toc-text]::before {
-    order: 1;
-    content: attr(data-toc-text);
-    padding-right: 7px;
-}
+
 
 /* Adjust orders for remaining elements */
 [data-type="table-of-contents"] li p::before {
     order: 2;
-    display: flex;
     content: 
     ". . . . . . . . . . . . . . . . . . . . "
     ". . . . . . . . . . . . . . . . . . . . "

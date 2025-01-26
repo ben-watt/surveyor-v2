@@ -112,12 +112,13 @@ const Toc = ({ maxDepth = 1, data }: TocProps) => {
             selector: `#${CSS.escape(d.item.id)}`,
           }))
           .map((d) => (
-            <li key={d.itemId}>
+            <li className="dots"
+              key={d.itemId} >
               <p
                 data-toc-id-selector={d.selector}
                 data-toc-text={d.hierarchyText}
               >
-                {d.textContent}
+                {d.hierarchyText + " " + d.textContent}
               </p>
             </li>
           ))}
