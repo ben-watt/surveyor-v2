@@ -56,11 +56,11 @@ export default function Page() {
 
   const [entitiesToSeed, setEntitiesToSeed] = useState<EntitiesToSync>({
     elements: true,
-    components: false,
-    phrases: false,
+    components: true,
+    phrases: true,
     locations: true,
     sections: true,
-    surveys: false,
+    surveys: true,
   });
 
   const [entitiesToRemove, setEntitiesToRemove] = useState<EntitiesToSync>({
