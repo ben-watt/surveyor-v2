@@ -71,7 +71,7 @@ export default function Page() {
   ];
 
   return (
-    <div className="p-2 md:p-10">
+    <div>
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Conditions</h1>

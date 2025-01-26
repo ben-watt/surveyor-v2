@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import client from "@/app/app/clients/AmplifyDataClient";
 import { SyncStatus, Section as SectionData } from "@/app/app/clients/Dexie";
+import { sectionStore } from "../clients/Database";
 
 interface SectionFormProps {
   initialData?: SectionData;
@@ -27,9 +27,11 @@ export default function SectionForm({ initialData }: SectionFormProps) {
   const onSubmit = async (data: SectionData) => {
     try {
       if (initialData) {
-        await client.models.Sections.update(data);
+        await sectionStore.update(data.id, (currentState) => {
+          return { ...currentState, ...data };
+        });
       } else {
-        await client.models.Sections.create(data);
+        await sectionStore.add(data);
       }
       router.push("/sections");
       router.refresh();

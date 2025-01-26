@@ -2,6 +2,8 @@ import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig, RuntimeCaching } from "serwist";
 import { NetworkOnly, Serwist } from "serwist";
 import { TransferProgressEvent, uploadData } from "aws-amplify/storage";
+import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore } from './app/clients/Database';
+import { SyncStatus } from './app/clients/Dexie';
 
 // This declares the value of `injectionPoint` to TypeScript.
 // `injectionPoint` is the string that will be replaced by the
@@ -23,6 +25,13 @@ interface ImageUpload {
   progress?: number;
 }
 
+interface TableEntity {
+  id: string;
+  updatedAt: string;
+  syncStatus: string;
+  syncError?: string;
+}
+
 declare const self: ServiceWorkerGlobalScope;
 
 const serwist = new Serwist({
@@ -34,11 +43,14 @@ const serwist = new Serwist({
 });
 
 // Register background sync
-const SYNC_TAG = 'image-uploads';
+const IMAGE_SYNC_TAG = 'image-uploads';
+const DATA_SYNC_TAG = 'data-sync';
 
 self.addEventListener('sync', async (event) => {
-  if (event.tag === SYNC_TAG) {
+  if (event.tag === IMAGE_SYNC_TAG) {
     event.waitUntil(syncImages());
+  } else if (event.tag === DATA_SYNC_TAG) {
+    event.waitUntil(syncData());
   }
 });
 
@@ -104,6 +116,33 @@ async function syncImages() {
       resolve();
     };
   });
+}
+
+async function syncData() {
+  const db = await openDB('Surveys', 1);
+  const stores = {
+    surveys: { store: surveyStore, table: 'surveys' },
+    components: { store: componentStore, table: 'components' },
+    elements: { store: elementStore, table: 'elements' },
+    phrases: { store: phraseStore, table: 'phrases' },
+    locations: { store: locationStore, table: 'locations' },
+    sections: { store: sectionStore, table: 'sections' },
+  };
+  
+  for (const [name, { store, table }] of Object.entries(stores)) {
+    try {
+      // Each store already has the syncWithServer method that handles both
+      // pulling remote changes and pushing local changes
+      const result = await store.syncWithServer();
+      if (result.err) {
+        console.error(`Failed to sync ${name}:`, result.val.message);
+      } else {
+        console.debug(`Successfully synced ${name}`);
+      }
+    } catch (error) {
+      console.error(`Failed to sync ${name}:`, error);
+    }
+  }
 }
 
 function openDB(name: string, version: number) {

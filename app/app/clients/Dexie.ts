@@ -8,6 +8,7 @@ import { Err, Ok, Result } from 'ts-results';
 import { getErrorMessage } from '../utils/handleError';
 import { liveQuery } from "dexie";
 import { useLiveQuery } from "dexie-react-hooks";
+import { triggerSync } from '../hooks/useDataSync';
 import { UtensilsIcon } from 'lucide-react';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
@@ -128,6 +129,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       ...data,
       syncStatus: SyncStatus.Queued,
     } as unknown as T);
+    triggerSync();
   };
 
   const update = async (id: string, updateFn: (currentState: Draft<T>) => void) => {
@@ -143,6 +145,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       syncStatus: "queued",
       updatedAt: new Date().toISOString(),
     });
+    triggerSync();
   };
 
   const remove = async (id: string) => {
