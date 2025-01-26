@@ -308,19 +308,12 @@
   list-style: decimal;
 }
 
-.tiptap #toc li {
+.tiptap [data-type="table-of-contents"] li {
   list-style: none;
 }
 
 .tiptap {
   font-family: Arial, sans-serif;
-}
-
-.tiptap *[data-toc-text]::before {
-  content: attr(data-toc-text);
-  padding-right: 7px;
-  /* width: 40px;
-  display: inline-block; */
 }
 
 .filepond--item {
