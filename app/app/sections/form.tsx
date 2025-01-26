@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { SyncStatus, Section as SectionData } from "@/app/app/clients/Dexie";
+import { Section as SectionData } from "@/app/app/clients/Dexie";
 import { sectionStore } from "../clients/Database";
 
 interface SectionFormProps {
@@ -20,7 +20,6 @@ export default function SectionForm({ initialData }: SectionFormProps) {
       id: crypto.randomUUID(),
       name: "",
       order: 0,
-      syncStatus: SyncStatus.Queued,
     },
   });
 
@@ -33,8 +32,7 @@ export default function SectionForm({ initialData }: SectionFormProps) {
       } else {
         await sectionStore.add(data);
       }
-      router.push("/sections");
-      router.refresh();
+      router.push("/app/sections");
     } catch (error) {
       console.error(error);
     }
