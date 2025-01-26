@@ -234,7 +234,7 @@
 .tiptap table {
   border-collapse: collapse;
   margin: 0;
-  overflow: hidden;
+  /* overflow: hidden; This causes no end of issues when rendering to print*/ 
   table-layout: fixed;
   width: 100%;
   page-break-inside: avoid;
