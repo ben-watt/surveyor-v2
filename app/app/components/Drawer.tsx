@@ -27,11 +27,13 @@ interface DynamicDrawerOpenArgs {
 }
 
 interface DynamicDrawerContextType {
+  isOpen: boolean;
   openDrawer: (props: DynamicDrawerOpenArgs) => void;
   closeDrawer: (id?: string) => void;
 }
 
 const DynamicDrawerContext = React.createContext<DynamicDrawerContextType>({
+  isOpen: false,
   openDrawer: (props: DynamicDrawerOpenArgs) => {},
   closeDrawer: () => {},
 });
@@ -66,7 +68,7 @@ export function DynamicDrawerProvider({
   }
 
   return (
-    <DynamicDrawerContext.Provider value={{ openDrawer: handleOpenDrawer, closeDrawer: handleCloseDrawer }}>
+    <DynamicDrawerContext.Provider value={{ isOpen: drawers.length > 0, openDrawer: handleOpenDrawer, closeDrawer: handleCloseDrawer }}>
       {children}
       {drawers.map(({ id, props }) => (
         <DynamicDrawer

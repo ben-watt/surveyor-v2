@@ -13,6 +13,8 @@ const schema = a.schema({
     .model({
       id: a.id().required(),
       syncStatus: a.string().required(),
+      createdAt: a.string().required(),
+      updatedAt: a.string().required(),
       content: a.json().required(),
     })
     .authorization((allow) => [
@@ -24,6 +26,8 @@ const schema = a.schema({
     name: a.string().required(),
     order: a.float(),
     syncStatus: a.string().required(),
+    createdAt: a.datetime().required(),
+    updatedAt: a.datetime().required(),
     elements: a.hasMany("Elements", "sectionId"),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
@@ -38,6 +42,8 @@ const schema = a.schema({
     description: a.string(),
     components: a.hasMany("Components", "elementId"),
     syncStatus: a.string().required(),
+    createdAt: a.datetime().required(),
+    updatedAt: a.datetime().required(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),
@@ -48,6 +54,8 @@ const schema = a.schema({
   Phrases: a.model({
     id: a.id().required(),
     syncStatus: a.string().required(),
+    createdAt: a.datetime().required(),
+    updatedAt: a.datetime().required(),
     name: a.string().required(),
     type: a.string().required(), // "Defect" or "Condition"
     associatedMaterialIds: a.string().required().array().required(),
@@ -65,7 +73,9 @@ const schema = a.schema({
       materials: a.ref("Material").required().array().required(),
       syncStatus: a.string().required(),
       elementId: a.id().required(),
-      element: a.belongsTo("Elements", "elementId")
+      element: a.belongsTo("Elements", "elementId"),
+      createdAt: a.datetime().required(),
+      updatedAt: a.datetime().required(),
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
@@ -76,6 +86,8 @@ const schema = a.schema({
     name: a.string().required(),
     parentId: a.string(), // Optional field for hierarchical structure
     syncStatus: a.string().required(),
+    createdAt: a.datetime().required(),
+    updatedAt: a.datetime().required(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),

@@ -427,7 +427,7 @@ export default function Page() {
             </Button>
           </div>
 
-          <div className="space-y-4 md:space-y-0 md:grid grid-cols-4 gap-4">
+          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-4 lg:gap-4">
             {[
               { type: "elements" as const, title: "Elements", data: elements, hydrated: elementsHydrated },
               { type: "components" as const, title: "Components", data: components, hydrated: componentsHydrated },

@@ -43,12 +43,12 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   }, [id, methods]);
 
   const onSubmit = async (data: UpdateForm) => {
-    
+
     
     if(id) {
       await phraseStore.update(id, (draft) => {
         draft.name = data.name;
-        draft.type = data.type;
+        draft.type = "condition";
         draft.phrase = data.phrase;
         draft.associatedElementIds = data.associatedElementIds;
         draft.associatedComponentIds = data.associatedComponentIds;
@@ -58,7 +58,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
       await phraseStore.add({
         id: uuidv4(),
         name: data.name,
-        type: data.type,
+        type: "condition",
         phrase: data.phrase,
         associatedElementIds: data.associatedElementIds,
         associatedComponentIds: data.associatedComponentIds,
@@ -82,13 +82,6 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         <Input
           labelTitle="Name"
           register={() => register("name", { required: true })}
-        />
-        <Combobox   
-          labelTitle="Type"
-          name="type"
-          control={control}
-          rules={{ required: true }}
-          data={["Defect", "Condition"].map((x) => ({ label: x, value: x }))}
         />
         <TextAreaInput
           labelTitle="Phrase"

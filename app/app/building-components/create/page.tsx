@@ -11,7 +11,7 @@ export default function Page() {
       <div className="flex mt-4 mb-4">
         <h1 className="text-4xl dark:text-white">Create Component</h1>
       </div>
-      <DataForm onSave={() => router.push("/building-components")} />
+      <DataForm />
     </div>
   )
 }

@@ -14,18 +14,19 @@ import { Combobox } from "@/app/app/components/Input/ComboBox";
 import toast from "react-hot-toast";
 import { useDynamicDrawer } from "../components/Drawer";
 import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/navigation";
 
 interface DataFormProps {
   id?: string;
   defaultValues?: Partial<Component>;
-  onSave?: () => void;
 }
 
-export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
+export function DataForm({ id, defaultValues }: DataFormProps) {
   const methods = useForm<Component>({ defaultValues: defaultValues });
   const { register, handleSubmit, control } = methods;
   const [isLoading, setIsLoading] = useState(true);
   const drawer = useDynamicDrawer();
+  const router = useRouter();
 
   const [ready, elements] = elementStore.useList();
 
@@ -70,8 +71,11 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         }
 
         toast.success("Saved");
-        drawer.closeDrawer();
-        onSave && onSave();
+        if(drawer.isOpen) {
+          drawer.closeDrawer();
+        } else {
+          router.push("/app/building-components");
+        }
       } catch (error) {
         console.error("Failed to save data", error);
         toast.error("Error unable to save data.");

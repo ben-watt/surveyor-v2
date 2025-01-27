@@ -7,9 +7,10 @@ import { useEffect } from "react";
 import { Combobox } from "../components/Input/ComboBox";
 import toast from "react-hot-toast";
 import { useDynamicDrawer } from "../components/Drawer";
-import { elementStore, type CreateElement, type UpdateElement } from "../clients/Database";
+import { elementStore, sectionStore, type CreateElement, type UpdateElement } from "../clients/Database";
 import { Element } from "../clients/Dexie";
 import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/navigation";
 
 interface DataFormProps {
   id?: string;
@@ -18,6 +19,8 @@ interface DataFormProps {
 export function DataForm({ id }: DataFormProps) {
   const form = useForm<Element>({});
   const drawer = useDynamicDrawer();
+  const [sectionsHydrated, sections] = sectionStore.useList();
+  const router = useRouter();
   const { register, handleSubmit, control } = form;
 
   useEffect(() => {
@@ -39,6 +42,8 @@ export function DataForm({ id }: DataFormProps) {
 
   const onSubmit = (data: Element) => {
     const save = async () => {
+      console.debug("[DataForm] onSubmit", data);
+      
       try {
         if (!data.id) {
           await elementStore.add({
@@ -61,13 +66,17 @@ export function DataForm({ id }: DataFormProps) {
       } catch (error) {
         toast.error("Error saving element");
         console.error("Failed to save", error);
-      } finally {
-        drawer.closeDrawer();
       }
+
+      router.push('/app/elements')
     };
 
     save();
   };
+
+  if(!sectionsHydrated) {
+    return <div>Loading...</div>
+  }
 
   return (
     <FormProvider {...form}>
@@ -82,13 +91,8 @@ export function DataForm({ id }: DataFormProps) {
         />
         <Combobox
           labelTitle="Section"
-          data={[
-            { value: "External Condition of Property", label: "External Condition of Property" },
-            { value: "Internal Condition of Property", label: "Internal Condition of Property" },
-            { value: "Sevices", label: "Sevices" },
-            { value: "Grounds (External Areas)", label: "Grounds (External Areas)" },
-          ]}
-          name="section"
+          data={sections.map(s => ({ value: s.id, label: s.name }))}
+          name="sectionId"
           control={control}
           rules={{ required: "Section is required" }}
         />

@@ -9,12 +9,44 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore, imageUploadStore } from "./clients/Database";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  useEffect(() => {
+    // Start periodic sync for all tables (every 30 seconds)
+    const cleanupFns = [
+      surveyStore.startPeriodicSync(),
+      componentStore.startPeriodicSync(),
+      elementStore.startPeriodicSync(),
+      phraseStore.startPeriodicSync(),
+      locationStore.startPeriodicSync(),
+      sectionStore.startPeriodicSync(),
+      imageUploadStore.startPeriodicSync(),
+    ];
+
+    // Setup online/offline handlers
+    const handleOnline = () => {
+      // Trigger immediate sync when coming online
+      surveyStore.sync();
+      componentStore.sync();
+      elementStore.sync();
+      phraseStore.sync();
+      locationStore.sync();
+      sectionStore.sync();
+      imageUploadStore.sync();
+    };
+
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      cleanupFns.forEach(cleanup => cleanup());
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
 
   return (
     <>

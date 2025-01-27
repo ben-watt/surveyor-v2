@@ -8,11 +8,15 @@ import {
   Phrase,
   Location,
   Section,
+  ImageUpload,
 } from "./Dexie";
 import client from "./AmplifyDataClient";
 import { Schema } from "@/amplify/data/resource";
 import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Draft } from "immer";
+import { uploadData, remove, list } from 'aws-amplify/storage';
+import { Ok, Err, Result } from 'ts-results';
+import { getErrorMessage } from '../utils/handleError';
 
 const mapToSurvey = (data: any): DexieSurvey => ({
   id: data.id,
@@ -23,7 +27,7 @@ const mapToSurvey = (data: any): DexieSurvey => ({
 });
 
 type UpdateSurvey = Partial<DexieSurvey> & { id: string };
-type CreateSurvey = Omit<DexieSurvey, "updatedAt" | "createdAt">;
+type CreateSurvey = Schema['Surveys']['createType'];
 
 // Create a wrapper for the survey store
 const createSurveyStore = () => {
@@ -31,22 +35,30 @@ const createSurveyStore = () => {
     db,
     "surveys",
     {
-      list: async () => {
+      list: async (): Promise<Result<DexieSurvey[], Error>> => {
         const response = await client.models.Surveys.list();
-        return response.data.map(mapToSurvey);
+        if (response.errors) {
+          return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        }
+        return Ok(response.data.map(mapToSurvey));
       },
-      create: async (data) => {
+      create: async (data): Promise<Result<DexieSurvey, Error>> => {
         const serverData = {
           id: data.id,
           syncStatus: SyncStatus.Synced,
           content: JSON.stringify(data.content),
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
         }
 
         console.log("[createSurveyStore] Creating survey", serverData);
         const response = await client.models.Surveys.create(serverData);
-        return mapToSurvey(response.data);
+        if (response.errors) {
+          return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        }
+        return Ok(mapToSurvey(response.data));
       },
-      update: async (data) => {
+      update: async (data): Promise<Result<DexieSurvey, Error>> => {
         const serverData = {
           id: data.id,
           syncStatus: SyncStatus.Synced,
@@ -55,10 +67,17 @@ const createSurveyStore = () => {
 
         console.log("[createSurveyStore] Updating survey", serverData); 
         const response = await client.models.Surveys.update(serverData);
-        return mapToSurvey(response.data);
+        if (response.errors) {
+          return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        }
+        return Ok(mapToSurvey(response.data));
       },
-      delete: async (id) => {
-        await client.models.Surveys.delete({ id });
+      delete: async (id): Promise<Result<void, Error>> => {
+        const response = await client.models.Surveys.delete({ id });
+        if (response.errors) {
+          return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        }
+        return Ok(undefined);
       },
     }
   );
@@ -100,27 +119,40 @@ const mapToComponent = (data: any): Component => ({
 });
 
 export type UpdateComponent = Partial<Component> & { id: string };
-export type CreateComponent = Omit<Component, "updatedAt" | "createdAt">;
+export type CreateComponent = Schema['Components']['createType'];
 
 export const componentStore = CreateDexieHooks<
   Component,
   CreateComponent,
   UpdateComponent
 >(db, "components", {
-  list: async () => {
+  list: async (): Promise<Result<Component[], Error>> => {
     const response = await client.models.Components.list();
-    return response.data.map(mapToComponent);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(response.data.map(mapToComponent));
   },
-  create: async (data) => {
+  create: async (data): Promise<Result<Component, Error>> => {
     const response = await client.models.Components.create(data);
-    return mapToComponent(response.data);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(mapToComponent(response.data));
   },
-  update: async (data) => {
+  update: async (data): Promise<Result<Component, Error>> => {
     const response = await client.models.Components.update(data);
-    return mapToComponent(response.data);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(mapToComponent(response.data));
   },
-  delete: async (id) => {
-    await client.models.Components.delete({ id });
+  delete: async (id): Promise<Result<void, Error>> => {
+    const response = await client.models.Components.delete({ id });
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(undefined);
   },
 });
 
@@ -136,30 +168,40 @@ const mapToElement = (data: any): BuildingSurveyElement => ({
 });
 
 export type UpdateElement = Partial<BuildingSurveyElement> & { id: string };
-export type CreateElement = Omit<
-  BuildingSurveyElement,
-  "updatedAt" | "createdAt"
->;
+export type CreateElement = Schema['Elements']['createType'];
 
 export const elementStore = CreateDexieHooks<
   BuildingSurveyElement,
   CreateElement,
   UpdateElement
 >(db, "elements", {
-  list: async () => {
+  list: async (): Promise<Result<BuildingSurveyElement[], Error>> => {
     const response = await client.models.Elements.list();
-    return response.data.map(mapToElement);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(response.data.map(mapToElement));
   },
-  create: async (data) => {
+  create: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
     const response = await client.models.Elements.create(data);
-    return mapToElement(response.data);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(mapToElement(response.data));
   },
-  update: async (data) => {
+  update: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
     const response = await client.models.Elements.update(data);
-    return mapToElement(response.data);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(mapToElement(response.data));
   },
-  delete: async (id) => {
-    await client.models.Elements.delete({ id });
+  delete: async (id): Promise<Result<void, Error>> => {
+    const response = await client.models.Elements.delete({ id });
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(undefined);
   },
 });
 
@@ -173,26 +215,40 @@ const mapToSection = (data: any): Section => ({
 });
 
 export type UpdateSection = Partial<Section> & { id: string };
-export type CreateSection = Omit<Section, "updatedAt" | "createdAt">;
+export type CreateSection = Schema['Sections']['createType'];
 
 export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSection>(
   db,
   "sections",
   {
-    list: async () => {
+    list: async (): Promise<Result<Section[], Error>> => {
       const response = await client.models.Sections.list();
-      return response.data.map(mapToSection);
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(response.data.map(mapToSection));
     },
-    create: async (data) => {
+    create: async (data): Promise<Result<Section, Error>> => {
       const response = await client.models.Sections.create(data);
-      return mapToSection(response.data);
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      console.log("[createSectionStore] Created section", response);
+      return Ok(mapToSection(response.data));
     },
-    update: async (data) => {
+    update: async (data): Promise<Result<Section, Error>> => {
       const response = await client.models.Sections.update(data);
-      return mapToSection(response.data);
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(mapToSection(response.data));
     },
-    delete: async (id) => {
-      await client.models.Sections.delete({ id });
+    delete: async (id): Promise<Result<void, Error>> => {
+      const response = await client.models.Sections.delete({ id });
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(undefined);
     },
   }
 );
@@ -212,23 +268,36 @@ const mapToPhrase = (data: any): Phrase => ({
 });
 
 export type UpdatePhrase = Partial<Phrase> & { id: string };
-export type CreatePhrase = Omit<Phrase, "updatedAt" | "createdAt">;
+export type CreatePhrase = Schema['Phrases']['createType'];
 
 export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(db, "phrases", {
-  list: async () => {
+  list: async (): Promise<Result<Phrase[], Error>> => {
     const response = await client.models.Phrases.list();
-    return response.data.map(mapToPhrase);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(response.data.map(mapToPhrase));
   },
-  create: async (data) => {
+  create: async (data): Promise<Result<Phrase, Error>> => {
     const response = await client.models.Phrases.create(data);
-    return mapToPhrase(response.data);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(mapToPhrase(response.data));
   },
-  update: async (data) => {
+  update: async (data): Promise<Result<Phrase, Error>> => {
     const response = await client.models.Phrases.update(data);
-    return mapToPhrase(response.data);
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(mapToPhrase(response.data));
   },
-  delete: async (id) => {
-    await client.models.Phrases.delete({ id });
+  delete: async (id): Promise<Result<void, Error>> => {
+    const response = await client.models.Phrases.delete({ id });
+    if (response.errors) {
+      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+    }
+    return Ok(undefined);
   },
 });
 
@@ -248,33 +317,238 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
   db,
   "locations",
   {
-    list: async () => {
+    list: async (): Promise<Result<Location[], Error>> => {
       const response = await client.models.Locations.list();
-      if(response.errors) {
-        throw new Error(response.errors.map(e => e.message).join(", "));
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
-      return response.data.map(mapToLocation);
+      return Ok(response.data.map(mapToLocation));
     },
-    create: async (data) => {
+    create: async (data): Promise<Result<Location, Error>> => {
       const response = await client.models.Locations.create(data);
-      if(response.errors) {
-        throw new Error(response.errors.map(e => e.message).join(", "));
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
-      return mapToLocation(response.data);
+      return Ok(mapToLocation(response.data));
     },
-    update: async (data) => {
+    update: async (data): Promise<Result<Location, Error>> => {
       const response = await client.models.Locations.update(data);
-      if(response.errors) {
-        throw new Error(response.errors.map(e => e.message).join(", "));
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
-      return mapToLocation(response.data);
+      return Ok(mapToLocation(response.data));
     },
-    delete: async (id) => {
+    delete: async (id): Promise<Result<void, Error>> => {
       const response = await client.models.Locations.delete({ id });
-      if(response.errors) {
-        throw new Error(response.errors.map(e => e.message).join(", "));
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(undefined);
+    },
+  }
+);
+
+// Add image upload store - this uses Amplify Storage for file operations
+export type UpdateImageUpload = Partial<ImageUpload> & { id: string };
+export type CreateImageUpload = Omit<ImageUpload, "updatedAt" | "syncStatus" | "syncError">;
+
+export const imageUploadStore = CreateDexieHooks<ImageUpload, CreateImageUpload, UpdateImageUpload>(
+  db,
+  "imageUploads",
+  {
+    list: async (): Promise<Result<ImageUpload[], Error>> => {
+      try {
+        // TODO this should return the remote files only, the issue is it's per path ideally.
+        const response = await list({
+          path: 'report-images/'
+        });
+        return Ok(response.items.map(item => ({
+          id: "",
+          file: new Blob(),
+          path: item.path,
+          metadata: {},
+          updatedAt: new Date().toISOString(),
+          syncStatus: SyncStatus.Synced,
+        })));
+      } catch (error) {
+        return Err(new Error(getErrorMessage(error)));
       }
     },
+    create: async (data): Promise<Result<ImageUpload, Error>> => {
+      const now = new Date().toISOString();
+      
+      // Upload file to S3 via Amplify Storage
+      try {
+        const response = await uploadData({
+          path: data.path,
+          data: data.file,
+          options: {
+            contentType: data.file.type,
+            metadata: data.metadata,
+          }
+        });
+
+        const imageUpload: ImageUpload = {
+          id: data.id,
+          file: data.file,
+          path: data.path,
+          metadata: data.metadata,
+          updatedAt: now,
+          syncStatus: SyncStatus.Synced,
+        };
+        await db.imageUploads.add(imageUpload);
+        return Ok(imageUpload);
+      } catch (error) {
+        console.error("[imageUploadStore] Failed to upload file:", error);
+        const imageUpload: ImageUpload = {
+          id: data.id,
+          file: data.file,
+          path: data.path,
+          metadata: data.metadata,
+          updatedAt: now,
+          syncStatus: SyncStatus.Failed,
+          syncError: error instanceof Error ? error.message : "Failed to upload file",
+        };
+        await db.imageUploads.add(imageUpload);
+        return Ok(imageUpload);
+      }
+    },
+    update: async (data): Promise<Result<ImageUpload, Error>> => {
+      try {
+        const existing = await db.imageUploads.get(data.id);
+        if (!existing) {
+          return Err(new Error("Image upload not found"));
+        }
+
+        // Don't allow updates to deleted items
+        if (existing.syncStatus === SyncStatus.PendingDelete) {
+          return Err(new Error("Cannot update a deleted image"));
+        }
+
+        const now = new Date().toISOString();
+        
+        // If file has changed, update in S3
+        if (data.file && data.file !== existing.file) {
+          try {
+            await uploadData({
+              path: data.path || existing.path,
+              data: data.file,
+              options: {
+                contentType: data.file.type,
+                metadata: data.metadata || existing.metadata,
+              }
+            });
+
+            const imageUpload: ImageUpload = {
+              ...existing,
+              ...data,
+              updatedAt: now,
+              syncStatus: SyncStatus.Synced,
+            };
+            await db.imageUploads.put(imageUpload);
+            return Ok(imageUpload);
+          } catch (error) {
+            console.error("[imageUploadStore] Failed to update file:", error);
+            const imageUpload: ImageUpload = {
+              ...existing,
+              ...data,
+              updatedAt: now,
+              syncStatus: SyncStatus.Failed,
+              syncError: error instanceof Error ? error.message : "Failed to update file",
+            };
+            await db.imageUploads.put(imageUpload);
+            return Ok(imageUpload);
+          }
+        }
+
+        // If only metadata changed
+        const imageUpload: ImageUpload = {
+          ...existing,
+          ...data,
+          updatedAt: now,
+          syncStatus: SyncStatus.Synced,
+        };
+        await db.imageUploads.put(imageUpload);
+        return Ok(imageUpload);
+      } catch (error) {
+        return Err(new Error(getErrorMessage(error)));
+      }
+    },
+    delete: async (id): Promise<Result<void, Error>> => {
+      try {
+        const existing = await db.imageUploads.get(id);
+        if (existing) {
+          // Mark for deletion instead of deleting immediately
+          await db.imageUploads.put({
+            ...existing,
+            syncStatus: SyncStatus.PendingDelete,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+        return Ok(undefined);
+      } catch (error) {
+        return Err(new Error(getErrorMessage(error)));
+      }
+    },
+    syncWithServer: async () => {
+      // Handle actual deletion of pending deletes
+      const pendingDeletes = await db.imageUploads
+        .where('syncStatus')
+        .equals(SyncStatus.PendingDelete)
+        .toArray();
+
+      for (const item of pendingDeletes) {
+        try {
+          // Attempt to delete from S3
+          await remove({ path: item.path });
+          // If successful, remove from local DB
+          await db.imageUploads.delete(item.id);
+        } catch (error) {
+          console.error(`[imageUploadStore] Failed to delete file ${item.path} from S3:`, error);
+          // Mark as failed if S3 deletion fails
+          await db.imageUploads.put({
+            ...item,
+            syncStatus: SyncStatus.Failed,
+            syncError: error instanceof Error ? error.message : "Failed to delete file",
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+
+      // Handle queued uploads
+      const queuedUploads = await db.imageUploads
+        .where('syncStatus')
+        .equals(SyncStatus.Queued)
+        .toArray(); 
+
+      for (const item of queuedUploads) {
+        try {
+          await uploadData({
+            path: item.path,
+            data: item.file,
+            options: {
+              contentType: item.file.type,
+              metadata: item.metadata,
+            }
+          });
+          // If successful, mark as synced
+          await db.imageUploads.put({
+            ...item,
+            syncStatus: SyncStatus.Synced,
+            syncError: undefined,
+            updatedAt: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error(`[imageUploadStore] Failed to retry upload for ${item.path}:`, error);
+          // Update error message and timestamp
+          await db.imageUploads.put({
+            ...item,
+            syncError: error instanceof Error ? error.message : "Failed to upload file",
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
   }
 );
 

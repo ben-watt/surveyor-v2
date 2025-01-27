@@ -38,8 +38,9 @@ import 'filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css';
 // Utils
 import { join } from 'path';
 import { useImageUpload } from '@/app/app/hooks/useImageUpload';
-import { db } from '@/app/app/clients/Dexie';
-import { ImageUpload } from '@/app/app/clients/Dexie';
+import { SyncStatus, ImageUpload } from '@/app/app/clients/Dexie';
+import { imageUploadStore } from '../../clients/Database';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 // 2. Register plugins at the top level
 registerPlugin(
@@ -89,12 +90,12 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
             // So we need to upload the medium version if the file is an array
             let fileToUpload = file;
             if (Array.isArray(file)) {
-                fileToUpload = file.find(x => x.name == "medium_").file ?? file;
+                fileToUpload = file.find(x => x.name == "medium_")?.file ?? file[0];
             }
 
             console.debug("[FilePond Process] Uploading file:", fileToUpload);
 
-            const uploadTask = queueUpload(fileToUpload, {
+            queueUpload(fileToUpload, {
                 path: join(path, fileToUpload.name),
                 metadata: {
                     ...metadata,
@@ -103,10 +104,7 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
                 onProgress: (percentage) => {
                     progress(true, percentage, 100);
                 }
-            });
-
-            uploadTask.then((id) => {
-                // Store the upload ID in the file metadata
+            }).then((id) => {
                 metadata.uploadId = id;
                 load(fileToUpload.name);
                 console.debug("[FilePond Process] Upload queued:", id);
@@ -117,7 +115,6 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
 
             return {
                 abort: () => {
-                    // If we have an upload ID, try to cancel it
                     if (metadata.uploadId) {
                         cancelUpload(metadata.uploadId).then((cancelled) => {
                             if (cancelled) {
@@ -127,7 +124,7 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
                     }
                     abort();
                 }
-            }
+            };
         }) as ProcessServerConfigFunction,
         load: ((source, load, error, progress, abort, headers) => {
             try {
@@ -232,67 +229,38 @@ export const InputImage = ({
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
     const { cancelUpload } = useImageUpload();
 
+    // Subscribe to image upload status changes using imageUploadStore
+    const [isHydrated, uploadStatuses] = imageUploadStore.useList();
+    const filteredUploadStatuses = useMemo(() => 
+        uploadStatuses.filter(upload => upload.path.startsWith(path)),
+        [uploadStatuses, path]
+    );
+
     useEffect(() => {
         const loadInitialFiles = async (): Promise<void> => {
             console.debug("[FilePond] loadInitialFiles");
             try {
-                // Load remote files from S3
-                const trailingPath = path.endsWith('/') ? path : path + '/';
-                const { items } = await list({
-                    path: trailingPath,
-                    options: { listAll: true }
-                });
-
-                // Load local pending uploads from IndexedDB
-                const pendingUploads = await db.imageUploads
-                    .where('path')
-                    .startsWith(trailingPath)
-                    .toArray() as ExtendedImageUpload[];
-
                 const files: FilePondInitialFile[] = [];
+                const trailingPath = path.endsWith('/') ? path : path + '/';
 
-                // Add remote files
-                if (items.length > 0) {
-                    const remoteFiles = await Promise.all(
-                        items.map(async (item) => {
-                            const filename = item.path.split('/').pop() || '';
-                            const { url } = await getUrl({ path: item.path });
-                            return {
-                                source: item.path,
-                                options: {
-                                    type: 'local' as const,
-                                    metadata: {
-                                        filename,
-                                        poster: url.href,
-                                        status: 'synced'
-                                    },
-                                    file: {
-                                        name: filename,
-                                        size: item.size,
-                                        type: 'image/*'
-                                    }
-                                }
-                            };
-                        })
-                    );
-                    files.push(...remoteFiles);
-                }
+                // First, process local pending uploads
+                if (filteredUploadStatuses.length) {
+                    const pendingFiles = await Promise.all(filteredUploadStatuses.map(async (upload) => {
+                        // Skip files marked for deletion
+                        if (upload.syncStatus === SyncStatus.PendingDelete) return null;
 
-                // Add pending uploads
-                if (pendingUploads.length > 0) {
-                    const pendingFiles = await Promise.all(pendingUploads.map(async (upload) => {
                         // Convert Blob to object URL for FilePond
                         const objectUrl = URL.createObjectURL(upload.file);
                         return {
                             source: objectUrl,
                             options: {
-                                type: 'local' as const,
+                                type: 'local' as FilePondInitialFile['options']['type'],
                                 metadata: {
                                     ...upload.metadata,
                                     status: upload.syncStatus,
                                     error: upload.syncError,
-                                    progress: upload.progress,
-                                    originalFile: upload.file // Store original file for later use
+                                    uploadId: upload.id, // Store upload ID for cancellation
+                                    originalFile: upload.file
                                 },
                                 file: {
                                     name: upload.path.split('/').pop() || '',
@@ -300,9 +268,45 @@ export const InputImage = ({
                                     type: 'image/*'
                                 }
                             }
-                        };
+                        } as FilePondInitialFile;
                     }));
-                    files.push(...pendingFiles);
+                    
+                    files.push(...pendingFiles.filter((file): file is FilePondInitialFile => file !== null));
+                }
+
+                // Then load remote files that aren't in pending uploads
+                const { items } = await list({
+                    path: trailingPath,
+                    options: { listAll: true }
+                });
+
+                if (items.length > 0) {
+                    const pendingPaths = new Set(filteredUploadStatuses.map(u => u.path));
+                    const remoteFiles = await Promise.all(
+                        items
+                            .filter(item => !pendingPaths.has(item.path)) // Skip files that are in pending uploads
+                            .map(async (item) => {
+                                const filename = item.path.split('/').pop() || '';
+                                const { url } = await getUrl({ path: item.path });
+                                return {
+                                    source: item.path,
+                                    options: {
+                                        type: 'local' as const,
+                                        metadata: {
+                                            filename,
+                                            poster: url.href,
+                                            status: SyncStatus.Synced
+                                        },
+                                        file: {
+                                            name: filename,
+                                            size: item.size,
+                                            type: 'image/*'
+                                        }
+                                    }
+                                };
+                            })
+                    );
+                    files.push(...remoteFiles);
                 }
 
                 setInitialFiles(files);
@@ -322,7 +326,9 @@ export const InputImage = ({
             }
         };
 
-        loadInitialFiles();
+        if (isHydrated) {
+            loadInitialFiles();
+        }
 
         // Cleanup object URLs on unmount
         return () => {
@@ -332,84 +338,96 @@ export const InputImage = ({
                 }
             });
         };
-    }, [onChange, path]);
+    }, [onChange, path, filteredUploadStatuses, isHydrated]);
 
     return (
-        <FilePond
-            name={id || 'filepond'}
-            allowMultiple={true}
-            maxFiles={maxNumberOfFiles}
-            allowRevert={true}
-            acceptedFileTypes={['image/*']}
-            instantUpload={true}
-            allowImagePreview={true}
-            imagePreviewHeight={100}
-            allowImageResize={true}
-            imageResizeTargetWidth={1200}
-            imageResizeTargetHeight={1200}
-            imageResizeMode="contain"
-            imageTransformOutputQuality={80}
-            imageTransformOutputMimeType="image/jpeg"
-            allowImageTransform={true}
-            imageTransformVariants={{
-                'thumbnail_': (transforms: any) => {
-                    transforms.resize = {
-                        size: {
-                            width: 200,
-                            height: 200,
-                        },
-                    };
-                    return transforms;
-                },
-                'medium_': (transforms: any) => {
-                    transforms.resize = {
-                        size: {
-                            width: 800,
-                            height: 800,
-                        },
-                    };
-                    return transforms;
-                },
-            }}
-            credits={false}
-            onremovefile={(err, file) => {
-                // Cleanup object URL if it exists
-                if (typeof file.source === 'string' && file.source.startsWith('blob:')) {
-                    URL.revokeObjectURL(file.source);
-                }
-
-                // Try to cancel upload if it's still pending
-                const uploadId = file.getMetadata('uploadId');
-                if (uploadId) {
-                    cancelUpload(uploadId).catch(console.error);
-                }
-
-                setInitialFiles(prev => prev.filter(f => {
-                    if (typeof f.source === 'string') {
-                        return f.source !== file.source;
+        <div className="relative">
+            <FilePond
+                name={id || 'filepond'}
+                allowMultiple={true}
+                maxFiles={maxNumberOfFiles}
+                allowRevert={true}
+                acceptedFileTypes={['image/*']}
+                instantUpload={true}
+                allowImagePreview={true}
+                imagePreviewHeight={100}
+                allowImageResize={true}
+                imageResizeTargetWidth={1200}
+                imageResizeTargetHeight={1200}
+                imageResizeMode="contain"
+                imageTransformOutputQuality={80}
+                imageTransformOutputMimeType="image/jpeg"
+                allowImageTransform={true}
+                imageTransformVariants={{
+                    'thumbnail_': (transforms: any) => {
+                        transforms.resize = {
+                            size: {
+                                width: 200,
+                                height: 200,
+                            },
+                        };
+                        return transforms;
+                    },
+                    'medium_': (transforms: any) => {
+                        transforms.resize = {
+                            size: {
+                                width: 800,
+                                height: 800,
+                            },
+                        };
+                        return transforms;
+                    },
+                }}
+                credits={false}
+                onremovefile={(err, file) => {
+                    // Cleanup object URL if it exists
+                    if (typeof file.source === 'string' && file.source.startsWith('blob:')) {
+                        URL.revokeObjectURL(file.source);
                     }
-                    const name = f.options?.file?.name;
-                    return name ? name !== file.filename : false;
-                }));
-            }}
-            onupdatefiles={(files) => {
-                // Convert file names to full paths to update the form
-                const fileSources = files.map(file => join(path, file.filename))
-                onChange?.(fileSources);
-            }}
-            server={createServerConfig({ 
-                path,
-                initialFiles,
-                onCancel: cancelUpload
-            })}
-            files={initialFiles}
-            labelTapToRetry="Tap to retry upload"
-            labelFileProcessing="Uploading..."
-            labelFileProcessingComplete="Upload complete"
-            labelFileProcessingAborted="Upload cancelled"
-            labelFileLoadError="Error loading file"
-            labelFileProcessingError={(error) => error?.body || 'Upload failed, tap to retry'}
-        />
+
+                    // Try to cancel upload if it's still pending
+                    const uploadId = file.getMetadata('uploadId');
+                    if (uploadId) {
+                        cancelUpload(uploadId).catch(console.error);
+                    }
+
+                    setInitialFiles(prev => prev.filter(f => {
+                        if (typeof f.source === 'string') {
+                            return f.source !== file.source;
+                        }
+                        const name = f.options?.file?.name;
+                        return name ? name !== file.filename : false;
+                    }));
+                }}
+                onupdatefiles={(files) => {
+                    // Convert file names to full paths to update the form
+                    const fileSources = files.map(file => join(path, file.filename))
+                    onChange?.(fileSources);
+                }}
+                server={createServerConfig({ 
+                    path,
+                    initialFiles,
+                    onCancel: cancelUpload
+                })}
+                files={initialFiles}
+                labelTapToRetry="Tap to retry upload"
+                labelFileProcessing="Uploading..."
+                labelFileProcessingComplete="Upload complete"
+                labelFileProcessingAborted="Upload cancelled"
+                labelFileLoadError="Error loading file"
+                labelFileProcessingError={(error) => error?.body || 'Upload failed, tap to retry'}
+            />
+            {filteredUploadStatuses.some(upload => upload.syncStatus === SyncStatus.Failed) && (
+                <div className="absolute top-0 right-0 bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
+                    Some uploads failed
+                </div>
+            )}
+            {filteredUploadStatuses.some(upload => upload.syncStatus === SyncStatus.Queued) && (
+                <div className="absolute top-0 right-0 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">
+                    Syncing...
+                </div>
+            )}
+        </div>
     );
 };
 

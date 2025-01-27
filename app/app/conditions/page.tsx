@@ -63,6 +63,9 @@ export default function Page() {
               <Link href={`/app/conditions/${id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
+              <DropdownMenuItem onClick={() => phraseStore.remove(id)}>
+                <span className="text-red-500">Delete</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );

@@ -32,6 +32,11 @@ export default function Page() {
     });
   }, [components]);
 
+  const handleDelete = (id: string) => {
+    componentStore.remove(id);
+    router.refresh();
+  }
+
   const columns: ColumnDef<TableData>[] = [
     {
       header: "Name",
@@ -73,7 +78,7 @@ export default function Page() {
               </Link>
               <DropdownMenuItem
                 className="text-red-500"
-                onClick={() => deleteDefect(id)}
+                onClick={() => handleDelete(id)}
               >
                 <span className="text-red-500">Delete</span>
               </DropdownMenuItem>
@@ -83,10 +88,6 @@ export default function Page() {
       },
     },
   ];
-
-  function deleteDefect(id: string): void {
-    componentStore.remove(id);
-  }
 
   return (
     <div>
