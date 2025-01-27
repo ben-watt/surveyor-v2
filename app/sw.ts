@@ -119,7 +119,6 @@ async function syncImages() {
 }
 
 async function syncData() {
-  const db = await openDB('Surveys', 1);
   const stores = {
     surveys: { store: surveyStore, table: 'surveys' },
     components: { store: componentStore, table: 'components' },
