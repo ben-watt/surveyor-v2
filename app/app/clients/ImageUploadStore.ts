@@ -11,8 +11,11 @@ function createImageUploadStore(db: Dexie, name: string) {
     const table = db.table<ImageUpload>(name);
 
     const sync = async () => {
+        console.debug("[ImageUploadStore] sync");
         table.where('syncStatus').equals(SyncStatus.Queued).toArray().then(async items => {
+            console.debug("[ImageUploadStore] sync", items);
             items.forEach(async item => {
+                console.debug("[ImageUploadStore] sync", item);
                 const uploadTask = await uploadData({
                     path: item.path,
                     data: item.file,
@@ -22,10 +25,12 @@ function createImageUploadStore(db: Dexie, name: string) {
                     }
                 })
 
-                const result = await uploadTask;
+                const result = await uploadTask.result
+                console.debug("[ImageUploadStore] sync", result);
 
                 if(result) {
                     table.delete(item.path);
+                    console.debug("[ImageUploadStore] sync", result);
                 }
             });
         });
@@ -35,12 +40,17 @@ function createImageUploadStore(db: Dexie, name: string) {
         list: async (path: string) => {
 
             const localImages = await table.where('path').equals(path).toArray();
+            
+            console.debug("[ImageUploadStore] local images", localImages);
+
             const response = await list({
                 path: path,
                 options: {
                     listAll: true,
                 }
             });
+
+            console.debug("[ImageUploadStore] remote images", response);
 
             const remoteResponse = response.items.map(item => {
                 return {
@@ -59,6 +69,7 @@ function createImageUploadStore(db: Dexie, name: string) {
             return Ok(remoteResponse.concat(localResponse));
         },
         get: async (fullPath: string) => {
+            console.debug("[ImageUploadStore] get", fullPath);
             const response = await getProperties({
                 path: fullPath,
             });
@@ -74,11 +85,14 @@ function createImageUploadStore(db: Dexie, name: string) {
                 file: image,
                 metadata: response.metadata,    
                 path: fullPath,
+                href: url.url.href,
                 syncStatus: SyncStatus.Synced,
              });
         },
         create: async (data: CreateImageUpload) => {
+            console.debug("[ImageUploadStore] create", data);
             table.add({
+                id: data.path,
                 path: data.path,
                 file: data.file,
                 metadata: data.metadata,
@@ -89,10 +103,13 @@ function createImageUploadStore(db: Dexie, name: string) {
             sync();
         },
         remove: async (path: string) => {
+            console.debug("[ImageUploadStore] remove", path);
             const localImage = await table.get(path);
             if (localImage) {
+                console.debug("[ImageUploadStore] remove", localImage);
                 table.delete(path);
             } else {
+                console.debug("[ImageUploadStore] remove", path);
                 await remove({
                     path: path,
                 });

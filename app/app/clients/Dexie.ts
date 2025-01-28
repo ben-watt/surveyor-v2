@@ -25,6 +25,7 @@ export type Location = Schema['Locations']['type'];
 export type Section = Omit<Schema['Sections']['type'], "elements">;
 
 export interface ImageUpload {
+  id: string;
   path: string;
   file: Blob;
   metadata?: Record<string, string>;
@@ -333,7 +334,7 @@ const db = new Dexie('Surveys') as Dexie & {
   phrases: EntityTable<Phrase, "id">;
   locations: EntityTable<Location, "id">;
   sections: EntityTable<Section, "id">;
-  imageUploads: EntityTable<ImageUpload, "path">;
+  imageUploads: EntityTable<ImageUpload, "id">;
 };
 
 db.version(1).stores({
@@ -343,7 +344,7 @@ db.version(1).stores({
   phrases: '&id, updatedAt, syncStatus',
   locations: '&id, updatedAt, syncStatus',
   sections: '&id, updatedAt, syncStatus',
-  imageUploads: '&path, updatedAt, syncStatus',
+  imageUploads: '&id, path, updatedAt, syncStatus',
 });
 
 

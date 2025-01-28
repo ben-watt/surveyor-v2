@@ -75,9 +75,8 @@ interface RhfInputImageProps extends InputImageProps {
 }
 
 // 4. Extract server configuration to a separate function for better readability
-const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfigProps & {
+const createServerConfig = ({ path, initialFiles }: CreateServerConfigProps & {
     initialFiles: FilePondInitialFile[];
-    onCancel: (uploadId: string) => Promise<boolean>;
 }) => {
     const { queueUpload, cancelUpload } = useImageUpload();
 
@@ -94,17 +93,28 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
 
             console.debug("[FilePond Process] Uploading file:", fileToUpload);
 
-            queueUpload(fileToUpload, {
-                path: join(path, fileToUpload.name),
-                metadata: {
-                    ...metadata,
-                    filename: fileToUpload.name
-                },
-                onProgress: (percentage) => {
-                    progress(true, percentage, 100);
-                }
-            }).then((id) => {
-                metadata.uploadId = id;
+            const upload = async () => {
+                const fullPath = join(path, fileToUpload.name)
+                await imageUploadStore.create({
+                    id: fullPath,
+                    path: fullPath,
+                    file: fileToUpload,
+                    metadata: {
+                        ...metadata,
+                        filename: fileToUpload.name
+                    }
+                });
+
+                console.debug("[FilePond Process] Upload queued:", fullPath);
+
+                progress(true, 0, 100);
+
+                console.debug("[FilePond Process] Syncing images");
+                imageUploadStore.sync();
+                return fullPath;
+            }
+
+            upload().then((id) => {
                 load(fileToUpload.name);
                 console.debug("[FilePond Process] Upload queued:", id);
             }).catch((err) => {
@@ -127,17 +137,10 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
         }) as ProcessServerConfigFunction,
         load: ((source, load, error, progress, abort, headers) => {
             try {
-                getUrl({ path: source })
-                .then(({ url }) => {
-                    const finalUrl = source.includes('amazonaws.com') ? source : url.href;
-                    fetch(finalUrl)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response;
-                    })
-                    .then((response) => {
-                        response.blob().then((value) => load(value));
-                    });
+                imageUploadStore.get(source)
+                .then((result) => {
+                    if(!result.ok) return;
+                    load(result.val.file);
                 });
             } catch (err) {
                 console.error("[Load Err] Could not load image:", err);
@@ -145,34 +148,15 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
             }
         }) as LoadServerConfigFunction,
         restore: ((uniqueFileId, load, error, progress, abort, headers) => {
-            console.debug("[FilePond Restore] Restoring file:", uniqueFileId);
-            try {
-                getUrl({ path: uniqueFileId })
-                .then(({ url }) => {
-                    fetch(url.href)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response;
-                    })
-                    .then((response) => {
-                        response.blob().then((value) => load(value as File));
-                    });
-                });
-            } catch (err) {
-                console.error("[Restore Err] Could not restore file:", err);
-                error('Could not restore file');
-            }
+            console.debug("[FilePond Restore] Restoring file has not been implemented:", uniqueFileId);
         }) as RestoreServerConfigFunction,
         fetch: ((url, load, error, progress, abort, headers) => {
             console.debug("[FilePond Fetch] Fetching file:", url);
             try {
-                fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response;
-                })
-                .then((response) => {
-                    response.blob().then((value) => load(value));
+                imageUploadStore.get(url)
+                .then((result) => {
+                    if(!result.ok) return;
+                    load(result.val.file);
                 });
             } catch (err) {
                 console.error("[Fetch Err] Could not fetch file:", err);
@@ -182,37 +166,7 @@ const createServerConfig = ({ path, initialFiles, onCancel }: CreateServerConfig
         revert: null,
         remove: ((source, load, error) => {
             console.debug("[FilePond Remove] Removing file:", source);
-            
-            // First check if this is a queued upload that needs to be cancelled
-            const metadata = initialFiles.find((f: FilePondInitialFile) => 
-                f.source === source || f.options?.file?.name === source
-            )?.options?.metadata;
-
-            if (metadata?.uploadId) {
-                // This is a queued upload, cancel it
-                onCancel(metadata.uploadId).then((cancelled) => {
-                    if (cancelled) {
-                        load();
-                        console.debug("[FilePond Remove] Upload cancelled:", metadata.uploadId);
-                    } else {
-                        error('Failed to cancel upload');
-                    }
-                }).catch((err) => {
-                    console.error("[FilePond Err] Failed to cancel upload:", err);
-                    error('Failed to cancel upload');
-                });
-            } else {
-                // This is a remote file, remove it from S3
-                remove({
-                    path: source,
-                }).then(() => {
-                    load();
-                    console.debug("[FilePond Remove] File deleted:", source);
-                }).catch((err) => {
-                    console.error("[FilePond Err] Failed to delete file:", err);
-                    error('Failed to delete file');
-                });
-            }
+            imageUploadStore.remove(source).catch(console.error);
         }) as RemoveServerConfigFunction
     };
 };
@@ -226,104 +180,50 @@ export const InputImage = ({
     maxNumberOfFiles = 10
 }: InputImageProps) => {
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
-    const { cancelUpload } = useImageUpload();
-
-    // Subscribe to image upload status changes using the new hook
-    const { images: uploadStatuses, isLoading } = useImageList(path);
-    const filteredUploadStatuses = useMemo(() => 
-        uploadStatuses.filter((upload: ImageListItem) => upload.fullPath.startsWith(path)),
-        [uploadStatuses, path]
-    );
 
     useEffect(() => {
         const loadInitialFiles = async (): Promise<void> => {
-            console.debug("[FilePond] loadInitialFiles");
+            console.debug("[FilePond] loadInitialFiles for path", path);
 
             try {
-                const files: FilePondInitialFile[] = [];
                 const trailingPath = path.endsWith('/') ? path : path + '/';
+                const images = await imageUploadStore.list(trailingPath);
+                if(!images.ok) return;
 
-                // First, process local pending uploads
-                if (filteredUploadStatuses.length) {
-                    const pendingFiles = await Promise.all(filteredUploadStatuses.map(async (upload: ImageListItem) => {
-                        // Skip files marked for deletion
-                        if (upload.syncStatus === SyncStatus.PendingDelete) return null;
+                console.debug("[FilePond] images", images.val);
 
-                        // Get the file details from the store
-                        const result = await imageUploadStore.get(upload.fullPath);
-                        if (!result.ok) return null;
+                const filePondFiles = await Promise.all(images.val.map(async (image: ImageListItem) => {
+                    const result = await imageUploadStore.get(image.fullPath);
+                    if(!result.ok) return null;
 
-                        const fileData = result.val;
-                        // Convert Blob to object URL for FilePond
-                        const objectUrl = URL.createObjectURL(fileData.file);
-                        return {
-                            source: objectUrl,
-                            options: {
-                                type: 'local' as FilePondInitialFile['options']['type'],
-                                metadata: {
-                                    ...fileData.metadata,
-                                    status: fileData.syncStatus,
-                                    error: undefined,
-                                    uploadId: upload.fullPath, // Use path as ID
-                                    originalFile: fileData.file
-                                },
-                                file: {
-                                    name: fileData.path.split('/').pop() || '',
-                                    size: fileData.file.size,
-                                    type: fileData.file.type
-                                }
+                    console.debug("[FilePond] get image", result);
+
+                    const fileData = result.val;
+
+                    // ToDo could review adding limbo here for the local files that haven't been uploaded it gives
+                    // the user the ability to try the upload again.
+                    return {
+                        source: result.val.path,
+                        options: {
+                            type: 'local',
+                            metadata: {
+                                filename: fileData.path.split('/').pop() || '',
+                                poster: fileData.href,
+                                status: fileData.syncStatus,
+                                uploadId: image.fullPath,
+                            },
+                            file: {
+                                name: fileData.path.split('/').pop() || '',
+                                size: fileData.file.size,
+                                type: fileData.file.type
                             }
-                        } as FilePondInitialFile;
-                    }));
-                    
-                    files.push(...pendingFiles.filter((file): file is FilePondInitialFile => file !== null));
-                }
+                        }
+                    } as FilePondInitialFile;
+                }));
 
-                // Then load remote files that aren't in pending uploads
-                const { items } = await list({
-                    path: trailingPath,
-                    options: { listAll: true }
-                });
-
-                if (items.length > 0) {
-                    const pendingPaths = new Set(filteredUploadStatuses.map((u: ImageListItem) => u.fullPath));
-                    const remoteFiles = await Promise.all(
-                        items
-                            .filter(item => !pendingPaths.has(item.path))
-                            .map(async (item) => {
-                                const filename = item.path.split('/').pop() || '';
-                                const { url } = await getUrl({ path: item.path });
-                                return {
-                                    source: item.path,
-                                    options: {
-                                        type: 'local' as const,
-                                        metadata: {
-                                            filename,
-                                            poster: url.href,
-                                            status: SyncStatus.Synced
-                                        },
-                                        file: {
-                                            name: filename,
-                                            size: item.size,
-                                            type: 'image/*'
-                                        }
-                                    }
-                                };
-                            })
-                    );
-                    files.push(...remoteFiles);
-                }
-
-                setInitialFiles(files);
-                const validFileSources = files
-                    .map(file => {
-                        if (typeof file.source === 'string') return file.source;
-                        const name = file.options?.file?.name;
-                        return name || null;
-                    })
-                    .filter((source): source is string => source !== null);
-                
-                onChange?.(validFileSources);
+                console.debug("[FilePond] filePondFiles", filePondFiles);
+                setInitialFiles(filePondFiles.filter(file => file !== null));
+                onChange?.(filePondFiles.filter(file => file !== null).map(file => file.source));
             } catch (error) {
                 console.error('[InputImage] Error loading files:', error);
                 setInitialFiles([]);
@@ -331,19 +231,14 @@ export const InputImage = ({
             }
         };
 
-        if (!isLoading) {
-            loadInitialFiles();
-        }
-
+        loadInitialFiles();
         // Cleanup object URLs on unmount
         return () => {
             initialFiles.forEach(file => {
-                if (typeof file.source === 'string' && file.source.startsWith('blob:')) {
-                    URL.revokeObjectURL(file.source);
-                }
+                file.options?.file?.name && URL.revokeObjectURL(file.source);
             });
         };
-    }, [onChange, path, filteredUploadStatuses, isLoading]);
+    }, [onChange, path]);
 
     return (
         <div className="relative">
@@ -392,16 +287,13 @@ export const InputImage = ({
 
                     // Try to cancel upload if it's still pending
                     const uploadId = file.getMetadata('uploadId');
-                    if (uploadId) {
-                        cancelUpload(uploadId).catch(console.error);
+                    
+                    if(uploadId) {
+                        imageUploadStore.remove(uploadId).catch(console.error);
                     }
 
                     setInitialFiles(prev => prev.filter(f => {
-                        if (typeof f.source === 'string') {
-                            return f.source !== file.source;
-                        }
-                        const name = f.options?.file?.name;
-                        return name ? name !== file.filename : false;
+                        return f.options?.metadata?.uploadId !== uploadId;
                     }));
                 }}
                 onupdatefiles={(files) => {
@@ -411,8 +303,7 @@ export const InputImage = ({
                 }}
                 server={createServerConfig({ 
                     path,
-                    initialFiles,
-                    onCancel: cancelUpload
+                    initialFiles
                 })}
                 files={initialFiles}
                 labelTapToRetry="Tap to retry upload"
@@ -422,16 +313,6 @@ export const InputImage = ({
                 labelFileLoadError="Error loading file"
                 labelFileProcessingError={(error) => error?.body || 'Upload failed, tap to retry'}
             />
-            {filteredUploadStatuses.some((upload: ImageListItem) => upload.syncStatus === SyncStatus.Failed) && (
-                <div className="absolute top-0 right-0 bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
-                    Some uploads failed
-                </div>
-            )}
-            {filteredUploadStatuses.some((upload: ImageListItem) => upload.syncStatus === SyncStatus.Queued) && (
-                <div className="absolute top-0 right-0 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">
-                    Syncing...
-                </div>
-            )}
         </div>
     );
 };
