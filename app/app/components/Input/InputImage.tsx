@@ -37,10 +37,9 @@ import 'filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css';
 
 // Utils
 import { join } from 'path';
-import { useImageUpload } from '@/app/app/hooks/useImageUpload';
+import { useImageUpload, useImageList, ImageListItem } from '@/app/app/hooks/useImageUpload';
 import { SyncStatus, ImageUpload } from '@/app/app/clients/Dexie';
-import { imageUploadStore } from '../../clients/Database';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { imageUploadStore } from '@/app/app/clients/ImageUploadStore';
 
 // 2. Register plugins at the top level
 registerPlugin(
@@ -229,43 +228,49 @@ export const InputImage = ({
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
     const { cancelUpload } = useImageUpload();
 
-    // Subscribe to image upload status changes using imageUploadStore
-    const [isHydrated, uploadStatuses] = imageUploadStore.useList();
+    // Subscribe to image upload status changes using the new hook
+    const { images: uploadStatuses, isLoading } = useImageList(path);
     const filteredUploadStatuses = useMemo(() => 
-        uploadStatuses.filter(upload => upload.path.startsWith(path)),
+        uploadStatuses.filter((upload: ImageListItem) => upload.fullPath.startsWith(path)),
         [uploadStatuses, path]
     );
 
     useEffect(() => {
         const loadInitialFiles = async (): Promise<void> => {
             console.debug("[FilePond] loadInitialFiles");
+
             try {
                 const files: FilePondInitialFile[] = [];
                 const trailingPath = path.endsWith('/') ? path : path + '/';
 
                 // First, process local pending uploads
                 if (filteredUploadStatuses.length) {
-                    const pendingFiles = await Promise.all(filteredUploadStatuses.map(async (upload) => {
+                    const pendingFiles = await Promise.all(filteredUploadStatuses.map(async (upload: ImageListItem) => {
                         // Skip files marked for deletion
                         if (upload.syncStatus === SyncStatus.PendingDelete) return null;
 
+                        // Get the file details from the store
+                        const result = await imageUploadStore.get(upload.fullPath);
+                        if (!result.ok) return null;
+
+                        const fileData = result.val;
                         // Convert Blob to object URL for FilePond
-                        const objectUrl = URL.createObjectURL(upload.file);
+                        const objectUrl = URL.createObjectURL(fileData.file);
                         return {
                             source: objectUrl,
                             options: {
                                 type: 'local' as FilePondInitialFile['options']['type'],
                                 metadata: {
-                                    ...upload.metadata,
-                                    status: upload.syncStatus,
-                                    error: upload.syncError,
-                                    uploadId: upload.id, // Store upload ID for cancellation
-                                    originalFile: upload.file
+                                    ...fileData.metadata,
+                                    status: fileData.syncStatus,
+                                    error: undefined,
+                                    uploadId: upload.fullPath, // Use path as ID
+                                    originalFile: fileData.file
                                 },
                                 file: {
-                                    name: upload.path.split('/').pop() || '',
-                                    size: (upload.file as File).size,
-                                    type: 'image/*'
+                                    name: fileData.path.split('/').pop() || '',
+                                    size: fileData.file.size,
+                                    type: fileData.file.type
                                 }
                             }
                         } as FilePondInitialFile;
@@ -281,10 +286,10 @@ export const InputImage = ({
                 });
 
                 if (items.length > 0) {
-                    const pendingPaths = new Set(filteredUploadStatuses.map(u => u.path));
+                    const pendingPaths = new Set(filteredUploadStatuses.map((u: ImageListItem) => u.fullPath));
                     const remoteFiles = await Promise.all(
                         items
-                            .filter(item => !pendingPaths.has(item.path)) // Skip files that are in pending uploads
+                            .filter(item => !pendingPaths.has(item.path))
                             .map(async (item) => {
                                 const filename = item.path.split('/').pop() || '';
                                 const { url } = await getUrl({ path: item.path });
@@ -326,7 +331,7 @@ export const InputImage = ({
             }
         };
 
-        if (isHydrated) {
+        if (!isLoading) {
             loadInitialFiles();
         }
 
@@ -338,7 +343,7 @@ export const InputImage = ({
                 }
             });
         };
-    }, [onChange, path, filteredUploadStatuses, isHydrated]);
+    }, [onChange, path, filteredUploadStatuses, isLoading]);
 
     return (
         <div className="relative">
@@ -417,12 +422,12 @@ export const InputImage = ({
                 labelFileLoadError="Error loading file"
                 labelFileProcessingError={(error) => error?.body || 'Upload failed, tap to retry'}
             />
-            {filteredUploadStatuses.some(upload => upload.syncStatus === SyncStatus.Failed) && (
+            {filteredUploadStatuses.some((upload: ImageListItem) => upload.syncStatus === SyncStatus.Failed) && (
                 <div className="absolute top-0 right-0 bg-red-100 text-red-800 px-2 py-1 rounded text-sm">
                     Some uploads failed
                 </div>
             )}
-            {filteredUploadStatuses.some(upload => upload.syncStatus === SyncStatus.Queued) && (
+            {filteredUploadStatuses.some((upload: ImageListItem) => upload.syncStatus === SyncStatus.Queued) && (
                 <div className="absolute top-0 right-0 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">
                     Syncing...
                 </div>

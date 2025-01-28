@@ -24,10 +24,9 @@ export type Phrase = Schema['Phrases']['type'];
 export type Location = Schema['Locations']['type'];
 export type Section = Omit<Schema['Sections']['type'], "elements">;
 
-export interface ImageUpload extends TableEntity {
-  id: string;
-  file: Blob;
+export interface ImageUpload {
   path: string;
+  file: Blob;
   metadata?: Record<string, string>;
   updatedAt: string;
   syncStatus: string;
@@ -58,17 +57,32 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
   };
 }
 
+
+export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
+  list: () => Promise<T[] | Result<T[], Error>>;
+  create: (data: TCreate) => Promise<T | Result<T, Error>>;
+  update: (data: TUpdate) => Promise<T | Result<T, Error>>;
+  delete: (id: string) => Promise<void | Result<void, Error>>;
+  syncWithServer?: () => Promise<void>;
+}
+
+export interface DexieStore<T, TCreate> {
+  useList: () => [boolean, T[]];
+  useGet: (id: string) => [boolean, T | undefined];
+  add: (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt">) => Promise<void>;
+  get: (id: string) => Promise<T>;
+  update: (id: string, updateFn: (currentState: Draft<T>) => void) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+  removeAll: (options: { options: boolean }) => Promise<void>;
+  sync: () => void;
+  startPeriodicSync: (intervalMs?: number) => () => void;
+}
+
 function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: string }>(
   db: Dexie,
   tableName: string,
-  remoteHandlers: {
-    list: () => Promise<T[] | Result<T[], Error>>;
-    create: (data: TCreate) => Promise<T | Result<T, Error>>;
-    update: (data: TUpdate) => Promise<T | Result<T, Error>>;
-    delete: (id: string) => Promise<void | Result<void, Error>>;
-    syncWithServer?: () => Promise<void>;  // Optional custom sync handler
-  }
-) {
+  remoteHandlers: DexieRemoteHandlers<T, TCreate, TUpdate>
+) : DexieStore<T, TCreate> {
   const table = db.table<T>(tableName);
   let syncInProgress = false;
   
@@ -319,7 +333,7 @@ const db = new Dexie('Surveys') as Dexie & {
   phrases: EntityTable<Phrase, "id">;
   locations: EntityTable<Location, "id">;
   sections: EntityTable<Section, "id">;
-  imageUploads: EntityTable<ImageUpload, "id">;
+  imageUploads: EntityTable<ImageUpload, "path">;
 };
 
 db.version(1).stores({
@@ -329,7 +343,7 @@ db.version(1).stores({
   phrases: '&id, updatedAt, syncStatus',
   locations: '&id, updatedAt, syncStatus',
   sections: '&id, updatedAt, syncStatus',
-  imageUploads: '&id, path, updatedAt, syncStatus',
+  imageUploads: '&path, updatedAt, syncStatus',
 });
 
 

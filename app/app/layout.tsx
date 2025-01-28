@@ -9,7 +9,8 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore, imageUploadStore } from "./clients/Database";
+import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore } from "./clients/Database";
+import { imageUploadStore } from "./clients/ImageUploadStore";
 
 export default function RootLayout({
   children,
@@ -43,7 +44,8 @@ export default function RootLayout({
     window.addEventListener('online', handleOnline);
 
     return () => {
-      cleanupFns.forEach(cleanup => cleanup());
+      //TODO: Add cleanup
+      //cleanupFns.forEach(cleanup => cleanup());
       window.removeEventListener('online', handleOnline);
     };
   }, []);

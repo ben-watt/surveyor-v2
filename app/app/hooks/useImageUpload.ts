@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { imageUploadStore } from '../clients/Database';
+import { imageUploadStore } from '../clients/ImageUploadStore';
+import { SyncStatus, ImageUpload } from '../clients/Dexie';
 
 interface ImageUploadOptions {
   path: string;
@@ -8,13 +9,47 @@ interface ImageUploadOptions {
   onProgress?: (progress: number) => void;
 }
 
+// Type for the image list response
+export interface ImageListItem {
+    fullPath: string;
+    syncStatus: SyncStatus;
+}
+
+export const useImageList = (path: string) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [images, setImages] = useState<ImageListItem[]>([]);
+
+    useEffect(() => {
+        const loadImages = async () => {
+            setIsLoading(true);
+            try {
+                const result = await imageUploadStore.list(path);
+                if (result.ok) {
+                    setImages(result.val);
+                }
+            } catch (error) {
+                console.error('Failed to load images:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadImages();
+        // Set up an interval to refresh the list periodically
+        const interval = setInterval(loadImages, 5000);
+
+        return () => clearInterval(interval);
+    }, [path]);
+
+    return { images, isLoading };
+};
+
 export function useImageUpload() {
   const queueUpload = useCallback(async (file: File | Blob, options: ImageUploadOptions) => {
     const id = uuidv4();
 
     try {
-      await imageUploadStore.add({
-        id,
+      await imageUploadStore.create({
         file,
         path: options.path,
         metadata: options.metadata
