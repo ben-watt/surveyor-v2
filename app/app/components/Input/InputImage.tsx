@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // 1. Group and organize imports
 // React and FilePond
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
@@ -15,12 +15,8 @@ import {
     RestoreServerConfigFunction,
     FetchServerConfigFunction,
     RemoveServerConfigFunction,
-    FilePondInitialFile,
-    FilePondFile
+    FilePondInitialFile
 } from 'filepond';
-
-// AWS Amplify
-import { getUrl, remove, list } from "aws-amplify/storage";
 
 // Form handling
 import { FieldValues, UseControllerProps, useFormContext } from "react-hook-form";
@@ -37,8 +33,6 @@ import 'filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css';
 
 // Utils
 import { join } from 'path';
-import { useImageUpload, useImageList, ImageListItem } from '@/app/app/hooks/useImageUpload';
-import { SyncStatus, ImageUpload } from '@/app/app/clients/Dexie';
 import { imageUploadStore } from '@/app/app/clients/ImageUploadStore';
 
 // 2. Register plugins at the top level
@@ -64,11 +58,6 @@ interface CreateServerConfigProps {
 }
 
 // Add this type near other interfaces
-interface ExtendedImageUpload extends ImageUpload {
-    progress?: number;
-}
-
-// Add this type near other interfaces
 interface RhfInputImageProps extends InputImageProps {
     rhfProps: UseControllerProps<FieldValues>;
     labelText?: string;
@@ -78,8 +67,6 @@ interface RhfInputImageProps extends InputImageProps {
 const createServerConfig = ({ path, initialFiles }: CreateServerConfigProps & {
     initialFiles: FilePondInitialFile[];
 }) => {
-    const { queueUpload, cancelUpload } = useImageUpload();
-
     return {
         process: ((fieldName, file, metadata, load, error, progress, abort) => {
             console.debug("[FilePond Process] Uploading file:", file);
@@ -92,9 +79,10 @@ const createServerConfig = ({ path, initialFiles }: CreateServerConfigProps & {
             }
 
             console.debug("[FilePond Process] Uploading file:", fileToUpload);
+            
+            const fullPath = join(path, fileToUpload.name)
 
             const upload = async () => {
-                const fullPath = join(path, fileToUpload.name)
                 await imageUploadStore.create({
                     id: fullPath,
                     path: fullPath,
@@ -124,13 +112,7 @@ const createServerConfig = ({ path, initialFiles }: CreateServerConfigProps & {
 
             return {
                 abort: () => {
-                    if (metadata.uploadId) {
-                        cancelUpload(metadata.uploadId).then((cancelled) => {
-                            if (cancelled) {
-                                console.debug("[FilePond Process] Upload cancelled:", metadata.uploadId);
-                            }
-                        });
-                    }
+                    imageUploadStore.remove(fullPath).catch(console.error);
                     abort();
                 }
             };
@@ -167,6 +149,7 @@ const createServerConfig = ({ path, initialFiles }: CreateServerConfigProps & {
         remove: ((source, load, error) => {
             console.debug("[FilePond Remove] Removing file:", source);
             imageUploadStore.remove(source).catch(console.error);
+            load();
         }) as RemoveServerConfigFunction
     };
 };
@@ -180,65 +163,58 @@ export const InputImage = ({
     maxNumberOfFiles = 10
 }: InputImageProps) => {
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
+    console.debug("[InputImage][InputImage][%s] render", path);
 
-    useEffect(() => {
-        const loadInitialFiles = async (): Promise<void> => {
-            console.debug("[FilePond] loadInitialFiles for path", path);
+    const loadInitialFiles = async (): Promise<void> => {
+        console.debug("[InputImage][InputImage][%s] loadInitialFiles for path", path);
 
-            try {
-                const trailingPath = path.endsWith('/') ? path : path + '/';
-                const images = await imageUploadStore.list(trailingPath);
-                if(!images.ok) return;
+        try {
+            const trailingPath = path.endsWith('/') ? path : path + '/';
+            const images = await imageUploadStore.list(trailingPath);
+            if(!images.ok) return;
 
-                console.debug("[FilePond] images", images.val);
+            console.debug("[InputImage][InputImage][%s] images", path, images.val);
 
-                const filePondFiles = await Promise.all(images.val.map(async (image: ImageListItem) => {
-                    const result = await imageUploadStore.get(image.fullPath);
-                    if(!result.ok) return null;
+            const filePondFiles = await Promise.all(images.val.map(async (image) => {
+                const result = await imageUploadStore.get(image.fullPath);
+                if(!result.ok) return null;
 
-                    console.debug("[FilePond] get image", result);
+                console.debug("[InputImage][InputImage][%s] get image", path, result);
 
-                    const fileData = result.val;
+                const fileData = result.val;
 
-                    // ToDo could review adding limbo here for the local files that haven't been uploaded it gives
-                    // the user the ability to try the upload again.
-                    return {
-                        source: result.val.path,
-                        options: {
-                            type: 'local',
-                            metadata: {
-                                filename: fileData.path.split('/').pop() || '',
-                                poster: fileData.href,
-                                status: fileData.syncStatus,
-                                uploadId: image.fullPath,
-                            },
-                            file: {
-                                name: fileData.path.split('/').pop() || '',
-                                size: fileData.file.size,
-                                type: fileData.file.type
-                            }
+                // ToDo could review adding limbo here for the local files that haven't been uploaded it gives
+                // the user the ability to try the upload again.
+                return {
+                    source: result.val.path,
+                    options: {
+                        type: 'local',
+                        metadata: {
+                            filename: fileData.path.split('/').pop() || '',
+                            poster: fileData.href,
+                            status: fileData.syncStatus,
+                            uploadId: image.fullPath,
+                        },
+                        file: {
+                            name: fileData.path.split('/').pop() || '',
+                            size: fileData.file.size,
+                            type: fileData.file.type
                         }
-                    } as FilePondInitialFile;
-                }));
+                    }
+                } as FilePondInitialFile;
+            }));
 
-                console.debug("[FilePond] filePondFiles", filePondFiles);
-                setInitialFiles(filePondFiles.filter(file => file !== null));
-                onChange?.(filePondFiles.filter(file => file !== null).map(file => file.source));
-            } catch (error) {
-                console.error('[InputImage] Error loading files:', error);
-                setInitialFiles([]);
-                onChange?.([]);
-            }
-        };
+            console.debug("[InputImage][InputImage][%s] filePondFiles", path, filePondFiles);
+            setInitialFiles(filePondFiles.filter(file => file !== null));
+            onChange?.(filePondFiles.filter(file => file !== null).map(file => file.source));
+        } catch (error) {
+            console.error('[InputImage][InputImage][%s] Error loading files:', path, error);
+            setInitialFiles([]);
+            onChange?.([]);
+        }
+    };
 
-        loadInitialFiles();
-        // Cleanup object URLs on unmount
-        return () => {
-            initialFiles.forEach(file => {
-                file.options?.file?.name && URL.revokeObjectURL(file.source);
-            });
-        };
-    }, [onChange, path]);
+    useMemo(() => loadInitialFiles(), [path]);
 
     return (
         <div className="relative">
@@ -324,13 +300,14 @@ export const RhfInputImage = ({
     ...props
 }: RhfInputImageProps) => {
     const { setValue, register, formState } = useFormContext();
+    console.debug("[InputImage][RhfInputImage][%s] render", path);
 
     useEffect(() => {
         register(rhfProps.name, rhfProps.rules);
     }, [register, rhfProps.name, rhfProps.rules]);
 
-    const onChange = useMemo(() => (fileSources: string[]) => {
-        console.debug("[RhfInputImage] onLoad", fileSources);
+    const onChange = useCallback((fileSources: string[]) => {
+        console.debug("[InputImage][RhfInputImage][%s] onChange", path, fileSources);
         setValue(rhfProps.name, fileSources, { shouldDirty: true });
     }, [rhfProps.name, setValue]);
 

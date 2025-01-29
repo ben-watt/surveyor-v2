@@ -11,11 +11,10 @@ function createImageUploadStore(db: Dexie, name: string) {
     const table = db.table<ImageUpload>(name);
 
     const sync = async () => {
-        console.debug("[ImageUploadStore] sync");
+        console.debug("[ImageUploadStore] sync started");
         table.where('syncStatus').equals(SyncStatus.Queued).toArray().then(async items => {
             console.debug("[ImageUploadStore] sync", items);
             items.forEach(async item => {
-                console.debug("[ImageUploadStore] sync", item);
                 const uploadTask = await uploadData({
                     path: item.path,
                     data: item.file,
@@ -26,11 +25,11 @@ function createImageUploadStore(db: Dexie, name: string) {
                 })
 
                 const result = await uploadTask.result
-                console.debug("[ImageUploadStore] sync", result);
+                console.debug("[ImageUploadStore] sync result", result);
 
                 if(result) {
                     table.delete(item.path);
-                    console.debug("[ImageUploadStore] sync", result);
+                    console.debug("[ImageUploadStore] deleted", result);
                 }
             });
         });
@@ -119,7 +118,7 @@ function createImageUploadStore(db: Dexie, name: string) {
             sync();
         },
         startPeriodicSync: async () => {
-            setInterval(sync, 10000);
+            setInterval(sync, 60000);
         }
     }
 }

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/drawer";
 
 interface DynamicDrawerOpenArgs {
+  id: string;
   title: string;
   description?: string;
   content?: React.ReactNode;
@@ -55,7 +56,7 @@ export function DynamicDrawerProvider({
   }>>([]);
 
   function handleOpenDrawer(props: DynamicDrawerOpenArgs) {
-    const id = crypto.randomUUID();
+    const id = props.id ?? crypto.randomUUID();
     setDrawers(prev => [...prev, { id, props }]);
   }
 
@@ -73,7 +74,6 @@ export function DynamicDrawerProvider({
       {drawers.map(({ id, props }) => (
         <DynamicDrawer
           key={id}
-          drawerId={id}
           isOpen={true}
           handleClose={() => handleCloseDrawer(id)}
           {...props}
@@ -84,13 +84,13 @@ export function DynamicDrawerProvider({
 }
 
 interface DynamicDrawerProps extends DynamicDrawerOpenArgs {
-  drawerId: string;
+  id: string;
   isOpen: boolean;
   handleClose: () => void;
 }
 
 export function DynamicDrawer({
-  drawerId,
+  id,
   title,
   description,
   content,
@@ -101,7 +101,7 @@ export function DynamicDrawer({
 
   if (isDesktop) {
     return (
-      <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+      <Dialog key={id} open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
         <DialogContent className="sm:max-w-md max-h-full overflow-scroll">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -116,7 +116,7 @@ export function DynamicDrawer({
   }
 
   return (
-    <Drawer open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+    <Drawer key={id} open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DrawerContent className="max-h-lvh" >
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>

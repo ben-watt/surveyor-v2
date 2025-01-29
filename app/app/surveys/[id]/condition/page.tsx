@@ -47,7 +47,7 @@ const ConditionPage = ({ params: { id } }: ConditionPageProps) => {
       {!isHydrated && <div>Loading...</div>}
       {isHydrated && survey && (
         <DynamicDrawer
-          drawerId={id + "/condition"}
+          id={id + "-condition"}
           isOpen={isOpen}
           handleClose={handleClose}
           title="Property Condition"
@@ -70,6 +70,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
 
   const onStartNewInspection = () => {
     openDrawer({
+      id: `${id}-condition-inspect`,
       title: "Inspect Component",
       description: "Inspect the component",
       content: <InspectionForm surveyId={id} />
@@ -178,6 +179,7 @@ const ElementSectionComponent = ({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => openDrawer({
+                id: `${surveyId}-condition-${elementSection.id}-edit`,
                 title: `Edit Element - ${elementSection.name}`,
                 description: `Edit the ${elementSection.name} element for survey`,
                 content: <ElementForm
@@ -189,6 +191,7 @@ const ElementSectionComponent = ({
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => openDrawer({
+                id: `${surveyId}-condition-${elementSection.id}-inspect`,
                 title: `Inspect ${elementSection.name}`,
                 description: `Add or edit inspections for ${elementSection.name}`,
                 content: <InspectionForm

@@ -106,6 +106,8 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
     );
   }
 
+  console.debug("[ElementForm] render", `report-images/${surveyId}/elements/${elementId}`);
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValid)} className="space-y-6">
@@ -117,12 +119,12 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
             placeholder="Enter element description"
           />
           <div className="space-y-2">
-            <Label>Images</Label>
             <RhfInputImage
               path={`report-images/${surveyId}/elements/${elementId}`}
               rhfProps={{
                 name: "images"
               }}
+              labelText="Images"
             />
           </div>
         </FormSection>
@@ -146,6 +148,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
                     onClick={(e) => {
                       e.preventDefault();
                       drawer.openDrawer({
+                        id: `${surveyId}-condition-inspect-${component.id}`,
                         title: `Inspect Component - ${component.name}`,
                         description: `Inspect the ${component.name} component`,
                         content: <InspectionForm
@@ -178,6 +181,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
           </div>
           <Button variant="secondary" type="button" className="w-full" onClick={() => {
             drawer.openDrawer({
+              id: `${surveyId}-condition-add-component`,
               title: `Add Component`,
               description: `Add a component to the element`,
               content: <InspectionForm
