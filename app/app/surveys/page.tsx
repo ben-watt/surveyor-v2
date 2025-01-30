@@ -142,10 +142,11 @@ function HomePage() {
 
     return (
       <>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {data.map((x) => (
             <BuildingSurveyListCard
               key={x.id}
+
               survey={x}
               onView={() => router.push(`/app/surveys/${x.id}`)}
             />
