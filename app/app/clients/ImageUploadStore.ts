@@ -1,5 +1,5 @@
 import { uploadData, remove, list, getProperties, getUrl } from 'aws-amplify/storage';
-import { Ok } from 'ts-results';
+import { Ok, Result } from 'ts-results';
 import { db, ImageUpload, SyncStatus } from './Dexie';
 import Dexie from 'dexie';
 
@@ -15,7 +15,7 @@ function createImageUploadStore(db: Dexie, name: string) {
         table.where('syncStatus').equals(SyncStatus.Queued).toArray().then(async items => {
             console.debug("[ImageUploadStore] sync", items);
             items.forEach(async item => {
-                const uploadTask = await uploadData({
+                const uploadTask = uploadData({
                     path: item.path,
                     data: item.file,
                     options: {
@@ -67,8 +67,15 @@ function createImageUploadStore(db: Dexie, name: string) {
 
             return Ok(remoteResponse.concat(localResponse));
         },
-        get: async (fullPath: string) => {
+        get: async (fullPath: string): Promise<Result<ImageUpload, Error>> => {
             console.debug("[ImageUploadStore] get", fullPath);
+
+            // check if the file exists in the local store
+            const localImage = await table.get({ path: fullPath });
+            if(localImage) {
+                return Ok(localImage);
+            }
+
             const response = await getProperties({
                 path: fullPath,
             });
@@ -80,12 +87,15 @@ function createImageUploadStore(db: Dexie, name: string) {
             const image = await fetch(url.url.href)
             .then(x => x.blob());  
 
+            const lastModified = response.lastModified ? response.lastModified.toISOString() : new Date().toISOString();
             return Ok({
                 file: image,
                 metadata: response.metadata,    
                 path: fullPath,
                 href: url.url.href,
                 syncStatus: SyncStatus.Synced,
+                id: fullPath,
+                updatedAt: lastModified,
              });
         },
         create: async (data: CreateImageUpload) => {
@@ -94,6 +104,7 @@ function createImageUploadStore(db: Dexie, name: string) {
                 id: data.path,
                 path: data.path,
                 file: data.file,
+                href: data.href,
                 metadata: data.metadata,
                 updatedAt: new Date().toISOString(),
                 syncStatus: SyncStatus.Queued,

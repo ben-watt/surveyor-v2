@@ -118,6 +118,7 @@
     "@aws-amplify/backend": "^1.12.0",
     "@aws-amplify/backend-cli": "^1.4.6",
     "@gocapsule/column-extension": "^1.0.0-beta-3",
+    "@hookform/devtools": "^4.3.3",
     "@tailwindcss/forms": "^0.5.9",
     "@types/node": "^20.17.11",
     "@types/react": "^18.3.18",

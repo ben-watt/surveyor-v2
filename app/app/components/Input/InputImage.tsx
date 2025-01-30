@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // 1. Group and organize imports
 // React and FilePond
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
@@ -15,11 +15,12 @@ import {
     RestoreServerConfigFunction,
     FetchServerConfigFunction,
     RemoveServerConfigFunction,
-    FilePondInitialFile
+    FilePondInitialFile,
+    FilePondFile
 } from 'filepond';
 
 // Form handling
-import { FieldValues, UseControllerProps, useFormContext } from "react-hook-form";
+import { FieldValues, useController, UseControllerProps, useFormContext } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 
 // Components
@@ -59,14 +60,12 @@ interface CreateServerConfigProps {
 
 // Add this type near other interfaces
 interface RhfInputImageProps extends InputImageProps {
-    rhfProps: UseControllerProps<FieldValues>;
     labelText?: string;
+    rhfProps?: UseControllerProps;
 }
 
 // 4. Extract server configuration to a separate function for better readability
-const createServerConfig = ({ path, initialFiles }: CreateServerConfigProps & {
-    initialFiles: FilePondInitialFile[];
-}) => {
+const createServerConfig = ({ path }: CreateServerConfigProps) => {
     return {
         process: ((fieldName, file, metadata, load, error, progress, abort) => {
             console.debug("[FilePond Process] Uploading file:", file);
@@ -87,6 +86,7 @@ const createServerConfig = ({ path, initialFiles }: CreateServerConfigProps & {
                     id: fullPath,
                     path: fullPath,
                     file: fileToUpload,
+                    href: "",
                     metadata: {
                         ...metadata,
                         filename: fileToUpload.name
@@ -163,7 +163,11 @@ export const InputImage = ({
     maxNumberOfFiles = 10
 }: InputImageProps) => {
     const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>([]);
-    console.debug("[InputImage][InputImage][%s] render", path);
+    const [files, setFiles] = React.useState<FilePondFile[]>([]);
+    const [hasLoaded, setHasLoaded] = React.useState(false);
+    const filepond = useRef<FilePond | null>(null);
+
+    console.debug("[InputImage][InputImage][%s] files", path, files, hasLoaded, filepond.current);
 
     const loadInitialFiles = async (): Promise<void> => {
         console.debug("[InputImage][InputImage][%s] loadInitialFiles for path", path);
@@ -185,6 +189,7 @@ export const InputImage = ({
 
                 // ToDo could review adding limbo here for the local files that haven't been uploaded it gives
                 // the user the ability to try the upload again.
+                // If href is blank I could create a URL to the file locally.
                 return {
                     source: result.val.path,
                     options: {
@@ -206,19 +211,24 @@ export const InputImage = ({
 
             console.debug("[InputImage][InputImage][%s] filePondFiles", path, filePondFiles);
             setInitialFiles(filePondFiles.filter(file => file !== null));
+            setHasLoaded(true);
             onChange?.(filePondFiles.filter(file => file !== null).map(file => file.source));
         } catch (error) {
             console.error('[InputImage][InputImage][%s] Error loading files:', path, error);
             setInitialFiles([]);
+            setHasLoaded(true);
             onChange?.([]);
         }
     };
 
-    useMemo(() => loadInitialFiles(), [path]);
+    useEffect(() => {
+        loadInitialFiles();
+    }, [path]);
 
     return (
         <div className="relative">
             <FilePond
+                ref={filepond}
                 name={id || 'filepond'}
                 allowMultiple={true}
                 maxFiles={maxNumberOfFiles}
@@ -275,12 +285,10 @@ export const InputImage = ({
                 onupdatefiles={(files) => {
                     // Convert file names to full paths to update the form
                     const fileSources = files.map(file => join(path, file.filename))
-                    onChange?.(fileSources);
+                    //setFiles(files);
+                    //onChange?.(fileSources);
                 }}
-                server={createServerConfig({ 
-                    path,
-                    initialFiles
-                })}
+                server={createServerConfig({ path })}
                 files={initialFiles}
                 labelTapToRetry="Tap to retry upload"
                 labelFileProcessing="Uploading..."
@@ -293,36 +301,29 @@ export const InputImage = ({
     );
 };
 
+const MemoizedInputImage = React.memo(InputImage);
+
 export const RhfInputImage = ({
     path,
-    rhfProps,
     labelText,
+    rhfProps,
     ...props
 }: RhfInputImageProps) => {
-    const { setValue, register, formState } = useFormContext();
+    const { field, formState } = useController({ name: "images" });
     console.debug("[InputImage][RhfInputImage][%s] render", path);
-
-    useEffect(() => {
-        register(rhfProps.name, rhfProps.rules);
-    }, [register, rhfProps.name, rhfProps.rules]);
-
-    const onChange = useCallback((fileSources: string[]) => {
-        console.debug("[InputImage][RhfInputImage][%s] onChange", path, fileSources);
-        setValue(rhfProps.name, fileSources, { shouldDirty: true });
-    }, [rhfProps.name, setValue]);
 
     return (
         <div>
             {labelText && <Label text={labelText} />}
-            <InputImage
+            <MemoizedInputImage
                 id={path}
                 path={path}
-                onChange={onChange}
+                onChange={field.onChange}
                 {...props}
             />
             <ErrorMessage
                 errors={formState.errors}
-                name={rhfProps.name}
+                name={"images"}
                 render={({ message }) => InputError({ message })}
             />
         </div>

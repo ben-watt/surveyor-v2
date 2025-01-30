@@ -24,7 +24,6 @@ interface DynamicDrawerOpenArgs {
   title: string;
   description?: string;
   content?: React.ReactNode;
-  contentFn?: () => React.ReactNode;
 }
 
 interface DynamicDrawerContextType {
@@ -35,48 +34,88 @@ interface DynamicDrawerContextType {
 
 const DynamicDrawerContext = React.createContext<DynamicDrawerContextType>({
   isOpen: false,
-  openDrawer: (props: DynamicDrawerOpenArgs) => {},
+  openDrawer: () => {},
   closeDrawer: () => {},
 });
 
 export function useDynamicDrawer() {
   const context = React.useContext(DynamicDrawerContext);
   if (!context) {
-    throw new Error("useDynamicDrawer must be used within a DynamicDrawerProvider");
+    throw new Error(
+      "useDynamicDrawer must be used within a DynamicDrawerProvider"
+    );
   }
   return context;
 }
 
+// Memoized content component to prevent unnecessary re-renders
+const MemoizedContent = React.memo(
+  ({ content }: { content: React.ReactNode }) => <div>{content}</div>
+);
+MemoizedContent.displayName = 'MemoizedContent';
+
+// Individual drawer component that manages its own lifecycle
+const IndividualDrawer = React.memo(
+  ({ id, props, onClose }: { id: string; props: DynamicDrawerOpenArgs; onClose: (id: string) => void }) => {
+    return (
+      <DynamicDrawer
+        key={id}
+        isOpen={true}
+        handleClose={() => onClose(id)}
+        {...props}
+      />
+    );
+  }
+);
+IndividualDrawer.displayName = 'IndividualDrawer';
+
 export function DynamicDrawerProvider({
   children,
 }: React.PropsWithChildren<{}>) {
-  const [drawers, setDrawers] = React.useState<Array<{
-    id: string;
-    props: DynamicDrawerOpenArgs;
-  }>>([]);
+  const [drawerStates, setDrawerStates] = React.useState<
+    Record<string, DynamicDrawerOpenArgs>
+  >({});
 
-  function handleOpenDrawer(props: DynamicDrawerOpenArgs) {
+  const handleOpenDrawer = React.useCallback((props: DynamicDrawerOpenArgs) => {
     const id = props.id ?? crypto.randomUUID();
-    setDrawers(prev => [...prev, { id, props }]);
-  }
+    setDrawerStates((prev) => ({ ...prev, [id]: props }));
+  }, []);
 
-  function handleCloseDrawer(id?: string) {
+  const handleCloseDrawer = React.useCallback((id?: string) => {
     if (id) {
-      setDrawers(prev => prev.filter(drawer => drawer.id !== id));
+      setDrawerStates((prev) => {
+        const newState = { ...prev };
+        delete newState[id];
+        return newState;
+      });
     } else {
-      setDrawers(prev => prev.slice(0, -1));
+      setDrawerStates((prev) => {
+        const newState = { ...prev };
+        const lastKey = Object.keys(newState).pop();
+        if (lastKey) delete newState[lastKey];
+        return newState;
+      });
     }
-  }
+  }, []);
+
+  const contextValue = React.useMemo(
+    () => ({
+      isOpen: Object.keys(drawerStates).length > 0,
+      openDrawer: handleOpenDrawer,
+      closeDrawer: handleCloseDrawer,
+    }),
+    [handleOpenDrawer, handleCloseDrawer, drawerStates]
+  );
 
   return (
-    <DynamicDrawerContext.Provider value={{ isOpen: drawers.length > 0, openDrawer: handleOpenDrawer, closeDrawer: handleCloseDrawer }}>
+    <DynamicDrawerContext.Provider value={contextValue}>
       {children}
-      {drawers.map(({ id, props }) => (
-        <DynamicDrawer
+      {Object.entries(drawerStates).map(([id, props]) => (
+        <IndividualDrawer
           key={id}
-          isOpen={true}
-          handleClose={() => handleCloseDrawer(id)}
-          {...props}
+          id={id}
+          props={props}
+          onClose={handleCloseDrawer}
         />
       ))}
     </DynamicDrawerContext.Provider>
@@ -95,41 +134,41 @@ export function DynamicDrawer({
   description,
   content,
   isOpen,
-  handleClose
+  handleClose,
 }: DynamicDrawerProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
+  const handleOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (!open) handleClose();
+    },
+    [handleClose]
+  );
+
   if (isDesktop) {
     return (
-      <Dialog key={id} open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
+      <Dialog key={id} open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md max-h-full overflow-scroll">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <div>
-            {content}
-          </div>
+          <MemoizedContent content={content} />
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Drawer key={id} open={isOpen} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DrawerContent className="max-h-lvh" >
+    <Drawer key={id} open={isOpen} onOpenChange={handleOpenChange}>
+      <DrawerContent className="max-h-lvh">
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
         <div className="p-4 overflow-scroll">
-            {content}
+          <MemoizedContent content={content} />
         </div>
-        {/* <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">Close</Button>
-          </DrawerClose>
-        </DrawerFooter> */}
       </DrawerContent>
     </Drawer>
   );

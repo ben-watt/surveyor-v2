@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import InspectionForm from "./InspectionForm";
 import { Edit, Trash2 } from "lucide-react";
 import { getElementSection, updateElementDetails, removeComponent } from "@/app/app/surveys/building-survey-reports/Survey";
+import { useTraceUpdate } from "@/app/app/hooks/useTraceUpdates";
 
 type ElementFormData = {
   description: string;
@@ -25,8 +26,9 @@ interface ElementFormProps {
   elementId: string;
 }
 
-export default function ElementForm({ surveyId, sectionId, elementId }: ElementFormProps) {  
+export default function ElementForm({ surveyId, sectionId, elementId }: ElementFormProps) {
   console.debug("[ElementForm] props", surveyId, sectionId, elementId);
+  useTraceUpdate({ surveyId, sectionId, elementId });
 
   const drawer = useDynamicDrawer();
   const [isLoading, setIsLoading] = React.useState(true);
@@ -119,13 +121,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
             placeholder="Enter element description"
           />
           <div className="space-y-2">
-            <RhfInputImage
-              path={`report-images/${surveyId}/elements/${elementId}`}
-              rhfProps={{
-                name: "images"
-              }}
-              labelText="Images"
-            />
+            <RhfInputImage rhfProps={{ name: "images" }} path={`report-images/${surveyId}/elements/${elementId}`} labelText="Images" />
           </div>
         </FormSection>
 

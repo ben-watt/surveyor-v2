@@ -29,6 +29,7 @@ export interface ImageUpload {
   path: string;
   file: Blob;
   metadata?: Record<string, string>;
+  href: string;
   updatedAt: string;
   syncStatus: string;
   syncError?: string;
