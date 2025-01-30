@@ -6,6 +6,7 @@ import { Draft, produce } from "immer";
 import { Err, Ok, Result } from 'ts-results';
 import { getErrorMessage } from '../utils/handleError';
 import { useLiveQuery } from "dexie-react-hooks";
+import { useEffect, useState } from 'react';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -96,11 +97,16 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   }, 1000);
 
   const useList = (): [boolean, T[]] => {
+    const [hydrated, setHydrated] = useState<boolean>(false);
     const data = useLiveQuery(
-      async () => await table.where('syncStatus').notEqual(SyncStatus.PendingDelete).toArray(),
-      []
+      async () => {
+        const items = await table.where('syncStatus').notEqual(SyncStatus.PendingDelete).toArray();
+        setHydrated(true);
+        return items;
+      }
     );
-    return [data === undefined ? false : true, data ?? []];
+
+    return [hydrated, data ?? []];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {

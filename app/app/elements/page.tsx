@@ -14,6 +14,7 @@ import { DataTable, SortableHeader } from "@/app/app/components/DataTable";
 import { useRouter } from "next/navigation";
 import { componentStore, elementStore, sectionStore } from "../clients/Database";
 import { Element as ElementData } from "../clients/Dexie";
+import { useEffect, useState } from "react";
 
 export default function Page() {
   const router = useRouter();
@@ -49,7 +50,13 @@ export default function Page() {
     {
       id: "component count",
       header: "Component Count",
-      accessorFn: (v) => components.filter(c => c.elementId === v.id).length, 
+      accessorFn: (row) => {
+        return row.id;
+      },
+      cell: (props) => {
+        const elementId = props.getValue() as string;
+        return components.filter(c => c.elementId === elementId).length;
+      },
       meta: {
         tw: {
           headerClassName: "text-right",
@@ -114,9 +121,10 @@ export default function Page() {
         initialState={{ sorting: [{ id: "order", desc: false }] }}
         columns={columns}
         data={elements}
-        isLoading={elementsHydrated && componentsHydrated && sectionsHydrated}
+        isLoading={!elementsHydrated || !componentsHydrated || !sectionsHydrated}
         onCreate={() => router.push("/app/elements/create")}
       />
     </div>
+
   );
 }
