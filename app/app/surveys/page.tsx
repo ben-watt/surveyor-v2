@@ -24,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { DataTable, SortableHeader } from "../components/DataTable";
 import { surveyStore } from "@/app/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader } from "@/components/ui/card";
+import { BuildingSurveyListCard } from "./SurveyListCard";
 
 type TableData = BuildingSurveyFormData;
 
@@ -139,12 +141,25 @@ function HomePage() {
     ];
 
     return (
-      <DataTable
-        initialState={{ sorting: [{ id: "created", desc: true }] }}
-        columns={columns}
-        data={data.map((x) => x)}
-        onCreate={() => router.push("/app/surveys/create")}
-      />
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {data.map((x) => (
+            <BuildingSurveyListCard
+              key={x.id}
+              survey={x}
+              onView={() => router.push(`/app/surveys/${x.id}`)}
+            />
+          ))}
+        </div>
+        <div className="hidden">
+          <DataTable
+            initialState={{ sorting: [{ id: "created", desc: true }] }}
+            columns={columns}
+            data={data.map((x) => x)}
+            onCreate={() => router.push("/app/surveys/create")}
+          />
+        </div>
+      </>
     );
   }
 }
