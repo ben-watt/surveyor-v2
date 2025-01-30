@@ -45,7 +45,7 @@ const ReportDetailFormPage = ({
 
   return (
     <DynamicDrawer
-      drawerId={id + "/report-details"}
+      id={id + "/report-details"}
       isOpen={isOpen}
       handleClose={handleClose}
       title="Report Details"

@@ -311,7 +311,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   };
 
   // Add periodic sync function that can be called from layout
-  const startPeriodicSync = (intervalMs: number = 30000) => {
+  const startPeriodicSync = (intervalMs: number = 60000) => {
     const interval = setInterval(() => {
       if (navigator.onLine && !syncInProgress) {
         syncWithServer();

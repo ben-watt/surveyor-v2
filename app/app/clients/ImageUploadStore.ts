@@ -128,8 +128,9 @@ function createImageUploadStore(db: Dexie, name: string) {
         sync: async () => {
             sync();
         },
-        startPeriodicSync: async () => {
-            setInterval(sync, 60000);
+        startPeriodicSync: (intervalMs: number = 60000) => {
+            const interval = setInterval(sync, intervalMs);
+            return () => clearInterval(interval);
         }
     }
 }

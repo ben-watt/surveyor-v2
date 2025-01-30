@@ -44,8 +44,7 @@ export default function RootLayout({
     window.addEventListener('online', handleOnline);
 
     return () => {
-      //TODO: Add cleanup
-      //cleanupFns.forEach(cleanup => cleanup());
+      cleanupFns.forEach(cleanup => cleanup());
       window.removeEventListener('online', handleOnline);
     };
   }, []);
