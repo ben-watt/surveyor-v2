@@ -173,17 +173,8 @@ export const InputImage = ({
   const [initialFiles, setInitialFiles] = React.useState<FilePondInitialFile[]>(
     []
   );
-  const [files, setFiles] = React.useState<FilePondFile[]>([]);
   const [hasLoaded, setHasLoaded] = React.useState(false);
   const filepond = useRef<FilePond | null>(null);
-
-  console.debug(
-    "[InputImage][InputImage][%s] files",
-    path,
-    files,
-    hasLoaded,
-    filepond.current
-  );
 
   const loadInitialFiles = async (): Promise<void> => {
     console.debug(
@@ -320,7 +311,10 @@ export const InputImage = ({
         }}
         onupdatefiles={(files) => {
           // Convert file names to full paths to update the form
-          const fileSources = files.map((file) => join(path, file.filename));
+          // Issue where this results in the form having a png file but
+          // the uploaded file is a jpg file.
+          // Hacked in a fix for now.
+          const fileSources = files.map((file) => join(path, file.file.name.replace(".png", ".jpg").replace(".jpeg", ".jpg")));
           onChange?.(fileSources);
         }}
         server={createServerConfig({ path })}

@@ -80,6 +80,8 @@ function PhotoGallery({ params }: PhotoGalleryProps) {
           for (const elementSection of section.elementSections || []) {
             if (elementSection.images?.length) {
               const urls = await getSignedUrls(elementSection.images);
+              
+              console.log("[PhotoGallery] getSignedUrls", elementSection.name, urls);
               sections.push({
                 name: elementSection.name,
                 photos: urls.map((url) => ({ url: url })),

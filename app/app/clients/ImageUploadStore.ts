@@ -14,7 +14,7 @@ function createImageUploadStore(db: Dexie, name: string) {
         console.debug("[ImageUploadStore] sync started");
         table.where('syncStatus').equals(SyncStatus.Queued).toArray().then(async items => {
             console.debug("[ImageUploadStore] sync", items);
-            items.forEach(async item => {
+            items.forEach(async (item: ImageUpload) => {
                 const uploadTask = uploadData({
                     path: item.path,
                     data: item.file,
