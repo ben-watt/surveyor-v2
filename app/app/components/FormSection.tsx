@@ -80,6 +80,7 @@ export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLin
   const handleClick = () => {
     if(drawer) {
       openDrawer({
+        id: "form-section-drawer",
         title: drawer.title,
         description: drawer.description,
         content: drawer.content,

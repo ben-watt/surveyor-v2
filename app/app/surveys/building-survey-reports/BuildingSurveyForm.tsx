@@ -295,7 +295,6 @@ function Report({ initFormValues }: ReportProps) {
 
     toast.success("Saved");
     router.push("/app/surveys");
-    router.refresh();
   };
 
   const onError = (errors: any) => {
