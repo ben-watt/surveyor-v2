@@ -240,7 +240,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   const get = async (id: string) => {
       const local = await table.get(id);
       if (!local || local.syncStatus === SyncStatus.PendingDelete) {
-      throw new Error("Item not found");
+      throw new Error("Item not found with id: " + id);
       }
     return local;
   };

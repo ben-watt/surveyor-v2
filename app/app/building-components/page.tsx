@@ -16,28 +16,17 @@ import { componentStore, elementStore } from "../clients/Database";
 import { Component, Element } from "../clients/Dexie";
 import { useRouter } from "next/navigation";
 
-type TableData = Component & {
-  element: Element;
-};
-
 export default function Page() {
   const router = useRouter();
   const [isHydrated, components] = componentStore.useList();
-  const [data, setData] = useState<TableData[]>([]);
-
-  useEffect(() => {
-    components.forEach(async (component) => {
-      const element = await elementStore.get(component.elementId);
-      setData((prev) => [...prev, { ...component, element }]);
-    });
-  }, [components]);
+  const [elementsHydrated, elements] = elementStore.useList();
 
   const handleDelete = (id: string) => {
     componentStore.remove(id);
     router.refresh();
   }
 
-  const columns: ColumnDef<TableData>[] = [
+  const columns: ColumnDef<Component>[] = [
     {
       header: "Name",
       accessorKey: "name",
@@ -47,8 +36,15 @@ export default function Page() {
       header: ({ column }) => (
         <SortableHeader column={column} header="Element" />
       ),
-      accessorFn: (v) => v.element.name,
+      accessorFn: (v) => v.elementId,
+      cell: (props) => {
+        const elementId = props.getValue()
+        const element = elements.find(e => e.id === elementId);
+        return element?.name;
+      }
     },
+
+
     {
       id: "created",
       header: ({ column }) => (
@@ -102,8 +98,8 @@ export default function Page() {
       </div>
       <DataTable
         columns={columns}
-        data={data}
-        isLoading={isHydrated}
+        data={components}
+        isLoading={!isHydrated || !elementsHydrated}
         onCreate={() => router.push("/app/building-components/create")}
       />
     </div>
