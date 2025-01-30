@@ -21,6 +21,8 @@ function PhotoGallery({ params }: PhotoGalleryProps) {
   const [isHydrated, survey] = surveyStore.useGet(params.id);
   const [photoSections, setPhotoSections] = useState<PhotoSection[]>([]);
 
+  console.log("[PhotoGallery] photoSections", survey);
+
   useEffect(() => {
     async function getSignedUrls(
       imagePaths: string[]

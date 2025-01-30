@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
+import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/app/components/FormSection";
 import { ElementSection, SurveySection } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+
 import { surveyStore, elementStore, sectionStore } from "@/app/app/clients/Database";
 import { RhfInputImage } from "@/app/app/components/Input/InputImage";
 import TextAreaInput from "@/app/app/components/Input/TextAreaInput";
@@ -112,6 +114,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
 
   return (
     <FormProvider {...methods}>
+      <DevTool control={control} />
       <form onSubmit={handleSubmit(onValid)} className="space-y-6">
         <FormSection title="Element Details">
           <TextAreaInput

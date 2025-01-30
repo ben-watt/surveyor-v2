@@ -321,8 +321,7 @@ export const InputImage = ({
         onupdatefiles={(files) => {
           // Convert file names to full paths to update the form
           const fileSources = files.map((file) => join(path, file.filename));
-          //setFiles(files);
-          //onChange?.(fileSources);
+          onChange?.(fileSources);
         }}
         server={createServerConfig({ path })}
         files={initialFiles}
@@ -349,11 +348,16 @@ export const RhfInputImage = ({
   rhfProps,
   ...props
 }: RhfInputImageProps) => {
-  const { field, formState } = useController({
-    name: rhfProps?.name,
-    rules: rhfProps?.rules,
-  });
-  console.debug("[InputImage][RhfInputImage][%s] render", path);
+  const { setValue, formState, register } = useFormContext();
+
+  const onChange = (fileSources: string[]) => {
+    console.debug("[InputImage][RhfInputImage][%s] onChange", path, fileSources);
+    setValue(rhfProps.name, fileSources);
+  }
+
+  useEffect(() => {
+    register(rhfProps.name);
+  }, [rhfProps.name, register]);
 
   return (
     <div>
@@ -361,12 +365,12 @@ export const RhfInputImage = ({
       <MemoizedInputImage
         id={path}
         path={path}
-        onChange={field.onChange}
+        onChange={onChange}
         {...props}
       />
       <ErrorMessage
         errors={formState.errors}
-        name={"images"}
+        name={rhfProps.name}
         render={({ message }) => InputError({ message })}
       />
     </div>
