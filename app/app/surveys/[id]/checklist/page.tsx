@@ -46,7 +46,7 @@ const ChecklistPage = ({
       {!isHydrated && <div>Loading...</div>}
       {isHydrated && survey && (
         <DynamicDrawer
-          drawerId={id + "/checklist"}
+          id={id + "/checklist"}
           isOpen={isOpen}
           handleClose={handleClose}
           title="Checklist"

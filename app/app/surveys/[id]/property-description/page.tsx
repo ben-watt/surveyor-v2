@@ -46,7 +46,7 @@ const PropertyDescriptionPage = ({
       {!isHydrated && <div>Loading...</div>}
       {isHydrated && survey && (
         <DynamicDrawer
-          drawerId={id + "/property-description"}
+          id={id + "/property-description"}
           isOpen={isOpen}
           handleClose={handleClose}
           title="Property Description"

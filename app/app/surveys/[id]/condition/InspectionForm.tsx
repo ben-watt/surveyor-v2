@@ -380,6 +380,7 @@ function InspectionFormContent({
               errors={errors}
               onCreateNew={() => {
                 drawer.openDrawer({
+                  id: surveyId + "/element",
                   title: "Create a new element",
                   description: "Create a new element for any survey",
                   content: <ElementDataForm />,
@@ -394,6 +395,7 @@ function InspectionFormContent({
               onClick={(e) => {
                 e.preventDefault();
                 drawer.openDrawer({
+                  id: surveyId + "/element",
                   title: `Edit Element - ${element.name}`,
                   description: `Edit the ${element.name} element for survey`,
                   content: (
@@ -421,6 +423,7 @@ function InspectionFormContent({
               errors={errors}
               onCreateNew={() => {
                 drawer.openDrawer({
+                  id: surveyId + "/component",
                   title: "Create a new component",
                   description: "Create a new component for any element",
                   content: (
@@ -478,6 +481,7 @@ function InspectionFormContent({
             isMulti={true}
             onCreateNew={() => {
               drawer.openDrawer({
+                id: surveyId + "/condition",
                 title: "Create a new condition phrase",
                 description: "Create a new condition phrase for any surveys",
                 content: (

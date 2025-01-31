@@ -8,13 +8,15 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, count, isActive, onClick }: StatusBadgeProps) {
-  const getStatusColor = (status: SyncStatus) => {
+  const getStatusColor = (status: SyncStatus): string => {
     const baseColors = {
       [SyncStatus.Draft]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
       [SyncStatus.Synced]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
       [SyncStatus.Queued]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
       [SyncStatus.Failed]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+      [SyncStatus.PendingDelete]: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
     };
+
 
     return isActive 
       ? "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100"

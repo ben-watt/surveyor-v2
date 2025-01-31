@@ -69,12 +69,12 @@ const createSurveyStore = () => {
         }
         return Ok(mapToSurvey(response.data));
       },
-      delete: async (id): Promise<Result<void, Error>> => {
+      delete: async (id): Promise<Result<string, Error>> => {
         const response = await client.models.Surveys.delete({ id });
         if (response.errors) {
           return Err(new Error(response.errors.map(e => e.message).join(", ")));
         }
-        return Ok(undefined);
+        return Ok(id);
       },
     }
   );
@@ -144,12 +144,12 @@ export const componentStore = CreateDexieHooks<
     }
     return Ok(mapToComponent(response.data));
   },
-  delete: async (id): Promise<Result<void, Error>> => {
+  delete: async (id): Promise<Result<string, Error>> => {
     const response = await client.models.Components.delete({ id });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
-    return Ok(undefined);
+    return Ok(id);
   },
 });
 
@@ -193,12 +193,12 @@ export const elementStore = CreateDexieHooks<
     }
     return Ok(mapToElement(response.data));
   },
-  delete: async (id): Promise<Result<void, Error>> => {
+  delete: async (id): Promise<Result<string, Error>> => {
     const response = await client.models.Elements.delete({ id });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
-    return Ok(undefined);
+    return Ok(id);
   },
 });
 
@@ -240,12 +240,12 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
       }
       return Ok(mapToSection(response.data));
     },
-    delete: async (id): Promise<Result<void, Error>> => {
+    delete: async (id): Promise<Result<string, Error>> => {
       const response = await client.models.Sections.delete({ id });
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
-      return Ok(undefined);
+      return Ok(id);
     },
   }
 );
@@ -289,12 +289,12 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
     }
     return Ok(mapToPhrase(response.data));
   },
-  delete: async (id): Promise<Result<void, Error>> => {
+  delete: async (id): Promise<Result<string, Error>> => {
     const response = await client.models.Phrases.delete({ id });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
-    return Ok(undefined);
+    return Ok(id);
   },
 });
 
@@ -335,12 +335,12 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
       }
       return Ok(mapToLocation(response.data));
     },
-    delete: async (id): Promise<Result<void, Error>> => {
+    delete: async (id): Promise<Result<string, Error>> => {
       const response = await client.models.Locations.delete({ id });
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
-      return Ok(undefined);
+      return Ok(id);
     },
   }
 );

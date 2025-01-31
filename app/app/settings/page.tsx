@@ -102,36 +102,42 @@ export default function Page() {
       [SyncStatus.Queued]: elements.filter(item => item.syncStatus === SyncStatus.Queued).length,
       [SyncStatus.Failed]: elements.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: elements.filter(item => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: elements.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
     },
     components: {
       [SyncStatus.Draft]: components.filter(item => item.syncStatus === SyncStatus.Draft).length,
       [SyncStatus.Queued]: components.filter(item => item.syncStatus === SyncStatus.Queued).length,
       [SyncStatus.Failed]: components.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: components.filter(item => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: components.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
     },
     phrases: {
       [SyncStatus.Draft]: phrases.filter(item => item.syncStatus === SyncStatus.Draft).length,
       [SyncStatus.Queued]: phrases.filter(item => item.syncStatus === SyncStatus.Queued).length,
       [SyncStatus.Failed]: phrases.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: phrases.filter(item => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: phrases.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
     },
     locations: {
       [SyncStatus.Draft]: locations.filter(item => item.syncStatus === SyncStatus.Draft).length,
       [SyncStatus.Queued]: locations.filter(item => item.syncStatus === SyncStatus.Queued).length,
       [SyncStatus.Failed]: locations.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: locations.filter(item => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: locations.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
     },
     sections: {
       [SyncStatus.Draft]: sections.filter(item => item.syncStatus === SyncStatus.Draft).length,
       [SyncStatus.Queued]: sections.filter(item => item.syncStatus === SyncStatus.Queued).length,
       [SyncStatus.Failed]: sections.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: sections.filter(item => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: sections.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
     },
     surveys: {
       [SyncStatus.Draft]: surveys.filter(item => item.syncStatus === SyncStatus.Draft).length,
       [SyncStatus.Queued]: surveys.filter(item => item.syncStatus === SyncStatus.Queued).length,
       [SyncStatus.Failed]: surveys.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: surveys.filter(item => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: surveys.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
     },
   };
 
@@ -280,42 +286,42 @@ export default function Page() {
       
       if (entitiesToSync.elements) {
         syncTasks.push(
-          elementStore.syncWithServer().finally(() => 
+          elementStore.sync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, elements: false }))
           )
         );
       }
       if (entitiesToSync.components) {
         syncTasks.push(
-          componentStore.syncWithServer().finally(() => 
+          componentStore.sync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, components: false }))
           )
         );
       }
       if (entitiesToSync.phrases) {
         syncTasks.push(
-          phraseStore.syncWithServer().finally(() => 
+          phraseStore.sync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, phrases: false }))
           )
         );
       }
       if (entitiesToSync.locations) {
         syncTasks.push(
-          locationStore.syncWithServer().finally(() => 
+          locationStore.sync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, locations: false }))
           )
         );
       }
       if (entitiesToSync.sections) {
         syncTasks.push(
-          sectionStore.syncWithServer().finally(() => 
+          sectionStore.sync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, sections: false }))
           )
         );
       }
       if (entitiesToSync.surveys) {
         syncTasks.push(
-          surveyStore.syncWithServer().finally(() => 
+          surveyStore.sync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, surveys: false }))
           )
         );
@@ -323,7 +329,7 @@ export default function Page() {
 
       const results = await Promise.all(syncTasks);
 
-      if(results.some(x => x.err)) {
+      if(results.some(x => x)) {
         toast.error("Failed to sync with server");  
       } else {
         toast.success("Successfully synced with server");

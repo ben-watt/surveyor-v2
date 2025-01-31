@@ -6,13 +6,12 @@ import { Draft, produce } from "immer";
 import { Err, Ok, Result } from 'ts-results';
 import { getErrorMessage } from '../utils/handleError';
 import { useLiveQuery } from "dexie-react-hooks";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { debounce, DebouncedFunc } from 'lodash';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
 };
-
-type OmitType<T, K extends keyof T> = Omit<T, K>;
 
 export type Survey = ReplaceFieldType<Schema['Surveys']['type'], "content", BuildingSurveyFormData>;
 export type UpdateSurvey = ReplaceFieldType<Schema['Surveys']['updateType'], "content", BuildingSurveyFormData>;
@@ -51,21 +50,11 @@ enum SyncStatus {
   PendingDelete = "pending_delete",
 }
 
-// Add debounce utility
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
-
 export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
   list: () => Promise<T[] | Result<T[], Error>>;
   create: (data: TCreate) => Promise<T | Result<T, Error>>;
   update: (data: TUpdate) => Promise<T | Result<T, Error>>;
-  delete: (id: string) => Promise<void | Result<void, Error>>;
+  delete: (id: string) => Promise<void | Result<string, Error>>;
   syncWithServer?: () => Promise<void>;
 }
 
@@ -77,7 +66,7 @@ export interface DexieStore<T, TCreate> {
   update: (id: string, updateFn: (currentState: Draft<T>) => void) => Promise<void>;
   remove: (id: string) => Promise<void>;
   removeAll: (options: { options: boolean }) => Promise<void>;
-  sync: () => void;
+  sync: DebouncedFunc<() => Promise<Result<void, Error>>>;
   startPeriodicSync: (intervalMs?: number) => () => void;
 }
 
@@ -90,11 +79,20 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   let syncInProgress = false;
   
   // Create a debounced version of syncWithServer
-  const sync = debounce(async () => {
+  const sync = async () => {
     if (navigator.onLine && !syncInProgress) {
-      await syncWithServer();
+      const syncResult = await syncWithServer();
+      if (syncResult.ok) {
+        return Ok(undefined);
+      }
+
+      return Err(new Error(syncResult.val.message));
     }
-  }, 1000);
+
+    return Err(new Error("Not online"));
+  }
+
+  const debounceSync = debounce(sync, 1000);
 
   const useList = (): [boolean, T[]] => {
     const [hydrated, setHydrated] = useState<boolean>(false);
@@ -330,7 +328,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     remove,
     removeAll,
     startPeriodicSync,
-    sync
+    sync: debounceSync
   };
 }
 

@@ -36,8 +36,11 @@ export function mapElementsToElementData(elements: SeedElement[]): ElementData[]
     description: element.description || null,
     sectionId: element.sectionId || "",
     order: element.order || 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }));
 }
+
 
 export function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]): ComponentData[] {
   const componentData: ComponentData[] = [];
@@ -65,10 +68,13 @@ export function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]):
           elementId: matchingElement?.id || "",
           name: d.type,
           materials: [{ name: d.specification }],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         });
       }
     });
   });
+
 
   return componentData;
 }
@@ -102,9 +108,11 @@ export function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[], com
           name: phraseName,
           type: "Condition",
           associatedMaterialIds: [d.specification],
-          associatedElementIds: [matchingElement.id],
-          associatedComponentIds: [matchingComponent.id],
+          associatedElementIds: matchingElement.id ? [matchingElement.id] : [],
+          associatedComponentIds: matchingComponent.id ? [matchingComponent.id] : [],
           phrase: phraseText,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         });
       }
     });
@@ -118,5 +126,8 @@ export function prepareLocationData(locations: SeedLocation[]): LocationData[] {
     id: location.id,
     name: location.label, 
     parentId: location.parentId || null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }));
+
 } 
