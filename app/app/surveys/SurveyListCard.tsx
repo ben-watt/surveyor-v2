@@ -6,6 +6,7 @@ import { Eye } from "lucide-react"
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema"
 import { useEffect, useState } from "react"
 import { imageUploadStore } from "@/app/app/clients/ImageUploadStore"
+import ImagePlaceholder from "../components/ImagePlaceholder"
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData
@@ -13,7 +14,7 @@ interface BuildingSurveyListCardProps {
 }
 
 export function BuildingSurveyListCard({ survey, onView }: BuildingSurveyListCardProps) {
-    const [image, setImage] = useState<string>("/next.svg")
+    const [image, setImage] = useState<string>();
 
     useEffect(() => {
         imageUploadStore.get(survey.reportDetails?.moneyShot[0])
@@ -33,14 +34,19 @@ export function BuildingSurveyListCard({ survey, onView }: BuildingSurveyListCar
     <Card className="overflow-hidden">
       <div className="flex h-full">
         <div className="relative w-1/3 min-w-[120px]">
-          <Image
-            src={image}
-            alt={"Building survey image"}
-            layout="fill"
-            objectFit="cover"
-          />
+          {image ? (
+            <Image
+              src={image}
+              alt={"Building survey image"}
+              layout="fill"
+              objectFit="cover"
+            />
+          ) : (
+            <ImagePlaceholder  />
+          )}
           <Badge variant={survey.status === "draft" ? "secondary" : "default"} className="absolute top-2 left-2">
             {survey.status}
+
           </Badge>
         </div>
         <CardContent className="flex-1 p-4">
@@ -50,10 +56,6 @@ export function BuildingSurveyListCard({ survey, onView }: BuildingSurveyListCar
                 {survey.reportDetails?.address.formatted || "Untitled Survey"}
               </h3>
               <div className="space-y-1 text-sm">
-                <p className="text-muted-foreground line-clamp-1">
-                  {survey.reportDetails?.address.formatted || "Address not provided"}
-                </p>
-                <p className="text-muted-foreground">{survey.sections?.length || 0} sections</p>
                 <Badge variant="secondary">{survey.owner?.name || "Unknown"}</Badge>
               </div>
             </div>

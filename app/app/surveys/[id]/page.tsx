@@ -9,14 +9,7 @@ import Image from "next/image";
 import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import router from "next/router";
-
-function ImagePlaceholder() {
-  return (
-    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-      <ImageIcon className="w-8 h-8 text-gray-400" />
-    </div>
-  );
-}
+import ImagePlaceholder from "../../components/ImagePlaceholder";
 
 function Home({ params }: { params: { id: string } }) {
   const [isHydrated, survey] = surveyStore.useGet(params.id);
