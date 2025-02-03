@@ -100,15 +100,19 @@ export function BuildingSurveyListCard({
                 <Badge variant="secondary">
                   {survey.owner?.name || "Unknown"}
                 </Badge>
-                <p className="text-muted-foreground">
+                <Badge variant="secondary">
                   {survey.reportDetails?.reportDate
                     ? new Date(
                         survey.reportDetails.reportDate
                       ).toLocaleDateString()
                     : "No date set"}
-                </p>
+                </Badge>
+                <Badge variant="secondary">
+                  Level {survey.reportDetails.level}
+                </Badge>
               </div>
             </div>
+
             <Button
               variant="outline"
               className="mt-4 w-full sm:w-auto"
