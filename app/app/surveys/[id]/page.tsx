@@ -8,7 +8,7 @@ import { sectionStore, surveyStore } from "@/app/app/clients/Database";
 import Image from "next/image";
 import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import ImagePlaceholder from "../../components/ImagePlaceholder";
 
 function Home({ params }: { params: { id: string } }) {
@@ -16,6 +16,7 @@ function Home({ params }: { params: { id: string } }) {
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoCount, setPhotoCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function loadPhotos() {
