@@ -2,11 +2,18 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, MoreVertical, Trash2 } from "lucide-react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
 import { useEffect, useState } from "react";
 import { imageUploadStore } from "@/app/app/clients/ImageUploadStore";
 import ImagePlaceholder from "../components/ImagePlaceholder";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { surveyStore } from "../clients/Database";
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData;
@@ -27,12 +34,20 @@ export function BuildingSurveyListCard({
     });
   }, [survey.reportDetails?.moneyShot]);
 
+  const handleDelete = async () => {
+    try {
+      await surveyStore.remove(survey.id);
+    } catch (error) {
+      console.error("Failed to delete survey:", error);
+    }
+  };
+
   if (!survey) {
     return null;
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden relative">
       <div className="flex h-full">
         <div className="relative w-1/3 min-w-[120px]">
           {image ? (
@@ -55,9 +70,31 @@ export function BuildingSurveyListCard({
         <CardContent className="flex-1 p-4">
           <div className="flex flex-col h-full justify-between">
             <div>
-              <h3 className="font-semibold text-lg mb-2 line-clamp-1">
-                {survey.reportDetails?.address.formatted || "Untitled Survey"}
-              </h3>
+              <div className="flex items-start gap-2">
+                <h3 className="font-semibold text-lg mb-2 line-clamp-1 flex-1">
+                  {survey.reportDetails?.address.formatted || "Untitled Survey"}
+                </h3>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="-mt-1 h-8 w-8"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={handleDelete}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Survey
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
               <div className="text-sm flex items-center gap-4">
                 <Badge variant="secondary">
