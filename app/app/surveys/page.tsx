@@ -1,38 +1,80 @@
 "use client";
 
-import { CopyMarkupBtn } from "@/app/app/components/Buttons";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
 import { useRouter } from "next/navigation";
-import { ColumnDef } from "@tanstack/react-table";
-import { AddressDisplay } from "@/app/app/components/Address/AddressDisplay";
 
 import { v4 } from "uuid";
 
+
+import { Button } from "@/components/ui/button";
+import { surveyStore } from "@/app/app/clients/Database";
+import { BuildingSurveyListCard } from "./SurveyListCard";
+import { Input } from "@/components/ui/input";
+import React from "react";
+import { Filter, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DataTable, SortableHeader } from "../components/DataTable";
-import { surveyStore } from "@/app/app/clients/Database";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader } from "@/components/ui/card";
-import { BuildingSurveyListCard } from "./SurveyListCard";
 
-type TableData = BuildingSurveyFormData;
+interface FilterState {
+  status: string[];
+}
 
 function HomePage() {
   const router = useRouter();
   const [isHydrated, data] = surveyStore.useList();
   const [createId, setCreateId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<FilterState>({
+    status: [],
+  });
+
+  // Get unique status values from data
+  const availableStatuses = React.useMemo(() => {
+    const statuses = new Set(data.map(survey => survey.status));
+    return Array.from(statuses).filter(Boolean);
+  }, [data]);
+
+  const activeFilterCount = filters.status.length;
+
+  const filteredData = React.useMemo(() => {
+    let filtered = data;
+    
+    // Apply status filters
+    if (filters.status.length > 0) {
+      filtered = filtered.filter(survey => filters.status.includes(survey.status || ''));
+    }
+
+    // Apply search query
+    if (searchQuery.trim()) {
+      const searchLower = searchQuery.toLowerCase();
+      filtered = filtered.filter((survey) => {
+        return (
+          survey.reportDetails.clientName?.toLowerCase().includes(searchLower) ||
+          survey.reportDetails.address?.formatted?.toLowerCase().includes(searchLower) ||
+          survey.status?.toLowerCase().includes(searchLower) ||
+          survey.owner?.name?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    return filtered;
+  }, [data, searchQuery, filters]);
+
+  const toggleStatusFilter = (status: string) => {
+    setFilters(prev => ({
+      ...prev,
+      status: prev.status.includes(status)
+        ? prev.status.filter(s => s !== status)
+        : [...prev.status, status]
+    }));
+  };
 
   useEffect(() => {
     setCreateId(v4());
@@ -48,7 +90,7 @@ function HomePage() {
 
   return (
     <div>
-      <div className="flex justify-between mb-5 mt-5 items-baseline">
+      <div className="flex justify-between mb-5 mt-5 items-end">
         <div>
           <h1 className="text-3xl dark:text-white">Surveys</h1>
           <p className="text-sm text-muted-foreground">
@@ -56,113 +98,64 @@ function HomePage() {
           </p>
         </div>
       </div>
-      <div>{RenderTable()}</div>
-    </div>
-  );
-
-  function RenderTable() {
-    const columns: ColumnDef<TableData>[] = [
-      {
-        header: "Id",
-        accessorFn: (v) => "#" + v?.id?.split("-")[0] || "N/A",
-      },
-      {
-        header: "Client Name",
-        accessorKey: "reportDetails.clientName",
-      },
-      {
-        header: "Address",
-        accessorKey: "reportDetails.address.formatted",
-        cell: (props) => {
-          const address = props.getValue() as string;
-          return <AddressDisplay address={address} />;
-        },
-      },
-      {
-        header: "Owner",
-        accessorKey: "owner.name",
-        cell: (props) => {
-          return <Badge>{(props.getValue() as string) || "unknown"}</Badge>;
-        },
-      },
-      {
-        header: "Status",
-        accessorKey: "status",
-        cell: (props) => {
-          return <Badge>{props.getValue() as string}</Badge>;
-        },
-      },
-      {
-        id: "created",
-        header: ({ column }) => (
-          <SortableHeader column={column} header="Created" />
-        ),
-        accessorFn: (v) => new Date(v.reportDetails.reportDate),
-        cell: (props) => (props.getValue() as Date).toDateString(),
-        sortingFn: "datetime",
-      },
-      {
-        id: "actions",
-        cell: (props) => {
-          const reportId = props.row.original.id;
-          const showGenerate = props.row.original.status === "created";
-
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem>
-                  <Link href={`/app/surveys/${reportId}`}>Edit survey</Link>
-                </DropdownMenuItem>
-                {showGenerate && (
-                  <DropdownMenuItem>
-                    <Link href={`/app/editor/${reportId}`}>
-                      Generate report
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  className="text-red-500"
-                  onClick={() => deleteSurvey(reportId)}
-                >
-                  <span className="text-red-500">Delete survey</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
-        },
-      },
-    ];
-
-    return (
-      <>
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {data.map((x) => (
-            <BuildingSurveyListCard
-              key={x.id}
-
-              survey={x}
-              onView={() => router.push(`/app/surveys/${x.id}`)}
-            />
-          ))}
-        </div>
-        <div className="hidden">
-          <DataTable
-            initialState={{ sorting: [{ id: "created", desc: true }] }}
-            columns={columns}
-            data={data.map((x) => x)}
-            onCreate={() => router.push("/app/surveys/create")}
+      
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex-1">
+          <Input
+            placeholder="Search surveys..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
           />
         </div>
-      </>
-    );
-  }
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Filter className="h-4 w-4" />
+              <span className="hidden sm:inline">Filters</span>
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {availableStatuses.map((status) => (
+              <DropdownMenuCheckboxItem
+                key={status}
+                checked={filters.status.includes(status)}
+                onCheckedChange={() => toggleStatusFilter(status)}
+              >
+                {status}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button
+          type="button"
+          variant="default"
+          onClick={() => router.push("/app/surveys/create")}
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4 sm:hidden" />
+          <span className="hidden sm:inline">Create Survey</span>
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        {filteredData.map((x) => (
+          <BuildingSurveyListCard
+            key={x.id}
+            survey={x}
+            onView={() => router.push(`/app/surveys/${x.id}`)}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default HomePage;
