@@ -68,9 +68,7 @@ function createImageUploadStore(db: Dexie, name: string) {
             return Ok(remoteResponse.concat(localResponse));
         },
         get: async (fullPath: string): Promise<Result<ImageUpload, Error>> => {
-            console.debug("[ImageUploadStore] get", fullPath);
-
-            // check if the file exists in the local store
+            
             const localImage = await table.get({ path: fullPath });
             if(localImage) {
                 return Ok(localImage);

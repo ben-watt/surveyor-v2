@@ -196,4 +196,34 @@ export function removeElementSection(
 
   section.elementSections = section.elementSections.filter(e => e.id !== elementId);
   return survey;
+}
+
+// Get all images from a survey
+export function getAllSurveyImages(survey: BuildingSurveyFormData): string[] {
+    const allImages: string[] = [];
+
+    survey.reportDetails?.moneyShot?.forEach(image => {
+        allImages.push(image);
+    });
+
+    survey.reportDetails?.frontElevationImagesUri?.forEach(image => {
+        allImages.push(image);
+    });
+
+    survey.sections.forEach(section => {
+        section.elementSections.forEach(elementSection => {
+            if (elementSection.images) {
+                allImages.push(...elementSection.images);
+            }
+
+            elementSection.components.forEach(component => {
+                if (component.images) {
+                    allImages.push(...component.images);
+                }
+            });
+        });
+
+    });
+
+    return Array.from(new Set(allImages));
 } 
