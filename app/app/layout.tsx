@@ -11,6 +11,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore } from "./clients/Database";
 import { imageUploadStore } from "./clients/ImageUploadStore";
+import { OnlineStatus } from "./components/OnlineStatus";
 
 export default function RootLayout({
   children,
@@ -60,6 +61,9 @@ export default function RootLayout({
                   <div className="flex items-center gap-2 px-4 w-full">
                     <SidebarTrigger className="-ml-1" />
                     <Breadcrumbs />
+                  </div>
+                  <div className="mr-10">
+                    <OnlineStatus />
                   </div>
                 </header>
                 <div className="flex flex-1 flex-col gap-4">
