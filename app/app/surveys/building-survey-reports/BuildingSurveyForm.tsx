@@ -327,7 +327,7 @@ function Report({ initFormValues }: ReportProps) {
     <div>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit, onError)}>
-          <div className="space-y-1">
+          <div className="space-y-1 cursor-pointer">
             {formSections.map((section, index) => (
               <MultiFormSection
                 key={index}

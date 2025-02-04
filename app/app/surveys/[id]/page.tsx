@@ -10,6 +10,7 @@ import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import { useRouter } from "next/navigation";
 import ImagePlaceholder from "../../components/ImagePlaceholder";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 function Home({ params }: { params: { id: string } }) {
   const [isHydrated, survey] = surveyStore.useGet(params.id);
@@ -44,8 +45,8 @@ function Home({ params }: { params: { id: string } }) {
 
   return (
     <>
-      <div>
-        <div className="mx-auto lg:w-2/3 relative">
+      <div className="space-y-4 mx-auto lg:w-2/3">
+        <div className="relative">
           <div 
             className="grid grid-cols-4 grid-rows-2 gap-1 rounded-lg overflow-hidden aspect-[20/9]" 
             onClick={() => router.push(`/app/surveys/${params.id}/photos`)}
@@ -98,10 +99,19 @@ function Home({ params }: { params: { id: string } }) {
             <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full px-1 text-xs">{isHydrated ? `${photoCount}` : "-"}</span>
           </div>
         </div>
-        <div className="container mx-auto p-0 px-0 lg:px-16 xl:px-96">  
-          <Suspense fallback={<div>Loading...</div>}>
-            <BuildingSurveyForm id={params.id} />
-          </Suspense>
+        <div>  
+          <Card>
+            <CardHeader>
+              <CardTitle>Building Survey Report - Level {survey?.reportDetails.level}</CardTitle>
+              <CardDescription>{survey?.reportDetails.address.formatted ?? "No address specified"}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Suspense fallback={<div>Loading...</div>}>
+                <BuildingSurveyForm id={params.id} />
+              </Suspense>
+            </CardContent>
+          </Card>
+
         </div>
       </div>
     </>
