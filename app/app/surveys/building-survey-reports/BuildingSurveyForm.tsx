@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import seedSectionData from "@/app/app/settings/sections.json";
 import seedElementData from "@/app/app/settings/elements.json";
+import Link from "next/link";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -342,17 +343,28 @@ function Report({ initFormValues }: ReportProps) {
               <InputError message="Please fix the errors above before saving" />
             )}
           </div>
-          <div className="space-y-2">
-            <PrimaryBtn type="submit" disabled={!isFormValid()}>
-              Save
-            </PrimaryBtn>
+          <div className="space-x-2 flex justify-end">
+            {
+              initFormValues.status === "created" && isFormValid() && (
+                <Button variant="default" onClick={(ev) => {
+                  ev.preventDefault();
+                  router.push(`/app/editor/${initFormValues.id}`)
+                }} disabled={!isFormValid()}>
+                  Generate Report
+                </Button>
+              ) 
+            }
             {initFormValues.status === "draft" && (
               <Button
-                className="w-full"
-                variant="secondary"
+                variant="default"
                 onClick={saveAsDraft}
               >
                 Save As Draft
+              </Button>
+            )}
+            {initFormValues.status === "draft" && isFormValid() && (
+              <Button variant="default" type="submit" disabled={!isFormValid()}>
+                Save
               </Button>
             )}
           </div>
