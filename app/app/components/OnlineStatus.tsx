@@ -1,40 +1,44 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Wifi, WifiOff } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Wifi, WifiOff } from "lucide-react";
+import { TooltipContent, Tooltip, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 export const OnlineStatus = () => {
-    const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(true);
 
-    useEffect(() => {
-        // Set initial state
-        setIsOnline(navigator.onLine);
+  useEffect(() => {
+    // Set initial state
+    setIsOnline(navigator.onLine);
 
-        // Add event listeners
-        const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
+    // Add event listeners
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
-        // Cleanup
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
+    // Cleanup
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
-    return (
-        <div className="flex items-center gap-2 text-sm">
-            {isOnline ? (
-                <>
-                    <Wifi className="h-4 w-4 text-green-500" />
-                </>
-            ) : (
-                <>
+  return (
+    <TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger>
+                {isOnline ? (
+                    <Wifi className="h-4 w-4" />
+                ) : (
                     <WifiOff className="h-4 w-4 text-red-500" />
-                </>
-            )}
-        </div>
-    );
-}; 
+                )}
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>{isOnline ? "Online" : "Offline"}</p>
+            </TooltipContent>
+        </Tooltip>
+    </TooltipProvider>
+  );
+};

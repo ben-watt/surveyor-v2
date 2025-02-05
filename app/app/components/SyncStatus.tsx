@@ -99,7 +99,7 @@ export const SyncStatus = () => {
                         ) : hasUnsynced ? (
                             <CloudOff className="h-4 w-4 text-yellow-500" />
                         ) : (
-                            <Cloud className="h-4 w-4 text-green-500" />
+                            <Cloud className="h-4 w-4" />
                         )}
                     </div>
                 </TooltipTrigger>
