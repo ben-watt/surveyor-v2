@@ -97,10 +97,20 @@ export default function Page() {
         </div>
       </div>
       <DataTable
+        initialState={{
+          sorting: [{ id: "created", desc: false }],
+          columnVisibility: {
+            name: true,
+            element: true,
+            created: false,
+            actions: true,
+          },
+        }}
         columns={columns}
         data={components}
         isLoading={!isHydrated || !elementsHydrated}
         onCreate={() => router.push("/app/building-components/create")}
+
       />
     </div>
   );

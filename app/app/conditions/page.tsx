@@ -84,6 +84,15 @@ export default function Page() {
         </div>
       </div>
       <DataTable
+        initialState={{
+          sorting: [{ id: "created", desc: false }],
+          columnVisibility: {
+            name: true,
+            phrase: false,
+            created: false,
+            actions: true,
+          },
+        }}
         columns={columns}
         data={phrases}
         onCreate={() => router.push("/app/conditions/create")}

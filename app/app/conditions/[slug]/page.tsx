@@ -9,9 +9,9 @@ export default function Page({ params }: { params: { slug: string }}) {
   return (
     <div className="container mx-auto px-5">
       <div className="flex mt-4 mb-4">
-        <h1 className="text-4xl dark:text-white">Edit Phrase</h1>
+        <h1 className="text-4xl dark:text-white">Edit Condition</h1>
       </div>
-      <DataForm id={params.slug} onSave={() => router.push("/phrases")} />
+      <DataForm id={params.slug} onSave={() => router.push("/app/conditions")} />
     </div>
   );
 }

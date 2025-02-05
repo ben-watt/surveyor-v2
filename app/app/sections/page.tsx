@@ -39,9 +39,9 @@ export default function Page() {
       },
     },
     {
-      id: "element count",
+      id: "element_count",
       header: "Element Count",
-      accessorFn: (v) => elements.filter(e => e.sectionId === v.id).length,
+      accessorFn: (v) => elements.filter((e) => e.sectionId === v.id).length,
       meta: {
         tw: {
           headerClassName: "text-right",
@@ -58,7 +58,7 @@ export default function Page() {
       cell: (props) => {
         const date = props.getValue() as Date;
         return date.toLocaleDateString();
-      }
+      },
     },
     {
       id: "actions",
@@ -99,16 +99,28 @@ export default function Page() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Sections</h1>
-          <p className="text-sm text-muted-foreground">Sections are used to group elements in a building survey report.</p>
+          <p className="text-sm text-muted-foreground">
+            Sections are used to group elements in a building survey report.
+          </p>
         </div>
       </div>
       <DataTable
-        initialState={{ sorting: [{ id: "order", desc: false }] }}
+        initialState={{
+          sorting: [{ id: "order", desc: false }],
+          columnVisibility: {
+            name: true,
+            order: true,
+            actions: true,
+            element_count: false,
+            created: false,
+          },
+        }}
         columns={columns}
+
         data={sections}
         isLoading={isHydrated && elementsHydrated}
         onCreate={() => router.push("/app/sections/create")}
       />
     </div>
   );
-} 
+}

@@ -12,7 +12,11 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/app/components/DataTable";
 import { useRouter } from "next/navigation";
-import { componentStore, elementStore, sectionStore } from "../clients/Database";
+import {
+  componentStore,
+  elementStore,
+  sectionStore,
+} from "../clients/Database";
 import { Element as ElementData } from "../clients/Dexie";
 import { useEffect, useState } from "react";
 
@@ -30,11 +34,12 @@ export default function Page() {
     {
       header: "Section",
       accessorKey: "sectionId",
+      id: "section",
       cell: (props) => {
         const sectionId = props.getValue() as string;
-        const section = sections.find(s => s.id === sectionId);
+        const section = sections.find((s) => s.id === sectionId);
         return section ? section.name : "Unknown";
-      }
+      },
     },
     {
       id: "order",
@@ -55,7 +60,7 @@ export default function Page() {
       },
       cell: (props) => {
         const elementId = props.getValue() as string;
-        return components.filter(c => c.elementId === elementId).length;
+        return components.filter((c) => c.elementId === elementId).length;
       },
       meta: {
         tw: {
@@ -73,7 +78,7 @@ export default function Page() {
       cell: (props) => {
         const date = props.getValue() as Date;
         return date.toLocaleDateString();
-      }
+      },
     },
     {
       id: "actions",
@@ -114,17 +119,31 @@ export default function Page() {
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
           <h1 className="text-3xl dark:text-white">Elements</h1>
-          <p className="text-sm text-muted-foreground">Elements are the top level parts of a building and are used to group components.</p>
+          <p className="text-sm text-muted-foreground">
+            Elements are the top level parts of a building and are used to group
+            components.
+          </p>
         </div>
       </div>
       <DataTable
-        initialState={{ sorting: [{ id: "order", desc: false }] }}
+        initialState={{
+          sorting: [{ id: "order", desc: false }],
+          columnVisibility: {
+            name: true,
+            section: false,
+            order: true,
+            "component count": false,
+            created: false,
+            actions: true,
+          },
+        }}
         columns={columns}
         data={elements}
-        isLoading={!elementsHydrated || !componentsHydrated || !sectionsHydrated}
+        isLoading={
+          !elementsHydrated || !componentsHydrated || !sectionsHydrated
+        }
         onCreate={() => router.push("/app/elements/create")}
       />
     </div>
-
   );
 }
