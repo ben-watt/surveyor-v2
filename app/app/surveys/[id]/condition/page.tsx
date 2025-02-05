@@ -1,7 +1,10 @@
 "use client";
 
 import { FormSection } from "@/app/app/components/FormSection";
-import { ElementSection, SurveySection } from "../../building-survey-reports/BuildingSurveyReportSchema";
+import {
+  ElementSection,
+  SurveySection,
+} from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/app/clients/Database";
 import { ClipboardList, MoreHorizontal, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -18,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { DynamicDrawer, useDynamicDrawer } from "@/app/app/components/Drawer";
 import InspectionForm from "./InspectionForm";
 import ElementForm from "./ElementForm";
-import { excludeElementSection } from "../../building-survey-reports/Survey";
+import { toggleElementSection } from "../../building-survey-reports/Survey";
 
 interface ConditionPageProps {
   params: {
@@ -73,70 +76,76 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
       id: `${id}-condition-inspect`,
       title: "Inspect Component",
       description: "Inspect the component",
-      content: <InspectionForm surveyId={id} />
-    })
-  }
+      content: <InspectionForm surveyId={id} />,
+    });
+  };
 
-  if(initValues.length == 0) {
+  if (initValues.length == 0) {
     return (
       <div className="text-center p-6">
         <div className="mx-auto bg-muted rounded-full w-12 h-12 flex items-center justify-center mb-4">
           <ClipboardList className="h-6 w-6 text-muted-foreground" />
         </div>
         <h2 className="text-2xl font-semibold mb-2">No Inspections Yet</h2>
-        <p className="text-muted-foreground mb-6">You haven't inspected any components in this building.</p>
-        <Button onClick={onStartNewInspection}>
-          Start New Inspection
-        </Button>
+        <p className="text-muted-foreground mb-6">
+          You haven't inspected any components in this building.
+        </p>
+        <Button onClick={onStartNewInspection}>Start New Inspection</Button>
       </div>
-    )
+    );
   }
 
-  const filteredSections = initValues.map(section => ({
-    ...section,
-    elementSections: section.elementSections.filter(element =>
-      element.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })).filter(section => section.elementSections.length > 0);
+  const filteredSections = initValues
+    .map((section) => ({
+      ...section,
+      elementSections: section.elementSections.filter((element) =>
+        element.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    }))
+    .filter((section) => section.elementSections.length > 0);
 
   return (
     <div>
-        <div className="mb-4 relative">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search elements..."
-              className="w-full p-2 pl-9 border rounded-md bg-background hover:bg-accent/50 focus:bg-background transition-colors"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted-foreground">
-             <Search className="h-5 w-5" />
-            </div>
+      <div className="mb-4 relative">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search elements..."
+            className="w-full p-2 pl-9 border rounded-md bg-background hover:bg-accent/50 focus:bg-background transition-colors"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted-foreground">
+            <Search className="h-5 w-5" />
           </div>
         </div>
-        {filteredSections.map((section, sectionIndex) => (
-          <FormSection 
-            key={section.name} 
-            title={section.name} 
-            collapsable
-            defaultCollapsed={!(searchTerm.length > 0)}
-          >
-            {section.elementSections.map((elementSection) => (
-              <ElementSectionComponent
-                key={elementSection.name}
-                elementSection={elementSection}
-                sectionId={section.id}
-                surveyId={id}
-              />
-            ))}
-          </FormSection>
-        ))}
-        <div className="space-y-2">
-          <Button className="w-full" variant="default" onClick={onStartNewInspection}>
-            Inspect Component
-          </Button>
-        </div>
+      </div>
+      {filteredSections.map((section, sectionIndex) => (
+        <FormSection
+          key={section.name}
+          title={section.name}
+          collapsable
+          defaultCollapsed={!(searchTerm.length > 0)}
+        >
+          {section.elementSections.map((elementSection) => (
+            <ElementSectionComponent
+              key={elementSection.name}
+              elementSection={elementSection}
+              sectionId={section.id}
+              surveyId={id}
+            />
+          ))}
+        </FormSection>
+      ))}
+      <div className="space-y-2">
+        <Button
+          className="w-full"
+          variant="default"
+          onClick={onStartNewInspection}
+        >
+          Inspect Component
+        </Button>
+      </div>
     </div>
   );
 };
@@ -155,15 +164,35 @@ const ElementSectionComponent = ({
   const { openDrawer } = useDynamicDrawer();
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
 
-  const handleRemove = async () => {
+  const toggleElement = async () => {
     if (!survey) return;
     await surveyStore.update(surveyId, (draft) => {
-      excludeElementSection(draft, sectionId, elementSection.id);
+      toggleElementSection(draft, sectionId, elementSection.id);
+    });
+  };
+
+  const onEdit = () => {
+    openDrawer({
+      id: `${surveyId}-condition-${elementSection.id}-edit`,
+      title: `Edit Element - ${elementSection.name}`,
+      description: `Edit the ${elementSection.name} element for survey`,
+      content: (
+        <ElementForm
+          surveyId={surveyId}
+          sectionId={sectionId}
+          elementId={elementSection.id}
+        />
+      ),
     });
   };
 
   return (
-    <div className={`border border-gray-200 p-2 rounded ${elementSection.isPartOfSurvey ? "" : "bg-muted/50 text-muted-foreground"}`}>
+    <div
+      className={`border border-gray-200 p-2 rounded ${
+        elementSection.isPartOfSurvey ? "" : "bg-muted/50 text-muted-foreground"
+      }`}
+      onClick={onEdit}
+    >
       <div className="flex justify-between items-center">
         <div>
           <h4>{elementSection.name}</h4>
@@ -178,37 +207,36 @@ const ElementSectionComponent = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => openDrawer({
-                id: `${surveyId}-condition-${elementSection.id}-edit`,
-                title: `Edit Element - ${elementSection.name}`,
-                description: `Edit the ${elementSection.name} element for survey`,
-                content: <ElementForm
-                  surveyId={surveyId}
-                  sectionId={sectionId}
-                  elementId={elementSection.id}
-                />
-              })}>
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openDrawer({
-                id: `${surveyId}-condition-${elementSection.id}-inspect`,
-                title: `Inspect ${elementSection.name}`,
-                description: `Add or edit inspections for ${elementSection.name}`,
-                content: <InspectionForm
-                  surveyId={surveyId}
-                  defaultValues={{
-                    element: {
-                      id: elementSection.id,
-                      name: elementSection.name,
-                    },
-                  }}
-                />
-              })}>
+              <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  openDrawer({
+                    id: `${surveyId}-condition-${elementSection.id}-inspect`,
+                    title: `Inspect ${elementSection.name}`,
+                    description: `Add or edit inspections for ${elementSection.name}`,
+                    content: (
+                      <InspectionForm
+                        surveyId={surveyId}
+                        defaultValues={{
+                          element: {
+                            id: elementSection.id,
+                            name: elementSection.name,
+                          },
+                        }}
+                      />
+                    ),
+                  })
+                }
+              >
                 Inspect Component
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleRemove}>
-                <span className="text-red-500">Exclude from Survey</span>
+              <DropdownMenuItem onClick={toggleElement}>
+                <span>
+                  {elementSection.isPartOfSurvey
+                    ? "Exclude from Survey"
+                    : "Include in Survey"}
+                </span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

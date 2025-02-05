@@ -193,7 +193,7 @@ export function findComponent(
 }
 
 // Remove an element section
-export function excludeElementSection(
+export function toggleElementSection(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string
@@ -204,8 +204,9 @@ export function excludeElementSection(
   const elementSection = section.elementSections.find(e => e.id === elementId);
   if (!elementSection) return survey;
 
-  elementSection.isPartOfSurvey = false;
+  elementSection.isPartOfSurvey = !elementSection.isPartOfSurvey;
   return survey;
+
 }
 
 
