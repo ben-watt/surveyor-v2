@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm, FormProvider, FieldErrors } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/app/components/FormSection";
-import { ElementSection, SurveySection } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { ElementSection, FormStatus, SurveySection } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -76,15 +76,36 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
       updateElementDetails(survey, sectionId, elementId, {
         description: data.description,
         images: data.images,
+        status: {
+          status: FormStatus.Complete,
+          errors: [],
+        },
+
       });
     });
+
 
     drawer.closeDrawer();
     toast.success("Element details saved");
   };
 
+  const onInvalid = async (errors: FieldErrors<ElementFormData>) => { 
+    console.error("[ElementForm] onInvalid", errors);
+    await surveyStore.update(surveyId, (survey) => {
+      return updateElementDetails(survey, sectionId, elementId, {
+        status: {
+          status: FormStatus.Error,
+          errors: [errors.description?.message || ""],
+        }
+      });
+
+    });
+  };
+
+
   const handleRemoveComponent = async (inspectionId: string) => {
     const section = surveySections.find(s => s.id === sectionId);
+
     if (!section) {
       toast.error("Section not found");
       return;
@@ -115,7 +136,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
   return (
     <FormProvider {...methods}>
       <DevTool control={control} />
-      <form onSubmit={handleSubmit(onValid)} className="space-y-6">
+      <form onSubmit={handleSubmit(onValid, onInvalid)} className="space-y-6">
         <FormSection title="Element Details">
           <TextAreaInput
             className="h-36"

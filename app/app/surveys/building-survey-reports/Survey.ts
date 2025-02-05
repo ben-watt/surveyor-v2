@@ -1,4 +1,4 @@
-import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing } from "./BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus } from "./BuildingSurveyReportSchema";
 
 // Find or create a section
 function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
@@ -31,9 +31,15 @@ function findOrCreateElementSection(
       description: "",
       components: [],
       images: [],
+      status: {
+        status: FormStatus.Incomplete,
+        errors: [],
+      },
+
     };
     section.elementSections.push(elementSection);
   }
+
   
   return elementSection;
 }
@@ -112,10 +118,7 @@ export function updateElementDetails(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string,
-  updates: {
-    description?: string,
-    images?: string[],
-  }
+  updates: Partial<ElementSection>
 ): BuildingSurveyFormData {
   const section = survey.sections.find(s => s.id === sectionId);
   if (!section) return survey;
@@ -128,6 +131,10 @@ export function updateElementDetails(
   }
   if (updates.images !== undefined) {
     elementSection.images = updates.images;
+  }
+
+  if (updates.status !== undefined) {
+    elementSection.status = updates.status;
   }
 
   return survey;
@@ -227,3 +234,20 @@ export function getAllSurveyImages(survey: BuildingSurveyFormData): string[] {
 
     return Array.from(new Set(allImages));
 } 
+
+export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionStatus {
+  const allElementsComplete = survey.sections.every(s => s.elementSections.every(e => e.status?.status === FormStatus.Complete))
+  const allElementsHaveAtLeastOneComponent = survey.sections.every(s => s.elementSections.every(e => e.components.length > 0))
+
+  if (allElementsComplete && allElementsHaveAtLeastOneComponent) {
+    return {
+      status: FormStatus.Complete,
+      errors: [],
+    };
+  } else {
+    return {
+      status: FormStatus.Incomplete,
+      errors: survey.sections.flatMap(s => s.elementSections.filter(e => e.isPartOfSurvey).flatMap(e => e.status?.errors || [])),
+    };
+  }
+}

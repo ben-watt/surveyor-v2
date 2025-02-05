@@ -80,14 +80,6 @@ function HomePage() {
     setCreateId(v4());
   }, []);
 
-  const deleteSurvey = async (id: string) => {
-    try {
-      surveyStore.remove(id);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <div>
       <div className="flex justify-between mb-5 mt-5 items-end">

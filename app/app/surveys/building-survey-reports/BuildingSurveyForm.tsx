@@ -3,13 +3,10 @@ import React, { useEffect } from "react";
 import {
   Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
+  FormStatus,
 } from "./BuildingSurveyReportSchema";
 
-import {
-  useForm,
-  FormProvider,
-} from "react-hook-form";
-import { PrimaryBtn } from "@/app/app/components/Buttons";
+import { useForm, FormProvider } from "react-hook-form";
 import InputError from "@/app/app/components/InputError";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -22,7 +19,7 @@ import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import seedSectionData from "@/app/app/settings/sections.json";
 import seedElementData from "@/app/app/settings/elements.json";
-import Link from "next/link";
+import { getConditionStatus } from "./Survey";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -49,24 +46,32 @@ const createDefaultFormValues = async (
   }
 
   // Sort sections by order
-  const orderedSections = [...seedSectionData].sort((a, b) => a.order - b.order);
-  
+  const orderedSections = [...seedSectionData].sort(
+    (a, b) => a.order - b.order
+  );
+
   // Sort elements by order and group by sectionId
-  const orderedElements = [...seedElementData].sort((a, b) => a.order - b.order);
+  const orderedElements = [...seedElementData].sort(
+    (a, b) => a.order - b.order
+  );
 
   // Create sections array with pre-populated elements
-  const sections = orderedSections.map(section => ({
+  const sections = orderedSections.map((section) => ({
     id: section.id,
     name: section.name,
     elementSections: orderedElements
-      .filter(element => element.sectionId === section.id)
-      .map(element => ({
+      .filter((element) => element.sectionId === section.id)
+      .map((element) => ({
         id: element.id,
         name: element.name,
         isPartOfSurvey: true,
         description: element.description || "",
         components: [],
         images: [],
+        status: {
+          status: FormStatus.Incomplete,
+          errors: [],
+        },
       })),
   }));
 
@@ -96,10 +101,11 @@ const createDefaultFormValues = async (
       situation: "",
       moneyShot: [],
       frontElevationImagesUri: [],
-      status: { status: "incomplete", errors: [] },
+      status: { status: FormStatus.Incomplete, errors: [] },
     },
     propertyDescription: {
       propertyType: {
+
         type: "text",
         value: "",
         label: "Property Type",
@@ -182,7 +188,7 @@ const createDefaultFormValues = async (
         placeholder: "Freehold, Leasehold, Commonhold, Other",
         required: true,
       },
-      status: { status: "incomplete", errors: [] },
+      status: { status: FormStatus.Incomplete, errors: [] },
     },
     sections: sections,
     checklist: {
@@ -209,7 +215,7 @@ const createDefaultFormValues = async (
           "I confirm that the information provided is accurate"
         ),
       ],
-      status: { status: "incomplete", errors: [] },
+      status: { status: FormStatus.Incomplete, errors: [] },
     },
   });
 };
@@ -221,7 +227,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   console.debug("[ReportWrapper] isHydrated", isHydrated, report);
 
   const throwError = useAsyncError();
-  
+
   useEffect(() => {
     async function createNewForm() {
       console.log("[ReportWrapper] createNewForm");
@@ -248,13 +254,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   }, [id, isHydrated, report, router, throwError]);
 
   return (
-    <>
-      {report ? (
-        <Report initFormValues={report} />
-      ) : (
-        <div>Loading...</div>
-      )}
-    </>
+    <>{report ? <Report initFormValues={report} /> : <div>Loading...</div>}</>
   );
 }
 
@@ -278,18 +278,24 @@ function Report({ initFormValues }: ReportProps) {
     router.push("/app/surveys");
     router.refresh();
   };
+
   const isFormValid = () => {
     const defaultValues = formState.defaultValues;
     if (!defaultValues) return false;
 
-    return defaultValues.reportDetails?.status?.status === "complete" &&
-      defaultValues.propertyDescription?.status?.status === "complete" &&
-      defaultValues.checklist?.status?.status === "complete";
-  }
+    const allSectionsComplete = [
+      defaultValues.reportDetails?.status?.status,
+      defaultValues.propertyDescription?.status?.status,
+      defaultValues.checklist?.status?.status,
+      getConditionStatus(initFormValues).status,
+    ].every(s => s === FormStatus.Complete)
+
+    return allSectionsComplete;
+  };
 
   const onSubmit = async () => {
     console.log("[BuildingSurveyForm] onSubmit", methods.getValues());
-    
+
     surveyStore.update(initFormValues.id, (survey) => {
       survey.status = "created";
     });
@@ -311,16 +317,17 @@ function Report({ initFormValues }: ReportProps) {
     {
       title: "Property Description",
       href: `/app/surveys/${initFormValues.id}/property-description`,
-      status: initFormValues.propertyDescription.status.status
+      status: initFormValues.propertyDescription.status.status,
     },
     {
       title: "Property Condition",
       href: `/app/surveys/${initFormValues.id}/condition`,
+      status: getConditionStatus(initFormValues).status,
     },
     {
       title: "Checklist",
       href: `/app/surveys/${initFormValues.id}/checklist`,
-      status: initFormValues.checklist.status.status
+      status: initFormValues.checklist.status.status,
     },
   ];
 
@@ -334,7 +341,7 @@ function Report({ initFormValues }: ReportProps) {
                 key={index}
                 title={section.title}
                 href={section.href}
-                status={section.status || "none"}
+                status={section.status || FormStatus.Unknown}
               />
             ))}
           </div>
@@ -344,21 +351,20 @@ function Report({ initFormValues }: ReportProps) {
             )}
           </div>
           <div className="space-x-2 flex justify-end">
-            {
-              initFormValues.status === "created" && isFormValid() && (
-                <Button variant="default" onClick={(ev) => {
-                  ev.preventDefault();
-                  router.push(`/app/editor/${initFormValues.id}`)
-                }} disabled={!isFormValid()}>
-                  Generate Report
-                </Button>
-              ) 
-            }
-            {initFormValues.status === "draft" && (
+            {initFormValues.status === "created" && isFormValid() && (
               <Button
                 variant="default"
-                onClick={saveAsDraft}
+                onClick={(ev) => {
+                  ev.preventDefault();
+                  router.push(`/app/editor/${initFormValues.id}`);
+                }}
+                disabled={!isFormValid()}
               >
+                Generate Report
+              </Button>
+            )}
+            {initFormValues.status === "draft" && (
+              <Button variant="default" onClick={saveAsDraft}>
                 Save As Draft
               </Button>
             )}

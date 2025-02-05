@@ -4,6 +4,7 @@ import { FormProvider, SubmitErrorHandler, SubmitHandler, useForm } from "react-
 import {
   PropertyDescription,
   Input,
+  FormStatus,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
@@ -86,9 +87,10 @@ const PropertyDescriptionForm = ({
         ...currentState.propertyDescription,
         ...data,
         status: {
-          status: "complete",
+          status: FormStatus.Complete,
           errors: [],
         },
+
       };
     });
 
@@ -98,10 +100,11 @@ const PropertyDescriptionForm = ({
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = async (errors) => {
     await surveyStore.update(id, (currentState) => {
       currentState.propertyDescription.status = {
-        status: "incomplete",
+        status: FormStatus.Incomplete,
         errors: Object.values(errors).map((error) => error.message ?? ""),
       };
     });
+
   };
 
   return (

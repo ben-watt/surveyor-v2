@@ -9,12 +9,14 @@ import {
 import {
   PropertyDescription,
   Checklist,
+  FormStatus,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { PrimaryBtn } from "@/app/app/components/Buttons";
 import { useRouter } from "next/navigation";
 import { DynamicDrawer } from "@/app/app/components/Drawer";
+
 import { useEffect, useState } from "react";
 
 interface ChecklistPageProps {
@@ -81,9 +83,10 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
         ...currentState.checklist,
         ...data,
         status: {
-          status: "complete",
+          status: FormStatus.Complete,
           errors: [],
         },
+
       };
     });
 
@@ -93,10 +96,11 @@ const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
   const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = (errors) => {
     surveyStore.update(id, (currentState) => {
       currentState.checklist.status = {
-        status: "error",
+        status: FormStatus.Error,
         errors: Object.values(errors).map((error) => error.message ?? ""),
       };
     });
+
   };
 
   return (

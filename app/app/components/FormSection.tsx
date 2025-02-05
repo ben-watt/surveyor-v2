@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import Link from "next/link";
 import { DynamicDrawer, useDynamicDrawer } from "./Drawer";
 import { useRouter } from "next/navigation";
+import { FormSectionStatus, FormStatus } from "../surveys/building-survey-reports/BuildingSurveyReportSchema";
 
 interface FormSectionProps {
   title?: string;
@@ -62,9 +63,10 @@ export const FormSection = ({
 interface FormSectionLinkProps {
   title: string;
   href?: string;
-  status: "complete" | "incomplete" | "error" | "warning" | "none";
+  status: FormStatus;
   drawer?: DrawerProps;
 }
+
 
 
 interface DrawerProps {

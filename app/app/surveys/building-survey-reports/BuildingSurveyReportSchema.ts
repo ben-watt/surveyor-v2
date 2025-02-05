@@ -1,3 +1,5 @@
+import { useFormStatus } from "react-dom"
+
 export type BuildingSurveyFormData = {
     id: string,
     owner: {
@@ -41,10 +43,20 @@ export type ReportDetails = {
 }
 
 export type FormSectionStatus = {
-    status: "complete" | "incomplete" | "error" | "warning";
+    status: FormStatus;
     errors: string[];
 }
+
+export enum FormStatus {
+    Complete = "complete",
+    Incomplete = "incomplete",
+    Error = "error",
+    Warning = "warning",
+    Unknown = "unknown",
+}
+
 export type InputType = "text" | "number" | "date" | "textarea" | "select" | "checkbox" | "boolean" | "always-true-checkbox"
+
 
 export type Input<T> = {
     type: InputType,
@@ -55,7 +67,6 @@ export type Input<T> = {
 }
 
 type description = string;
-type Year = number;
 type roomCount = number;
 export type Tenure = "Freehold" | "Leasehold" | "Commonhold" | "Other" | "Unknown";
 
@@ -88,6 +99,7 @@ export type ElementSection = {
     description: string,
     components: Inspection[],
     images: string[],
+    status: FormSectionStatus
 }
 
 export type Inspection = {

@@ -3,7 +3,7 @@ import InputDate from "@/app/app/components/Input/InputDate";
 import Input from "@/app/app/components/Input/InputText";
 import TextAreaInput from "@/app/app/components/Input/TextAreaInput";
 import { FormProvider, SubmitErrorHandler, useForm } from "react-hook-form";
-import { ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
+import { FormStatus, ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { PrimaryBtn } from "@/app/app/components/Buttons";
 import { surveyStore } from "@/app/app/clients/Database";
 import { memo } from "react";
@@ -98,7 +98,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
 
     surveyStore.update(surveyId, (survey) => {
       survey.reportDetails.status = {
-        status: "error",
+        status: FormStatus.Error,
         errors: Object.values(errors).map((e) => e.message ?? ""),
       };
     });
