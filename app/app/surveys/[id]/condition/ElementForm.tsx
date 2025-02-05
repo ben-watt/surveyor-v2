@@ -80,7 +80,6 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
           status: FormStatus.Complete,
           errors: [],
         },
-
       });
     });
 

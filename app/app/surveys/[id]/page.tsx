@@ -3,8 +3,8 @@
 import React, { Suspense, useEffect, useState } from "react";
 import BuildingSurveyForm from "../building-survey-reports/BuildingSurveyForm";
 import Link from "next/link";
-import { Grid, Images, LayoutGrid, Image as ImageIcon } from "lucide-react";
-import { sectionStore, surveyStore } from "@/app/app/clients/Database";
+import { LayoutGrid } from "lucide-react";
+import { surveyStore } from "@/app/app/clients/Database";
 import Image from "next/image";
 import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";

@@ -193,7 +193,7 @@ export function findComponent(
 }
 
 // Remove an element section
-export function removeElementSection(
+export function excludeElementSection(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string
@@ -201,9 +201,13 @@ export function removeElementSection(
   const section = survey.sections.find(s => s.id === sectionId);
   if (!section) return survey;
 
-  section.elementSections = section.elementSections.filter(e => e.id !== elementId);
+  const elementSection = section.elementSections.find(e => e.id === elementId);
+  if (!elementSection) return survey;
+
+  elementSection.isPartOfSurvey = false;
   return survey;
 }
+
 
 // Get all images from a survey
 export function getAllSurveyImages(survey: BuildingSurveyFormData): string[] {
@@ -236,8 +240,14 @@ export function getAllSurveyImages(survey: BuildingSurveyFormData): string[] {
 } 
 
 export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionStatus {
+  console.log("[getConditionStatus] survey", survey);
+
   const allElementsComplete = survey.sections.every(s => s.elementSections.every(e => e.status?.status === FormStatus.Complete))
   const allElementsHaveAtLeastOneComponent = survey.sections.every(s => s.elementSections.every(e => e.components.length > 0))
+
+  console.log("[getConditionStatus] allElementsComplete", allElementsComplete);
+  console.log("[getConditionStatus] allElementsHaveAtLeastOneComponent", allElementsHaveAtLeastOneComponent);
+
 
   if (allElementsComplete && allElementsHaveAtLeastOneComponent) {
     return {

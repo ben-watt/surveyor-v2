@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { DynamicDrawer, useDynamicDrawer } from "@/app/app/components/Drawer";
 import InspectionForm from "./InspectionForm";
 import ElementForm from "./ElementForm";
-import { removeElementSection } from "../../building-survey-reports/Survey";
+import { excludeElementSection } from "../../building-survey-reports/Survey";
 
 interface ConditionPageProps {
   params: {
@@ -158,12 +158,12 @@ const ElementSectionComponent = ({
   const handleRemove = async () => {
     if (!survey) return;
     await surveyStore.update(surveyId, (draft) => {
-      removeElementSection(draft, sectionId, elementSection.id);
+      excludeElementSection(draft, sectionId, elementSection.id);
     });
   };
 
   return (
-    <div className="border border-gray-200 p-2 rounded">
+    <div className={`border border-gray-200 p-2 rounded ${elementSection.isPartOfSurvey ? "" : "bg-muted/50 text-muted-foreground"}`}>
       <div className="flex justify-between items-center">
         <div>
           <h4>{elementSection.name}</h4>
@@ -208,7 +208,7 @@ const ElementSectionComponent = ({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleRemove}>
-                <span className="text-red-500">Remove</span>
+                <span className="text-red-500">Exclude from Survey</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
