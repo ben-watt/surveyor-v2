@@ -6,7 +6,7 @@ import {
   SurveySection,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/app/clients/Database";
-import { ClipboardList, MoreHorizontal, Search } from "lucide-react";
+import { Blocks, ClipboardList, MoreHorizontal, MoreVertical, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -202,7 +202,7 @@ const ElementSectionComponent = ({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal />
+                <MoreVertical />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -242,6 +242,9 @@ const ElementSectionComponent = ({
           </DropdownMenu>
         </div>
       </div>
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          {elementSection.components.length} component{elementSection.components.length > 1 ? "s" : ""}
+        </span>
     </div>
   );
 };

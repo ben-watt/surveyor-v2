@@ -2,12 +2,16 @@
 
 import * as React from "react"
 import {
+  Award,
+  Blocks,
   BookOpen,
   Bot,
   Frame,
   GalleryVerticalEnd,
+  Grid2x2,
   Layers,
   MapPin,
+  NotebookPen,
   Settings2,
   SquareTerminal,
   Worm,
@@ -32,7 +36,7 @@ const applicationNavData = {
     {
       title: "Surveys",
       url: "/app/surveys",
-      icon: BookOpen,
+      icon: NotebookPen,
       isActive: true,
     },
   ]
@@ -48,17 +52,17 @@ const configurationNavData = {
     {
       title: "Elements",
       url: "/app/elements",
-      icon: SquareTerminal,
+      icon: Grid2x2,
     },
     {
       title: "Components",
       url: "/app/building-components",
-      icon: Frame,
+      icon: Blocks,
     },
     {
       title: "Conditions",
       url: "/app/conditions",
-      icon: Bot,
+      icon: Award,
     },
 
     {

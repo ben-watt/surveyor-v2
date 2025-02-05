@@ -63,12 +63,6 @@ interface CreateServerConfigProps {
   path: string;
 }
 
-// Add this type near other interfaces
-interface RhfInputImageProps extends InputImageProps {
-  labelText?: string;
-  rhfProps: UseControllerProps;
-}
-
 // 4. Extract server configuration to a separate function for better readability
 const createServerConfig = ({ path }: CreateServerConfigProps) => {
   return {
@@ -317,6 +311,12 @@ export const InputImage = ({
           const fileSources = files.map((file) => join(path, file.file.name.replace(".png", ".jpg").replace(".jpeg", ".jpg")));
           onChange?.(fileSources);
         }}
+        onaddfile={(err, file) => {
+          console.debug("[InputImage][InputImage][%s] onaddfile", path, file);
+        }}
+        onprocessfile={(err, file) => {
+          console.debug("[InputImage][InputImage][%s] onprocessfile", path, file);
+        }}
         server={createServerConfig({ path })}
         files={initialFiles}
         labelTapToRetry="Tap to retry upload"
@@ -336,6 +336,12 @@ export const InputImage = ({
 // the problem of re-renders and the latest uplaods disappearing
 const MemoizedInputImage = React.memo(InputImage);
 
+// Add this type near other interfaces
+interface RhfInputImageProps extends InputImageProps {
+  labelText?: string;
+  rhfProps: UseControllerProps;
+}
+
 export const RhfInputImage = ({
   path,
   labelText,
@@ -345,7 +351,6 @@ export const RhfInputImage = ({
   const { setValue, formState, register } = useFormContext();
 
   const onChange = (fileSources: string[]) => {
-    console.debug("[InputImage][RhfInputImage][%s] onChange", path, fileSources);
     setValue(rhfProps.name, fileSources);
   }
 

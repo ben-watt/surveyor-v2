@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { InputImageComponent } from "@/app/app/components/Input/InputImage";
 import { useDynamicDrawer } from "@/app/app/components/Drawer";
 import AddressInput from "@/app/app/components/Input/AddressInput";
+import { Button } from "@/components/ui/button";
 
 interface ReportDetailsFormProps {
   surveyId: string;
@@ -47,24 +48,6 @@ const LevelField = memo(({ control }: any) => (
   </div>
 ));
 LevelField.displayName = 'LevelField';
-
-const ImageField = memo(({ surveyId, fieldName, label, minFiles = 1, validate }: any) => (
-  <div>
-    <InputImageComponent.rhfImage
-      labelText={label}
-      rhfProps={{
-        name: fieldName,
-        rules: {
-          required: true,
-          validate,
-        },
-      }}
-      minNumberOfFiles={minFiles}
-      path={`report-images/${surveyId}/${fieldName}/`}
-    />
-  </div>
-));
-ImageField.displayName = 'ImageField';
 
 const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) => {
   const methods = useForm<ReportDetails>({
@@ -157,23 +140,40 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           />
         </div>
 
-        <ImageField 
-          surveyId={surveyId}
-          fieldName="moneyShot"
-          label="Money Shot"
-          validate={(v: any) => v.length === 1 || "Only one image is required"}
-        />
+        <div>
+          <InputImageComponent.rhfImage
+            labelText={"Money Shot"}
+            rhfProps={{
+              name: "moneyShot",
+              rules: {
+                required: true,
+                validate: (v: any) => v.length === 1 || "Only one image is required",
+              },
+            }}
+            minNumberOfFiles={1}
+            maxNumberOfFiles={1}
+            path={`report-images/${surveyId}/moneyShot/`}
+          />
+        </div>
 
-        <ImageField 
-          surveyId={surveyId}
-          fieldName="frontElevationImagesUri"
-          label="Front Elevation Images"
-          validate={(v: any) => v.length > 0 || "One or more images are required"}
-        />
-
-        <PrimaryBtn type="submit">Save</PrimaryBtn>
+        <div>
+          <InputImageComponent.rhfImage
+            labelText={"Front Elevation Images"}
+            rhfProps={{
+              name: "frontElevationImagesUri",
+              rules: {
+                required: true,
+                validate: (v: any) => v.length > 0 || "One or more images are required",
+              },
+            }}
+            minNumberOfFiles={1}
+            path={`report-images/${surveyId}/frontElevationImagesUri/`}
+          />
+        </div>
+        <Button variant="default" className="w-full" type="submit">Save</Button>
       </form>
     </FormProvider>
+
   );
 };
 
