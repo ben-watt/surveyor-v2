@@ -19,6 +19,7 @@ export function Breadcrumbs() {
         href: '/' + segments.slice(0, index + 1).join('/'),
         label: isGuid ? segment.substring(0, 8) + '...' : startCase(segment)
       };
+
     });
   };
 
