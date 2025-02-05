@@ -20,6 +20,20 @@ import { v4 as uuidv4 } from "uuid";
 import seedSectionData from "@/app/app/settings/sections.json";
 import seedElementData from "@/app/app/settings/elements.json";
 import { getConditionStatus } from "./Survey";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Zap } from "lucide-react";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -105,7 +119,6 @@ const createDefaultFormValues = async (
     },
     propertyDescription: {
       propertyType: {
-
         type: "text",
         value: "",
         label: "Property Type",
@@ -271,8 +284,7 @@ function Report({ initFormValues }: ReportProps) {
 
   const router = useRouter();
 
-  const saveAsDraft = async (ev: React.FormEvent<HTMLButtonElement>) => {
-    ev.preventDefault();
+  const saveAsDraft = async () => {
     console.log("[BuildingSurveyForm] saveAsDraft", methods.getValues());
     toast.success("Saved As Draft");
     router.push("/app/surveys");
@@ -288,7 +300,7 @@ function Report({ initFormValues }: ReportProps) {
       defaultValues.propertyDescription?.status?.status,
       defaultValues.checklist?.status?.status,
       getConditionStatus(initFormValues).status,
-    ].every(s => s === FormStatus.Complete)
+    ].every((s) => s === FormStatus.Complete);
 
     return allSectionsComplete;
   };
@@ -301,7 +313,6 @@ function Report({ initFormValues }: ReportProps) {
     });
 
     toast.success("Saved");
-    router.push("/app/surveys");
   };
 
   const onError = (errors: any) => {
@@ -335,45 +346,68 @@ function Report({ initFormValues }: ReportProps) {
     <div>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit, onError)}>
-          <div className="space-y-1 cursor-pointer">
-            {formSections.map((section, index) => (
-              <MultiFormSection
-                key={index}
-                title={section.title}
-                href={section.href}
-                status={section.status || FormStatus.Unknown}
-              />
-            ))}
-          </div>
-          <div>
-            {Object.values(formState.errors).length > 0 && (
-              <InputError message="Please fix the errors above before saving" />
-            )}
-          </div>
-          <div className="space-x-2 flex justify-end">
-            {initFormValues.status === "created" && isFormValid() && (
-              <Button
-                variant="default"
-                onClick={(ev) => {
-                  ev.preventDefault();
-                  router.push(`/app/editor/${initFormValues.id}`);
-                }}
-                disabled={!isFormValid()}
-              >
-                Generate Report
-              </Button>
-            )}
-            {initFormValues.status === "draft" && (
-              <Button variant="default" onClick={saveAsDraft}>
-                Save As Draft
-              </Button>
-            )}
-            {initFormValues.status === "draft" && isFormValid() && (
-              <Button variant="default" type="submit" disabled={!isFormValid()}>
-                Save
-              </Button>
-            )}
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="relative">
+                Building Survey Report - Level{" "}
+                {initFormValues.reportDetails.level}
+                <div className="absolute top-0 right-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="default" className="gap-2">
+                        <Zap />
+                        <span className="hidden md:inline">Actions</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            router.push(`/app/editor/${initFormValues.id}`);
+                          }}
+                          disabled={!isFormValid()}
+                        >
+                          Generate Report
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(ev) => saveAsDraft()}>
+                          Save As Draft
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            handleSubmit(onSubmit, onError)();
+                          }}
+                          disabled={!isFormValid()}
+                        >
+                          Save
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardTitle>
+              <CardDescription>
+                {initFormValues.reportDetails.address.formatted ??
+                  "No address specified"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1 cursor-pointer">
+                {formSections.map((section, index) => (
+                  <MultiFormSection
+                    key={index}
+                    title={section.title}
+                    href={section.href}
+                    status={section.status || FormStatus.Unknown}
+                  />
+                ))}
+              </div>
+              <div>
+                {Object.values(formState.errors).length > 0 && (
+                  <InputError message="Please fix the errors above before saving" />
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </form>
       </FormProvider>
     </div>

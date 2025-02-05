@@ -240,14 +240,11 @@ export function getAllSurveyImages(survey: BuildingSurveyFormData): string[] {
 } 
 
 export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionStatus {
-  console.log("[getConditionStatus] survey", survey);
+  const elementSections = survey.sections.flatMap(s => s.elementSections);
+  const activeElementSections = elementSections.filter(e => e.isPartOfSurvey);
 
-  const allElementsComplete = survey.sections.every(s => s.elementSections.every(e => e.status?.status === FormStatus.Complete))
-  const allElementsHaveAtLeastOneComponent = survey.sections.every(s => s.elementSections.every(e => e.components.length > 0))
-
-  console.log("[getConditionStatus] allElementsComplete", allElementsComplete);
-  console.log("[getConditionStatus] allElementsHaveAtLeastOneComponent", allElementsHaveAtLeastOneComponent);
-
+  const allElementsComplete = activeElementSections.every(e => e.status?.status === FormStatus.Complete)
+  const allElementsHaveAtLeastOneComponent = activeElementSections.every(e => e.components.length > 0)
 
   if (allElementsComplete && allElementsHaveAtLeastOneComponent) {
     return {

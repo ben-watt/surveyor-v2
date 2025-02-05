@@ -99,19 +99,10 @@ function Home({ params }: { params: { id: string } }) {
             <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full px-1 text-xs">{isHydrated ? `${photoCount}` : "-"}</span>
           </div>
         </div>
-        <div>  
-          <Card>
-            <CardHeader>
-              <CardTitle>Building Survey Report - Level {survey?.reportDetails.level}</CardTitle>
-              <CardDescription>{survey?.reportDetails.address.formatted ?? "No address specified"}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Suspense fallback={<div>Loading...</div>}>
-                <BuildingSurveyForm id={params.id} />
-              </Suspense>
-            </CardContent>
-          </Card>
-
+        <div> 
+          <Suspense fallback={<div>Loading...</div>}>
+            <BuildingSurveyForm id={params.id} />
+          </Suspense>
         </div>
       </div>
     </>
