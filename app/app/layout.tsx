@@ -12,6 +12,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore } from "./clients/Database";
 import { imageUploadStore } from "./clients/ImageUploadStore";
 import { OnlineStatus } from "./components/OnlineStatus";
+import { SyncStatus } from "./components/SyncStatus";
 
 export default function RootLayout({
   children,
@@ -62,7 +63,8 @@ export default function RootLayout({
                     <SidebarTrigger className="-ml-1" />
                     <Breadcrumbs />
                   </div>
-                  <div className="mr-10">
+                  <div className="mr-10 flex items-center gap-4">
+                    <SyncStatus />
                     <OnlineStatus />
                   </div>
                 </header>
