@@ -53,9 +53,9 @@ export const TocNode = Node.create({
   renderHTML({ HTMLAttributes }) {
     const options = this.options;
     if (!options.repo) {
-      console.error('TocNode: No repository configured');
       return ['div', { 'data-type': 'table-of-contents' }, ''];
     }
+
     const data = options.repo.getParsed();
     const domSpec = renderReactToDomSpec(<Toc data={data} />);
 
@@ -101,7 +101,7 @@ interface TocProps {
 const Toc = ({ maxDepth = 1, data }: TocProps) => {
   return (
     <section>
-      <p style={{ fontSize: "18pt", marginBottom: "8mm" }}>Table of Contents</p>
+      <p style={{ fontSize: "14pt", marginBottom: "8mm" }}>Table of Contents</p>
       <ul>
         {data
           .filter((d) => d.item.originalLevel <= maxDepth)
@@ -116,9 +116,8 @@ const Toc = ({ maxDepth = 1, data }: TocProps) => {
               key={d.itemId} >
               <p
                 data-toc-id-selector={d.selector}
-                data-toc-text={d.hierarchyText}
               >
-                {d.hierarchyText + " " + d.textContent}
+                {d.hierarchyText}  {d.textContent}
               </p>
             </li>
           ))}
@@ -127,6 +126,13 @@ const Toc = ({ maxDepth = 1, data }: TocProps) => {
   );
 };
 
+
+function appendZeroToHierarchyText(text: string): string {
+  if(text.includes(".")) {
+    return text;
+  }
+  return text + ".0";
+}
 
 function parseDataHierarchy(
   data: TocDataItem[]
@@ -159,7 +165,7 @@ function parseDataHierarchy(
     stack.pop();
     return {
       item,
-      hierarchyText: text,
+      hierarchyText: appendZeroToHierarchyText(text),
     };
   });
 }
@@ -214,7 +220,7 @@ const replaceNode = (
     ? [
         {
           type: "text",
-          text: nodePos.textContent,
+          text: nodePos.textContent
         },
       ]
     : [];
@@ -241,6 +247,7 @@ export const TocNodeView = ({ editor }: NodeViewProps) => {
         console.error('TocNode: No repository configured');
         return;
       }
+
       const { data } = repo.get();
       console.log("[updateToc]", data);
       const tocData = parseDataHierarchy(data);
@@ -277,7 +284,7 @@ export const TocNodeView = ({ editor }: NodeViewProps) => {
   );
 
   useEffect(() => {
-    updateToc();
+      updateToc();
   }, [updateToc]);
 
   return (

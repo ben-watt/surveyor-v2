@@ -8,13 +8,13 @@
         }
 
         @top-left {
-            content: element(addressRunning);
-            font-size: x-small;
+            content: element(headerRunning);
+            width: 4cm;
         }
 
         @top-right {
-            content: element(headerRunning);
-            width: 4cm;
+            content: element(addressRunning);
+            font-size: x-small;
         }
 
         @bottom-right {
@@ -50,8 +50,6 @@
     padding: 0;
     text-wrap: nowrap;
 }
-
-
 
 /* Adjust orders for remaining elements */
 [data-type="table-of-contents"] li p::before {

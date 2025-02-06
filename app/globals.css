@@ -137,6 +137,12 @@
     min-height: 24px;
   } */
 
+  /* Table of Contents */
+  .tiptap [data-toc-text]::before {
+    content: attr(data-toc-text);
+    margin-right: 10px;
+  }
+
 /* Basic editor styles */
 .tiptap {
   outline: none;

@@ -7,6 +7,7 @@ import type {
   ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
+import { formatDateWithSuffix } from '@/app/app/utils/dateFormatters';
 
 const TableBlock = ({
   children,
@@ -86,7 +87,7 @@ const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
       <p id={id} style={{ fontWeight: "bold" }}></p>
       <h2
         data-add-toc-here-id={id}
-        style={{ fontWeight: "bold", textAlign: "center" }}
+        style={{ fontWeight: "bold", fontSize: "14pt", textAlign: "center" }}
       >
         {children}
       </h2>
@@ -133,7 +134,7 @@ export default function PDF({ form }: PdfProps) {
             />
           </div>
           <div>
-            <p style={{ textAlign: "right", fontSize: "20pt" }}>
+            <p style={{ textAlign: "right", fontSize: "14pt", fontWeight: "bold" }}>
               Level {form.reportDetails.level} Building Survey Report
             </p>
             <p style={{ textAlign: "right" }}></p>
@@ -147,22 +148,26 @@ export default function PDF({ form }: PdfProps) {
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>
               <strong>{clientName}</strong>
-            </p>
+            </p>  
             <p style={{ textAlign: "right" }}></p>
-            <p style={{ textAlign: "right" }}>Prepared By</p>
+            <p style={{ textAlign: "right" }}>Prepared by</p>
             <p style={{ textAlign: "right" }}>
               Clarke & Watt Building Consultancy Ltd
             </p>
-            <p style={{ textAlign: "right" }}>Northern Assurance Building</p>
-            <p style={{ textAlign: "right" }}>9-21 Princess Street</p>
+            <p style={{ textAlign: "right" }}>Suite D</p>  
+            <p style={{ textAlign: "right" }}>The Towers</p>  
+            <p style={{ textAlign: "right" }}>Towers Business Park</p>
+            <p style={{ textAlign: "right" }}>Wilmslow Road</p>
             <p style={{ textAlign: "right" }}>Manchester</p>
-            <p style={{ textAlign: "right" }}>M2 4DN</p>
+            <p style={{ textAlign: "right" }}>M20 2RY</p>
             <p style={{ textAlign: "right" }}></p>
-            <p style={{ textAlign: "right" }}>Email: {form.owner.email}</p>
-            <p style={{ textAlign: "right" }}>
+            <p style={{ textAlign: "right", fontSize: "8pt" }}>Email: admin@cwbc.co.uk</p>
+
+            <p style={{ textAlign: "right", fontSize: "8pt" }}>
               Date: {reportDate.toDateString()}
             </p>
-            <p style={{ textAlign: "right" }}>Ref: #{form.id.substring(0,8)}</p>
+
+            <p style={{ textAlign: "right", fontSize: "8pt" }}>Ref: #{form.id.substring(0,8)}</p>
           </div>
         </TableBlock>
       </Page>
@@ -199,9 +204,9 @@ export default function PDF({ form }: PdfProps) {
         <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>
         <TableBlock widths={[40, 60]}>
           <p>Inspection Date:</p>
-          <p>{inspectionDate.toDateString()}</p>
+          <p>{formatDateWithSuffix(inspectionDate)}</p>
           <p>Report Issue Date:</p>
-          <p>{reportDate.toDateString()}</p>
+          <p>{formatDateWithSuffix(reportDate)}</p>
           <p>Weather at the time of inspection:</p>
           <p>{form.reportDetails.weather}</p>
           <p>Orientation</p>
@@ -214,8 +219,8 @@ export default function PDF({ form }: PdfProps) {
         <div id="toc" data-type="table-of-contents" data-toc-data="[]"></div>
       </Page>
       <Page>
-        <h1 style={{ fontWeight: "bold" }}>Definitions</h1>
-        <H2 id="key">Key</H2>
+        <h1 style={{ fontWeight: "bold", fontSize: "14pt" }}>Definitions</h1>
+        <h2 style={{ fontWeight: "bold", fontSize: "14pt" }}>Key</h2>
         <TableBlock widths={[94, 6]}>
           <ul>
             <li>
@@ -254,7 +259,7 @@ export default function PDF({ form }: PdfProps) {
         <p></p>
         <TableBlock widths={[50, 50]}>
           <div>
-            <h2 style={{ fontWeight: "bold" }}>Glossary of Terms</h2>
+            <h2 style={{ fontWeight: "bold", fontSize: "14pt" }}>Glossary of Terms</h2>
             <ul>
               <li>Immediate: Within 1 year</li>
               <li>Short Term: Within the next 1 to 3 years</li>
@@ -263,7 +268,7 @@ export default function PDF({ form }: PdfProps) {
             </ul>
           </div>
           <div>
-            <h2 style={{ fontWeight: "bold" }}>
+            <h2 style={{ fontWeight: "bold", fontSize: "14pt" }}>
               Crack Definitions (BRE Digest 251)
             </h2>
             <ul>
@@ -278,7 +283,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <h2 style={{ fontWeight: "bold" }}>Typical House Diagram</h2>
+        <h2 style={{ fontSize: "14pt", fontWeight: "bold" }}>Typical House Diagram</h2>
         <img
           style={{ margin: "0 auto" }}
           src="/typical-house.webp"
@@ -287,40 +292,45 @@ export default function PDF({ form }: PdfProps) {
         />
       </Page>
       <Page>
-        <h1 style={{ fontWeight: "bold" }}>Description Of the Property</h1>
+        <h1 style={{ fontSize: "14pt", fontWeight: "bold" }}>Description Of the Property</h1>
         <TableBlock widths={[50, 50]}>
-          <h3>Property Type</h3>
+          <h3 style={{ fontWeight: "bold" }}>Property Type</h3>
           <p>{form.propertyDescription.propertyType.value}</p>
-          <h3>Construction Details</h3>
+          <h3 style={{ fontWeight: "bold" }}>Construction Details</h3>
           <p>{form.propertyDescription.constructionDetails.value}</p>
-          <h3>Year of Construction</h3>
+          <h3 style={{ fontWeight: "bold" }}>Year of Construction</h3>
           <p>{form.propertyDescription.yearOfConstruction.value}</p>
-          <h3>Year of Extensions</h3>
+          <h3 style={{ fontWeight: "bold" }}>Year of Extensions</h3>
           <p>
+
             {fallback(form.propertyDescription.yearOfExtensions.value, "N/A")}
           </p>
-          <h3>Year of Conversions</h3>
+          <h3 style={{ fontWeight: "bold" }}>Year of Conversions</h3>
           <p>
             {fallback(form.propertyDescription.yearOfConversions.value, "N/A")}
+
           </p>
-          <h3>Grounds</h3>
+          <h3 style={{ fontWeight: "bold" }}>Grounds</h3>
           <p>{form.propertyDescription.grounds.value}</p>
-          <h3>Services</h3>
+          <h3 style={{ fontWeight: "bold" }}>Services</h3>
           <p>{form.propertyDescription.services.value}</p>
-          <h3>Other Services</h3>
+          <h3 style={{ fontWeight: "bold" }}>Other Services</h3>
           <p>{form.propertyDescription.otherServices.value}</p>
-          <h3>Energy Rating</h3>
+
+          <h3 style={{ fontWeight: "bold" }}>Energy Rating</h3>
           <p>{form.propertyDescription.energyRating.value}</p>
-          <h3>Number of Bedrooms</h3>
+          <h3 style={{ fontWeight: "bold" }}>Number of Bedrooms</h3>
           <p>{form.propertyDescription.numberOfBedrooms.value}</p>
-          <h3>Number of Bathrooms</h3>
+          <h3 style={{ fontWeight: "bold" }}>Number of Bathrooms</h3>
           <p>{form.propertyDescription.numberOfBathrooms.value}</p>
-          <h3>Tenure</h3>
+
+          <h3 style={{ fontWeight: "bold" }}>Tenure</h3>
           <p>{form.propertyDescription.tenure.value}</p>
         </TableBlock>
+
       </Page>
       <Page>
-        <h3 style={{ fontWeight: "bold" }}>Location Plan</h3>
+        <h3 style={{ fontSize: "14pt", fontWeight: "bold" }}>Location Plan</h3>
         <p style={{ textAlign: "justify" }}>
           Red line demarcations do not represent the legal boundary of the
           property and are to indicate the approximate areas of the property
@@ -349,10 +359,10 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         {form.sections.map((s, i) => (
           <div key={s.name}>
-            <h1 style={{ fontWeight: "bold" }}>{s.name}</h1>
+            <h1 style={{ fontSize: "14pt", fontWeight: "bold" }}>{s.name}</h1>
             {s.elementSections.map((cs, j) => (
               <ConditionSection
-                key={`${i}.${j}`}
+                key={`${s.name}.${cs.name}`}
                 elementSection={cs}
                 form={form}
               />
@@ -816,7 +826,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   let tableRows = [];
   for (let i = 0; i < es.images.length; i = i + 2) {
     tableRows.push(
-      <tr key={elementSection.id + "." + i}>
+      <tr key={`${elementSection.id}.${i}`}>
         <td>
           <img
             style={{ width: "500mm" }}
@@ -831,7 +841,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
           {es.images.at(i + 1) && (
             <img
               style={{ width: "500mm" }}
-              key={i + 1}
+              key={`${elementSection.id}.${i + 1}`}
               src={es.images[i + 1]}
               alt={elementSection.name + ".image." + i}
               width={400}
@@ -870,7 +880,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
         .map((mc) => ({ mc: mc, id: uuidv4() }))
         .map(({ mc, id }, i) => (
           <>
-            <TableBlock widths={[10, 20, 64, 6]} key={i}>
+            <TableBlock widths={[10, 20, 64, 6]} key={`${elementSection.id}.${i}`}>
               <p id={id}></p>
               <h3 data-add-toc-here-id={id}>
                 <strong>Component</strong>
@@ -880,6 +890,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 style={{
                   fontWeight: "bold",
                   textAlign: "center",
+                  fontSize: "18pt"
                 }}
               >
                 {mc.ragStatus === "N/I" ? "NI" : <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus)}}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>}

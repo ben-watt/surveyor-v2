@@ -1,4 +1,5 @@
 import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { formatDateWithSuffix } from "../../utils/dateFormatters";
 
 interface HeaderFooterHtmlProps {
   editorData: BuildingSurveyFormData | undefined;
@@ -7,7 +8,7 @@ interface HeaderFooterHtmlProps {
 export const HeaderFooterHtml = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <>
-      <div className="header-container mb-4">
+      <div className="header-container mb-4">      
         <img
           className="headerImage object-contain"
           src="/cwbc-logo.webp"
@@ -15,10 +16,16 @@ export const HeaderFooterHtml = ({ editorData }: HeaderFooterHtmlProps) => {
           width="150"
           height="80"
           style={{ maxWidth: '300px', height: 'auto' }}
-        />
-        <div className="headerAddress mt-2">
+        /> 
+         <div className="headerAddress mt-2">
           <p className="text-sm text-gray-600">
             {editorData ? editorData.reportDetails.address.formatted : "Unknown"}
+          </p>
+          <p>
+            {editorData ? '#' + editorData.id.substring(0, 8) : "Unknown"}
+          </p>
+          <p>
+            {editorData ? formatDateWithSuffix(new Date(editorData.reportDetails.reportDate)) : "Unknown"}
           </p>
         </div>
       </div>
