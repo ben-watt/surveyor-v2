@@ -132,10 +132,9 @@
   --gray-3: #cbd5e0;
 }
 
-  /* .tiptap p { -- This is causing issues when rendering to print and I have no idea why
-    line-height: 24px;
-    min-height: 24px;
-  } */
+  .tiptap p {
+    min-height: 1rem;
+  }
 
   /* Table of Contents */
   .tiptap [data-toc-text]::before {

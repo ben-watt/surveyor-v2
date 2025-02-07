@@ -18,7 +18,7 @@ export const HeaderFooterHtml = ({ editorData }: HeaderFooterHtmlProps) => {
           style={{ maxWidth: '300px', height: 'auto' }}
         /> 
          <div className="headerAddress mt-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-xs text-gray-600">
             {editorData ? editorData.reportDetails.address.formatted : "Unknown"}
           </p>
           <p>

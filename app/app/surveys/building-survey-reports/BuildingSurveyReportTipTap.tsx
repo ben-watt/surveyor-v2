@@ -371,18 +371,21 @@ export default function PDF({ form }: PdfProps) {
         ))}
       </Page>
       <Page>
-        <h1 style={{ fontWeight: "bold" }}>Issues for your Legal Advisor</h1>
-        <h2 style={{ fontWeight: "bold" }}>Planning & Building Regulations</h2>
+        <h1 style={{ fontWeight: "bold", fontSize: "14pt" }}>Issues for your Legal Advisor</h1>
+        <H2 id="planning-building-regulations">Planning & Building Regulations</H2>
         <p style={{ textAlign: "justify" }}>
           As mentioned within the body of this report, we strongly recommend
+
+
           that you obtain certificates and warranties from the Vendor relating
           to the electrical and gas installations, extensions, etc. to confirm
           that all fully comply with the Building Regulations.
         </p>
-        <h2 style={{ fontWeight: "bold" }}>Statutory</h2>
+        <H2 id="statutory">Statutory</H2>
         <TableBlock widths={[10, 90]}>
           <h3>&nbsp;</h3>
           <ul>
+
             <li>
               <p style={{ textAlign: "justify" }}>
                 Confirm all Statutory Approvals for all alteration and
@@ -517,10 +520,11 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <h2 style={{ fontWeight: "bold" }}>
+        <H2 id="thermal-insulation-energy-efficiency">
           Thermal Insulation & Energy Efficiency
-        </h2>
+        </H2>
         <TableBlock widths={[10, 90]}>
+
           <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
             As part of the marketing process, current regulations require the
@@ -548,11 +552,12 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <h1 style={{ fontWeight: "bold" }}>Risks</h1>
-        <h2 style={{ fontWeight: "bold" }}>Risks to the building</h2>
+        <h1 style={{ fontWeight: "bold", fontSize: "14pt" }}>Risks</h1>
+        <H2 id="risks-to-the-building">Risks to the building</H2>
         <RiskRow
           id={"timber-rot"}
           risk={"Timber rot and insect damage"}
+
           description={`We have been unable to assess the condition of all timber elements
             and walls of the property due to furniture and building fabric
             obstructing our view and we are therefore unable to confirm that
@@ -583,16 +588,20 @@ The property owner should stay informed about local flood alerts and maintain re
 Given the high risk of surface water flooding, you should ensure that your insurance policy covers for flood damage and expect
 to pay higher premiums in light of this information.`}
         />
-        <h2 style={{ fontWeight: "bold" }}>Risks to the grounds</h2>
+        <p></p>
+        <H2 id="risks-to-the-grounds">Risks to the grounds</H2>
         <RiskRow
           id={"invasive-species"}
           risk={"Invasive species"}
+
           description={`None noted at the time of inspection.`}
         />
-        <h2 style={{ fontWeight: "bold" }}>Risks to the people</h2>
+        <p></p>
+        <H2 id="risks-to-the-people">Risks to the people</H2>
         <RiskRow
           id={"asbestos"}
           risk={"Asbestos"}
+
           description={`Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been
 concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition
 (R&D) Asbestos survey before commencing any refurbishment works.`}
@@ -618,7 +627,7 @@ Board's website. We have not undertaken any separate inquiries with the relevant
         />
       </Page>
       <Page>
-        <h1 style={{ fontWeight: "bold" }}>Conclusion</h1>
+        <h1 style={{ fontWeight: "bold", fontSize: "14pt" }}>Conclusion</h1>
         <TableBlock widths={[10, 90]}>
           <h3>&nbsp;</h3>
           <p style={{ textAlign: "justify" }}>
@@ -679,7 +688,7 @@ Board's website. We have not undertaken any separate inquiries with the relevant
         </p>
       </Page>
       <Page>
-        <h1 style={{ fontWeight: "bold" }}>APPENDIX 1 - Limitations</h1>
+        <h1 style={{ fontWeight: "bold", fontSize: "14pt" }}>APPENDIX 1 - Limitations</h1>
         <TableBlock widths={[10, 90]}>
           <h2 style={{ fontWeight: "bold" }}>&nbsp;</h2>
           <p style={{ textAlign: "justify" }}>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Previewer } from "pagedjs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
@@ -13,37 +13,59 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isRendering, setIsRendering] = React.useState(true);
 
-  console.log("[PrintPreviewer] Rendering", content);
-
   const handleDownload = () => {
     setIsDownloading(true);
     window.print();
     setIsDownloading(false);
   };
 
-  React.useEffect(() => {
-    if (!previewRef.current) return;
+  useEffect(() => {
+    if (!previewRef.current || !content) return;
+    
     const prev = previewRef.current;
-    prev.innerHTML = '';
-    setIsRendering(true);
+    let timeoutId: NodeJS.Timeout;
+    let currentPreviewer: Previewer | null = null;
 
-    var previewer = new Previewer({});
-    previewer
-      .preview(content, ["/pagedstyles.css", "/interface.css"], prev)
-      .then(() => {
+    const generatePreview = async () => {
+      try {
+        console.log("[PrintPreviewer] Starting preview generation");
+        if (!prev.isConnected) return;
+        
+        // Clear previous content
+        prev.innerHTML = '';
+        setIsRendering(true);
+        
+        // Create new previewer instance for each update
+        currentPreviewer = new Previewer({});
+        await currentPreviewer.preview(
+          content,
+          ["/pagedstyles.css", "/interface.css"],
+          prev
+        );
+        
+        console.log("[PrintPreviewer] Preview generation complete");
         setIsRendering(false);
-      })
-      .catch((error) => {
-        console.error("Preview generation failed:", error);
+      } catch (error) {
+        console.error("[PrintPreviewer] Preview generation failed:", error);
         setIsRendering(false);
-      });
+      }
+    };
 
-    return () => {  
+    // Debounce the preview generation
+    // Solves the issue of multiple preview generations in dev
+    timeoutId = setTimeout(generatePreview, 100);
+
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (currentPreviewer) {
+        currentPreviewer = null;
+      }
       if (prev.isConnected) {
         prev.innerHTML = '';
       }
     };
-  }, [content]);
+  }, [content]);  // Re-run when content changes
 
   return (
     <div>
