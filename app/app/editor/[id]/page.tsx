@@ -8,10 +8,10 @@ import { useEditorState } from "../hooks/useEditorState";
 
 export default function Page({ params }: { params: { id: string } }) {
   const [preview, setPreview] = React.useState(false);
-  const { editorContent, previewContent, headerFooterHtml, setPreviewContent } = useEditorState(params.id);
+  const { editorContent, previewContent, header, footer, titlePage, setPreviewContent } = useEditorState(params.id);
 
   const handleEditorUpdate = (html: string) => {
-    setPreviewContent(headerFooterHtml + html);
+    setPreviewContent( titlePage + header + footer + html);
   };
 
   return (

@@ -1,4 +1,8 @@
 @media print {
+    @page title {
+        margin: 0;
+    }
+
     @page {
         size: A4 landscape;
     
@@ -7,9 +11,8 @@
             font-size: small;
         }
 
-        @top-left {
+        @top-left-corner {
             content: element(headerRunning);
-            width: 4cm;
         }
 
         @top-right {
@@ -22,6 +25,14 @@
             width: 3cm;
         }
     }
+}
+
+.title-page {
+    page: title;
+}
+
+.pagedjs_margin .pagedjs_margin-top-left-corner .pagedjs_margin-content {
+    width: 920px;
 }
 
 .headerAddress {

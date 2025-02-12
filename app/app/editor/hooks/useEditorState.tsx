@@ -2,15 +2,17 @@ import React from "react";
 import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/app/clients/Database";
 import { mapFormDataToHtml } from "../utils/formData";
-import { HeaderFooterHtml } from "../components/HeaderFooter";
+import { Footer, Header, TitlePage } from "../components/HeaderFooter";
 import { renderToStaticMarkup } from "react-dom/server";
 
 export const useEditorState = (surveyId: string) => {
   const [editorContent, setEditorContent] = React.useState<string>("");
   const [editorData, setEditorData] = React.useState<BuildingSurveyFormData>();
   const [previewContent, setPreviewContent] = React.useState<string>("");
-  const [headerFooterHtml, setHeaderFooterHtml] = React.useState<string>("");
   const [isLoading, setIsLoading] = React.useState(true);
+  const [header, setHeader] = React.useState<string>("");
+  const [footer, setFooter] = React.useState<string>("");
+  const [titlePage, setTitlePage] = React.useState<string>("");
 
   React.useEffect(() => {
     const getReport = async () => {
@@ -28,8 +30,18 @@ export const useEditorState = (surveyId: string) => {
     getReport();
   }, [surveyId]);
 
-  const renderHeaderFooter = React.useCallback(
-    () => renderToStaticMarkup(<HeaderFooterHtml editorData={editorData} />),
+  const renderFooter = React.useCallback(
+    () => renderToStaticMarkup(<Footer editorData={editorData} />),
+    [editorData]
+  );
+
+  const renderTitlePage = React.useCallback(
+    () => renderToStaticMarkup(<TitlePage editorData={editorData} />),
+    [editorData]
+  );
+
+  const renderHeader = React.useCallback(
+    () => renderToStaticMarkup(<Header editorData={editorData} />),
     [editorData]
   );
 
@@ -47,13 +59,23 @@ export const useEditorState = (surveyId: string) => {
   }, [mapToEditorContent]);
 
   React.useEffect(() => {
-    setHeaderFooterHtml(renderHeaderFooter());
-  }, [renderHeaderFooter]);
+    setHeader(renderHeader());
+  }, [renderHeader]);
+
+  React.useEffect(() => {
+    setFooter(renderFooter());
+  }, [renderFooter]);
+
+  React.useEffect(() => { 
+    setTitlePage(renderTitlePage());
+  }, [renderTitlePage]);
 
   return {
     editorContent,
     previewContent,
-    headerFooterHtml,
+    header,
+    footer,
+    titlePage,
     setPreviewContent,
     isLoading,
   };
