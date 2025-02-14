@@ -5,7 +5,7 @@ import {
   NodeViewWrapper,
   ReactNodeViewRenderer,
 } from "@tiptap/react";
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState, useRef } from "react";
 import { renderReactToDomSpec } from "./Helper";
 
 interface TocDataItem {
@@ -284,8 +284,17 @@ export const TocNodeView = ({ editor }: NodeViewProps) => {
   );
 
   useEffect(() => {
-      updateToc();
-  }, [updateToc]);
+    const handleCreate = () => {
+      setTimeout(updateToc, 100);
+    };
+
+    editor.on('create', handleCreate);
+    handleCreate();
+
+    return () => {
+      editor.off('create', handleCreate);
+    };
+  }, [editor, updateToc]);
 
   return (
     <NodeViewWrapper className="hover:bg-slate-100 bg-slate-50 border border-violet-950 rounded-sm relative cursor-pointer p-2 overflow-hidden">
