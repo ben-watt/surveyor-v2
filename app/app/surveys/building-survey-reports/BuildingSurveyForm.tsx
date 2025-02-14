@@ -348,10 +348,11 @@ function Report({ initFormValues }: ReportProps) {
         <form onSubmit={handleSubmit(onSubmit, onError)}>
           <Card>
             <CardHeader>
-              <CardTitle className="relative">
-                Building Survey Report - Level{" "}
-                {initFormValues.reportDetails.level}
-                <div className="absolute top-0 right-0">
+              <CardTitle className="flex justify-between">
+                <div>
+                  Building Survey Report - Level{" "}{initFormValues.reportDetails.level}
+                </div>
+                <div className="h-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="default" className="gap-2">
