@@ -56,7 +56,7 @@ interface NewEditorProps {
   content: Content;
   onUpdate?: (props: EditorEvents["update"]) => void;
   onCreate?: (props: EditorEvents["create"]) => void;
-  onPrint: () => void;
+  onPrint: () => void;  
 }
 
 const ImageResizeWithAttributes = extendAttributesWithDefaults(ImageResize, { "style" : "width: 100%; height: auto; cursor: pointer;"});

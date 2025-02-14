@@ -839,23 +839,19 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
       <tr key={`${elementSection.id}.${i}`}>
         <td>
           <img
-            style={{ width: "500mm" }}
             key={i}
             src={es.images[i]}
             alt={elementSection.name + ".image." + i}
-            width={300}
-            height={300}
+            style={{ maxHeight: "250px", margin: "0 auto" }}
           />
         </td>
         <td>
           {es.images.at(i + 1) && (
             <img
-              style={{ width: "500mm" }}
               key={`${elementSection.id}.${i + 1}`}
               src={es.images[i + 1]}
               alt={elementSection.name + ".image." + i}
-              width={400}
-              height={400}
+              style={{ maxHeight: "250px", margin: "0 auto" }}
             />
           )}
         </td>
