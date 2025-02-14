@@ -8,6 +8,7 @@ import type {
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
 import { formatDateWithSuffix } from '@/app/app/utils/dateFormatters';
+import { MicVocal } from "lucide-react";
 
 const TableBlock = ({
   children,
@@ -910,18 +911,27 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               </p>
               <div>
                 {mc.conditions.map((d) => (
-                  <p style={{ textAlign: "justify" }} key={d.name}>
+                  <p style={{ textAlign: "justify"}} key={d.name}>
                     {d.phrase}
                   </p>
                 ))}
+                {mc.additionalDescription && (
+                  <p style={{ textAlign: "justify" }}>
+                    {mc.additionalDescription}
+                  </p>
+                )}
               </div>
               <p></p>
-
               {form.reportDetails.level === "3" && (
                 <>
                   <p></p>
                   <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
-                  <p>£{mc.costings[0].cost}</p>
+                  {mc.costings.map(c => 
+                    <p key={c.description}>
+                      <strong>{c.cost}</strong> + " " + <span>({c.description})</span>
+                    </p>
+                  )}
+                  {mc.costings.length === 0 && (<p>N/A</p>)}
                   <p></p>
                 </>
               )}
