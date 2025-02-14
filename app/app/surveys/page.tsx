@@ -11,7 +11,7 @@ import { surveyStore } from "@/app/app/clients/Database";
 import { BuildingSurveyListCard } from "./SurveyListCard";
 import { Input } from "@/components/ui/input";
 import React from "react";
-import { Filter, Plus } from "lucide-react";
+import { Filter, ListFilter, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,7 +103,7 @@ function HomePage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2">
-              <Filter className="h-4 w-4" />
+              <ListFilter  className="h-4 w-4" />
               <span className="hidden sm:inline">Filters</span>
               {activeFilterCount > 0 && (
                 <Badge variant="secondary" className="ml-1">

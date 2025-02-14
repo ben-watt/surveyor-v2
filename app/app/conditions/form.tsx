@@ -60,9 +60,9 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         name: data.name,
         type: "condition",
         phrase: data.phrase,
-        associatedElementIds: data.associatedElementIds,
-        associatedComponentIds: data.associatedComponentIds,
-        associatedMaterialIds: data.associatedMaterialIds,
+        associatedElementIds: data.associatedElementIds ?? [],
+        associatedComponentIds: data.associatedComponentIds ?? [],
+        associatedMaterialIds: data.associatedMaterialIds ?? [],
       });
       toast.success("Phrase created");
     }

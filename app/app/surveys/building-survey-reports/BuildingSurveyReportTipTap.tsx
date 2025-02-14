@@ -204,15 +204,15 @@ export default function PDF({ form }: PdfProps) {
         <p></p>
         <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>
         <TableBlock widths={[40, 60]}>
-          <p>Inspection Date:</p>
+          <p><strong>Inspection Date:</strong></p>
           <p>{formatDateWithSuffix(inspectionDate)}</p>
-          <p>Report Issue Date:</p>
+          <p><strong>Report Issue Date:</strong></p>
           <p>{formatDateWithSuffix(reportDate)}</p>
-          <p>Weather at the time of inspection:</p>
+          <p><strong>Weather at the time of inspection:</strong></p>
           <p>{form.reportDetails.weather}</p>
-          <p>Orientation</p>
+          <p><strong>Orientation</strong></p>
           <p>{form.reportDetails.orientation}</p>
-          <p>Situation</p>
+          <p><strong>Situation</strong></p>
           <p>{form.reportDetails.situation}</p>
         </TableBlock>
       </Page>
@@ -229,7 +229,7 @@ export default function PDF({ form }: PdfProps) {
               Property to be maintained as usual.
             </li>
           </ul>
-          <p style={{ textAlign: "center" }}>
+          <p style={{ textAlign: "center", fontSize: "18pt" }}>
             <mark style={{ backgroundColor: "green" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
           </p>
           <ul>
@@ -238,7 +238,7 @@ export default function PDF({ form }: PdfProps) {
               serious. Property to be maintained as usual.
             </li>
           </ul>
-          <p style={{ textAlign: "center" }}>
+          <p style={{ textAlign: "center", fontSize: "18pt" }}>
             <mark style={{ backgroundColor: "orange" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
           </p>
           <ul>
@@ -247,13 +247,13 @@ export default function PDF({ form }: PdfProps) {
               to be repaired, replace or investigated urgently.
             </li>
           </ul>
-          <p style={{ textAlign: "center" }}>
-            <mark style={{ backgroundColor: "red" }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
+          <p style={{ textAlign: "center", fontSize: "18pt"  }}>
+            <mark style={{ backgroundColor: "red"}}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
           </p>
           <ul>
             <li>Not inspected</li>
           </ul>
-          <p style={{ textAlign: "center"}}>
+          <p style={{ textAlign: "center", fontSize: "18pt"}}>
             <strong>NI</strong>
           </p>
         </TableBlock>
@@ -295,37 +295,37 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <h1 style={{ fontSize: "14pt", fontWeight: "bold" }}>Description Of the Property</h1>
         <TableBlock widths={[50, 50]}>
-          <h3 style={{ fontWeight: "bold" }}>Property Type</h3>
+          <h3><strong>Property Type</strong></h3>
           <p>{form.propertyDescription.propertyType.value}</p>
-          <h3 style={{ fontWeight: "bold" }}>Construction Details</h3>
+          <h3><strong>Construction Details</strong></h3>
           <p>{form.propertyDescription.constructionDetails.value}</p>
-          <h3 style={{ fontWeight: "bold" }}>Year of Construction</h3>
+          <h3><strong>Year of Construction</strong></h3>
           <p>{form.propertyDescription.yearOfConstruction.value}</p>
-          <h3 style={{ fontWeight: "bold" }}>Year of Extensions</h3>
+          <h3><strong>Year of Extensions</strong></h3>
           <p>
 
             {fallback(form.propertyDescription.yearOfExtensions.value, "N/A")}
           </p>
-          <h3 style={{ fontWeight: "bold" }}>Year of Conversions</h3>
+          <h3><strong>Year of Conversions</strong></h3>
           <p>
             {fallback(form.propertyDescription.yearOfConversions.value, "N/A")}
 
           </p>
-          <h3 style={{ fontWeight: "bold" }}>Grounds</h3>
+          <h3><strong>Grounds</strong></h3>
           <p>{form.propertyDescription.grounds.value}</p>
-          <h3 style={{ fontWeight: "bold" }}>Services</h3>
+          <h3><strong>Services</strong></h3>
           <p>{form.propertyDescription.services.value}</p>
-          <h3 style={{ fontWeight: "bold" }}>Other Services</h3>
+          <h3><strong>Other Services</strong></h3>
           <p>{form.propertyDescription.otherServices.value}</p>
 
-          <h3 style={{ fontWeight: "bold" }}>Energy Rating</h3>
+          <h3><strong>Energy Rating</strong></h3>
           <p>{form.propertyDescription.energyRating.value}</p>
-          <h3 style={{ fontWeight: "bold" }}>Number of Bedrooms</h3>
+          <h3><strong>Number of Bedrooms</strong></h3>
           <p>{form.propertyDescription.numberOfBedrooms.value}</p>
-          <h3 style={{ fontWeight: "bold" }}>Number of Bathrooms</h3>
+          <h3><strong>Number of Bathrooms</strong></h3>
           <p>{form.propertyDescription.numberOfBathrooms.value}</p>
 
-          <h3 style={{ fontWeight: "bold" }}>Tenure</h3>
+          <h3><strong>Tenure</strong></h3>
           <p>{form.propertyDescription.tenure.value}</p>
         </TableBlock>
 
