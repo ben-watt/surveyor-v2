@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Zap } from "lucide-react";
+import { AddressDisplay } from "@/app/app/components/Address/AddressDisplay";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -102,6 +103,12 @@ const createDefaultFormValues = async (
       level: "2",
       address: {
         formatted: "",
+        line1: "",
+        line2: "",
+        line3: "",
+        city: "",
+        county: "",
+        postcode: "",
         location: {
           lat: 0,
           lng: 0,
@@ -387,8 +394,14 @@ function Report({ initFormValues }: ReportProps) {
                 </div>
               </CardTitle>
               <CardDescription>
-                {initFormValues.reportDetails.address.formatted ??
-                  "No address specified"}
+                {initFormValues.reportDetails.address.line1 ? (
+                  <AddressDisplay 
+                    address={initFormValues.reportDetails.address}
+                    maxLength={30}
+                  />
+                ) : (
+                  initFormValues.reportDetails.address.formatted ?? "No address specified"
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>

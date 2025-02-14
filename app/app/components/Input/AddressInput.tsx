@@ -89,7 +89,7 @@ function CustomPlacesAutocomplete({
 
     const request: google.maps.places.PlaceDetailsRequest = {
       placeId: prediction.place_id,
-      fields: ['formatted_address', 'geometry']
+      fields: ['formatted_address', 'geometry', 'address_components']
     };
 
     placesService.current.getDetails(request, (place, status) => {
@@ -261,8 +261,27 @@ function AddressInput({
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     console.log("[AddressInput] place_changed event", place);
     if (place.formatted_address && place.geometry?.location) {
+      // Parse address components
+      const addressComponents = place.address_components || [];
+      const streetNumber = addressComponents.find(c => c.types.includes('street_number'))?.long_name || '';
+      const route = addressComponents.find(c => c.types.includes('route'))?.long_name || '';
+      const subpremise = addressComponents.find(c => c.types.includes('subpremise'))?.long_name || '';
+      const city = addressComponents.find(c => c.types.includes('postal_town') || c.types.includes('locality'))?.long_name || '';
+      const county = addressComponents.find(c => c.types.includes('administrative_area_level_2'))?.long_name || '';
+      const postcode = addressComponents.find(c => c.types.includes('postal_code'))?.long_name || '';
+
+      // Construct line1 from subpremise (if exists), street number and route
+      const line1Parts = [subpremise, streetNumber, route].filter(Boolean);
+      const line1 = line1Parts.join(' ');
+
       const newAddress: Address = {
         formatted: place.formatted_address,
+        line1,
+        line2: '',  // Optional: Can be filled manually if needed
+        line3: '',  // Optional: Can be filled manually if needed
+        city,
+        county,
+        postcode,
         location: {
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng()

@@ -1,4 +1,4 @@
-import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, mapAddress } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { formatDateWithSuffix } from "../../utils/dateFormatters";
 import Image from "next/image";
 
@@ -58,7 +58,7 @@ export const TitlePage = ({ editorData }: HeaderFooterHtmlProps) => {
         <div className="flex justify-between px-16 w-full min-h-40">
           <div>
             <p>Level {editorData?.reportDetails.level} Building Survey Report</p>
-            <p>{editorData?.reportDetails.address.formatted}</p>
+            {editorData?.reportDetails.address && mapAddress(editorData?.reportDetails.address, (line) => <p>{line}</p>)}
           </div>
           <div className="self-end text-right">
             <p>

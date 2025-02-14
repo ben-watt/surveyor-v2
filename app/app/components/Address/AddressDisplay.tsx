@@ -5,14 +5,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Address, formatAddress } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 
 interface AddressDisplayProps {
-  address: string;
+  address: Address;
   maxLength?: number;
 }
 
 export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps) {
   const [open, setOpen] = useState(false);
+  const formattedAddress = formatAddress(address);
+  const shortAddress = address.formatted.substring(0, maxLength) + "...";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -24,16 +27,16 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
           onMouseLeave={() => setOpen(false)}
         >
           <span className="cursor-pointer">
-            {address.substring(0, maxLength) + "..."}
+            {shortAddress}
           </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-fit"
+        className="w-fit whitespace-pre-line"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
       >
-        <p className="text-sm">{address}</p>
+        <p className="text-sm">{formattedAddress}</p>
       </PopoverContent>
     </Popover>
   );

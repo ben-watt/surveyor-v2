@@ -2,13 +2,13 @@
 
 import React, { Fragment, isValidElement } from "react";
 import Image from "next/image";
-import type {
-  BuildingSurveyFormData,
-  ElementSection,
+import {
+  mapAddress,
+  type BuildingSurveyFormData,
+  type ElementSection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
 import { formatDateWithSuffix } from '@/app/app/utils/dateFormatters';
-import { MicVocal } from "lucide-react";
 
 const TableBlock = ({
   children,
@@ -142,7 +142,8 @@ export default function PDF({ form }: PdfProps) {
             <p style={{ textAlign: "right" }}>Of the premises known as</p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}  className="m-0">
-              <strong>{address.formatted}</strong>
+              {address && mapAddress(address, (line) => 
+              <p style={{ textAlign: "right" }}><strong>{line}</strong></p>)}
             </p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>For and on behalf of</p>

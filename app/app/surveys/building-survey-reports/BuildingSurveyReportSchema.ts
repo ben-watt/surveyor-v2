@@ -22,9 +22,51 @@ export type Checklist = {
 
 export type Address = {
     formatted: string;
+    line1: string;
+    line2?: string;
+    line3?: string;
+    city: string;
+    county?: string;
+    postcode: string;
     location: {
         lat: number;
         lng: number;
+    };
+}
+
+export const formatAddress = (address: Address): string => {
+    return [
+        address.line1,
+        address.line2,
+        address.line3,
+        address.city,
+        address.county,
+        address.postcode
+    ].filter(Boolean).join('\n');
+}
+
+export const mapAddress = (address: Address, fn: (line: string) => any): any[] => {
+    return [
+        address.line1,
+        address.line2,
+        address.line3,
+        address.city,
+        address.county,
+        address.postcode
+    ].filter(Boolean).map((value) => fn(value as string));
+}
+
+// Helper to convert formatted string to Address structure
+export const parseFormattedAddress = (formatted: string): Partial<Address> => {
+    const lines = formatted.split('\n').map(line => line.trim());
+    return {
+        formatted,
+        line1: lines[0] || '',
+        line2: lines[1],
+        line3: lines[2],
+        city: lines[3] || '',
+        county: lines[4],
+        postcode: lines[5] || '',
     };
 }
 
