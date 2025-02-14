@@ -207,9 +207,13 @@ const ElementSectionComponent = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}>Edit</DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation();
                   openDrawer({
                     id: `${surveyId}-condition-${elementSection.id}-inspect`,
                     title: `Inspect ${elementSection.name}`,
@@ -225,13 +229,18 @@ const ElementSectionComponent = ({
                         }}
                       />
                     ),
-                  })
-                }
+                  });
+                }}
               >
                 Inspect Component
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={toggleElement}>
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                onSelect={toggleElement}
+              >
                 <span>
                   {elementSection.isPartOfSurvey
                     ? "Exclude from Survey"
