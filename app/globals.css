@@ -132,15 +132,19 @@
   --gray-3: #cbd5e0;
 }
 
-  .tiptap p {
-    min-height: 1rem;
-  }
+.tiptap p {
+  min-height: 1rem;
+}
 
-  /* Table of Contents */
-  .tiptap [data-toc-text]::before {
-    content: attr(data-toc-text);
-    margin-right: 10px;
-  }
+.tiptap p + p {
+  margin-bottom: 0.2rem;
+}
+
+/* Table of Contents */
+.tiptap [data-toc-text]::before {
+  content: attr(data-toc-text);
+  margin-right: 10px;
+}
 
 /* Basic editor styles */
 .tiptap {

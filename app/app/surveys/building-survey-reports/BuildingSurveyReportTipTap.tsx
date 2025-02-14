@@ -911,9 +911,12 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               </p>
               <div>
                 {mc.conditions.map((d) => (
-                  <p style={{ textAlign: "justify"}} key={d.name}>
-                    {d.phrase}
-                  </p>
+                  <>
+                    <p style={{ textAlign: "justify"}} key={d.name}>
+                      {d.phrase}
+                    </p>
+                    <p style={{ fontSize: "6pt"}}></p>
+                  </>
                 ))}
                 {mc.additionalDescription && (
                   <p style={{ textAlign: "justify" }}>

@@ -54,13 +54,13 @@ export const TitlePage = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="title-page relative">
       <Image src="/cwbc_cover_landscape.jpg" alt="Cover Page" width={1122} height={0} />
-      <div className="absolute text-white bottom-52 w-full">
-        <div className="flex justify-between px-16 w-full">
+      <div className="absolute text-white bottom-24 w-full">
+        <div className="flex justify-between px-16 w-full min-h-40">
           <div>
             <p>Level {editorData?.reportDetails.level} Building Survey Report</p>
             <p>{editorData?.reportDetails.address.formatted}</p>
           </div>
-          <div>
+          <div className="self-end text-right">
             <p>
                 {editorData
                   ? formatDateWithSuffix(
