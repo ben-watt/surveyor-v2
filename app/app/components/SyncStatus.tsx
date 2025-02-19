@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
 import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore } from '../clients/Database';
 import { SyncStatus as SyncStatusEnum } from '../clients/Dexie';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export const SyncStatus = () => {
     const [surveysHydrated, surveys] = surveyStore.useRawList();
@@ -15,6 +15,7 @@ export const SyncStatus = () => {
     const [sectionsHydrated, sections] = sectionStore.useList();
 
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     // Check if any items are not synced
     const hasUnsynced = [
@@ -74,25 +75,10 @@ export const SyncStatus = () => {
         return null;
     }
 
-    const getTooltipContent = () => {
-        if (isSyncing) {
-            return "Syncing in progress...";
-        }
-        if (hasUnsynced) {
-            return `Unsynced changes:\n${
-                Object.entries(statusCounts)
-                    .filter(([status, count]) => count > 0 && status !== SyncStatusEnum.Synced)
-                    .map(([status, count]) => `${status}: ${count}`)
-                    .join('\n')
-            }`;
-        }
-        return "All changes synced";
-    };
-
     return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger>
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <button className="focus:outline-none">
                     <div className="flex items-center gap-2 text-sm">
                         {isSyncing ? (
                             <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
@@ -102,11 +88,30 @@ export const SyncStatus = () => {
                             <Cloud className="h-4 w-4" />
                         )}
                     </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p className="whitespace-pre-line">{getTooltipContent()}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3">
+                <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                        {isSyncing ? "Syncing in progress..." : 
+                         hasUnsynced ? "Unsynced Changes" : 
+                         "All Changes Synced"}
+                    </p>
+                    {hasUnsynced && (
+                        <div className="space-y-1">
+                            {Object.entries(statusCounts)
+                                .filter(([status, count]) => count > 0 && status !== SyncStatusEnum.Synced)
+                                .map(([status, count]) => (
+                                    <div key={status} className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">{status}</span>
+                                        <span>{count}</span>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    )}
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }; 
