@@ -12,10 +12,17 @@ interface AddressDisplayProps {
   maxLength?: number;
 }
 
+const shortAddress = (address: Address, maxLength: number) => {
+  if (address.formatted.length > maxLength) {
+    return address.formatted.substring(0, maxLength) + "...";
+  }
+  return address.formatted;
+}
+
 export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps) {
   const [open, setOpen] = useState(false);
   const formattedAddress = formatAddress(address);
-  const shortAddress = address.formatted.substring(0, maxLength) + "...";
+  const shorterAddress = shortAddress(address, maxLength);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -27,7 +34,7 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
           onMouseLeave={() => setOpen(false)}
         >
           <span className="cursor-pointer">
-            {shortAddress}
+            {shorterAddress}
           </span>
         </Button>
       </PopoverTrigger>

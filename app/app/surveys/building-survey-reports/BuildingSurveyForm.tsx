@@ -397,7 +397,7 @@ function Report({ initFormValues }: ReportProps) {
                 {initFormValues.reportDetails.address.line1 ? (
                   <AddressDisplay 
                     address={initFormValues.reportDetails.address}
-                    maxLength={30}
+                    maxLength={60}
                   />
                 ) : (
                   initFormValues.reportDetails.address.formatted ?? "No address specified"
