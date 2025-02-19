@@ -89,6 +89,10 @@ export default function SignIn() {
               <Link href="/signup" className="text-primary hover:underline">
                 Sign up
               </Link>
+              {" "}or{" "}
+              <Link href="/reset-password" className="text-primary hover:underline">
+                Forgot Password?
+              </Link>
             </div>
           </CardFooter>
         </form>
