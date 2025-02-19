@@ -4,18 +4,12 @@ import * as React from "react"
 import {
   Award,
   Blocks,
-  BookOpen,
-  Bot,
-  Frame,
-  GalleryVerticalEnd,
   Grid2x2,
   Layers,
-  MapPin,
   NotebookPen,
   Settings2,
-  SquareTerminal,
-  Worm,
 } from "lucide-react"
+import { AppIcon } from "@/app/app/components/AppIcon"
 
 import { NavSection } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -87,11 +81,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Worm  className="size-4" />
+                <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <AppIcon color="white" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Surveyor</span>
+                  <span className="truncate font-semibold">Survii</span>
                   <span className="truncate text-xs">v0.0.1</span>
                 </div>
               </Link>

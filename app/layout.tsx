@@ -5,10 +5,10 @@ import "instantsearch.css/themes/satellite.css";
 import { Metadata, Viewport } from "next";
 import { ClientSideDependencies } from "./dependencies";
 
-const APP_NAME = "Surveyor App";
-const APP_DEFAULT_TITLE = "Surveyor";
+const APP_NAME = "Survii";
+const APP_DEFAULT_TITLE = "Survii";
 const APP_TITLE_TEMPLATE = "%s - PWA App";
-const APP_DESCRIPTION = "Surveyor App for quick building surveys.";
+const APP_DESCRIPTION = "Surveying simplified.";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
