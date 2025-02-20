@@ -96,7 +96,7 @@ export function BuildingSurveyListCard({
                 </DropdownMenu>
               </div>
 
-              <div className="text-sm flex items-center gap-4">
+              <div className="text-sm flex flex-wrap items-center gap-4">
                 <Badge variant="secondary">
                   {survey.owner?.name || "Unknown"}
                 </Badge>
