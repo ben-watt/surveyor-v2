@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import InspectionForm from "./InspectionForm";
 import { Edit, Trash2 } from "lucide-react";
 import { getElementSection, updateElementDetails, removeComponent } from "@/app/app/surveys/building-survey-reports/Survey";
-import { useTraceUpdate } from "@/app/app/hooks/useTraceUpdates";
 
 type ElementFormData = {
   description: string;
@@ -29,8 +28,6 @@ interface ElementFormProps {
 }
 
 export default function ElementForm({ surveyId, sectionId, elementId }: ElementFormProps) {
-  console.debug("[ElementForm] props", surveyId, sectionId, elementId);
-  useTraceUpdate({ surveyId, sectionId, elementId });
 
   const drawer = useDynamicDrawer();
   const [isLoading, setIsLoading] = React.useState(true);

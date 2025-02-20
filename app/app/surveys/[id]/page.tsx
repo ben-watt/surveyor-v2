@@ -10,7 +10,6 @@ import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import { useRouter } from "next/navigation";
 import ImagePlaceholder from "../../components/ImagePlaceholder";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 function Home({ params }: { params: { id: string } }) {
   const [isHydrated, survey] = surveyStore.useGet(params.id);

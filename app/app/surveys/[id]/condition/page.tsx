@@ -6,7 +6,7 @@ import {
   SurveySection,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/app/clients/Database";
-import { Blocks, ClipboardList, MoreHorizontal, MoreVertical, Search } from "lucide-react";
+import { ClipboardList, MoreVertical, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -22,6 +22,7 @@ import { DynamicDrawer, useDynamicDrawer } from "@/app/app/components/Drawer";
 import InspectionForm from "./InspectionForm";
 import ElementForm from "./ElementForm";
 import { toggleElementSection } from "../../building-survey-reports/Survey";
+import { DataForm as ElementFormData } from "@/app/app/elements/form";
 
 interface ConditionPageProps {
   params: {
@@ -102,7 +103,6 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
         element.name.toLowerCase().includes(searchTerm.toLowerCase())
       ),
     }))
-    .filter((section) => section.elementSections.length > 0);
 
   return (
     <div>
@@ -135,6 +135,13 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
               surveyId={id}
             />
           ))}
+          {section.elementSections.length == 0 && (
+            <div className="text-center p-6">
+              <p className="text-muted-foreground mb-6">
+                No elements found for this section.
+              </p>
+            </div>
+          )}
         </FormSection>
       ))}
       <div className="space-y-2">

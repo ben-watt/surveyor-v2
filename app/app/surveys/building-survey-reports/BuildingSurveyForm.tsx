@@ -4,6 +4,7 @@ import {
   Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
   FormStatus,
+  SurveySection,
 } from "./BuildingSurveyReportSchema";
 
 import { useForm, FormProvider } from "react-hook-form";
@@ -11,14 +12,13 @@ import InputError from "@/app/app/components/InputError";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MultiFormSection } from "@/app/app/components/FormSection";
-import { surveyStore } from "@/app/app/clients/Database";
+import { surveyStore, sectionStore, elementStore } from "@/app/app/clients/Database";
+import { Section, Element } from "@/app/app/clients/Dexie";
 import { fetchUserAttributes } from "aws-amplify/auth";
-import { Ok, Result } from "ts-results";
+import { Ok, Result, Err } from "ts-results";
 import { useAsyncError } from "@/app/app/hooks/useAsyncError";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
-import seedSectionData from "@/app/app/settings/sections.json";
-import seedElementData from "@/app/app/settings/elements.json";
 import { getConditionStatus } from "./Survey";
 import {
   Card,
@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Zap } from "lucide-react";
 import { AddressDisplay } from "@/app/app/components/Address/AddressDisplay";
+import { registerQuotaErrorCallback } from "serwist";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -48,30 +49,32 @@ const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
   required: true,
 });
 
-const createDefaultFormValues = async (
-  id: string
-): Promise<Result<BuildingSurveyForm, Error>> => {
-  const user = await fetchUserAttributes();
-
+const createDefaultFormValues = (
+  id: string,
+  dbSections: Section[],
+  dbElements: Element[],
+  user: { sub?: string; name?: string; email?: string; picture?: string }
+): Result<BuildingSurveyForm, Error> => {
   if (!user.sub || !user.name || !user.email || !user.picture) {
     toast(
       "Your profile is missing some information. Please check you've added all your profile information."
     );
     console.error(user);
+    return Err(new Error("Missing user information"));
   }
 
   // Sort sections by order
-  const orderedSections = [...seedSectionData].sort(
-    (a, b) => a.order - b.order
+  const orderedSections = [...dbSections].sort(
+    (a, b) => (a.order || 0) - (b.order || 0)
   );
 
-  // Sort elements by order and group by sectionId
-  const orderedElements = [...seedElementData].sort(
-    (a, b) => a.order - b.order
+  // Sort elements by order
+  const orderedElements = [...dbElements].sort(
+    (a, b) => (a.order || 0) - (b.order || 0)
   );
 
   // Create sections array with pre-populated elements
-  const sections = orderedSections.map((section) => ({
+  const formSections: SurveySection[] = orderedSections.map((section) => ({
     id: section.id,
     name: section.name,
     elementSections: orderedElements
@@ -94,9 +97,9 @@ const createDefaultFormValues = async (
     id: id,
     status: "draft",
     owner: {
-      id: user.sub || "Unknown",
-      name: user.name || "Unknown",
-      email: user.email || "Unknown",
+      id: user.sub,
+      name: user.name,
+      email: user.email,
       signaturePath: user.picture ? [user.picture] : [],
     },
     reportDetails: {
@@ -210,7 +213,7 @@ const createDefaultFormValues = async (
       },
       status: { status: FormStatus.Incomplete, errors: [] },
     },
-    sections: sections,
+    sections: formSections,
     checklist: {
       items: [
         shouldBeTrueCheckBox("Have you checked for asbestos?"),
@@ -242,27 +245,36 @@ const createDefaultFormValues = async (
 
 export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   const [isHydrated, report] = surveyStore.useGet(id);
+  const [sectionsHydrated, dbSections] = sectionStore.useList();
+  const [elementsHydrated, dbElements] = elementStore.useList();
   const router = useRouter();
-
-  console.debug("[ReportWrapper] isHydrated", isHydrated, report);
-
   const throwError = useAsyncError();
 
   useEffect(() => {
     async function createNewForm() {
       console.log("[ReportWrapper] createNewForm");
       const newId = uuidv4();
-      const formResult = await createDefaultFormValues(newId);
+      
+      try {
+        const user = await fetchUserAttributes();
+        if (!sectionsHydrated || !elementsHydrated) {
+          console.log("[ReportWrapper] waiting for data to hydrate");
+          return;
+        }
 
-      if (formResult.ok) {
-        surveyStore.add({
-          id: newId,
-          content: formResult.val,
-        });
+        const formResult = createDefaultFormValues(newId, dbSections, dbElements, user);
+        if (formResult.ok) {
+          surveyStore.add({
+            id: newId,
+            content: formResult.val,
+          });
 
-        router.push(`/app/surveys/${newId}`);
-      } else {
-        throwError(formResult.val);
+          router.replace(`/app/surveys/${newId}`);
+        } else {
+          throwError(formResult.val);
+        }
+      } catch (error) {
+        throwError(error instanceof Error ? error : new Error("Unknown error occurred"));
       }
     }
 
@@ -271,7 +283,11 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
     if (isHydrated && !report) {
       createNewForm();
     }
-  }, [id, isHydrated, report, router, throwError]);
+  }, [id, isHydrated, report, router, throwError, sectionsHydrated, elementsHydrated, dbSections, dbElements]);
+
+  if (!sectionsHydrated || !elementsHydrated) {
+    return <div>Loading sections and elements...</div>;
+  }
 
   return (
     <>{report ? <Report initFormValues={report} /> : <div>Loading...</div>}</>
