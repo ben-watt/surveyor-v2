@@ -149,16 +149,16 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
           <div className="space-y-2">
             {elementData?.components.map((component) => (
               <div key={component.id} className="flex items-center justify-between p-1 pl-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-4 h-4 rounded-sm ${
+                <div className="flex items-center space-x-4 min-w-20">
+                  <div className={`flex-shrink-0 w-4 h-4 rounded-sm ${
                     component.ragStatus === "Red" ? "bg-red-500" :
                     component.ragStatus === "Amber" ? "bg-amber-500" :
                     component.ragStatus === "Green" ? "bg-green-500" :
                     "bg-gray-500"
                   }`} />
-                  <span className="text-sm truncate" >{component.useNameOverride ? component.nameOverride : component.name}</span>
+                  <span className="text-sm truncate min-w-0 flex-1">{component.useNameOverride ? component.nameOverride : component.name}</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-shrink-0">
                   <Button
                     variant="ghost"
                     onClick={(e) => {
