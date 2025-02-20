@@ -12,7 +12,11 @@ import InputError from "@/app/app/components/InputError";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MultiFormSection } from "@/app/app/components/FormSection";
-import { surveyStore, sectionStore, elementStore } from "@/app/app/clients/Database";
+import {
+  surveyStore,
+  sectionStore,
+  elementStore,
+} from "@/app/app/clients/Database";
 import { Section, Element } from "@/app/app/clients/Dexie";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { Ok, Result, Err } from "ts-results";
@@ -254,7 +258,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
     async function createNewForm() {
       console.log("[ReportWrapper] createNewForm");
       const newId = uuidv4();
-      
+
       try {
         const user = await fetchUserAttributes();
         if (!sectionsHydrated || !elementsHydrated) {
@@ -262,7 +266,12 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
           return;
         }
 
-        const formResult = createDefaultFormValues(newId, dbSections, dbElements, user);
+        const formResult = createDefaultFormValues(
+          newId,
+          dbSections,
+          dbElements,
+          user
+        );
         if (formResult.ok) {
           surveyStore.add({
             id: newId,
@@ -274,7 +283,9 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
           throwError(formResult.val);
         }
       } catch (error) {
-        throwError(error instanceof Error ? error : new Error("Unknown error occurred"));
+        throwError(
+          error instanceof Error ? error : new Error("Unknown error occurred")
+        );
       }
     }
 
@@ -283,7 +294,17 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
     if (isHydrated && !report) {
       createNewForm();
     }
-  }, [id, isHydrated, report, router, throwError, sectionsHydrated, elementsHydrated, dbSections, dbElements]);
+  }, [
+    id,
+    isHydrated,
+    report,
+    router,
+    throwError,
+    sectionsHydrated,
+    elementsHydrated,
+    dbSections,
+    dbElements,
+  ]);
 
   if (!sectionsHydrated || !elementsHydrated) {
     return <div>Loading sections and elements...</div>;
@@ -371,11 +392,27 @@ function Report({ initFormValues }: ReportProps) {
         <form onSubmit={handleSubmit(onSubmit, onError)}>
           <Card>
             <CardHeader>
-              <CardTitle className="flex justify-between">
+              <div className="flex justify-between">
                 <div>
-                  Building Survey Report - Level{" "}{initFormValues.reportDetails.level}
+                  <CardTitle>
+                    <div>
+                      Building Survey Report - Level{" "}
+                      {initFormValues.reportDetails.level}
+                    </div>
+                  </CardTitle>
+                  <CardDescription>
+                    {initFormValues.reportDetails.address.line1 ? (
+                      <AddressDisplay
+                        address={initFormValues.reportDetails.address}
+                        maxLength={32}
+                      />
+                    ) : (
+                      initFormValues.reportDetails.address.formatted ??
+                      "No address specified"
+                    )}
+                  </CardDescription>
                 </div>
-                <div className="h-0">
+                <div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="default" className="gap-2">
@@ -384,41 +421,31 @@ function Report({ initFormValues }: ReportProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(ev) => {
-                            ev.preventDefault();
-                            router.push(`/app/editor/${initFormValues.id}`);
-                          }}
-                          disabled={!isFormValid()}
-                        >
-                          Generate Report
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(ev) => saveAsDraft()}>
-                          Save As Draft
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(ev) => {
-                            ev.preventDefault();
-                            handleSubmit(onSubmit, onError)();
-                          }}
-                          disabled={!isFormValid()}
-                        >
-                          Save
-                        </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(ev) => {
+                          ev.preventDefault();
+                          router.push(`/app/editor/${initFormValues.id}`);
+                        }}
+                        disabled={!isFormValid()}
+                      >
+                        Generate Report
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(ev) => saveAsDraft()}>
+                        Save As Draft
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(ev) => {
+                          ev.preventDefault();
+                          handleSubmit(onSubmit, onError)();
+                        }}
+                        disabled={!isFormValid()}
+                      >
+                        Save
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              </CardTitle>
-              <CardDescription>
-                {initFormValues.reportDetails.address.line1 ? (
-                  <AddressDisplay 
-                    address={initFormValues.reportDetails.address}
-                    maxLength={60}
-                  />
-                ) : (
-                  initFormValues.reportDetails.address.formatted ?? "No address specified"
-                )}
-              </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-1 cursor-pointer">
