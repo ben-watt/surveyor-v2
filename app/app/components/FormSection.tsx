@@ -1,6 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import React, { PropsWithChildren, useEffect } from "react";
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link";
 import { DynamicDrawer, useDynamicDrawer } from "./Drawer";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,19 @@ export const FormSection = ({
     closed: { rotate: 0 },
   }
 
+  const contentVariants = {
+    open: { 
+      height: "auto",
+      opacity: 1,
+      transition: { duration: 0.2, ease: "easeOut" }
+    },
+    closed: { 
+      height: 0,
+      opacity: 0,
+      transition: { duration: 0.2, ease: "easeIn" }
+    }
+  }
+
   if(!collapsable) {
     return (
       <div className="border border-grey-600 mt-2 mb-2 rounded p-2">
@@ -45,16 +58,26 @@ export const FormSection = ({
   return (
     <div className="border border-grey-600 mt-2 mb-2 rounded p-2">
       {title && (
-        <div className="flex justify-between items-center" onClick={() => setCollapsed((prev) => !prev)}>
+        <div className="flex justify-between items-center cursor-pointer" onClick={() => setCollapsed((prev) => !prev)}>
           <h2 className="text-lg font-semibold">{title}</h2>
           <motion.div className="mr-2" animate={collapsed ? "closed" : "open" } variants={variants}>
             <ChevronRight size={20} />
           </motion.div>
         </div>
       )}
-        <div className="space-y-2 mt-2" hidden={collapsed}>
+      <AnimatePresence initial={false}>
+        {!collapsed && (
+          <motion.div
+            className="space-y-2 mt-2 overflow-hidden"
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={contentVariants}
+          >
             {children}
-        </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
