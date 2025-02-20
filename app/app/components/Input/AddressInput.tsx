@@ -24,7 +24,6 @@ interface AddressInputProps {
   control: Control<any>;
   rules?: Record<string, any>;
   errors?: FieldErrors<FieldValues>;
-  countryCode?: string; // Optional override for country restriction
 }
 
 const mapContainerStyle = {
@@ -36,11 +35,9 @@ const mapContainerStyle = {
 
 function CustomPlacesAutocomplete({ 
   inputRef, 
-  countryCode,
   onPlaceSelect 
 }: { 
   inputRef: React.RefObject<HTMLInputElement>,
-  countryCode?: string,
   onPlaceSelect: (place: google.maps.places.PlaceResult) => void
 }) {
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
@@ -66,10 +63,7 @@ function CustomPlacesAutocomplete({
       }
 
       const request: google.maps.places.AutocompletionRequest = {
-        input,
-        ...(countryCode && {
-          componentRestrictions: { country: countryCode }
-        })
+        input
       };
 
       try {
@@ -81,7 +75,7 @@ function CustomPlacesAutocomplete({
         setPredictions([]);
       }
     },
-    [countryCode]
+    []
   );
 
   const handlePredictionClick = useCallback(async (prediction: google.maps.places.AutocompletePrediction) => {
@@ -213,44 +207,15 @@ function AddressInput({
   control,
   rules,
   errors,
-  countryCode: propCountryCode,
 }: AddressInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [countryCode, setCountryCode] = useState<string | undefined>(propCountryCode);
   
   const { field } = useController({
     name,
     control,
     rules,
   });
-
-  // Try to detect user's country if not provided in props
-  useEffect(() => {
-    if (propCountryCode) return;
-
-    // First try to get country from browser language
-    const browserLang = navigator.language || (navigator as any).userLanguage;
-    if (browserLang) {
-      const country = browserLang.split('-')[1]?.toLowerCase();
-      if (country) {
-        setCountryCode(country);
-        return;
-      }
-    }
-
-    // If browser language doesn't work, try IP geolocation
-    fetch('https://ipapi.co/json/')
-      .then(response => response.json())
-      .then(data => {
-        if (data.country_code) {
-          setCountryCode(data.country_code.toLowerCase());
-        }
-      })
-      .catch(error => {
-        console.error('Error detecting country:', error);
-      });
-  }, [propCountryCode]);
 
   // Handle initial value
   useEffect(() => {
@@ -300,7 +265,7 @@ function AddressInput({
           <ShadInput
             ref={inputRef}
             className={cn("focus:ring-0 focus:border-none", className)}
-            placeholder={countryCode ? `Search in ${new Intl.DisplayNames([navigator.language], { type: 'region' }).of(countryCode.toUpperCase())}...` : placeholder}
+            placeholder={placeholder}
             disabled={disabled}
             defaultValue={field.value?.formatted ?? ""}
             onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -318,7 +283,6 @@ function AddressInput({
           />
           <CustomPlacesAutocomplete 
             inputRef={inputRef}
-            countryCode={countryCode}
             onPlaceSelect={handlePlaceSelect}
           />
         </div>
