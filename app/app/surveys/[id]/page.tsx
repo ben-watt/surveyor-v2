@@ -95,7 +95,7 @@ function Home({ params }: { params: { id: string } }) {
                 <span className="text-sm">Photos</span>
             </Link>
 
-            <span className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full px-1 text-xs">{isHydrated ? `${photoCount}` : "-"}</span>
+            <span className="absolute -top-2 -left-2 bg-black text-white rounded-full px-1 text-xs">{isHydrated ? `${photoCount}` : "-"}</span>
           </div>
         </div>
         <div> 
