@@ -268,7 +268,7 @@ function InspectionFormContent({
       phrases
         .filter(
           (phrase) =>
-            phrase.type === "Condition" &&
+            phrase.type.toLowerCase() === "condition" &&
             (phrase.associatedComponentIds.includes(component.id) ||
               phrase.associatedElementIds.includes(element.id))
         )
