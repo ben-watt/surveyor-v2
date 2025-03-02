@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { tenantAdmin } from "./tenant-admin/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -9,6 +10,34 @@ authenticated via an API key, can only "read" records.
 =========================================================================*/
 
 const schema = a.schema({
+  // Add tenant admin mutations
+  tenantAdmin: a
+    .mutation()
+    .arguments({
+      action: a.string().required(),
+      groupName: a.string(),
+      username: a.string(),
+      description: a.string(),
+    })
+    .authorization((allow) => [
+      allow.authenticated(),
+    ])
+    .handler(a.handler.function(tenantAdmin))
+    .returns(a.json()),
+
+  Tenant: a
+    .model({
+      id: a.id().required(),
+      name: a.string().required(),
+      description: a.string(),
+      createdAt: a.datetime().required(),
+      createdBy: a.string().required(),
+      tenantId: a.string(),
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(["read"]),
+      allow.owner().to(["create", "read", "update", "delete"]),
+    ]),
   Surveys: a
     .model({
       id: a.id().required(),
@@ -16,6 +45,7 @@ const schema = a.schema({
       createdAt: a.string().required(),
       updatedAt: a.string().required(),
       content: a.json().required(),
+      tenantId: a.string(),
     })
     .authorization((allow) => [
       allow.authenticated().to(["create", "read", "update"]),
@@ -29,6 +59,7 @@ const schema = a.schema({
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     elements: a.hasMany("Elements", "sectionId"),
+    tenantId: a.string(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),
@@ -44,6 +75,7 @@ const schema = a.schema({
     syncStatus: a.string().required(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
+    tenantId: a.string(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),
@@ -62,6 +94,7 @@ const schema = a.schema({
     associatedElementIds:  a.string().required().array().required(),
     associatedComponentIds:  a.string().required().array().required(),
     phrase: a.string().required(),
+    tenantId: a.string(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),
@@ -76,6 +109,7 @@ const schema = a.schema({
       element: a.belongsTo("Elements", "elementId"),
       createdAt: a.datetime().required(),
       updatedAt: a.datetime().required(),
+      tenantId: a.string(),
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
@@ -88,6 +122,7 @@ const schema = a.schema({
     syncStatus: a.string().required(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
+    tenantId: a.string(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow.authenticated().to(["create", "read", "update", "delete"]),

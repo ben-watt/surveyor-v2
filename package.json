@@ -16,6 +16,7 @@
     "@aws-amplify/ui-react": "^6.1.11",
     "@aws-amplify/ui-react-storage": "^3.6.1",
     "@aws-lambda-powertools/logger": "^2.12.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.758.0",
     "@aws-sdk/client-rum": "^3.721.0",
     "@googlemaps/extended-component-library": "^0.6.13",
     "@heroicons/react": "^2.2.0",

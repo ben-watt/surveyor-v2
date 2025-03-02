@@ -58,7 +58,7 @@ export default function SignUp() {
         username: email,
         confirmationCode
       })
-      router.push("/surveys") // Redirect to dashboard after successful confirmation
+      router.push("/app/surveys") // Redirect to dashboard after successful confirmation
     } catch (err: any) {
       setError(err.message || "Failed to confirm sign up")
     } finally {

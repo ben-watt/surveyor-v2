@@ -14,6 +14,13 @@ import { Schema } from "@/amplify/data/resource";
 import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Draft } from "immer";
 import { Ok, Err, Result } from 'ts-results';
+import { getCurrentTenantId } from "@/app/app/utils/tenant-utils";
+
+// Helper function to get tenant filter for queries
+async function getTenantFilter() {
+  const tenantId = await getCurrentTenantId();
+  return tenantId ? { filter: { tenantId: { eq: tenantId } } } : {};
+}
 
 const mapToSurvey = (data: any): DexieSurvey => ({
   id: data.id,
@@ -21,6 +28,7 @@ const mapToSurvey = (data: any): DexieSurvey => ({
   content: JSON.parse(data.content),
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
+  tenantId: data.tenantId,
 });
 
 type UpdateSurvey = Partial<DexieSurvey> & { id: string };
@@ -33,19 +41,24 @@ const createSurveyStore = () => {
     "surveys",
     {
       list: async (): Promise<Result<DexieSurvey[], Error>> => {
-        const response = await client.models.Surveys.list();
+        // Apply tenant filter to list query
+        const filter = await getTenantFilter();
+        const response = await client.models.Surveys.list(filter);
         if (response.errors) {
           return Err(new Error(response.errors.map(e => e.message).join(", ")));
         }
         return Ok(response.data.map(mapToSurvey));
       },
       create: async (data): Promise<Result<DexieSurvey, Error>> => {
+        // Add tenant ID to new survey
+        const tenantId = await getCurrentTenantId();
         const serverData = {
           id: data.id,
           syncStatus: SyncStatus.Synced,
           content: JSON.stringify(data.content),
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
+          tenantId,
         }
 
         console.log("[createSurveyStore] Creating survey", serverData);
@@ -113,6 +126,7 @@ const mapToComponent = (data: any): Component => ({
   name: data.name,
   materials: data.materials,
   elementId: data.elementId,
+  tenantId: data.tenantId,
 });
 
 export type UpdateComponent = Partial<Component> & { id: string };
@@ -124,14 +138,20 @@ export const componentStore = CreateDexieHooks<
   UpdateComponent
 >(db, "components", {
   list: async (): Promise<Result<Component[], Error>> => {
-    const response = await client.models.Components.list();
+    // Apply tenant filter to list query
+    const filter = await getTenantFilter();
+    const response = await client.models.Components.list(filter);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
     return Ok(response.data.map(mapToComponent));
   },
   create: async (data): Promise<Result<Component, Error>> => {
-    const response = await client.models.Components.create(data);
+    // Add tenant ID to new component
+    const tenantId = await getCurrentTenantId();
+    const createData = { ...data, tenantId };
+    
+    const response = await client.models.Components.create(createData);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }

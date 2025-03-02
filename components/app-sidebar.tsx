@@ -8,6 +8,8 @@ import {
   Layers,
   NotebookPen,
   Settings2,
+  Building2,
+  ChevronDown,
 } from "lucide-react"
 import { AppIcon } from "@/app/app/components/AppIcon"
 
@@ -24,6 +26,16 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import { useTenant } from "@/app/app/contexts/TenantContext"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const applicationNavData = {
   items: [
@@ -32,6 +44,11 @@ const applicationNavData = {
       url: "/app/surveys",
       icon: NotebookPen,
       isActive: true,
+    },
+    {
+      title: "Tenants",
+      url: "/app/tenants",
+      icon: Building2,
     },
   ]
 }
@@ -74,9 +91,11 @@ const configurationNavData = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { currentTenant, tenants, loading, setCurrentTenant } = useTenant();
+
   return (
     <Sidebar collapsible="icon" {...props}>
-    <SidebarHeader>
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
@@ -90,6 +109,63 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
               </Link>
             </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          {/* Tenant Selector */}
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton size="lg" className="mt-2">
+                  <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    {loading ? (
+                      <Skeleton className="h-4 w-24" />
+                    ) : (
+                      <>
+                        <span className="truncate font-semibold">
+                          {currentTenant?.name || "No Tenant"}
+                        </span>
+                        <span className="truncate text-xs">
+                          {tenants.length} {tenants.length === 1 ? "tenant" : "tenants"}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <ChevronDown className="ml-auto h-4 w-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="w-[--radix-dropdown-menu-trigger-width]"
+              >
+                <DropdownMenuLabel>Switch Tenant</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {tenants.map((tenant) => (
+                  <DropdownMenuItem
+                    key={tenant.id}
+                    className={
+                      currentTenant?.id === tenant.id
+                        ? "bg-accent text-accent-foreground"
+                        : ""
+                    }
+                    onClick={() => setCurrentTenant(tenant)}
+                  >
+                    {tenant.name}
+                  </DropdownMenuItem>
+                ))}
+                {tenants.length === 0 && (
+                  <DropdownMenuItem disabled>
+                    No tenants available
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/app/tenants">Manage Tenants</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

@@ -13,6 +13,7 @@ import { surveyStore, componentStore, elementStore, phraseStore, locationStore, 
 import { imageUploadStore } from "./clients/ImageUploadStore";
 import { OnlineStatus } from "./components/OnlineStatus";
 import { SyncStatus } from "./components/SyncStatus";
+import { TenantProvider } from "./contexts/TenantContext";
 
 export default function RootLayout({
   children,
@@ -55,6 +56,7 @@ export default function RootLayout({
     <>
       <DynamicDrawerProvider>
         <TooltipProvider>
+          <TenantProvider>
             <SidebarProvider>
               <AppSidebar className="print:!hidden" />
               <SidebarInset className="print:!w-0 print:!m-0 print:!p-0">
@@ -84,7 +86,7 @@ export default function RootLayout({
                 </div>
               </SidebarInset>
             </SidebarProvider>
-          
+          </TenantProvider>
           <Toaster position="top-right" />
         </TooltipProvider>
       </DynamicDrawerProvider>

@@ -1,4 +1,5 @@
 import { defineAuth } from '@aws-amplify/backend';
+import { tenantAdmin } from '../data/tenant-admin/resource';
 
 /**
  * Define and configure your auth resource
@@ -23,17 +24,19 @@ export const auth = defineAuth({
   // },
   userAttributes: {
     /** request additional attributes for your app's users */
-    // email: {
-    //   mutable: false,
-    //   required: true,
-    // },
-    // profilePicture: {
-    //   mutable: true,
-    //   required: false,
-    // },
-    // fullname: {
-    //   mutable: true,
-    //   required: false,
-    // },
+    email: {
+      mutable: false,
+      required: true,
+    },
   },
+  // Grant access to the tenant admin function
+  access: (allow) => [
+    allow.resource(tenantAdmin).to([
+      'createGroup',
+      'addUserToGroup',
+      'removeUserFromGroup',
+      'listGroups',
+      'listUsersInGroup',
+    ]),
+  ],
 });
