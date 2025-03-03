@@ -14,7 +14,7 @@ import { Schema } from "@/amplify/data/resource";
 import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Draft } from "immer";
 import { Ok, Err, Result } from 'ts-results';
-import { getCurrentTenantId } from "@/app/app/utils/tenant-utils";
+import { getCurrentTenantId, withTenantId } from "@/app/app/utils/tenant-utils";
 
 // Helper function to get tenant filter for queries
 async function getTenantFilter() {
@@ -51,15 +51,14 @@ const createSurveyStore = () => {
       },
       create: async (data): Promise<Result<DexieSurvey, Error>> => {
         // Add tenant ID to new survey
-        const tenantId = await getCurrentTenantId();
-        const serverData = {
+        const baseData = {
           id: data.id,
           syncStatus: SyncStatus.Synced,
           content: JSON.stringify(data.content),
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
-          tenantId,
-        }
+        };
+        const serverData = await withTenantId(baseData);
 
         console.log("[createSurveyStore] Creating survey", serverData);
         const response = await client.models.Surveys.create(serverData);
@@ -69,11 +68,13 @@ const createSurveyStore = () => {
         return Ok(mapToSurvey(response.data));
       },
       update: async (data): Promise<Result<DexieSurvey, Error>> => {
-        const serverData = {
+        // Add tenant ID to update
+        const baseData = {
           id: data.id,
           syncStatus: SyncStatus.Synced,
           content: JSON.stringify(data.content),
-        }
+        };
+        const serverData = await withTenantId(baseData);
 
         console.log("[createSurveyStore] Updating survey", serverData); 
         const response = await client.models.Surveys.update(serverData);
@@ -148,17 +149,17 @@ export const componentStore = CreateDexieHooks<
   },
   create: async (data): Promise<Result<Component, Error>> => {
     // Add tenant ID to new component
-    const tenantId = await getCurrentTenantId();
-    const createData = { ...data, tenantId };
-    
-    const response = await client.models.Components.create(createData);
+    const serverData = await withTenantId(data);
+    const response = await client.models.Components.create(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
     return Ok(mapToComponent(response.data));
   },
   update: async (data): Promise<Result<Component, Error>> => {
-    const response = await client.models.Components.update(data);
+    // Add tenant ID to update
+    const serverData = await withTenantId(data);
+    const response = await client.models.Components.update(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -182,6 +183,7 @@ const mapToElement = (data: any): BuildingSurveyElement => ({
   order: data.order,
   sectionId: data.sectionId,
   description: data.description,
+  tenantId: data.tenantId,
 });
 
 export type UpdateElement = Partial<BuildingSurveyElement> & { id: string };
@@ -193,21 +195,27 @@ export const elementStore = CreateDexieHooks<
   UpdateElement
 >(db, "elements", {
   list: async (): Promise<Result<BuildingSurveyElement[], Error>> => {
-    const response = await client.models.Elements.list();
+    // Apply tenant filter to list query
+    const filter = await getTenantFilter();
+    const response = await client.models.Elements.list(filter);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
     return Ok(response.data.map(mapToElement));
   },
   create: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
-    const response = await client.models.Elements.create(data);
+    // Add tenant ID to new element
+    const serverData = await withTenantId(data);
+    const response = await client.models.Elements.create(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
     return Ok(mapToElement(response.data));
   },
   update: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
-    const response = await client.models.Elements.update(data);
+    // Add tenant ID to update
+    const serverData = await withTenantId(data);
+    const response = await client.models.Elements.update(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -229,6 +237,7 @@ const mapToSection = (data: any): Section => ({
   createdAt: data.createdAt,
   name: data.name,
   order: data.order || 0,
+  tenantId: data.tenantId,
 });
 
 export type UpdateSection = Partial<Section> & { id: string };
@@ -239,14 +248,18 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
   "sections",
   {
     list: async (): Promise<Result<Section[], Error>> => {
-      const response = await client.models.Sections.list();
+      // Apply tenant filter to list query
+      const filter = await getTenantFilter();
+      const response = await client.models.Sections.list(filter);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
       return Ok(response.data.map(mapToSection));
     },
     create: async (data): Promise<Result<Section, Error>> => {
-      const response = await client.models.Sections.create(data);
+      // Add tenant ID to new section
+      const serverData = await withTenantId(data);
+      const response = await client.models.Sections.create(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
@@ -254,7 +267,9 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
       return Ok(mapToSection(response.data));
     },
     update: async (data): Promise<Result<Section, Error>> => {
-      const response = await client.models.Sections.update(data);
+      // Add tenant ID to update
+      const serverData = await withTenantId(data);
+      const response = await client.models.Sections.update(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
@@ -282,6 +297,7 @@ const mapToPhrase = (data: any): Phrase => ({
   associatedComponentIds: data.associatedComponentIds,
   phrase: data.phrase,
   owner: data.owner,
+  tenantId: data.tenantId,
 });
 
 export type UpdatePhrase = Partial<Phrase> & { id: string };
@@ -289,21 +305,27 @@ export type CreatePhrase = Schema['Phrases']['createType'];
 
 export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(db, "phrases", {
   list: async (): Promise<Result<Phrase[], Error>> => {
-    const response = await client.models.Phrases.list();
+    // Apply tenant filter to list query
+    const filter = await getTenantFilter();
+    const response = await client.models.Phrases.list(filter);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
     return Ok(response.data.map(mapToPhrase));
   },
   create: async (data): Promise<Result<Phrase, Error>> => {
-    const response = await client.models.Phrases.create(data);
+    // Add tenant ID to new phrase
+    const serverData = await withTenantId(data);
+    const response = await client.models.Phrases.create(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
     return Ok(mapToPhrase(response.data));
   },
   update: async (data): Promise<Result<Phrase, Error>> => {
-    const response = await client.models.Phrases.update(data);
+    // Add tenant ID to update
+    const serverData = await withTenantId(data);
+    const response = await client.models.Phrases.update(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -325,6 +347,7 @@ const mapToLocation = (data: any): Location => ({
   createdAt: data.createdAt,
   name: data.name,
   parentId: data.parentId,
+  tenantId: data.tenantId,
 });
 
 export type CreateLocation = Schema['Locations']['createType'];
@@ -335,21 +358,27 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
   "locations",
   {
     list: async (): Promise<Result<Location[], Error>> => {
-      const response = await client.models.Locations.list();
+      // Apply tenant filter to list query
+      const filter = await getTenantFilter();
+      const response = await client.models.Locations.list(filter);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
       return Ok(response.data.map(mapToLocation));
     },
     create: async (data): Promise<Result<Location, Error>> => {
-      const response = await client.models.Locations.create(data);
+      // Add tenant ID to new location
+      const serverData = await withTenantId(data);
+      const response = await client.models.Locations.create(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
       return Ok(mapToLocation(response.data));
     },
     update: async (data): Promise<Result<Location, Error>> => {
-      const response = await client.models.Locations.update(data);
+      // Add tenant ID to update
+      const serverData = await withTenantId(data);
+      const response = await client.models.Locations.update(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }

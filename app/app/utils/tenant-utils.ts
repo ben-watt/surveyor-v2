@@ -256,9 +256,33 @@ export async function setPreferredTenant(tenantId: string): Promise<void> {
 export async function getPreferredTenant(): Promise<string | null> {
   try {
     const attributes = await fetchUserAttributes();
-    return attributes['custom:preferredTenant'] || null;
+    const preferredTenant = attributes['custom:preferredTenant'];
+    
+    // If no preferred tenant is set, use the user's sub as their personal tenant
+    if (!preferredTenant) {
+      return attributes.sub || null;
+    }
+    
+    // If preferred tenant is explicitly set to "personal", use the user's sub
+    if (preferredTenant === 'personal') {
+      return attributes.sub || null;
+    }
+    
+    return preferredTenant;
   } catch (error) {
     console.error('Error getting preferred tenant:', error);
     return null;
   }
+}
+
+/**
+ * Ensures that a data object has the current tenant ID
+ * This should be used before creating or updating any entity
+ */
+export async function withTenantId<T>(data: T): Promise<T & { tenantId: string }> {
+  const tenantId = await getCurrentTenantId();
+  if (!tenantId) {
+    throw new Error('No tenant ID available. Please ensure a tenant is selected.');
+  }
+  return { ...data, tenantId };
 } 

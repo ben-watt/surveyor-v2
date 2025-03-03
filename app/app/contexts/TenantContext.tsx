@@ -63,7 +63,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       if (tenant) {
         await setPreferredTenant(tenant.id);
       } else {
-        await setPreferredTenant("NONE");
+        await setPreferredTenant("personal");
       }
     } catch (err) {
       console.error("Error setting preferred tenant:", err);

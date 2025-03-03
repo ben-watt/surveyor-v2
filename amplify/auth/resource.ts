@@ -28,6 +28,10 @@ export const auth = defineAuth({
       mutable: false,
       required: true,
     },
+    'custom:preferredTenant': {
+      mutable: true,
+      dataType: 'String',
+    },
   },
   // Grant access to the tenant admin function
   access: (allow) => [
