@@ -44,12 +44,7 @@ const applicationNavData = {
       url: "/app/surveys",
       icon: NotebookPen,
       isActive: true,
-    },
-    {
-      title: "Tenants",
-      url: "/app/tenants",
-      icon: Building2,
-    },
+    }
   ]
 }
 
@@ -93,45 +88,30 @@ const configurationNavData = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { currentTenant, tenants, loading, setCurrentTenant } = useTenant();
 
+  const tenantsData = tenants.map(tenant => ({
+    name: tenant.name,
+    logo: Building2,
+    id: tenant.id,
+    createdAt: tenant.createdAt,
+    createdBy: tenant.createdBy
+  }));
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
-                <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <AppIcon color="white" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Survii</span>
-                  <span className="truncate text-xs">v0.0.1</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          
-          {/* Tenant Selector */}
-          <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton size="lg" className="mt-2">
-                  <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
-                    <Building2 className="h-4 w-4" />
+                <SidebarMenuButton size="lg">
+                  <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <AppIcon color="white" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    {loading ? (
-                      <Skeleton className="h-4 w-24" />
-                    ) : (
-                      <>
-                        <span className="truncate font-semibold">
-                          {currentTenant?.name || "No Tenant"}
-                        </span>
-                        <span className="truncate text-xs">
-                          {tenants.length} {tenants.length === 1 ? "tenant" : "tenants"}
-                        </span>
-                      </>
-                    )}
+                    <span className="truncate font-semibold">
+                      Survii - {loading ? <Skeleton className="h-4 w-24" /> : currentTenant?.name || "Personal"}
+                    </span>
+                    <span className="truncate text-xs">v0.0.1</span>
                   </div>
                   <ChevronDown className="ml-auto h-4 w-4" />
                 </SidebarMenuButton>
@@ -140,9 +120,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 align="start"
                 className="w-[--radix-dropdown-menu-trigger-width]"
               >
-                <DropdownMenuLabel>Switch Tenant</DropdownMenuLabel>
+                <DropdownMenuLabel>Switch Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {tenants.map((tenant) => (
+                <DropdownMenuItem
+                  className={!currentTenant ? "bg-accent text-accent-foreground" : ""}
+                  onClick={() => setCurrentTenant(null)}
+                >
+                  <div className="flex items-center gap-2">
+                    Personal Account
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Tenants</DropdownMenuLabel>
+                {tenantsData.map((tenant) => (
                   <DropdownMenuItem
                     key={tenant.id}
                     className={
@@ -152,7 +142,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     }
                     onClick={() => setCurrentTenant(tenant)}
                   >
-                    {tenant.name}
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      {tenant.name}
+                    </div>
                   </DropdownMenuItem>
                 ))}
                 {tenants.length === 0 && (

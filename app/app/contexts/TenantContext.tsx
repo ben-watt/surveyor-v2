@@ -8,7 +8,7 @@ interface TenantContextType {
   tenants: Tenant[];
   loading: boolean;
   error: string | null;
-  setCurrentTenant: (tenant: Tenant) => Promise<void>;
+  setCurrentTenant: (tenant: Tenant | null) => Promise<void>;
   refreshTenants: () => Promise<void>;
 }
 
@@ -57,10 +57,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   };
 
   // Set the current tenant and save it as preferred
-  const setCurrentTenant = async (tenant: Tenant) => {
+  const setCurrentTenant = async (tenant: Tenant | null) => {
     try {
       setCurrentTenantState(tenant);
-      await setPreferredTenant(tenant.id);
+      if (tenant) {
+        await setPreferredTenant(tenant.id);
+      } else {
+        await setPreferredTenant("NONE");
+      }
     } catch (err) {
       console.error("Error setting preferred tenant:", err);
       setError("Failed to set preferred tenant");
