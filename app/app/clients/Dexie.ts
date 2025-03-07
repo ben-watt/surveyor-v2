@@ -8,6 +8,7 @@ import { getErrorMessage } from '../utils/handleError';
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from 'react';
 import { debounce, DebouncedFunc } from 'lodash';
+import { getCurrentTenantId } from '../utils/tenant-utils';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -40,6 +41,7 @@ type TableEntity = {
   updatedAt: string;
   syncStatus: string;
   syncError?: string;
+  tenantId: string;
 }
 
 enum SyncStatus {
@@ -96,24 +98,49 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
   const useList = (): [boolean, T[]] => {
     const [hydrated, setHydrated] = useState<boolean>(false);
+    const [tenantId, setTenantId] = useState<string | null>(null);
+
+    // Get current tenant ID
+    useState(() => {
+      getCurrentTenantId().then(setTenantId);
+    });
+
     const data = useLiveQuery(
       async () => {
-        const items = await table.where('syncStatus').notEqual(SyncStatus.PendingDelete).toArray();
+        if (!tenantId) return [];
+        const items = await table
+          .where('syncStatus')
+          .notEqual(SyncStatus.PendingDelete)
+          .filter(item => item.tenantId === tenantId)
+          .toArray();
         setHydrated(true);
         return items;
-      }
+      },
+      [tenantId]
     );
 
     return [hydrated, data ?? []];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
+    const [tenantId, setTenantId] = useState<string | null>(null);
+
+    // Get current tenant ID
+    useState(() => {
+      getCurrentTenantId().then(setTenantId);
+    });
+
     const result = useLiveQuery(
       async () => {
+        if (!tenantId) return { value: undefined };
         const item = await table.get(id);
-        return item && item.syncStatus !== SyncStatus.PendingDelete ? { value: item } : { value: undefined };
+        return item && 
+               item.syncStatus !== SyncStatus.PendingDelete && 
+               item.tenantId === tenantId 
+          ? { value: item } 
+          : { value: undefined };
       },
-      [id]
+      [id, tenantId]
     );
     
     return [result !== undefined, result?.value];
@@ -343,12 +370,12 @@ const db = new Dexie('Surveys') as Dexie & {
 };
 
 db.version(1).stores({
-  surveys: '&id, updatedAt, syncStatus',
-  components: '&id, updatedAt, syncStatus',
-  elements: '&id, updatedAt, syncStatus',
-  phrases: '&id, updatedAt, syncStatus',
-  locations: '&id, updatedAt, syncStatus',
-  sections: '&id, updatedAt, syncStatus',
+  surveys: '&id, updatedAt, syncStatus, tenantId',
+  components: '&id, updatedAt, syncStatus, tenantId',
+  elements: '&id, updatedAt, syncStatus, tenantId',
+  phrases: '&id, updatedAt, syncStatus, tenantId',
+  locations: '&id, updatedAt, syncStatus, tenantId',
+  sections: '&id, updatedAt, syncStatus, tenantId',
   imageUploads: '&id, path, updatedAt, syncStatus',
 });
 

@@ -43,8 +43,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        // If no preferred tenant or it's not in the list, use the first one
-        setCurrentTenantState(userTenants[0]);
+        // If no preferred tenant or it's not in the list, set to null
+        setCurrentTenantState(null);
       } else {
         setCurrentTenantState(null);
       }

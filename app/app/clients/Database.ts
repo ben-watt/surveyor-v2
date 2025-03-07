@@ -14,13 +14,7 @@ import { Schema } from "@/amplify/data/resource";
 import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Draft } from "immer";
 import { Ok, Err, Result } from 'ts-results';
-import { getCurrentTenantId, withTenantId } from "@/app/app/utils/tenant-utils";
-
-// Helper function to get tenant filter for queries
-async function getTenantFilter() {
-  const tenantId = await getCurrentTenantId();
-  return tenantId ? { filter: { tenantId: { eq: tenantId } } } : {};
-}
+import { withTenantId } from "@/app/app/utils/tenant-utils";
 
 const mapToSurvey = (data: any): DexieSurvey => ({
   id: data.id,
@@ -41,9 +35,7 @@ const createSurveyStore = () => {
     "surveys",
     {
       list: async (): Promise<Result<DexieSurvey[], Error>> => {
-        // Apply tenant filter to list query
-        const filter = await getTenantFilter();
-        const response = await client.models.Surveys.list(filter);
+        const response = await client.models.Surveys.list();
         if (response.errors) {
           return Err(new Error(response.errors.map(e => e.message).join(", ")));
         }
@@ -139,9 +131,7 @@ export const componentStore = CreateDexieHooks<
   UpdateComponent
 >(db, "components", {
   list: async (): Promise<Result<Component[], Error>> => {
-    // Apply tenant filter to list query
-    const filter = await getTenantFilter();
-    const response = await client.models.Components.list(filter);
+    const response = await client.models.Components.list();
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -195,9 +185,7 @@ export const elementStore = CreateDexieHooks<
   UpdateElement
 >(db, "elements", {
   list: async (): Promise<Result<BuildingSurveyElement[], Error>> => {
-    // Apply tenant filter to list query
-    const filter = await getTenantFilter();
-    const response = await client.models.Elements.list(filter);
+    const response = await client.models.Elements.list();
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -248,9 +236,7 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
   "sections",
   {
     list: async (): Promise<Result<Section[], Error>> => {
-      // Apply tenant filter to list query
-      const filter = await getTenantFilter();
-      const response = await client.models.Sections.list(filter);
+      const response = await client.models.Sections.list();
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
@@ -305,9 +291,7 @@ export type CreatePhrase = Schema['Phrases']['createType'];
 
 export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(db, "phrases", {
   list: async (): Promise<Result<Phrase[], Error>> => {
-    // Apply tenant filter to list query
-    const filter = await getTenantFilter();
-    const response = await client.models.Phrases.list(filter);
+    const response = await client.models.Phrases.list();
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -358,9 +342,7 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
   "locations",
   {
     list: async (): Promise<Result<Location[], Error>> => {
-      // Apply tenant filter to list query
-      const filter = await getTenantFilter();
-      const response = await client.models.Locations.list(filter);
+      const response = await client.models.Locations.list();
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }

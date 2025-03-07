@@ -45,11 +45,14 @@ const schema = a.schema({
       createdAt: a.string().required(),
       updatedAt: a.string().required(),
       content: a.json().required(),
-      tenantId: a.string(),
+      tenantId: a.string().required(),
     })
     .authorization((allow) => [
-      allow.authenticated().to(["create", "read", "update"]),
-      allow.owner().to(["create", "read", "update", "delete"]),
+      allow.owner().to(["create", "read", "update", "delete"]), 
+      allow
+      .groupDefinedIn("tenantId")
+      .withClaimIn("preferredTenant")
+      .to(["create", "read", "update", "delete"]),
     ]),
   Sections: a.model({
     id: a.id().required(),
@@ -59,10 +62,13 @@ const schema = a.schema({
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     elements: a.hasMany("Elements", "sectionId"),
-    tenantId: a.string(),
+    tenantId: a.string().required(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
-    allow.authenticated().to(["create", "read", "update", "delete"]),
+    allow
+      .groupDefinedIn("tenantId")
+      .withClaimIn("preferredTenant")
+      .to(["create", "read", "update", "delete"]),
   ]),
   Elements: a.model({
     id: a.id().required(),
@@ -75,10 +81,13 @@ const schema = a.schema({
     syncStatus: a.string().required(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
-    tenantId: a.string(),
+    tenantId: a.string().required(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
-    allow.authenticated().to(["create", "read", "update", "delete"]),
+    allow
+    .groupDefinedIn("tenantId")
+    .withClaimIn("preferredTenant")
+    .to(["create", "read", "update", "delete"]),
   ]),
   Material: a.customType({
     name: a.string().required()
@@ -94,10 +103,13 @@ const schema = a.schema({
     associatedElementIds:  a.string().required().array().required(),
     associatedComponentIds:  a.string().required().array().required(),
     phrase: a.string().required(),
-    tenantId: a.string(),
+    tenantId: a.string().required(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
-    allow.authenticated().to(["create", "read", "update", "delete"]),
+    allow
+    .groupDefinedIn("tenantId")
+    .withClaimIn("preferredTenant")
+    .to(["create", "read", "update", "delete"]),
   ]),
   Components: a
     .model({
@@ -109,11 +121,14 @@ const schema = a.schema({
       element: a.belongsTo("Elements", "elementId"),
       createdAt: a.datetime().required(),
       updatedAt: a.datetime().required(),
-      tenantId: a.string(),
+      tenantId: a.string().required(),
     })
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
-      allow.authenticated().to(["create", "read", "update", "delete"]),
+      allow
+      .groupDefinedIn("tenantId")
+      .withClaimIn("preferredTenant")
+      .to(["create", "read", "update", "delete"]),
     ]),
   Locations: a.model({
     id: a.id().required(),
@@ -122,10 +137,13 @@ const schema = a.schema({
     syncStatus: a.string().required(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
-    tenantId: a.string(),
+    tenantId: a.string().required(),
   }).authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
-    allow.authenticated().to(["create", "read", "update", "delete"]),
+    allow
+    .groupDefinedIn("tenantId")
+    .withClaimIn("preferredTenant")
+    .to(["create", "read", "update", "delete"]),
   ]),
 });
 
