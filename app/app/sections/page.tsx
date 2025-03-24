@@ -21,6 +21,7 @@ export default function Page() {
   const router = useRouter();
   const [isHydrated, sections] = sectionStore.useList();
   const [elementsHydrated, elements] = elementStore.useList();
+  const isLoading = !isHydrated || !elementsHydrated;
 
   const columns: ColumnDef<Section>[] = [
     {
@@ -118,7 +119,7 @@ export default function Page() {
         columns={columns}
 
         data={sections}
-        isLoading={isHydrated && elementsHydrated}
+        isLoading={isLoading}
         onCreate={() => router.push("/app/sections/create")}
       />
     </div>

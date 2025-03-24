@@ -18,6 +18,8 @@ import { EntityType, SyncingEntities, EntitiesToSync } from "./types";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData, prepareLocationData } from "./utils/mappers";
 import client from "../clients/AmplifyDataClient";
+import { getRawCounts } from "../clients/Database";
+import { withTenantId } from "../utils/tenant-utils";
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
@@ -169,30 +171,13 @@ export default function Page() {
   useEffect(() => {
     async function fetchServerCounts() {
       try {
-        const [
-          elementsResponse,
-          componentsResponse,
-          phrasesResponse,
-          locationsResponse,
-          sectionsResponse,
-          surveysResponse
-        ] = await Promise.all([
-          client.models.Elements.list(),
-          client.models.Components.list(),
-          client.models.Phrases.list(),
-          client.models.Locations.list(),
-          client.models.Sections.list(),
-          client.models.Surveys.list()
-        ]);
-
-        setServerCounts({
-          elements: elementsResponse.data.length,
-          components: componentsResponse.data.length,
-          phrases: phrasesResponse.data.length,
-          locations: locationsResponse.data.length,
-          sections: sectionsResponse.data.length,
-          surveys: surveysResponse.data.length,
-        });
+        const result = await getRawCounts();
+        if (result.ok) {
+          setServerCounts(result.val);
+        } else {
+          console.error("Failed to fetch server counts:", result.val);
+          toast.error("Failed to fetch server counts");
+        }
       } catch (error) {
         console.error("Failed to fetch server counts:", error);
         toast.error("Failed to fetch server counts");
@@ -217,30 +202,33 @@ export default function Page() {
 
       if (entitiesToSeed.sections) {
         for (const section of seedSectionData) {
-          await sectionStore.add({
+          const sectionWithTenant = await withTenantId({
             id: section.id,
             name: section.name,
             order: section.order
           });
+          await sectionStore.add(sectionWithTenant);
         }
       }
 
       if (entitiesToSeed.elements) {
         for (const element of seedElementData) {
-          await elementStore.add({
+          const elementWithTenant = await withTenantId({
             id: element.id,
             name: element.name,
             order: element.order,
             description: element.description || null,
             sectionId: element.sectionId || ""
           });
+          await elementStore.add(elementWithTenant);
         }
       }
 
       if (entitiesToSeed.locations) {
         const locationData = prepareLocationData(seedLocationData);
         for (const location of locationData) {
-          await locationStore.add(location);
+          const locationWithTenant = await withTenantId(location);
+          await locationStore.add(locationWithTenant);
         }
       }
 
@@ -249,14 +237,16 @@ export default function Page() {
       if (entitiesToSeed.components && elements.length > 0) {
         const components = mapBodToComponentData(bankOfDefects, mappedElements);
         for (const component of components) {
-          await componentStore.add(component);
+          const componentWithTenant = await withTenantId(component);
+          await componentStore.add(componentWithTenant);
         }
       }
 
       if (entitiesToSeed.phrases && elements.length > 0 && components.length > 0) {
         const phrases = mapBodToPhraseData(bankOfDefects, mappedElements, components);
         for (const phrase of phrases) {
-          await phraseStore.add(phrase);
+          const phraseWithTenant = await withTenantId(phrase);
+          await phraseStore.add(phraseWithTenant);
         }
       }
 

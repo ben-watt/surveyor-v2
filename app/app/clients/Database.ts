@@ -14,7 +14,8 @@ import { Schema } from "@/amplify/data/resource";
 import { BuildingSurveyFormData } from "@/app/app/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Draft } from "immer";
 import { Ok, Err, Result } from 'ts-results';
-import { withTenantId } from "@/app/app/utils/tenant-utils";
+import { withTenantId, getCurrentTenantId } from "@/app/app/utils/tenant-utils";
+import { getErrorMessage } from "../utils/handleError";
 
 const mapToSurvey = (data: any): DexieSurvey => ({
   id: data.id,
@@ -392,3 +393,39 @@ export const buildLocationTree = (items: Location[], parentId?: string): Locatio
       children: buildLocationTree(items, item.id)
     }));
 };
+
+export async function getRawCounts(): Promise<Result<{ [key: string]: number }, Error>> {
+  try {
+    const tenantId = await getCurrentTenantId();
+    if (!tenantId) {
+      return Err(new Error('No tenant ID available'));
+    }
+
+    const [
+      elements,
+      components,
+      phrases,
+      locations,
+      sections,
+      surveys
+    ] = await Promise.all([
+      client.models.Elements.list({ filter: { tenantId: { eq: tenantId } } }),
+      client.models.Components.list({ filter: { tenantId: { eq: tenantId } } }),
+      client.models.Phrases.list({ filter: { tenantId: { eq: tenantId } } }),
+      client.models.Locations.list({ filter: { tenantId: { eq: tenantId } } }),
+      client.models.Sections.list({ filter: { tenantId: { eq: tenantId } } }),
+      client.models.Surveys.list({ filter: { tenantId: { eq: tenantId } } })
+    ]);
+
+    return Ok({
+      elements: elements.data?.length || 0,
+      components: components.data?.length || 0,
+      phrases: phrases.data?.length || 0,
+      locations: locations.data?.length || 0,
+      sections: sections.data?.length || 0,
+      surveys: surveys.data?.length || 0,
+    });
+  } catch (error) {
+    return Err(new Error(getErrorMessage(error)));
+  }
+}
