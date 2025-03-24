@@ -29,7 +29,7 @@ export interface EntityCounts {
   sections: number;
 }
 
-export type ElementData = Omit<CreateElement, "syncStatus">;
-export type ComponentData = Omit<CreateComponent, "syncStatus">;
-export type PhraseData = Omit<CreatePhrase, "syncStatus">;
-export type LocationData = Omit<CreateLocation, "syncStatus">; 
+export type ElementData = Omit<CreateElement, "syncStatus" | "tenantId">;
+export type ComponentData = Omit<CreateComponent, "syncStatus" | "tenantId">;
+export type PhraseData = Omit<CreatePhrase, "syncStatus" | "tenantId">;
+export type LocationData = Omit<CreateLocation, "syncStatus" | "tenantId">; 

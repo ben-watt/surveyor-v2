@@ -7,10 +7,12 @@ import { useEffect } from "react";
 import { Combobox } from "../components/Input/ComboBox";
 import toast from "react-hot-toast";
 import { useDynamicDrawer } from "../components/Drawer";
-import { elementStore, sectionStore, type CreateElement, type UpdateElement } from "../clients/Database";
+import { elementStore, sectionStore, type CreateElement, type UpdateElement  } from "../clients/Database";
 import { Element } from "../clients/Dexie";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "next/navigation";
+import { withTenantId } from "../utils/tenant-utils";
+
 
 interface DataFormProps {
   id?: string;

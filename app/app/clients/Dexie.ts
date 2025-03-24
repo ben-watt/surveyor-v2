@@ -63,7 +63,7 @@ export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
 export interface DexieStore<T, TCreate> {
   useList: () => [boolean, T[]];
   useGet: (id: string) => [boolean, T | undefined];
-  add: (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt">) => Promise<void>;
+  add: (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt" | "tenantId">) => Promise<void>;
   get: (id: string) => Promise<T>;
   update: (id: string, updateFn: (currentState: Draft<T>) => void) => Promise<void>;
   remove: (id: string) => Promise<void>;
@@ -270,12 +270,14 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     return local;
   };
 
-  const add = async (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt">) => {
+  const add = async (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt" | "tenantId">) => {
+      const tenantId = await getCurrentTenantId();
       await table.add({
         ...data,
         syncStatus: SyncStatus.Queued,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        tenantId: tenantId
       } as unknown as T);
       
       // Trigger sync asynchronously if online
