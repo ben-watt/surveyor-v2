@@ -33,6 +33,7 @@ export const auth = defineAuth({
       dataType: 'String',
     },
   },
+  groups: ['global-admin'],
   // Grant access to the tenant admin function
   access: (allow) => [
     allow.resource(tenantAdmin).to([

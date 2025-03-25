@@ -2,6 +2,7 @@ import { getCurrentUser, fetchUserAttributes, updateUserAttributes } from 'aws-a
 import { generateClient } from 'aws-amplify/api';
 import { Schema } from '@/amplify/data/resource';
 import { useEffect, useState } from 'react';
+import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
 
 // Define types for tenant management
 export interface Tenant {
@@ -89,6 +90,12 @@ export function useTenantData() {
  */
 export async function createTenant(name: string, description?: string): Promise<Tenant> {
   try {
+    // Check if user has global-admin role
+    const isAdmin = await isGlobalAdmin();
+    if (!isAdmin) {
+      throw new Error('Only global administrators can create tenants');
+    }
+
     // Create the group in Cognito using the tenant admin function
     await client.mutations.tenantAdmin({
       action: 'createGroup',
@@ -124,6 +131,7 @@ export async function createTenant(name: string, description?: string): Promise<
   }
 }
 
+
 /**
  * List all tenants the current user has access to
  */
@@ -136,13 +144,49 @@ export async function listUserTenants(): Promise<Tenant[]> {
       return [];
     }
     
-    return result.data.map(item => ({
-      id: item.id,
-      name: item.name,
-      description: item.description || undefined,
-      createdAt: item.createdAt,
-      createdBy: item.createdBy
-    }));
+    // If user is global-admin, return all tenants
+    const isAdmin = await isGlobalAdmin();
+    if (isAdmin) {
+      return result.data.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || undefined,
+        createdAt: item.createdAt,
+        createdBy: item.createdBy
+      }));
+    }
+    
+    // Otherwise, only return tenants the user has access to
+    const tokens = await cognitoUserPoolsTokenProvider.getTokens();
+    
+    console.debug("tokens", tokens);
+
+    // check if it's a string array
+    const userGroups = Array.isArray(tokens?.accessToken?.payload?.['cognito:groups']) 
+      ? tokens.accessToken.payload['cognito:groups']
+      : []; 
+
+    // check if it's an array of strings
+    if (!Array.isArray(userGroups) || !userGroups.every(item => typeof item === 'string')) {
+      throw new Error('Invalid user groups format');
+    }
+
+    const userTenantIds = userGroups.filter((group: string) => group !== 'global-admin');
+
+    console.debug("listUserTenants", userTenantIds);
+    console.debug("listUserTenants", result.data);
+    
+    // TODO: this is a hack to get the tenants the user has access to
+    // we should filter by the tenant id instead of the name
+    return result.data
+      .filter(item => userTenantIds.includes(item.name))
+      .map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || undefined,
+        createdAt: item.createdAt,
+        createdBy: item.createdBy
+      }));
   } catch (error) {
     console.error('Error listing tenants:', error);
     throw error;
@@ -154,6 +198,12 @@ export async function listUserTenants(): Promise<Tenant[]> {
  */
 export async function addUserToTenant(username: string, tenantId: string): Promise<void> {
   try {
+    // Check if user has global-admin role
+    const isAdmin = await isGlobalAdmin();
+    if (!isAdmin) {
+      throw new Error('Only global administrators can add users to tenants');
+    }
+
     // Get tenant details
     const tenantResult = await client.models.Tenant.get({ id: tenantId });
     
@@ -183,6 +233,12 @@ export async function addUserToTenant(username: string, tenantId: string): Promi
  */
 export async function removeUserFromTenant(username: string, tenantId: string): Promise<void> {
   try {
+    // Check if user has global-admin role
+    const isAdmin = await isGlobalAdmin();
+    if (!isAdmin) {
+      throw new Error('Only global administrators can remove users from tenants');
+    }
+
     // Get tenant details
     const tenantResult = await client.models.Tenant.get({ id: tenantId });
     
@@ -285,4 +341,18 @@ export async function withTenantId<T>(data: T): Promise<T & { tenantId: string }
     throw new Error('No tenant ID available. Please ensure a tenant is selected.');
   }
   return { ...data, tenantId };
+}
+
+/**
+ * Check if the current user has the global-admin role
+ */
+export async function isGlobalAdmin(): Promise<boolean> {
+  try {
+    const attributes = await fetchUserAttributes();
+    const groups = (attributes['cognito:groups'] || []) as string[];
+    return groups.includes('global-admin');
+  } catch (error) {
+    console.error('Error checking global admin status:', error);
+    return false;
+  }
 } 

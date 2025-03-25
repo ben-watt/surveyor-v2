@@ -20,7 +20,7 @@ const schema = a.schema({
       description: a.string(),
     })
     .authorization((allow) => [
-      allow.authenticated(),
+      allow.group('global-admin'),
     ])
     .handler(a.handler.function(tenantAdmin))
     .returns(a.json()),
@@ -35,8 +35,8 @@ const schema = a.schema({
       tenantId: a.string(),
     })
     .authorization((allow) => [
-      allow.authenticated().to(["read"]),
-      allow.owner().to(["create", "read", "update", "delete"]),
+      allow.group('global-admin'),
+      allow.authenticated().to(['read']),
     ]),
   Surveys: a
     .model({

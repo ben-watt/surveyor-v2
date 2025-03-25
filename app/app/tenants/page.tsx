@@ -38,6 +38,7 @@ import {
   addUserToTenant, 
   removeUserFromTenant, 
   listTenantUsers,
+  isGlobalAdmin,
   Tenant,
   TenantUser
 } from "../utils/tenant-utils";
@@ -50,6 +51,7 @@ export default function TenantsPage() {
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isCreateTenantDialogOpen, setIsCreateTenantDialogOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [isGlobalAdminUser, setIsGlobalAdminUser] = useState(false);
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -57,6 +59,11 @@ export default function TenantsPage() {
       description: "",
     }
   });
+
+  // Check if user is global admin on page load
+  useEffect(() => {
+    checkGlobalAdmin();
+  }, []);
 
   // Load tenants on page load
   useEffect(() => {
@@ -69,6 +76,17 @@ export default function TenantsPage() {
       loadTenantUsers(selectedTenant.id);
     }
   }, [selectedTenant]);
+
+  // Check if current user is a global admin
+  const checkGlobalAdmin = async () => {
+    try {
+      const isAdmin = await isGlobalAdmin();
+      setIsGlobalAdminUser(isAdmin);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      setIsGlobalAdminUser(false);
+    }
+  };
 
   // Load all tenants the user has access to
   const loadTenants = async () => {
@@ -111,7 +129,7 @@ export default function TenantsPage() {
       await loadTenants();
     } catch (error) {
       console.error("Error creating tenant:", error);
-      toast.error("Failed to create tenant");
+      toast.error(error instanceof Error ? error.message : "Failed to create tenant");
     } finally {
       setLoading(false);
     }
@@ -130,7 +148,7 @@ export default function TenantsPage() {
       await loadTenantUsers(selectedTenant.id);
     } catch (error) {
       console.error("Error adding user to tenant:", error);
-      toast.error("Failed to add user to tenant");
+      toast.error(error instanceof Error ? error.message : "Failed to add user to tenant");
     } finally {
       setLoading(false);
     }
@@ -147,7 +165,7 @@ export default function TenantsPage() {
       await loadTenantUsers(selectedTenant.id);
     } catch (error) {
       console.error("Error removing user from tenant:", error);
-      toast.error("Failed to remove user from tenant");
+      toast.error(error instanceof Error ? error.message : "Failed to remove user from tenant");
     } finally {
       setLoading(false);
     }
@@ -156,64 +174,75 @@ export default function TenantsPage() {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Tenant Management</h1>
-        <Dialog open={isCreateTenantDialogOpen} onOpenChange={setIsCreateTenantDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create Tenant
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Tenant</DialogTitle>
-              <DialogDescription>
-                Create a new tenant that you can add users to.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(handleCreateTenant)}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Tenant Name</Label>
-                  <Input
-                    id="name"
-                    {...register("name", { required: "Tenant name is required" })}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-red-500">{errors.name.message}</p>
-                  )}
+        <div>
+          <h1 className="text-3xl font-bold">Tenant Management</h1>
+          {!isGlobalAdminUser && (
+            <p className="text-sm text-muted-foreground mt-1">
+              You can view your assigned tenants. Only administrators can create and manage tenants.
+            </p>
+          )}
+        </div>
+        {isGlobalAdminUser && (
+          <Dialog open={isCreateTenantDialogOpen} onOpenChange={setIsCreateTenantDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create Tenant
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Tenant</DialogTitle>
+                <DialogDescription>
+                  Create a new tenant that you can add users to.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit(handleCreateTenant)}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Tenant Name</Label>
+                    <Input
+                      id="name"
+                      {...register("name", { required: "Tenant name is required" })}
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-red-500">{errors.name.message}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      {...register("description")}
+                    />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    {...register("description")}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Creating..." : "Create Tenant"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Creating..." : "Create Tenant"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Tenant List */}
         <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Your Tenants</CardTitle>
             <CardDescription>
-              Select a tenant to manage its users
+              {isGlobalAdminUser 
+                ? "Select a tenant to manage its users"
+                : "Select a tenant to view its details"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading && <p>Loading tenants...</p>}
             {!loading && tenants.length === 0 && (
-              <p>You don't have any tenants yet. Create one to get started.</p>
+              <p>You don't have any tenants assigned yet.</p>
             )}
             {!loading && tenants.length > 0 && (
               <div className="space-y-2">
@@ -242,100 +271,95 @@ export default function TenantsPage() {
         </Card>
 
         {/* Tenant Users */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>
-                  {selectedTenant ? `${selectedTenant.name} Users` : "Users"}
-                </CardTitle>
-                <CardDescription>
-                  {selectedTenant
-                    ? `Manage users in ${selectedTenant.name}`
-                    : "Select a tenant to manage its users"}
-                </CardDescription>
-              </div>
-              {selectedTenant && (
-                <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Add User
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add User to {selectedTenant.name}</DialogTitle>
-                      <DialogDescription>
-                        Enter the email of the user you want to add to this tenant.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="email">User Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="user@example.com"
-                          value={newUserEmail}
-                          onChange={(e) => setNewUserEmail(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={handleAddUser} disabled={loading || !newUserEmail}>
-                        {loading ? "Adding..." : "Add User"}
+        {selectedTenant && (
+          <Card className="md:col-span-1">
+            <CardHeader>
+              <CardTitle>Users in {selectedTenant.name}</CardTitle>
+              <CardDescription>
+                {isGlobalAdminUser 
+                  ? "Manage users in this tenant"
+                  : "View users in this tenant"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isGlobalAdminUser && (
+                <div className="mb-4">
+                  <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Add User
                       </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add User to Tenant</DialogTitle>
+                        <DialogDescription>
+                          Enter the email address of the user to add to this tenant.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="email">Email Address</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={newUserEmail}
+                            onChange={(e) => setNewUserEmail(e.target.value)}
+                            placeholder="user@example.com"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={handleAddUser} disabled={loading || !newUserEmail}>
+                          {loading ? "Adding..." : "Add User"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {!selectedTenant && (
-              <p>Select a tenant to view and manage its users.</p>
-            )}
-            {selectedTenant && (
-              <>
-                {tenantUsers.length === 0 ? (
-                  <p>No users in this tenant yet.</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Added</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tenantUsers.map((user) => (
-                        <TableRow key={user.username}>
-                          <TableCell>{user.username}</TableCell>
-                          <TableCell>{user.email}</TableCell>
+              
+              {loading && <p>Loading users...</p>}
+              {!loading && tenantUsers.length === 0 && (
+                <p>No users in this tenant yet.</p>
+              )}
+              {!loading && tenantUsers.length > 0 && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Added At</TableHead>
+                      {isGlobalAdminUser && <TableHead>Actions</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tenantUsers.map((user) => (
+                      <TableRow key={user.username}>
+                        <TableCell>{user.name || '-'}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{new Date(user.addedAt).toLocaleDateString()}</TableCell>
+                        {isGlobalAdminUser && (
                           <TableCell>
-                            {new Date(user.addedAt).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell className="text-right">
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               onClick={() => handleRemoveUser(user.username)}
+                              disabled={loading}
                             >
                               <UserMinus className="h-4 w-4" />
                             </Button>
                           </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
