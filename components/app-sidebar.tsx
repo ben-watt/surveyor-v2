@@ -131,7 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Tenants</DropdownMenuLabel>
+                <DropdownMenuLabel>Teams</DropdownMenuLabel>
                 {tenantsData.map((tenant) => (
                   <DropdownMenuItem
                     key={tenant.id}
@@ -150,12 +150,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ))}
                 {tenants.length === 0 && (
                   <DropdownMenuItem disabled>
-                    No tenants available
+                    No teams available
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/app/tenants">Manage Tenants</Link>
+                  <Link href="/app/tenants">Manage Teams</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -131,13 +131,18 @@ export async function createTenant(name: string, description?: string): Promise<
   }
 }
 
+export async function getUserGroups(): Promise<string[]> {
+  const tokens = await cognitoUserPoolsTokenProvider.getTokens();
+  console.debug("tokens", tokens);
+  return tokens?.accessToken?.payload['cognito:groups'] as string[] || [];
+}
+
 
 /**
  * List all tenants the current user has access to
  */
 export async function listUserTenants(): Promise<Tenant[]> {
   try {
-    // Get all tenants
     const result = await client.models.Tenant.list();
     
     if (!result.data) {
@@ -154,32 +159,12 @@ export async function listUserTenants(): Promise<Tenant[]> {
         createdAt: item.createdAt,
         createdBy: item.createdBy
       }));
-    }
-    
-    // Otherwise, only return tenants the user has access to
-    const tokens = await cognitoUserPoolsTokenProvider.getTokens();
-    
-    console.debug("tokens", tokens);
+    }    
 
-    // check if it's a string array
-    const userGroups = Array.isArray(tokens?.accessToken?.payload?.['cognito:groups']) 
-      ? tokens.accessToken.payload['cognito:groups']
-      : []; 
+    const userGroups = await getUserGroups();
 
-    // check if it's an array of strings
-    if (!Array.isArray(userGroups) || !userGroups.every(item => typeof item === 'string')) {
-      throw new Error('Invalid user groups format');
-    }
-
-    const userTenantIds = userGroups.filter((group: string) => group !== 'global-admin');
-
-    console.debug("listUserTenants", userTenantIds);
-    console.debug("listUserTenants", result.data);
-    
-    // TODO: this is a hack to get the tenants the user has access to
-    // we should filter by the tenant id instead of the name
     return result.data
-      .filter(item => userTenantIds.includes(item.name))
+      .filter(item => userGroups.includes(item.name))
       .map(item => ({
         id: item.id,
         name: item.name,
@@ -348,8 +333,7 @@ export async function withTenantId<T>(data: T): Promise<T & { tenantId: string }
  */
 export async function isGlobalAdmin(): Promise<boolean> {
   try {
-    const attributes = await fetchUserAttributes();
-    const groups = (attributes['cognito:groups'] || []) as string[];
+    const groups = await getUserGroups();
     return groups.includes('global-admin');
   } catch (error) {
     console.error('Error checking global admin status:', error);

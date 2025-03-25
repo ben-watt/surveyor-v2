@@ -175,10 +175,10 @@ export default function TenantsPage() {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Tenant Management</h1>
+          <h1 className="text-3xl font-bold">Team Management</h1>
           {!isGlobalAdminUser && (
             <p className="text-sm text-muted-foreground mt-1">
-              You can view your assigned tenants. Only administrators can create and manage tenants.
+              You can view your assigned teams. Only administrators can create and manage tenants.
             </p>
           )}
         </div>
@@ -192,18 +192,18 @@ export default function TenantsPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Tenant</DialogTitle>
+                <DialogTitle>Create New Team</DialogTitle>
                 <DialogDescription>
-                  Create a new tenant that you can add users to.
+                  Create a new team that you can add users to.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit(handleCreateTenant)}>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="name">Tenant Name</Label>
+                    <Label htmlFor="name">Team Name</Label>
                     <Input
                       id="name"
-                      {...register("name", { required: "Tenant name is required" })}
+                      {...register("name", { required: "Team name is required" })}
                     />
                     {errors.name && (
                       <p className="text-sm text-red-500">{errors.name.message}</p>
@@ -219,7 +219,7 @@ export default function TenantsPage() {
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={loading}>
-                    {loading ? "Creating..." : "Create Tenant"}
+                    {loading ? "Creating..." : "Create Team"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -232,17 +232,17 @@ export default function TenantsPage() {
         {/* Tenant List */}
         <Card className="md:col-span-1">
           <CardHeader>
-            <CardTitle>Your Tenants</CardTitle>
+            <CardTitle>Your Teams</CardTitle>
             <CardDescription>
               {isGlobalAdminUser 
-                ? "Select a tenant to manage its users"
-                : "Select a tenant to view its details"}
+                ? "Select a team to manage its users"
+                : "Select a team to view its details"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading && <p>Loading tenants...</p>}
             {!loading && tenants.length === 0 && (
-              <p>You don't have any tenants assigned yet.</p>
+              <p>You don't have any teams assigned yet.</p>
             )}
             {!loading && tenants.length > 0 && (
               <div className="space-y-2">
@@ -277,8 +277,8 @@ export default function TenantsPage() {
               <CardTitle>Users in {selectedTenant.name}</CardTitle>
               <CardDescription>
                 {isGlobalAdminUser 
-                  ? "Manage users in this tenant"
-                  : "View users in this tenant"}
+                  ? "Manage users in this team"
+                  : "View users in this team"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -293,9 +293,9 @@ export default function TenantsPage() {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Add User to Tenant</DialogTitle>
+                        <DialogTitle>Add User to Team</DialogTitle>
                         <DialogDescription>
-                          Enter the email address of the user to add to this tenant.
+                          Enter the email address of the user to add to this team.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
@@ -322,7 +322,7 @@ export default function TenantsPage() {
               
               {loading && <p>Loading users...</p>}
               {!loading && tenantUsers.length === 0 && (
-                <p>No users in this tenant yet.</p>
+                <p>No users in this team yet.</p>
               )}
               {!loading && tenantUsers.length > 0 && (
                 <Table>
