@@ -60,7 +60,8 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
             id: uuidv4(),
             name: data.name,
             elementId: data.elementId,
-            materials: data.materials
+            materials: data.materials,
+            elementTenantId: data.elementTenantId,
           });
         } else {
           await componentStore.update(data.id, (draft) => {

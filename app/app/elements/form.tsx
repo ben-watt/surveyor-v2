@@ -54,6 +54,7 @@ export function DataForm({ id }: DataFormProps) {
             sectionId: data.sectionId,
             order: data.order,
             description: data.description,
+            sectionTenantId: data.sectionTenantId,
           });
           toast.success("Created Element");
         } else {

@@ -1,5 +1,6 @@
 import { matchSorter } from 'match-sorter';
 import { ElementData, ComponentData, PhraseData, LocationData } from "../types";
+import { getCurrentTenantId } from '../../utils/tenant-utils';
 
 interface SeedElement {
   id: string;
@@ -29,7 +30,8 @@ interface SeedLocation {
   parentId?: string | null;
 }
 
-export function mapElementsToElementData(elements: SeedElement[]): ElementData[] {
+export async function mapElementsToElementData(elements: SeedElement[]): Promise<ElementData[]> {
+  const tenantId = await getCurrentTenantId();
   return elements.map(element => ({
     id: element.id,
     name: element.name,
@@ -38,16 +40,18 @@ export function mapElementsToElementData(elements: SeedElement[]): ElementData[]
     order: element.order || 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    tenantId: tenantId || "",
+    sectionTenantId: tenantId || "",
   }));
 }
 
 
-export function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]): ComponentData[] {
+export async function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]): Promise<ComponentData[]> {
   const componentData: ComponentData[] = [];
   const componentIds = new Map<string, string>();
   
   bod.forEach((sheet) => {
-    sheet.defects.forEach((d) => {
+    sheet.defects.forEach(async (d) => {
       const componentKey = `${d.type}:${d.specification}`;
       let componentId = componentIds.get(componentKey);
       if (!componentId) {
@@ -63,6 +67,7 @@ export function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]):
         }
       } else {
         const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
+        const tenantId = await getCurrentTenantId();
         componentData.push({
           id: componentId,
           elementId: matchingElement?.id || "",
@@ -70,6 +75,7 @@ export function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]):
           materials: [{ name: d.specification }],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          elementTenantId: tenantId || "",
         });
       }
     });

@@ -31,9 +31,9 @@ const schema = a.schema({
       name: a.string().required(),
       description: a.string(),
       createdAt: a.datetime().required(),
-      createdBy: a.string().required(),
-      tenantId: a.string(),
+      createdBy: a.string().required()
     })
+    .identifier(['id'])
     .authorization((allow) => [
       allow.group('global-admin'),
       allow.authenticated().to(['read']),
@@ -47,6 +47,7 @@ const schema = a.schema({
       content: a.json().required(),
       tenantId: a.string().required(),
     })
+    .identifier(['tenantId', 'id'])
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]), 
       allow
@@ -61,9 +62,11 @@ const schema = a.schema({
     syncStatus: a.string().required(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
-    elements: a.hasMany("Elements", "sectionId"),
+    elements: a.hasMany("Elements", ["sectionId", "sectionTenantId"]),
     tenantId: a.string().required(),
-  }).authorization((allow) => [
+  })
+  .identifier(['tenantId', 'id'])
+  .authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
       .groupDefinedIn("tenantId")
@@ -75,14 +78,18 @@ const schema = a.schema({
     name: a.string().required(),
     order: a.float(),
     sectionId: a.id().required(),
-    section: a.belongsTo("Sections", "sectionId"),
+    sectionTenantId: a.string().required(),
+    section: a.belongsTo("Sections", ["sectionId", "sectionTenantId"]),
     description: a.string(),
-    components: a.hasMany("Components", "elementId"),
+    components: a.hasMany("Components", ["elementId", "elementTenantId"]),
     syncStatus: a.string().required(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     tenantId: a.string().required(),
-  }).authorization((allow) => [
+  })
+  .identifier(['tenantId', 'id'])
+  .authorization((allow) => [
+    allow.group('global-admin').to(["create", "read", "update", "delete"]),
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
     .groupDefinedIn("tenantId")
@@ -104,7 +111,9 @@ const schema = a.schema({
     associatedComponentIds:  a.string().required().array().required(),
     phrase: a.string().required(),
     tenantId: a.string().required(),
-  }).authorization((allow) => [
+  })
+  .identifier(['tenantId', 'id'])
+  .authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
     .groupDefinedIn("tenantId")
@@ -118,11 +127,13 @@ const schema = a.schema({
       materials: a.ref("Material").required().array().required(),
       syncStatus: a.string().required(),
       elementId: a.id().required(),
-      element: a.belongsTo("Elements", "elementId"),
+      elementTenantId: a.string().required(),
+      element: a.belongsTo("Elements", ["elementId", "elementTenantId"]),
       createdAt: a.datetime().required(),
       updatedAt: a.datetime().required(),
       tenantId: a.string().required(),
     })
+    .identifier(['tenantId', 'id'])
     .authorization((allow) => [
       allow.owner().to(["create", "read", "update", "delete"]),
       allow
@@ -138,7 +149,9 @@ const schema = a.schema({
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     tenantId: a.string().required(),
-  }).authorization((allow) => [
+  })
+  .identifier(['tenantId', 'id'])
+  .authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
     .groupDefinedIn("tenantId")

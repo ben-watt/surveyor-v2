@@ -3,6 +3,7 @@ import { generateClient } from 'aws-amplify/api';
 import { Schema } from '@/amplify/data/resource';
 import { useEffect, useState } from 'react';
 import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define types for tenant management
 export interface Tenant {
@@ -112,6 +113,7 @@ export async function createTenant(name: string, description?: string): Promise<
       description,
       createdBy: currentUser.username,
       createdAt: new Date().toISOString(),
+      id: uuidv4(),
     });
     
     if (!result.data) {

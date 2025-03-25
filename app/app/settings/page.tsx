@@ -19,7 +19,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData, prepareLocationData } from "./utils/mappers";
 import client from "../clients/AmplifyDataClient";
 import { getRawCounts } from "../clients/Database";
-import { withTenantId } from "../utils/tenant-utils";
+import { getCurrentTenantId, withTenantId } from "../utils/tenant-utils";
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
@@ -213,12 +213,11 @@ export default function Page() {
 
       if (entitiesToSeed.elements) {
         for (const element of seedElementData) {
+          const mappedElement = await mapElementsToElementData([element]);
+          const tenantId = await getCurrentTenantId();
           const elementWithTenant = await withTenantId({
-            id: element.id,
-            name: element.name,
-            order: element.order,
-            description: element.description || null,
-            sectionId: element.sectionId || ""
+            ...mappedElement[0],
+            sectionTenantId: tenantId || ''
           });
           await elementStore.add(elementWithTenant);
         }
@@ -232,10 +231,10 @@ export default function Page() {
         }
       }
 
-      const mappedElements = mapElementsToElementData(seedElementData);
+      const mappedElements = await mapElementsToElementData(seedElementData);
 
       if (entitiesToSeed.components && elements.length > 0) {
-        const components = mapBodToComponentData(bankOfDefects, mappedElements);
+        const components = await mapBodToComponentData(bankOfDefects, mappedElements);
         for (const component of components) {
           const componentWithTenant = await withTenantId(component);
           await componentStore.add(componentWithTenant);

@@ -77,7 +77,8 @@ const createSurveyStore = () => {
         return Ok(mapToSurvey(response.data));
       },
       delete: async (id): Promise<Result<string, Error>> => {
-        const response = await client.models.Surveys.delete({ id });
+        const tenantId = await getCurrentTenantId();
+        const response = await client.models.Surveys.delete({ id, tenantId: tenantId || "" });
         if (response.errors) {
           return Err(new Error(response.errors.map(e => e.message).join(", ")));
         }
@@ -121,6 +122,7 @@ const mapToComponent = (data: any): Component => ({
   materials: data.materials,
   elementId: data.elementId,
   tenantId: data.tenantId,
+  elementTenantId: data.elementTenantId,
 });
 
 export type UpdateComponent = Partial<Component> & { id: string };
@@ -157,7 +159,8 @@ export const componentStore = CreateDexieHooks<
     return Ok(mapToComponent(response.data));
   },
   delete: async (id): Promise<Result<string, Error>> => {
-    const response = await client.models.Components.delete({ id });
+    const tenantId = await getCurrentTenantId();
+    const response = await client.models.Components.delete({ id, tenantId: tenantId || "" });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -175,6 +178,7 @@ const mapToElement = (data: any): BuildingSurveyElement => ({
   sectionId: data.sectionId,
   description: data.description,
   tenantId: data.tenantId,
+  sectionTenantId: data.sectionTenantId,
 });
 
 export type UpdateElement = Partial<BuildingSurveyElement> & { id: string };
@@ -211,7 +215,8 @@ export const elementStore = CreateDexieHooks<
     return Ok(mapToElement(response.data));
   },
   delete: async (id): Promise<Result<string, Error>> => {
-    const response = await client.models.Elements.delete({ id });
+    const tenantId = await getCurrentTenantId();
+    const response = await client.models.Elements.delete({ id, tenantId: tenantId || "" });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -263,7 +268,8 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
       return Ok(mapToSection(response.data));
     },
     delete: async (id): Promise<Result<string, Error>> => {
-      const response = await client.models.Sections.delete({ id });
+      const tenantId = await getCurrentTenantId();
+      const response = await client.models.Sections.delete({ id, tenantId: tenantId || "" });
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
@@ -317,7 +323,8 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
     return Ok(mapToPhrase(response.data));
   },
   delete: async (id): Promise<Result<string, Error>> => {
-    const response = await client.models.Phrases.delete({ id });
+    const tenantId = await getCurrentTenantId();
+    const response = await client.models.Phrases.delete({ id, tenantId: tenantId || "" });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -368,7 +375,8 @@ export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLo
       return Ok(mapToLocation(response.data));
     },
     delete: async (id): Promise<Result<string, Error>> => {
-      const response = await client.models.Locations.delete({ id });
+      const tenantId = await getCurrentTenantId();
+      const response = await client.models.Locations.delete({ id, tenantId: tenantId || "" });
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
