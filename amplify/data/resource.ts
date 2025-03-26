@@ -139,23 +139,6 @@ const schema = a.schema({
       .withClaimIn("preferredTenant")
       .to(["create", "read", "update", "delete"]),
     ]),
-  Locations: a.model({
-    id: a.id().required(),
-    name: a.string().required(),
-    parentId: a.string(), // Optional field for hierarchical structure
-    syncStatus: a.string().required(),
-    createdAt: a.datetime().required(),
-    updatedAt: a.datetime().required(),
-    tenantId: a.string().required(),
-  })
-  .identifier(['tenantId', 'id'])
-  .authorization((allow) => [
-    allow.owner().to(["create", "read", "update", "delete"]),
-    allow
-    .groupDefinedIn("tenantId")
-    .withClaimIn("preferredTenant")
-    .to(["create", "read", "update", "delete"]),
-  ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

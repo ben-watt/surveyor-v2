@@ -1,5 +1,5 @@
 import { matchSorter } from 'match-sorter';
-import { ElementData, ComponentData, PhraseData, LocationData } from "../types";
+import { ElementData, ComponentData, PhraseData } from "../types";
 import { getCurrentTenantId } from '../../utils/tenant-utils';
 
 interface SeedElement {
@@ -40,8 +40,7 @@ export async function mapElementsToElementData(elements: SeedElement[]): Promise
     order: element.order || 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    tenantId: tenantId || "",
-    sectionTenantId: tenantId || "",
+    tenantId: tenantId || ""
   }));
 }
 
@@ -123,15 +122,4 @@ export function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[], com
   });
 
   return phrases;
-}
-
-export function prepareLocationData(locations: SeedLocation[]): LocationData[] {
-  return locations.map(location => ({
-    id: location.id,
-    name: location.label, 
-    parentId: location.parentId || null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }));
-
 } 

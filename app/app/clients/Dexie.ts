@@ -22,7 +22,6 @@ export type DeleteSurvey = Schema['Surveys']['deleteType']
 export type Component = Omit<Schema['Components']['type'], "element">;
 export type Element = Omit<Schema['Elements']['type'], "components" | "section">;
 export type Phrase = Schema['Phrases']['type'];
-export type Location = Schema['Locations']['type'];
 export type Section = Omit<Schema['Sections']['type'], "elements">;
 
 export interface ImageUpload {
@@ -366,7 +365,6 @@ const db = new Dexie('Surveys') as Dexie & {
   components: EntityTable<Component, "id", "tenantId">;
   elements: EntityTable<Element, "id", "tenantId">;
   phrases: EntityTable<Phrase, "id", "tenantId">;
-  locations: EntityTable<Location, "id", "tenantId">;
   sections: EntityTable<Section, "id", "tenantId">;
   imageUploads: EntityTable<ImageUpload, "id", "tenantId">;
 };
@@ -376,7 +374,6 @@ db.version(1).stores({
   components: '[id+tenantId], updatedAt, syncStatus',
   elements: '[id+tenantId], updatedAt, syncStatus',
   phrases: '[id+tenantId], updatedAt, syncStatus',
-  locations: '[id+tenantId], updatedAt, syncStatus',
   sections: '[id+tenantId], updatedAt, syncStatus',
   imageUploads: '[id+tenantId], path, updatedAt, syncStatus',
 });

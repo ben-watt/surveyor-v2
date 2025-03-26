@@ -6,7 +6,6 @@ import {
   SyncStatus,
   CreateDexieHooks,
   Phrase,
-  Location,
   Section,
 } from "./Dexie";
 import client from "./AmplifyDataClient";
@@ -330,76 +329,6 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
   },
 });
 
-const mapToLocation = (data: any): Location => ({
-  id: data.id,
-  syncStatus: SyncStatus.Synced,
-  updatedAt: data.updatedAt,
-  createdAt: data.createdAt,
-  name: data.name,
-  parentId: data.parentId,
-  tenantId: data.tenantId,
-});
-
-export type CreateLocation = Schema['Locations']['createType'];
-export type UpdateLocation = Schema['Locations']['updateType'];
-
-export const locationStore = CreateDexieHooks<Location, CreateLocation, UpdateLocation>(
-  db,
-  "locations",
-  {
-    list: async (): Promise<Result<Location[], Error>> => {
-      const response = await client.models.Locations.list();
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(response.data.map(mapToLocation));
-    },
-    create: async (data): Promise<Result<Location, Error>> => {
-      // Add tenant ID to new location
-      const serverData = await withTenantId(data);
-      const response = await client.models.Locations.create(serverData);
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(mapToLocation(response.data));
-    },
-    update: async (data): Promise<Result<Location, Error>> => {
-      // Add tenant ID to update
-      const serverData = await withTenantId(data);
-      const response = await client.models.Locations.update(serverData);
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(mapToLocation(response.data));
-    },
-    delete: async (id): Promise<Result<string, Error>> => {
-      const tenantId = await getCurrentTenantId();
-      const response = await client.models.Locations.delete({ id, tenantId: tenantId || "" });
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(id);
-    },
-  }
-);
-
-// Add utility method for building location tree
-export type LocationTree = {
-  value: string;
-  label: string;
-  children: LocationTree[];
-}
-
-export const buildLocationTree = (items: Location[], parentId?: string): LocationTree[] => {
-  return items
-    .filter(item => item.parentId === parentId || (!parentId && item.parentId == null))
-    .map(item => ({
-      value: item.id,
-      label: item.name,
-      children: buildLocationTree(items, item.id)
-    }));
-};
-
 export async function getRawCounts(): Promise<Result<{ [key: string]: number }, Error>> {
   try {
     const tenantId = await getCurrentTenantId();
@@ -411,14 +340,12 @@ export async function getRawCounts(): Promise<Result<{ [key: string]: number }, 
       elements,
       components,
       phrases,
-      locations,
       sections,
       surveys
     ] = await Promise.all([
       client.models.Elements.list({ filter: { tenantId: { eq: tenantId } } }),
       client.models.Components.list({ filter: { tenantId: { eq: tenantId } } }),
       client.models.Phrases.list({ filter: { tenantId: { eq: tenantId } } }),
-      client.models.Locations.list({ filter: { tenantId: { eq: tenantId } } }),
       client.models.Sections.list({ filter: { tenantId: { eq: tenantId } } }),
       client.models.Surveys.list({ filter: { tenantId: { eq: tenantId } } })
     ]);
@@ -427,7 +354,6 @@ export async function getRawCounts(): Promise<Result<{ [key: string]: number }, 
       elements: elements.data?.length || 0,
       components: components.data?.length || 0,
       phrases: phrases.data?.length || 0,
-      locations: locations.data?.length || 0,
       sections: sections.data?.length || 0,
       surveys: surveys.data?.length || 0,
     });

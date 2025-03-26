@@ -1,5 +1,5 @@
 import { SyncStatus } from "../clients/Dexie";
-import type { CreateComponent, CreateElement, CreateLocation, CreatePhrase } from "../clients/Database";
+import type { CreateComponent, CreateElement, CreatePhrase } from "../clients/Database";
 
 export type EntityType = "elements" | "components" | "phrases" | "sections" | "surveys";
 
@@ -29,4 +29,3 @@ export interface EntityCounts {
 export type ElementData = Omit<CreateElement, "syncStatus" | "tenantId">;
 export type ComponentData = Omit<CreateComponent, "syncStatus" | "tenantId">;
 export type PhraseData = Omit<CreatePhrase, "syncStatus" | "tenantId">;
-export type LocationData = Omit<CreateLocation, "syncStatus" | "tenantId">; 

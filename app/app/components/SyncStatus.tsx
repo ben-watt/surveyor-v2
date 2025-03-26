@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
-import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore } from '../clients/Database';
+import { surveyStore, componentStore, elementStore, phraseStore, sectionStore } from '../clients/Database';
 import { SyncStatus as SyncStatusEnum } from '../clients/Dexie';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -11,7 +11,6 @@ export const SyncStatus = () => {
     const [componentsHydrated, components] = componentStore.useList();
     const [elementsHydrated, elements] = elementStore.useList();
     const [phrasesHydrated, phrases] = phraseStore.useList();
-    const [locationsHydrated, locations] = locationStore.useList();
     const [sectionsHydrated, sections] = sectionStore.useList();
 
     const [isSyncing, setIsSyncing] = useState(false);
@@ -23,7 +22,6 @@ export const SyncStatus = () => {
         ...components,
         ...elements,
         ...phrases,
-        ...locations,
         ...sections
     ].some(item => 
         item.syncStatus === SyncStatusEnum.Draft || 
@@ -47,14 +45,13 @@ export const SyncStatus = () => {
             ...components,
             ...elements,
             ...phrases,
-            ...locations,
             ...sections
         ].forEach(item => {
             counts[item.syncStatus as SyncStatusEnum]++;
         });
 
         return counts;
-    }, [surveys, components, elements, phrases, locations, sections]);
+    }, [surveys, components, elements, phrases, sections]);
 
     // Monitor sync status changes
     useEffect(() => {
@@ -71,7 +68,7 @@ export const SyncStatus = () => {
 
     // Don't show anything until all data is hydrated
     if (!surveysHydrated || !componentsHydrated || !elementsHydrated || 
-        !phrasesHydrated || !locationsHydrated || !sectionsHydrated) {
+        !phrasesHydrated || !sectionsHydrated) {
         return null;
     }
 

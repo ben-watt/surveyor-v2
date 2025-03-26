@@ -46,7 +46,7 @@ export function EntityDialog({
             <Checkbox 
               id="elements"
               checked={entities.elements}
-              disabled={entityCounts.elements === 0}
+              disabled={entityCounts.sections === 0}
               onCheckedChange={(checked) => 
                 onEntitiesChange({ ...entities, elements: !!checked })
               }
@@ -59,7 +59,7 @@ export function EntityDialog({
             <Checkbox 
               id="components"
               checked={entities.components}
-              disabled={entityCounts.components === 0}
+              disabled={entityCounts.elements === 0}
               onCheckedChange={(checked) => 
                 onEntitiesChange({ ...entities, components: !!checked })
               }
@@ -72,7 +72,7 @@ export function EntityDialog({
             <Checkbox 
               id="phrases"
               checked={entities.phrases}
-              disabled={entityCounts.phrases === 0}
+              disabled={entityCounts.components === 0}
               onCheckedChange={(checked) => 
                 onEntitiesChange({ ...entities, phrases: !!checked })
               }
@@ -85,7 +85,7 @@ export function EntityDialog({
             <Checkbox 
               id="sections"
               checked={entities.sections}
-              disabled={entityCounts.sections === 0}
+              disabled={false}
               onCheckedChange={(checked) => 
                 onEntitiesChange({ ...entities, sections: !!checked })
               }
@@ -98,7 +98,7 @@ export function EntityDialog({
             <Checkbox 
               id="surveys"
               checked={entities.surveys}
-              disabled={entityCounts.surveys === 0}
+              disabled={entityCounts.phrases === 0}
               onCheckedChange={(checked) => 
                 onEntitiesChange({ ...entities, surveys: !!checked })
               }

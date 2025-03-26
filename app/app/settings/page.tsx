@@ -8,16 +8,16 @@ import 'react-json-view-lite/dist/index.css';
 import bankOfDefects from "./defects.json"; 
 import seedSectionData from "./sections.json";
 import seedElementData from "./elements.json";
-import { componentStore, elementStore, phraseStore, locationStore, sectionStore, surveyStore } from "../clients/Database";
+import { componentStore, elementStore, phraseStore, sectionStore, surveyStore } from "../clients/Database";
 import { SyncStatus } from "../clients/Dexie";
 import { getErrorMessage } from "../utils/handleError";
 import { EntityCard } from "./components/EntityCard";
 import { EntityDialog } from "./components/EntityDialog";
 import { EntityType, SyncingEntities, EntitiesToSync } from "./types";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData, prepareLocationData } from "./utils/mappers";
+import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData } from "./utils/mappers";
 import { getRawCounts } from "../clients/Database";
-import { getCurrentTenantId, withTenantId } from "../utils/tenant-utils";
+import { withTenantId } from "../utils/tenant-utils";
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
@@ -196,12 +196,7 @@ export default function Page() {
       if (entitiesToSeed.elements) {
         for (const element of seedElementData) {
           const mappedElement = await mapElementsToElementData([element]);
-          const tenantId = await getCurrentTenantId();
-          const elementWithTenant = await withTenantId({
-            ...mappedElement[0],
-            sectionTenantId: tenantId || ''
-          });
-          await elementStore.add(elementWithTenant);
+          await elementStore.add(mappedElement[0]);  
         }
       }
 

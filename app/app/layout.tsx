@@ -9,7 +9,7 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { surveyStore, componentStore, elementStore, phraseStore, locationStore, sectionStore } from "./clients/Database";
+import { surveyStore, componentStore, elementStore, phraseStore, sectionStore } from "./clients/Database";
 import { imageUploadStore } from "./clients/ImageUploadStore";
 import { OnlineStatus } from "./components/OnlineStatus";
 import { SyncStatus } from "./components/SyncStatus";
@@ -27,7 +27,6 @@ export default function RootLayout({
       componentStore.startPeriodicSync(),
       elementStore.startPeriodicSync(),
       phraseStore.startPeriodicSync(),
-      locationStore.startPeriodicSync(),
       sectionStore.startPeriodicSync(),
       imageUploadStore.startPeriodicSync(),
     ];
@@ -39,7 +38,6 @@ export default function RootLayout({
       componentStore.sync();
       elementStore.sync();
       phraseStore.sync();
-      locationStore.sync();
       sectionStore.sync();
       imageUploadStore.sync();
     };
