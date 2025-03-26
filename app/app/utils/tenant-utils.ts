@@ -55,6 +55,7 @@ export function useTenantData() {
         
         // Get list of available tenants
         const tenantsList = await listUserTenants();
+
         setTenants(tenantsList);
       } catch (error) {
         console.error('Error loading tenant data:', error);

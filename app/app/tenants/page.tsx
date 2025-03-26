@@ -178,7 +178,7 @@ export default function TenantsPage() {
           <h1 className="text-3xl font-bold">Team Management</h1>
           {!isGlobalAdminUser && (
             <p className="text-sm text-muted-foreground mt-1">
-              You can view your assigned teams. Only administrators can create and manage tenants.
+              You can view your assigned teams. Only administrators can create and manage teams.
             </p>
           )}
         </div>
@@ -187,7 +187,7 @@ export default function TenantsPage() {
             <DialogTrigger asChild>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Create Tenant
+                Create Team
               </Button>
             </DialogTrigger>
             <DialogContent>

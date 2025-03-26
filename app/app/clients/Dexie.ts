@@ -362,23 +362,23 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 }
 
 const db = new Dexie('Surveys') as Dexie & {
-  surveys: EntityTable<Survey, "id">;
-  components: EntityTable<Component, "id">;
-  elements: EntityTable<Element, "id">;
-  phrases: EntityTable<Phrase, "id">;
-  locations: EntityTable<Location, "id">;
-  sections: EntityTable<Section, "id">;
-  imageUploads: EntityTable<ImageUpload, "id">;
+  surveys: EntityTable<Survey, "id", "tenantId">;
+  components: EntityTable<Component, "id", "tenantId">;
+  elements: EntityTable<Element, "id", "tenantId">;
+  phrases: EntityTable<Phrase, "id", "tenantId">;
+  locations: EntityTable<Location, "id", "tenantId">;
+  sections: EntityTable<Section, "id", "tenantId">;
+  imageUploads: EntityTable<ImageUpload, "id", "tenantId">;
 };
 
 db.version(1).stores({
-  surveys: '&id, updatedAt, syncStatus, tenantId',
-  components: '&id, updatedAt, syncStatus, tenantId',
-  elements: '&id, updatedAt, syncStatus, tenantId',
-  phrases: '&id, updatedAt, syncStatus, tenantId',
-  locations: '&id, updatedAt, syncStatus, tenantId',
-  sections: '&id, updatedAt, syncStatus, tenantId',
-  imageUploads: '&id, path, updatedAt, syncStatus',
+  surveys: '[id+tenantId], updatedAt, syncStatus',
+  components: '[id+tenantId], updatedAt, syncStatus',
+  elements: '[id+tenantId], updatedAt, syncStatus',
+  phrases: '[id+tenantId], updatedAt, syncStatus',
+  locations: '[id+tenantId], updatedAt, syncStatus',
+  sections: '[id+tenantId], updatedAt, syncStatus',
+  imageUploads: '[id+tenantId], path, updatedAt, syncStatus',
 });
 
 
