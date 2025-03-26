@@ -67,7 +67,6 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
         }
       } else {
         const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
-        const tenantId = await getCurrentTenantId();
         componentData.push({
           id: componentId,
           elementId: matchingElement?.id || "",
@@ -75,7 +74,6 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
           materials: [{ name: d.specification }],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          elementTenantId: tenantId || "",
         });
       }
     });

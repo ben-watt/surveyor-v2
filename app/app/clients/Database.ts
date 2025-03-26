@@ -122,7 +122,6 @@ const mapToComponent = (data: any): Component => ({
   materials: data.materials,
   elementId: data.elementId,
   tenantId: data.tenantId,
-  elementTenantId: data.elementTenantId,
 });
 
 export type UpdateComponent = Partial<Component> & { id: string };
@@ -178,7 +177,6 @@ const mapToElement = (data: any): BuildingSurveyElement => ({
   sectionId: data.sectionId,
   description: data.description,
   tenantId: data.tenantId,
-  sectionTenantId: data.sectionTenantId,
 });
 
 export type UpdateElement = Partial<BuildingSurveyElement> & { id: string };

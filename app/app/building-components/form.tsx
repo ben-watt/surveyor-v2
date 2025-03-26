@@ -61,7 +61,6 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
             name: data.name,
             elementId: data.elementId,
             materials: data.materials,
-            elementTenantId: data.elementTenantId,
           });
         } else {
           await componentStore.update(data.id, (draft) => {

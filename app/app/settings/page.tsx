@@ -5,8 +5,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { JsonView, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
-import bankOfDefects from "./defects.json";
-import seedLocationData from "./locations.json";
+import bankOfDefects from "./defects.json"; 
 import seedSectionData from "./sections.json";
 import seedElementData from "./elements.json";
 import { componentStore, elementStore, phraseStore, locationStore, sectionStore, surveyStore } from "../clients/Database";
@@ -17,7 +16,6 @@ import { EntityDialog } from "./components/EntityDialog";
 import { EntityType, SyncingEntities, EntitiesToSync } from "./types";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData, prepareLocationData } from "./utils/mappers";
-import client from "../clients/AmplifyDataClient";
 import { getRawCounts } from "../clients/Database";
 import { getCurrentTenantId, withTenantId } from "../utils/tenant-utils";
 
@@ -29,7 +27,6 @@ export default function Page() {
     elements: false,
     components: false,
     phrases: false,
-    locations: false,
     sections: false,
     surveys: false,
   });
@@ -37,7 +34,6 @@ export default function Page() {
   const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
   const [phrasesHydrated, phrases] = phraseStore.useList();
-  const [locationsHydrated, locations] = locationStore.useList();
   const [sectionsHydrated, sections] = sectionStore.useList();
   const [surveysHydrated, surveys] = surveyStore.useRawList();
 
@@ -51,7 +47,6 @@ export default function Page() {
     elements: true,
     components: true,
     phrases: true,
-    locations: true,
     sections: true,
     surveys: true,
   });
@@ -60,7 +55,6 @@ export default function Page() {
     elements: true,
     components: true,
     phrases: true,
-    locations: true,
     sections: true,
     surveys: true,
   });
@@ -69,7 +63,6 @@ export default function Page() {
     elements: true,
     components: true,
     phrases: true,
-    locations: true,
     sections: true,
     surveys: true,
   });
@@ -78,7 +71,6 @@ export default function Page() {
     elements: elements.length,
     components: components.length,
     phrases: phrases.length,
-    locations: locations.length,
     sections: sections.length,
     surveys: surveys.length,
   };
@@ -87,7 +79,6 @@ export default function Page() {
     elements: 0,
     components: 0,
     phrases: 0,
-    locations: 0,
     sections: 0,
     surveys: 0,
   });
@@ -95,7 +86,6 @@ export default function Page() {
   const filteredElements = elements.filter(e => !filters.elements || e.syncStatus === filters.elements);
   const filteredComponents = components.filter(c => !filters.components || c.syncStatus === filters.components);
   const filteredPhrases = phrases.filter(p => !filters.phrases || p.syncStatus === filters.phrases);
-  const filteredLocations = locations.filter(l => !filters.locations || l.syncStatus === filters.locations);
   const filteredSurveys = surveys.filter(s => !filters.surveys || s.syncStatus === filters.surveys);
 
   const statusCounts = {
@@ -119,13 +109,6 @@ export default function Page() {
       [SyncStatus.Failed]: phrases.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: phrases.filter(item => item.syncStatus === SyncStatus.Synced).length,
       [SyncStatus.PendingDelete]: phrases.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
-    },
-    locations: {
-      [SyncStatus.Draft]: locations.filter(item => item.syncStatus === SyncStatus.Draft).length,
-      [SyncStatus.Queued]: locations.filter(item => item.syncStatus === SyncStatus.Queued).length,
-      [SyncStatus.Failed]: locations.filter(item => item.syncStatus === SyncStatus.Failed).length,
-      [SyncStatus.Synced]: locations.filter(item => item.syncStatus === SyncStatus.Synced).length,
-      [SyncStatus.PendingDelete]: locations.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
     },
     sections: {
       [SyncStatus.Draft]: sections.filter(item => item.syncStatus === SyncStatus.Draft).length,
@@ -195,7 +178,6 @@ export default function Page() {
         entitiesToSeed.elements && elementStore.removeAll({ options: false }),
         entitiesToSeed.components && componentStore.removeAll({ options: false }),
         entitiesToSeed.phrases && phraseStore.removeAll({ options: false }),
-        entitiesToSeed.locations && locationStore.removeAll({ options: false }),
         entitiesToSeed.sections && sectionStore.removeAll({ options: false }),
         entitiesToSeed.surveys && surveyStore.removeAll({ options: false })
       ].filter(Boolean));
@@ -220,14 +202,6 @@ export default function Page() {
             sectionTenantId: tenantId || ''
           });
           await elementStore.add(elementWithTenant);
-        }
-      }
-
-      if (entitiesToSeed.locations) {
-        const locationData = prepareLocationData(seedLocationData);
-        for (const location of locationData) {
-          const locationWithTenant = await withTenantId(location);
-          await locationStore.add(locationWithTenant);
         }
       }
 
@@ -266,7 +240,6 @@ export default function Page() {
         elements: entitiesToSync.elements,
         components: entitiesToSync.components,
         phrases: entitiesToSync.phrases,
-        locations: entitiesToSync.locations,
         sections: entitiesToSync.sections,
         surveys: entitiesToSync.surveys,
       });
@@ -291,13 +264,6 @@ export default function Page() {
         syncTasks.push(
           phraseStore.sync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, phrases: false }))
-          )
-        );
-      }
-      if (entitiesToSync.locations) {
-        syncTasks.push(
-          locationStore.sync()?.finally(() => 
-            setSyncingEntities(prev => ({ ...prev, locations: false }))
           )
         );
       }
@@ -334,7 +300,6 @@ export default function Page() {
         elements: false,
         components: false,
         phrases: false,
-        locations: false,
         sections: false,
         surveys: false,
       });
@@ -349,7 +314,6 @@ export default function Page() {
         entitiesToRemove.elements && elementStore.removeAll({ options: !localOnly }),
         entitiesToRemove.components && componentStore.removeAll({ options: !localOnly }),
         entitiesToRemove.phrases && phraseStore.removeAll({ options: !localOnly }),
-        entitiesToRemove.locations && locationStore.removeAll({ options: !localOnly }),
         entitiesToRemove.sections && sectionStore.removeAll({ options: !localOnly }),
         entitiesToRemove.surveys && surveyStore.removeAll({ options: !localOnly })
       ].filter(Boolean));
@@ -427,7 +391,6 @@ export default function Page() {
               { type: "elements" as const, title: "Elements", data: elements, hydrated: elementsHydrated },
               { type: "components" as const, title: "Components", data: components, hydrated: componentsHydrated },
               { type: "phrases" as const, title: "Phrases", data: phrases, hydrated: phrasesHydrated },
-              { type: "locations" as const, title: "Locations", data: locations, hydrated: locationsHydrated },
               { type: "sections" as const, title: "Sections", data: sections, hydrated: sectionsHydrated },
               { type: "surveys" as const, title: "Surveys", data: surveys, hydrated: surveysHydrated },
             ].map(({ type, title, data, hydrated }) => (
@@ -468,7 +431,6 @@ export default function Page() {
                   selectedEntity === "elements" ? filteredElements :
                   selectedEntity === "components" ? filteredComponents :
                   selectedEntity === "phrases" ? filteredPhrases :
-                  selectedEntity === "locations" ? filteredLocations :
                   selectedEntity === "sections" ? sections :
                   selectedEntity === "surveys" ? filteredSurveys :
                   []
