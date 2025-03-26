@@ -94,6 +94,8 @@ function Page() {
     }
   }
 
+  const sub = watch("sub");
+
   if(!enableForm) {
     return <div>Loading...</div>;
   }
@@ -119,8 +121,8 @@ function Page() {
               labelTitle="Signature Text"
               placeholder="Enter you signed name"
             />
-            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${watch()?.sub}/profilePicture/`} rhfProps={{name: "profile" }} labelText="Profile Picture" />
-            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${watch()?.sub}/signatureImage/`} rhfProps={{name: "picture" }} labelText="Signature Image" />
+            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${sub}/profilePicture/`} rhfProps={{name: "profile" }} labelText="Profile Picture" />
+            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${sub}/signatureImage/`} rhfProps={{name: "picture" }} labelText="Signature Image" />
             <PrimaryBtn 
               type="submit"
               disabled={!enableForm}
