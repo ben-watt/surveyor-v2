@@ -91,7 +91,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const tenantsData = tenants.map(tenant => ({
     name: tenant.name,
     logo: Building2,
-    id: tenant.id,
     createdAt: tenant.createdAt,
     createdBy: tenant.createdBy
   }));
@@ -134,9 +133,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuLabel>Teams</DropdownMenuLabel>
                 {tenantsData.map((tenant) => (
                   <DropdownMenuItem
-                    key={tenant.id}
+                    key={tenant.name}
                     className={
-                      currentTenant?.id === tenant.id
+                      currentTenant?.name === tenant.name
                         ? "bg-accent text-accent-foreground"
                         : ""
                     }

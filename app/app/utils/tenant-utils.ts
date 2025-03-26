@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Define types for tenant management
 export interface Tenant {
-  id: string;
   name: string;
   description?: string;
   createdAt: string;
@@ -38,24 +37,34 @@ export async function getCurrentTenantId(): Promise<string | null> {
 }
 
 /**
+ * Get the current tenant name from user attributes
+ * Returns null if no preferred tenant is set
+ */
+export async function getCurrentTenantName(): Promise<string | null> {
+  try {
+    return await getPreferredTenant();
+  } catch (error) {
+    console.error('Error getting current tenant name:', error);
+    return null;
+  }
+}
+
+/**
  * Hook to use tenant data in components
  * Returns the current tenant ID and loading state
  */
 export function useTenantData() {
-  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [currentTenant, setCurrentTenant] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState<Tenant[]>([]);
 
   useEffect(() => {
     async function loadTenantData() {
       try {
-        // Get current tenant ID
-        const currentTenantId = await getCurrentTenantId();
-        setTenantId(currentTenantId);
+        const currentTenantName = await getCurrentTenantName();
+        setCurrentTenant(currentTenantName);
         
-        // Get list of available tenants
         const tenantsList = await listUserTenants();
-
         setTenants(tenantsList);
       } catch (error) {
         console.error('Error loading tenant data:', error);
@@ -67,11 +76,10 @@ export function useTenantData() {
     loadTenantData();
   }, []);
   
-  // Function to switch tenant
-  const switchTenant = async (newTenantId: string) => {
+  const switchTenant = async (newTenantName: string) => {
     try {
-      await setPreferredTenant(newTenantId);
-      setTenantId(newTenantId);
+      await setPreferredTenant(newTenantName);
+      setCurrentTenant(newTenantName);
       return true;
     } catch (error) {
       console.error('Error switching tenant:', error);
@@ -80,7 +88,7 @@ export function useTenantData() {
   };
   
   return {
-    tenantId,
+    currentTenant,
     loading,
     tenants,
     switchTenant,
@@ -92,13 +100,19 @@ export function useTenantData() {
  */
 export async function createTenant(name: string, description?: string): Promise<Tenant> {
   try {
+    // Validate tenant name format
+    const validNameRegex = /^[a-z0-9-]+$/;
+    if (!validNameRegex.test(name)) {
+      throw new Error('Tenant name must contain only lowercase letters, numbers, and hyphens');
+    }
+
     // Check if user has global-admin role
     const isAdmin = await isGlobalAdmin();
     if (!isAdmin) {
       throw new Error('Only global administrators can create tenants');
     }
 
-    // Create the group in Cognito using the tenant admin function
+    // Create the group in Cognito using the tenant name
     await client.mutations.tenantAdmin({
       action: 'createGroup',
       groupName: name,
@@ -108,13 +122,12 @@ export async function createTenant(name: string, description?: string): Promise<
     // Get current user
     const currentUser = await getCurrentUser();
     
-    // Create tenant record in database
+    // Create tenant record in database using name as primary key
     const result = await client.models.Tenant.create({
       name,
       description,
       createdBy: currentUser.username,
       createdAt: new Date().toISOString(),
-      id: uuidv4(),
     });
     
     if (!result.data) {
@@ -122,7 +135,6 @@ export async function createTenant(name: string, description?: string): Promise<
     }
     
     return {
-      id: result.data.id,
       name: result.data.name,
       description: result.data.description || undefined,
       createdAt: result.data.createdAt,
@@ -156,7 +168,6 @@ export async function listUserTenants(): Promise<Tenant[]> {
     const isAdmin = await isGlobalAdmin();
     if (isAdmin) {
       return result.data.map(item => ({
-        id: item.id,
         name: item.name,
         description: item.description || undefined,
         createdAt: item.createdAt,
@@ -169,7 +180,6 @@ export async function listUserTenants(): Promise<Tenant[]> {
     return result.data
       .filter(item => userGroups.includes(item.name))
       .map(item => ({
-        id: item.id,
         name: item.name,
         description: item.description || undefined,
         createdAt: item.createdAt,
@@ -184,26 +194,19 @@ export async function listUserTenants(): Promise<Tenant[]> {
 /**
  * Add a user to a tenant
  */
-export async function addUserToTenant(username: string, tenantId: string): Promise<void> {
+export async function addUserToTenant(username: string, tenantName: string): Promise<void> {
   try {
     // Check if user has global-admin role
     const isAdmin = await isGlobalAdmin();
     if (!isAdmin) {
       throw new Error('Only global administrators can add users to tenants');
     }
-
-    // Get tenant details
-    const tenantResult = await client.models.Tenant.get({ id: tenantId });
     
-    if (!tenantResult.data) {
-      throw new Error(`Tenant with ID ${tenantId} not found`);
-    }
-    
-    // Add user to the Cognito group
+    // Add user to the Cognito group directly using tenant name
     const result = await client.mutations.tenantAdmin({
       action: 'addUserToGroup',
       username,
-      groupName: tenantResult.data.name
+      groupName: tenantName
     });
 
     if(result.errors) {
@@ -219,26 +222,19 @@ export async function addUserToTenant(username: string, tenantId: string): Promi
 /**
  * Remove a user from a tenant
  */
-export async function removeUserFromTenant(username: string, tenantId: string): Promise<void> {
+export async function removeUserFromTenant(username: string, tenantName: string): Promise<void> {
   try {
     // Check if user has global-admin role
     const isAdmin = await isGlobalAdmin();
     if (!isAdmin) {
       throw new Error('Only global administrators can remove users from tenants');
     }
-
-    // Get tenant details
-    const tenantResult = await client.models.Tenant.get({ id: tenantId });
     
-    if (!tenantResult.data) {
-      throw new Error(`Tenant with ID ${tenantId} not found`);
-    }
-    
-    // Remove user from the Cognito group
+    // Remove user from the Cognito group directly using tenant name
     await client.mutations.tenantAdmin({
       action: 'removeUserFromGroup',
       username,
-      groupName: tenantResult.data.name
+      groupName: tenantName
     });
   } catch (error) {
     console.error('Error removing user from tenant:', error);
@@ -249,19 +245,12 @@ export async function removeUserFromTenant(username: string, tenantId: string): 
 /**
  * List users in a tenant
  */
-export async function listTenantUsers(tenantId: string): Promise<TenantUser[]> {
+export async function listTenantUsers(tenantName: string): Promise<TenantUser[]> {
   try {
-    // Get tenant details
-    const tenantResult = await client.models.Tenant.get({ id: tenantId });
-    
-    if (!tenantResult.data) {
-      throw new Error(`Tenant with ID ${tenantId} not found`);
-    }
-    
-    // List users in the Cognito group
+    // List users in the Cognito group directly using tenant name
     const usersResult = await client.mutations.tenantAdmin({
       action: 'listUsersInGroup',
-      groupName: tenantResult.data.name
+      groupName: tenantName
     });
 
     const userResultJson = JSON.parse(usersResult.data as string) as any[];
@@ -281,11 +270,11 @@ export async function listTenantUsers(tenantId: string): Promise<TenantUser[]> {
 /**
  * Set user's preferred tenant
  */
-export async function setPreferredTenant(tenantId: string): Promise<void> {
+export async function setPreferredTenant(tenantName: string): Promise<void> {
   try {
     await updateUserAttributes({
       userAttributes: {
-        'custom:preferredTenant': tenantId
+        'custom:preferredTenant': tenantName
       }
     });
   } catch (error) {
@@ -320,18 +309,6 @@ export async function getPreferredTenant(): Promise<string | null> {
 }
 
 /**
- * Ensures that a data object has the current tenant ID
- * This should be used before creating or updating any entity
- */
-export async function withTenantId<T>(data: T): Promise<T & { tenantId: string }> {
-  const tenantId = await getCurrentTenantId();
-  if (!tenantId) {
-    throw new Error('No tenant ID available. Please ensure a tenant is selected.');
-  }
-  return { ...data, tenantId };
-}
-
-/**
  * Check if the current user has the global-admin role
  */
 export async function isGlobalAdmin(): Promise<boolean> {
@@ -347,7 +324,7 @@ export async function isGlobalAdmin(): Promise<boolean> {
 /**
  * Delete a tenant and its associated Cognito group
  */
-export async function deleteTenant(tenantId: string): Promise<void> {
+export async function deleteTenant(tenantName: string): Promise<void> {
   try {
     // Check if user has global-admin role
     const isAdmin = await isGlobalAdmin();
@@ -355,23 +332,27 @@ export async function deleteTenant(tenantId: string): Promise<void> {
       throw new Error('Only global administrators can delete tenants');
     }
 
-    // Get tenant details
-    const tenantResult = await client.models.Tenant.get({ id: tenantId });
-    
-    if (!tenantResult.data) {
-      throw new Error(`Tenant with ID ${tenantId} not found`);
-    }
-
     // Delete the Cognito group
     await client.mutations.tenantAdmin({
       action: 'deleteGroup',
-      groupName: tenantResult.data.name
+      groupName: tenantName
     });
 
     // Delete tenant record from database
-    await client.models.Tenant.delete({ id: tenantId });
+    await client.models.Tenant.delete({ id: tenantName });
   } catch (error) {
     console.error('Error deleting tenant:', error);
     throw error;
   }
+}
+
+/**
+ * Ensures that a data object has the current tenant name
+ */
+export async function withTenantId<T>(data: T): Promise<T & { tenantId: string }> {
+  const tenantName = await getCurrentTenantName();
+  if (!tenantName) {
+    throw new Error('No tenant selected. Please ensure a tenant is selected.');
+  }
+  return { ...data, tenantId: tenantName };
 } 

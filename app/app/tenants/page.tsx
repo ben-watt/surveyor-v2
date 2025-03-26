@@ -74,7 +74,7 @@ export default function TenantsPage() {
   // Load tenant users when a tenant is selected
   useEffect(() => {
     if (selectedTenant) {
-      loadTenantUsers(selectedTenant.id);
+      loadTenantUsers(selectedTenant.name);
     }
   }, [selectedTenant]);
 
@@ -142,11 +142,11 @@ export default function TenantsPage() {
     
     try {
       setLoading(true);
-      await addUserToTenant(newUserEmail, selectedTenant.id);
+      await addUserToTenant(newUserEmail, selectedTenant.name);
       toast.success(`User ${newUserEmail} added to ${selectedTenant.name}`);
       setNewUserEmail("");
       setIsAddUserDialogOpen(false);
-      await loadTenantUsers(selectedTenant.id);
+      await loadTenantUsers(selectedTenant.name);
     } catch (error) {
       console.error("Error adding user to tenant:", error);
       toast.error(error instanceof Error ? error.message : "Failed to add user to tenant");
@@ -161,9 +161,9 @@ export default function TenantsPage() {
     
     try {
       setLoading(true);
-      await removeUserFromTenant(username, selectedTenant.id);
+      await removeUserFromTenant(username, selectedTenant.name);
       toast.success(`User removed from ${selectedTenant.name}`);
-      await loadTenantUsers(selectedTenant.id);
+      await loadTenantUsers(selectedTenant.name);
     } catch (error) {
       console.error("Error removing user from tenant:", error);
       toast.error(error instanceof Error ? error.message : "Failed to remove user from tenant");
@@ -180,9 +180,9 @@ export default function TenantsPage() {
     
     try {
       setLoading(true);
-      await deleteTenant(tenant.id);
+      await deleteTenant(tenant.name);
       toast.success(`Team "${tenant.name}" deleted successfully`);
-      if (selectedTenant?.id === tenant.id) {
+      if (selectedTenant?.name === tenant.name) {
         setSelectedTenant(null);
         setTenantUsers([]);
       }
@@ -272,9 +272,9 @@ export default function TenantsPage() {
               <div className="space-y-2">
                 {tenants.map((tenant) => (
                   <div
-                    key={tenant.id}
+                    key={tenant.name}
                     className={`p-3 rounded-md flex justify-between items-center ${
-                      selectedTenant?.id === tenant.id
+                      selectedTenant?.name === tenant.name
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary hover:bg-secondary/80"
                     }`}

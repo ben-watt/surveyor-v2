@@ -52,7 +52,6 @@ const schema = a.schema({
       allow.owner().to(["create", "read", "update", "delete"]), 
       allow
       .groupDefinedIn("tenantId")
-      .withClaimIn("preferredTenant")
       .to(["create", "read", "update", "delete"]),
     ]),
   Sections: a.model({
@@ -69,9 +68,8 @@ const schema = a.schema({
   .authorization((allow) => [
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
-      .groupDefinedIn("tenantId")
-      .withClaimIn("preferredTenant")
-      .to(["create", "read", "update", "delete"]),
+    .groupDefinedIn("tenantId")
+    .to(["create", "read", "update", "delete"]),
   ]),
   Elements: a.model({
     id: a.id().required(),
@@ -92,7 +90,6 @@ const schema = a.schema({
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
     .groupDefinedIn("tenantId")
-    .withClaimIn("preferredTenant")
     .to(["create", "read", "update", "delete"]),
   ]),
   Material: a.customType({
@@ -116,7 +113,6 @@ const schema = a.schema({
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
     .groupDefinedIn("tenantId")
-    .withClaimIn("preferredTenant")
     .to(["create", "read", "update", "delete"]),
   ]),
   Components: a
@@ -136,7 +132,6 @@ const schema = a.schema({
       allow.owner().to(["create", "read", "update", "delete"]),
       allow
       .groupDefinedIn("tenantId")
-      .withClaimIn("preferredTenant")
       .to(["create", "read", "update", "delete"]),
     ]),
 });

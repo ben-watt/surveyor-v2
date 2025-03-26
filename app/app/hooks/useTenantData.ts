@@ -28,7 +28,7 @@ export function useTenantData<T>(
         setError(null);
         
         // Pass the current tenant ID to the fetch function
-        const result = await fetchFunction(currentTenant?.id || null);
+        const result = await fetchFunction(currentTenant?.name || null);
         
         if (isMounted) {
           setData(result);
@@ -50,9 +50,9 @@ export function useTenantData<T>(
     return () => {
       isMounted = false;
     };
-  }, [currentTenant?.id, ...dependencies]);
+  }, [currentTenant?.name, ...dependencies]);
 
-  return { data, loading, error, refetch: () => fetchFunction(currentTenant?.id || null) };
+  return { data, loading, error, refetch: () => fetchFunction(currentTenant?.name || null) };
 }
 
 /**

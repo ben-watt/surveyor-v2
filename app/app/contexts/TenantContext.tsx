@@ -32,11 +32,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       
       if (userTenants.length > 0) {
         // Try to get the preferred tenant from user attributes
-        const preferredTenantId = await getPreferredTenant();
+        const preferredTenantName = await getPreferredTenant();
         
-        if (preferredTenantId) {
+        if (preferredTenantName) {
           // Find the preferred tenant in the list
-          const preferredTenant = userTenants.find(t => t.id === preferredTenantId);
+          const preferredTenant = userTenants.find(t => t.name === preferredTenantName);
           if (preferredTenant) {
             setCurrentTenantState(preferredTenant);
             return;
@@ -61,7 +61,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     try {
       setCurrentTenantState(tenant);
       if (tenant) {
-        await setPreferredTenant(tenant.id);
+        await setPreferredTenant(tenant.name);
       } else {
         await setPreferredTenant("personal");
       }
