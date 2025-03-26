@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Users, UserPlus, UserMinus } from "lucide-react";
+import { PlusCircle, Users, UserPlus, UserMinus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { 
@@ -39,6 +39,7 @@ import {
   removeUserFromTenant, 
   listTenantUsers,
   isGlobalAdmin,
+  deleteTenant,
   Tenant,
   TenantUser
 } from "../utils/tenant-utils";
@@ -171,6 +172,29 @@ export default function TenantsPage() {
     }
   };
 
+  // Add delete handler function
+  const handleDeleteTenant = async (tenant: Tenant) => {
+    if (!confirm(`Are you sure you want to delete the team "${tenant.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await deleteTenant(tenant.id);
+      toast.success(`Team "${tenant.name}" deleted successfully`);
+      if (selectedTenant?.id === tenant.id) {
+        setSelectedTenant(null);
+        setTenantUsers([]);
+      }
+      await loadTenants();
+    } catch (error) {
+      console.error("Error deleting tenant:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete team");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
@@ -249,20 +273,37 @@ export default function TenantsPage() {
                 {tenants.map((tenant) => (
                   <div
                     key={tenant.id}
-                    className={`p-3 rounded-md cursor-pointer flex justify-between items-center ${
+                    className={`p-3 rounded-md flex justify-between items-center ${
                       selectedTenant?.id === tenant.id
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary hover:bg-secondary/80"
                     }`}
-                    onClick={() => setSelectedTenant(tenant)}
                   >
-                    <div>
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => setSelectedTenant(tenant)}
+                    >
                       <h3 className="font-medium">{tenant.name}</h3>
                       <p className="text-sm truncate">
                         {tenant.description || "No description"}
                       </p>
                     </div>
-                    <Users className="h-5 w-5" />
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      {isGlobalAdminUser && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTenant(tenant);
+                          }}
+                          disabled={loading}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

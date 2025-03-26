@@ -342,4 +342,36 @@ export async function isGlobalAdmin(): Promise<boolean> {
     console.error('Error checking global admin status:', error);
     return false;
   }
+}
+
+/**
+ * Delete a tenant and its associated Cognito group
+ */
+export async function deleteTenant(tenantId: string): Promise<void> {
+  try {
+    // Check if user has global-admin role
+    const isAdmin = await isGlobalAdmin();
+    if (!isAdmin) {
+      throw new Error('Only global administrators can delete tenants');
+    }
+
+    // Get tenant details
+    const tenantResult = await client.models.Tenant.get({ id: tenantId });
+    
+    if (!tenantResult.data) {
+      throw new Error(`Tenant with ID ${tenantId} not found`);
+    }
+
+    // Delete the Cognito group
+    await client.mutations.tenantAdmin({
+      action: 'deleteGroup',
+      groupName: tenantResult.data.name
+    });
+
+    // Delete tenant record from database
+    await client.models.Tenant.delete({ id: tenantId });
+  } catch (error) {
+    console.error('Error deleting tenant:', error);
+    throw error;
+  }
 } 

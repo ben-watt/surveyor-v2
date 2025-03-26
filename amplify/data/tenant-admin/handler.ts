@@ -6,6 +6,7 @@ import {
   CognitoIdentityProviderClient,
   ListGroupsCommand,
   ListUsersInGroupCommand,
+  DeleteGroupCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const client = new CognitoIdentityProviderClient();
@@ -27,6 +28,8 @@ export const handler = async (event: any) => {
         return await listGroups();
       case "listUsersInGroup":
         return await listUsersInGroup(params);
+      case "deleteGroup":
+        return await deleteGroup(params);
       default:
         throw new Error(`Unsupported action: ${action}`);
     }
@@ -86,4 +89,14 @@ async function listUsersInGroup({ groupName }: { groupName: string }) {
 
   const response = await client.send(command);
   return response.Users;
+}
+
+async function deleteGroup({ groupName }: { groupName: string }) {
+  const command = new DeleteGroupCommand({
+    GroupName: groupName,
+    UserPoolId: USER_POOL_ID,
+  });
+
+  await client.send(command);
+  return { success: true, message: `Group ${groupName} deleted successfully` };
 } 
