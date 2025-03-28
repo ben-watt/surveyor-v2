@@ -295,7 +295,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={{ fontSize: "14pt", fontWeight: "bold" }}>Description Of the Property</h1>
-        <TableBlock widths={[50, 50]}>
+        <TableBlock widths={[30, 70]}>
           <h3><strong>Property Type</strong></h3>
           <p>{form.propertyDescription.propertyType.value}</p>
           <h3><strong>Construction Details</strong></h3>
