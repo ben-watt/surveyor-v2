@@ -106,6 +106,7 @@ export type Input<T> = {
     label: string,
     placeholder: string,
     required: boolean,
+    order: number,
 }
 
 type description = string;
@@ -114,10 +115,10 @@ export type Tenure = "Freehold" | "Leasehold" | "Commonhold" | "Other" | "Unknow
 
 export type PropertyDescription = {
     propertyType: Input<string>,
+    constructionDetails: Input<description>,
     yearOfConstruction: Input<string>,
     yearOfExtensions: Input<string>,
     yearOfConversions: Input<string>,
-    constructionDetails: Input<description>,
     grounds: Input<description>,
     services: Input<string>,
     otherServices: Input<string>,

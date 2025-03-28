@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Zap } from "lucide-react";
 import { AddressDisplay } from "@/app/app/components/Address/AddressDisplay";
-import { registerQuotaErrorCallback } from "serwist";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -51,6 +50,7 @@ const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
   value: false,
   label: label,
   required: true,
+  order: 0,
 });
 
 const createDefaultFormValues = (
@@ -139,24 +139,7 @@ const createDefaultFormValues = (
         placeholder:
           "Detached, Semi-detached, Terraced, Flat, Bungalow, Maisonette, Other",
         required: true,
-      },
-      yearOfConstruction: {
-        type: "text",
-        label: "Year of Construction",
-        placeholder: "presumed 1990s - side extension",
-        required: true,
-      },
-      yearOfExtensions: {
-        type: "text",
-        label: "Year of Extensions",
-        placeholder: "2012",
-        required: false,
-      },
-      yearOfConversions: {
-        type: "text",
-        label: "Year of Conversions",
-        placeholder: "2004",
-        required: false,
+        order: 0,
       },
       constructionDetails: {
         type: "textarea",
@@ -164,6 +147,28 @@ const createDefaultFormValues = (
         label: "Construction Details",
         placeholder: "Brick, Stone, Timber, Concrete, Steel, Glass, Other",
         required: true,
+        order: 1,
+      },
+      yearOfConstruction: {
+        type: "text",
+        label: "Year of Construction",
+        placeholder: "presumed 1990s - side extension",
+        required: true,
+        order: 2,
+      },
+      yearOfExtensions: {
+        type: "text",
+        label: "Year of Extensions",
+        placeholder: "2012",
+        required: false,
+        order: 3,
+      },
+      yearOfConversions: {
+        type: "text",
+        label: "Year of Conversions",
+        placeholder: "2004",
+        required: false,
+        order: 4,
       },
       grounds: {
         type: "textarea",
@@ -171,6 +176,7 @@ const createDefaultFormValues = (
         label: "Grounds",
         placeholder: "Garden, Yard, Paved, Lawn, Other",
         required: true,
+        order: 5,
       },
       services: {
         type: "text",
@@ -179,6 +185,7 @@ const createDefaultFormValues = (
         placeholder:
           "Electricity, Gas, Water, Drainage, Telephone, Broadband, Other",
         required: true,
+        order: 6,
       },
       otherServices: {
         type: "text",
@@ -186,6 +193,7 @@ const createDefaultFormValues = (
         label: "Other Services",
         placeholder: "Cable TV, Satellite TV, Solar Panels, Other",
         required: false,
+        order: 7,
       },
       energyRating: {
         type: "text",
@@ -193,6 +201,7 @@ const createDefaultFormValues = (
         label: "Energy Rating",
         placeholder: "A, B, C, D, E, F, G, Other",
         required: true,
+        order: 8,
       },
       numberOfBedrooms: {
         type: "number",
@@ -200,6 +209,7 @@ const createDefaultFormValues = (
         label: "Number of Bedrooms",
         placeholder: "Number of Bedrooms",
         required: true,
+        order: 9,
       },
       numberOfBathrooms: {
         type: "number",
@@ -207,6 +217,7 @@ const createDefaultFormValues = (
         label: "Number of Bathrooms",
         placeholder: "Number of Bathrooms",
         required: true,
+        order: 10,
       },
       tenure: {
         type: "select",
@@ -214,6 +225,7 @@ const createDefaultFormValues = (
         label: "Tenure",
         placeholder: "Freehold, Leasehold, Commonhold, Other",
         required: true,
+        order: 11,
       },
       status: { status: FormStatus.Incomplete, errors: [] },
     },

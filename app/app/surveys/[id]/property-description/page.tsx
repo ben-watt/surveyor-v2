@@ -8,7 +8,6 @@ import {
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/app/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
-import { PrimaryBtn } from "@/app/app/components/Buttons";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DynamicDrawer } from "@/app/app/components/Drawer";
@@ -111,6 +110,7 @@ const PropertyDescriptionForm = ({
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onValidSubmit, onInvalidSubmit)}>
         {Object.keys(initValues)
+          .sort((a, b) => (initValues[a as keyof PropertyDescription] as Input<any>).order - (initValues[b as keyof PropertyDescription] as Input<any>).order)
           .map((key) => {
             const propKey = key as keyof Omit<PropertyDescription, "status">;
             const property = initValues[propKey] as Input<any>;
