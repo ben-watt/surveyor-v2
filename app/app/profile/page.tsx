@@ -101,10 +101,18 @@ function Page() {
   }
 
   return (
-    <div>
+    <div className="max-w-96 m-auto md:m-0">
+      <div className="flex justify-between mb-5 mt-5 items-baseline">
+        <div>
+          <h1 className="text-3xl font-bold dark:text-white">Profile</h1>
+          <p className="text-sm text-muted-foreground">
+            Update your profile information.
+          </p>
+        </div>
+      </div>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(handleUpdateUserAttribute, () => {})}>
-          <div className="space-y-2 max-w-72 m-auto">
+          <div className="space-y-2">
             <InputText
               labelTitle="Email"
               placeholder="Email Address"
