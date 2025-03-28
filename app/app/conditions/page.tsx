@@ -77,7 +77,7 @@ export default function Page() {
     <div>
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
-          <h1 className="text-3xl dark:text-white">Conditions</h1>
+          <h1 className="text-3xl font-bold dark:text-white">Conditions</h1>
           <p className="text-sm text-muted-foreground">
             Conditions are used to generate standard text for surveys.
           </p>

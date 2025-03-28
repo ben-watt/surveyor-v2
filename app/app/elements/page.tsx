@@ -18,7 +18,6 @@ import {
   sectionStore,
 } from "../clients/Database";
 import { Element as ElementData } from "../clients/Dexie";
-import { useEffect, useState } from "react";
 
 export default function Page() {
   const router = useRouter();
@@ -118,7 +117,7 @@ export default function Page() {
     <div>
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
-          <h1 className="text-3xl dark:text-white">Elements</h1>
+          <h1 className="text-3xl font-bold dark:text-white">Elements</h1>
           <p className="text-sm text-muted-foreground">
             Elements are the top level parts of a building and are used to group
             components.

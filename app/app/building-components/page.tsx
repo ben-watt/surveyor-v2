@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DataTable, SortableHeader } from "@/app/app/components/DataTable";
 import { componentStore, elementStore } from "../clients/Database";
-import { Component, Element } from "../clients/Dexie";
+import { Component } from "../clients/Dexie";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
@@ -89,7 +89,7 @@ export default function Page() {
     <div>
       <div className="flex justify-between mb-5 mt-5 items-baseline">
         <div>
-          <h1 className="text-3xl dark:text-white">Components</h1>
+          <h1 className="text-3xl font-bold dark:text-white">Components</h1>
           <p className="text-sm text-muted-foreground">
             Components are are the priamary items inspected during a building
             survey.

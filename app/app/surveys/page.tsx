@@ -84,7 +84,7 @@ function HomePage() {
     <div>
       <div className="flex justify-between mb-5 mt-5 items-end">
         <div>
-          <h1 className="text-3xl dark:text-white">Surveys</h1>
+          <h1 className="text-3xl font-bold dark:text-white">Surveys</h1>
           <p className="text-sm text-muted-foreground">
             Surveys are used to generate reports for building inspections.
           </p>

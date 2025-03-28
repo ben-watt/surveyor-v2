@@ -78,7 +78,9 @@ export default function RootLayout({
                     )}
                   >
                     <Suspense fallback={<div>Loading...</div>}>
-                      {children}
+                      <div className="p-2 md:mx-10">
+                        {children}
+                      </div>
                     </Suspense>
                   </ErrorBoundary>
                 </div>
