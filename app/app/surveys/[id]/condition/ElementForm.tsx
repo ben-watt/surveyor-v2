@@ -140,7 +140,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
             register={() => register("description")}
             placeholder="Enter element description"
           />
-          <div className="space-y-2">
+          <div className="space-y-2 image-w-50">
             <RhfInputImage rhfProps={{ name: "images" }} path={`report-images/${surveyId}/elements/${elementId}`} labelText="Images" />
           </div>
         </FormSection>

@@ -513,7 +513,7 @@ function InspectionFormContent({
             placeholder="Enter component description"
           />
 
-          <div className="space-y-2">
+          <div className="space-y-2 image-w-50">
             <Label>Images</Label>
             <RhfInputImage
               path={imageUploadPath}
