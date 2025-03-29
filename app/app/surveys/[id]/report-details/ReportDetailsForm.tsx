@@ -142,7 +142,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
 
         <div>
           <InputImageComponent.rhfImage
-            labelText={"Money Shot"}
+            labelText={"Cover Photo"}
             rhfProps={{
               name: "moneyShot",
               rules: {
