@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { surveyStore } from "@/app/app/clients/Database";
-import { getUrl } from "aws-amplify/storage";
+import { imageUploadStore } from "@/app/app/clients/ImageUploadStore";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
@@ -24,13 +24,13 @@ function PhotoGallery({ params }: PhotoGalleryProps) {
   console.log("[PhotoGallery] photoSections", survey);
 
   useEffect(() => {
-    async function getSignedUrls(
+    async function getImagesFromStore(
       imagePaths: string[]
     ): Promise<string[]> {
       return await Promise.all(
         imagePaths.map(async (path) => {
-          const { url } = await getUrl({ path });
-          return url.href;
+          const result = await imageUploadStore.get(path);
+          return result.unwrap().href;
         })
       );
     }
@@ -44,14 +44,14 @@ function PhotoGallery({ params }: PhotoGalleryProps) {
       if (survey.reportDetails?.moneyShot?.length) {
         const urls = await Promise.all(
           survey.reportDetails.moneyShot.map(async (path) => {
-            const { url } = await getUrl({ path });
-            return { url: url.href };
+            const result = await imageUploadStore.get(path);
+            return { url: result.unwrap().href };
           })
         );
 
         sections.push({
           name: "Money Shot",
-          photos: urls.map((url) => ({ url: url.url })),
+          photos: urls,
         });
       }
 
@@ -59,41 +59,37 @@ function PhotoGallery({ params }: PhotoGalleryProps) {
       if (survey.reportDetails?.frontElevationImagesUri?.length) {
         const urls = await Promise.all(
           survey.reportDetails.frontElevationImagesUri.map(async (path) => {
-            const { url } = await getUrl({ path });
-            return {
-              url: url.href,
-              path: survey.reportDetails.frontElevationImagesUri[0],
-            };
+            const result = await imageUploadStore.get(path);
+            return { url: result.unwrap().href };
           })
         );
 
         sections.push({
           name: "Front Elevation",
-          photos: urls.map((url) => ({ url: url.url })),
+          photos: urls,
         });
       }
 
       // Load component images
       if (survey.sections?.length) {
         for (const section of survey.sections) {
-
           for (const elementSection of section.elementSections || []) {
             if (elementSection.images?.length) {
-              const urls = await getSignedUrls(elementSection.images);
+              const urls = await getImagesFromStore(elementSection.images);
               
-              console.log("[PhotoGallery] getSignedUrls", elementSection.name, urls);
+              console.log("[PhotoGallery] getImagesFromStore", elementSection.name, urls);
               sections.push({
                 name: elementSection.name,
-                photos: urls.map((url) => ({ url: url })),
+                photos: urls.map((url) => ({ url })),
               });
             }
 
             for (const component of elementSection.components || []) {
               if (component.images?.length) {
-                const urls = await getSignedUrls(component.images);
+                const urls = await getImagesFromStore(component.images);
                 sections.push({
                   name: `${elementSection.name} - ${component.name}`,
-                  photos: urls.map((url) => ({ url: url })),
+                  photos: urls.map((url) => ({ url })),
                 });
               }
             }
