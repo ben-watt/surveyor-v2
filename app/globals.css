@@ -337,6 +337,6 @@
   font-family: Arial, sans-serif;
 }
 
-.filepond--item {
+.image-w-50 .filepond--item {
   width: calc(50% - 0.5em);
 }

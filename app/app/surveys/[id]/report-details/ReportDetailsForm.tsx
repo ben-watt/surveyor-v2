@@ -156,7 +156,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           />
         </div>
 
-        <div>
+        <div className="image-w-50">
           <InputImageComponent.rhfImage
             labelText={"Front Elevation"}
             rhfProps={{
