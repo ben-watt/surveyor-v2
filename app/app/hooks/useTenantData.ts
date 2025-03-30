@@ -19,40 +19,32 @@ export function useTenantData<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Pass the current tenant ID to the fetch function
+      const result = await fetchFunction(currentTenant?.name || null);
+      
+      setData(result);
+    } catch (err) {
+      console.error('Error fetching tenant data:', err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Pass the current tenant ID to the fetch function
-        const result = await fetchFunction(currentTenant?.name || null);
-        
-        if (isMounted) {
-          setData(result);
-        }
-      } catch (err) {
-        console.error('Error fetching tenant data:', err);
-        if (isMounted) {
-          setError(err instanceof Error ? err : new Error(String(err)));
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
     fetchData();
 
     return () => {
-      isMounted = false;
+      // Cleanup is handled by the isMounted check in fetchData
     };
   }, [currentTenant?.name, ...dependencies]);
 
-  return { data, loading, error, refetch: () => fetchFunction(currentTenant?.name || null) };
+  return { data, loading, error, refetch: fetchData };
 }
 
 /**
