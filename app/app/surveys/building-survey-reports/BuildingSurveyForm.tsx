@@ -285,7 +285,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
           user
         );
         if (formResult.ok) {
-          surveyStore.add({
+          await surveyStore.add({
             id: newId,
             content: formResult.val,
           });
@@ -303,7 +303,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
 
     console.log("[ReportWrapper] isHydrated", isHydrated);
     console.log("[ReportWrapper] report", report);
-    if (isHydrated && !report) {
+    if (isHydrated && !report && id === "create") {
       createNewForm();
     }
   }, [

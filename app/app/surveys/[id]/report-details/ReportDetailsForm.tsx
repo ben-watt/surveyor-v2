@@ -4,7 +4,6 @@ import Input from "@/app/app/components/Input/InputText";
 import TextAreaInput from "@/app/app/components/Input/TextAreaInput";
 import { FormProvider, SubmitErrorHandler, useForm } from "react-hook-form";
 import { FormStatus, ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
-import { PrimaryBtn } from "@/app/app/components/Buttons";
 import { surveyStore } from "@/app/app/clients/Database";
 import { memo } from "react";
 import { useRouter } from "next/navigation";
@@ -62,10 +61,10 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
-  const onValidHandler = (data: any): void => {
+  const onValidHandler = async (data: any): Promise<void> => {
     if (!surveyId) return;
 
-    surveyStore.update(surveyId, (survey) => {
+    await surveyStore.update(surveyId, (survey) => {
       survey.reportDetails = {
         ...data,
         status: { status: "complete", errors: [] },
@@ -76,10 +75,10 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     router.push(`/app/surveys/${surveyId}`);
   };
 
-  const onInvalidHandler: SubmitErrorHandler<ReportDetails> = (errors) => {
+  const onInvalidHandler: SubmitErrorHandler<ReportDetails> = async (errors) => {
     if (!surveyId) return;
 
-    surveyStore.update(surveyId, (survey) => {
+    await surveyStore.update(surveyId, (survey) => {
       survey.reportDetails.status = {
         status: FormStatus.Error,
         errors: Object.values(errors).map((e) => e.message ?? ""),
@@ -156,7 +155,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           />
         </div>
 
-        <div>
+        <div className="image-w-50">
           <InputImageComponent.rhfImage
             labelText={"Front Elevation"}
             rhfProps={{

@@ -40,6 +40,7 @@ import "filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css";
 // Utils
 import { join } from "path";
 import { imageUploadStore } from "@/app/app/clients/ImageUploadStore";
+import { getCurrentTenantId } from "../../utils/tenant-utils";
 
 // 2. Register plugins at the top level
 registerPlugin(
@@ -81,8 +82,10 @@ const createServerConfig = ({ path }: CreateServerConfigProps) => {
       const fullPath = join(path, fileToUpload.name);
 
       const upload = async () => {
+        const tenantId = await getCurrentTenantId();
         await imageUploadStore.create({
           id: fullPath,
+          tenantId: tenantId || "",
           path: fullPath,
           file: fileToUpload,
           href: "",

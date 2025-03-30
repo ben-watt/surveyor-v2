@@ -2,6 +2,7 @@ import { uploadData, remove, list, getProperties, getUrl } from 'aws-amplify/sto
 import { Ok, Result } from 'ts-results';
 import { db, ImageUpload, SyncStatus } from './Dexie';
 import Dexie from 'dexie';
+import { getCurrentTenantId } from '../utils/tenant-utils';
 
 // Types for the image upload store
 export type UpdateImageUpload = Partial<ImageUpload> & { id: string };
@@ -69,7 +70,8 @@ function createImageUploadStore(db: Dexie, name: string) {
         },
         get: async (fullPath: string): Promise<Result<ImageUpload, Error>> => {
             console.debug("[ImageUploadStore] get", fullPath);
-            const localImage = await table.get({ path: fullPath });
+            const tenantId = await getCurrentTenantId();
+            const localImage = await table.get([fullPath, tenantId]);
             if(localImage) {
                 return Ok(localImage);
             }
@@ -88,6 +90,7 @@ function createImageUploadStore(db: Dexie, name: string) {
             const lastModified = response.lastModified ? response.lastModified.toISOString() : new Date().toISOString();
             return Ok({
                 file: image,
+                tenantId: tenantId || "",
                 metadata: response.metadata,    
                 path: fullPath,
                 href: url.url.href,
@@ -98,8 +101,10 @@ function createImageUploadStore(db: Dexie, name: string) {
         },
         create: async (data: CreateImageUpload) => {
             console.debug("[ImageUploadStore] create", data);
+            const tenantId = await getCurrentTenantId();
             table.add({
                 id: data.path,
+                tenantId: tenantId || "",
                 path: data.path,
                 file: data.file,
                 href: data.href,

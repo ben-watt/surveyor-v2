@@ -88,7 +88,8 @@ describe('ImageUploadStore', () => {
                 file: new Blob(),
                 syncStatus: SyncStatus.Queued,
                 href: 'https://test.com/image.jpg',
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                tenantId: 'test-tenant'
             };
 
             mockTable.get.mockResolvedValue(mockLocalImage);
@@ -138,7 +139,8 @@ describe('ImageUploadStore', () => {
                 path: 'test.jpg',
                 file: new Blob(),
                 metadata: { test: 'metadata' },
-                href: 'https://test.com/image.jpg'
+                href: 'https://test.com/image.jpg',
+                tenantId: 'test-tenant'
             };
 
             await imageUploadStore.create(mockImage);
@@ -163,7 +165,8 @@ describe('ImageUploadStore', () => {
                 file: new Blob(),
                 syncStatus: SyncStatus.Queued,
                 href: 'https://test.com/image.jpg',
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                tenantId: 'test-tenant'
             };
 
             mockTable.get.mockResolvedValue(mockLocalImage);

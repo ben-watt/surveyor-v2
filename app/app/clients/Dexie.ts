@@ -26,6 +26,7 @@ export type Section = Omit<Schema['Sections']['type'], "elements">;
 
 export interface ImageUpload {
   id: string;
+  tenantId: string;
   path: string;
   file: Blob;
   metadata?: Record<string, string>;
@@ -132,7 +133,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     const result = useLiveQuery(
       async () => {
         if (!tenantId) return { value: undefined };
-        const item = await table.get(id);
+        const item = await table.get([id, tenantId]);
         return item && 
                item.syncStatus !== SyncStatus.PendingDelete && 
                item.tenantId === tenantId 
@@ -201,7 +202,8 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       }
 
       for (const remote of remoteData) {
-        const local = await table.get(remote.id);
+        const tenantId = await getCurrentTenantId();
+        const local = await table.get([remote.id, tenantId]);
         if (!local || 
             (local.syncStatus !== SyncStatus.PendingDelete && 
              new Date(remote.updatedAt) > new Date(local.updatedAt))) {
@@ -262,10 +264,11 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   };
 
   const get = async (id: string) => {
-      const local = await table.get(id);
-      if (!local || local.syncStatus === SyncStatus.PendingDelete) {
+    const tenantId = await getCurrentTenantId();
+    const local = await table.get([id, tenantId]);
+    if (!local || local.syncStatus === SyncStatus.PendingDelete) {
       throw new Error("Item not found with id: " + id);
-      }
+    }
     return local;
   };
 
@@ -284,7 +287,8 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   };
 
   const update = async (id: string, updateFn: (currentState: Draft<T>) => void) => {
-      const local = await table.get(id);
+      const tenantId = await getCurrentTenantId();
+      const local = await table.get([id, tenantId]);
       if (!local) {
       throw new Error("Item not found");
       }
@@ -304,7 +308,8 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   };
 
   const remove = async (id: string) => {
-      const local = await table.get(id);
+      const tenantId = await getCurrentTenantId();
+      const local = await table.get([id, tenantId]);
     if (local) {
       // Mark for deletion instead of deleting immediately
       await table.put({
