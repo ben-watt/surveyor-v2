@@ -1,5 +1,5 @@
 import { uploadData, remove, list, getProperties, getUrl } from 'aws-amplify/storage';
-import { Ok, Result } from 'ts-results';
+import { Err, Ok, Result } from 'ts-results';
 import { db, ImageUpload, SyncStatus } from './Dexie';
 import Dexie from 'dexie';
 import { getCurrentTenantId } from '../utils/tenant-utils';
@@ -29,8 +29,8 @@ function createImageUploadStore(db: Dexie, name: string) {
                 console.debug("[ImageUploadStore] sync result", result);
 
                 if(result) {
-                    table.delete(item.path);
-                    console.debug("[ImageUploadStore] deleted", result);
+                    table.delete([item.path, item.tenantId]);
+                    console.debug("[ImageUploadStore] deleted", [item.path, item.tenantId]);
                 }
             });
         });
@@ -69,16 +69,24 @@ function createImageUploadStore(db: Dexie, name: string) {
             return Ok(remoteResponse.concat(localResponse));
         },
         get: async (fullPath: string): Promise<Result<ImageUpload, Error>> => {
+
+            if(!fullPath) {
+                return Err(new Error("[ImageUploadStore] get: Full path is required"));
+            }
+
             console.debug("[ImageUploadStore] get", fullPath);
             const tenantId = await getCurrentTenantId();
             const localImage = await table.get([fullPath, tenantId]);
             if(localImage) {
+                console.debug("[ImageUploadStore] return local image", localImage);
                 return Ok(localImage);
             }
 
             const response = await getProperties({
                 path: fullPath,
             });
+
+            console.debug("[ImageUploadStore] get response", response);
 
             const url = await getUrl({
                 path: fullPath,
