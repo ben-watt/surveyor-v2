@@ -23,6 +23,10 @@ export interface TenantUser {
 // Client for GraphQL operations
 const client = generateClient<Schema>();
 
+// Add cache variable at the top level after imports
+let preferredTenantCache: { value: string | null; timestamp: number } | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 /**
  * Get the current tenant ID from user attributes
  * Returns null if no preferred tenant is set
@@ -277,6 +281,8 @@ export async function setPreferredTenant(tenantName: string): Promise<void> {
         'custom:preferredTenant': tenantName
       }
     });
+    // Clear the cache when setting new preferred tenant
+    preferredTenantCache = null;
   } catch (error) {
     console.error('Error setting preferred tenant:', error);
     throw error;
@@ -288,20 +294,34 @@ export async function setPreferredTenant(tenantName: string): Promise<void> {
  */
 export async function getPreferredTenant(): Promise<string | null> {
   try {
+    // Check cache first
+    if (preferredTenantCache && Date.now() - preferredTenantCache.timestamp < CACHE_DURATION) {
+      return preferredTenantCache.value;
+    }
+
     const attributes = await fetchUserAttributes();
     const preferredTenant = attributes['custom:preferredTenant'];
+    let result: string | null;
     
     // If no preferred tenant is set, use the user's sub as their personal tenant
     if (!preferredTenant) {
-      return attributes.sub || null;
+      result = attributes.sub || null;
     }
-    
     // If preferred tenant is explicitly set to "personal", use the user's sub
-    if (preferredTenant === 'personal') {
-      return attributes.sub || null;
+    else if (preferredTenant === 'personal') {
+      result = attributes.sub || null;
     }
+    else {
+      result = preferredTenant;
+    }
+
+    // Update cache
+    preferredTenantCache = {
+      value: result,
+      timestamp: Date.now()
+    };
     
-    return preferredTenant;
+    return result;
   } catch (error) {
     console.error('Error getting preferred tenant:', error);
     return null;

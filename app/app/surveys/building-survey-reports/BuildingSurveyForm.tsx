@@ -405,7 +405,7 @@ function Report({ initFormValues }: ReportProps) {
           <Card>
             <CardHeader>
               <div className="flex justify-between">
-                <div>
+                <div className="flex-1">
                   <CardTitle>
                     <div>
                       Building Survey Report - Level{" "}
@@ -416,7 +416,7 @@ function Report({ initFormValues }: ReportProps) {
                     {initFormValues.reportDetails.address.line1 ? (
                       <AddressDisplay
                         address={initFormValues.reportDetails.address}
-                        maxLength={31}
+                        maxLength={40}
                       />
                     ) : (
                       initFormValues.reportDetails.address.formatted ??

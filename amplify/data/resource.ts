@@ -20,7 +20,7 @@ const schema = a.schema({
       description: a.string(),
     })
     .authorization((allow) => [
-      allow.group('global-admin'),
+      allow.groups(['global-admin']),
     ])
     .handler(a.handler.function(tenantAdmin))
     .returns(a.json()),
@@ -35,7 +35,7 @@ const schema = a.schema({
     })
     .identifier(['id'])
     .authorization((allow) => [
-      allow.group('global-admin'),
+      allow.groups(['global-admin']),
       allow.authenticated().to(['read']),
     ]),
   Surveys: a
@@ -53,6 +53,7 @@ const schema = a.schema({
       allow
       .groupDefinedIn("tenantId")
       .to(["create", "read", "update", "delete"]),
+      allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
     ]),
   Sections: a.model({
     id: a.id().required(),
@@ -70,6 +71,7 @@ const schema = a.schema({
     allow
     .groupDefinedIn("tenantId")
     .to(["create", "read", "update", "delete"]),
+    allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
   ]),
   Elements: a.model({
     id: a.id().required(),
@@ -86,11 +88,11 @@ const schema = a.schema({
   })
   .identifier(['tenantId', 'id'])
   .authorization((allow) => [
-    allow.group('global-admin').to(["create", "read", "update", "delete"]),
     allow.owner().to(["create", "read", "update", "delete"]),
     allow
     .groupDefinedIn("tenantId")
     .to(["create", "read", "update", "delete"]),
+    allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
   ]),
   Material: a.customType({
     name: a.string().required()
@@ -114,6 +116,7 @@ const schema = a.schema({
     allow
     .groupDefinedIn("tenantId")
     .to(["create", "read", "update", "delete"]),
+    allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
   ]),
   Components: a
     .model({
@@ -133,6 +136,7 @@ const schema = a.schema({
       allow
       .groupDefinedIn("tenantId")
       .to(["create", "read", "update", "delete"]),
+      allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
     ]),
 });
 
