@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useTenantData, withTenantFilter } from '../useTenantData';
 import { useTenant } from '../../contexts/TenantContext';
 import React from 'react';
@@ -20,24 +20,24 @@ describe('useTenantData', () => {
 
   // 1. Basic Hook Lifecycle Tests
   describe('Basic Hook Lifecycle', () => {
-    it('should initialize with correct default state', () => {
+    it('should initialize with correct default state', async () => {
       const mockFetchFn = jest.fn();
       const { result } = renderHook(() => useTenantData(mockFetchFn));
       
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(null);
-      expect(result.current.error).toBe(null);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+        expect(result.current.data).toBe(null);
+        expect(result.current.error).toBe(null);
+      });
     });
 
     it('should call fetch function on mount', async () => {
       const mockFetchFn = jest.fn().mockResolvedValue([]);
       renderHook(() => useTenantData(mockFetchFn));
       
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+      await waitFor(() => {
+        expect(mockFetchFn).toHaveBeenCalledWith('test-tenant');
       });
-      
-      expect(mockFetchFn).toHaveBeenCalledWith('test-tenant');
     });
 
     it('should cleanup on unmount', async () => {
@@ -45,8 +45,8 @@ describe('useTenantData', () => {
       const { unmount } = renderHook(() => useTenantData(mockFetchFn));
       
       unmount();
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
+      await waitFor(() => {
+        expect(mockFetchFn).toHaveBeenCalled();
       });
       
       // Verify that the fetch result wasn't set after unmount
@@ -62,13 +62,11 @@ describe('useTenantData', () => {
       
       const { result } = renderHook(() => useTenantData(mockFetchFn));
       
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+      await waitFor(() => {
+        expect(result.current.data).toEqual(mockData);
+        expect(result.current.loading).toBe(false);
+        expect(result.current.error).toBe(null);
       });
-      
-      expect(result.current.data).toEqual(mockData);
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBe(null);
     });
 
     it('should handle null tenant ID', async () => {
@@ -76,12 +74,10 @@ describe('useTenantData', () => {
       const mockFetchFn = jest.fn().mockResolvedValue([]);
       
       renderHook(() => useTenantData(mockFetchFn));
-      
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+
+      await waitFor(() => {
+        expect(mockFetchFn).toHaveBeenCalledWith(null);
       });
-      
-      expect(mockFetchFn).toHaveBeenCalledWith(null);
     });
 
     it('should update data when dependencies change', async () => {
@@ -91,17 +87,11 @@ describe('useTenantData', () => {
         { initialProps: { dep: 1 } }
       );
       
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      });
-      
       rerender({ dep: 2 });
-      
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+
+      await waitFor(() => {
+        expect(mockFetchFn).toHaveBeenCalledTimes(2);
       });
-      
-      expect(mockFetchFn).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -112,14 +102,12 @@ describe('useTenantData', () => {
       const mockFetchFn = jest.fn().mockRejectedValue(error);
       
       const { result } = renderHook(() => useTenantData(mockFetchFn));
-      
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+    
+      await waitFor(() => {
+        expect(result.current.error).toEqual(error);
+        expect(result.current.loading).toBe(false);
+        expect(result.current.data).toBe(null);
       });
-      
-      expect(result.current.error).toEqual(error);
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(null);
     });
 
     it('should reset error state on successful fetch', async () => {
@@ -131,11 +119,9 @@ describe('useTenantData', () => {
       const { result } = renderHook(() => useTenantData(mockFetchFn));
       
       // First fetch - error
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+      await waitFor(() => {
+        expect(result.current.error).toEqual(error);
       });
-      
-      expect(result.current.error).toEqual(error);
       
       // Second fetch - success
       await act(async () => {
@@ -143,7 +129,9 @@ describe('useTenantData', () => {
         await new Promise(resolve => setTimeout(resolve, 0));
       });
       
-      expect(result.current.error).toBe(null);
+      await waitFor(() => {
+        expect(result.current.error).toBe(null);
+      });
     });
   });
 
@@ -158,16 +146,13 @@ describe('useTenantData', () => {
       expect(result.current.loading).toBe(true);
       
       // During fetch
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
       });
-      expect(result.current.loading).toBe(true);
       
-      // After fetch
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
       });
-      expect(result.current.loading).toBe(false);
     });
   });
 
@@ -177,10 +162,6 @@ describe('useTenantData', () => {
       const mockFetchFn = jest.fn().mockResolvedValue([]);
       
       const { result } = renderHook(() => useTenantData(mockFetchFn));
-      
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      });
       
       await act(async () => {
         await result.current.refetch();
