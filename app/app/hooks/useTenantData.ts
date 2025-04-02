@@ -29,7 +29,6 @@ export function useTenantData<T>(
       
       setData(result);
     } catch (err) {
-      console.error('Error fetching tenant data:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
