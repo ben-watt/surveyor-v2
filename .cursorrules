@@ -1,0 +1,80 @@
+{
+  "rules": {
+    "formatting": {
+      "indentSize": 2,
+      "maxLineLength": 100,
+      "useTabs": false,
+      "semicolons": true,
+      "singleQuote": true,
+      "trailingComma": "es5",
+      "bracketSpacing": true,
+      "arrowParens": "avoid"
+    },
+    "typescript": {
+      "strictNullChecks": true,
+      "noImplicitAny": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true
+    },
+    "react": {
+      "componentNaming": "PascalCase",
+      "propsNaming": "camelCase",
+      "eventHandlerNaming": "handle*",
+      "componentLocation": "app/app/components/",
+      "pageLocation": "app/app/"
+    },
+    "imports": {
+      "order": [
+        "^react",
+        "^next",
+        "^@/components/(.*)$",
+        "^@/lib/(.*)$",
+        "^@/hooks/(.*)$",
+        "^[./]"
+      ],
+      "newlineBetweenGroups": true,
+      "alphabetize": true
+    },
+    "testing": {
+      "testFileNaming": "*.test.ts",
+      "testFileLocation": "__tests__/",
+      "coverageThreshold": {
+        "statements": 80,
+        "branches": 80,
+        "functions": 80,
+        "lines": 80
+      }
+    },
+    "accessibility": {
+      "requireAriaLabels": true,
+      "requireAltText": true,
+      "requireRole": true
+    },
+    "performance": {
+      "maxBundleSize": "200kb",
+      "lazyLoadImages": true,
+      "preloadCriticalAssets": true
+    },
+    "security": {
+      "noEval": true,
+      "noInnerHtml": true,
+      "requireHttps": true
+    },
+    "documentation": {
+      "requireJSDoc": {
+        "classDeclaration": true,
+        "methodDefinition": true,
+        "arrowFunctionExpression": true
+      },
+      "requireParamDescription": true,
+      "requireReturnsDescription": true
+    },
+    "git": {
+      "commitMessageFormat": "type(scope): description",
+      "branchNaming": "type/description",
+      "requireCleanWorkingDir": true
+    }
+  }
+} 
