@@ -308,8 +308,9 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   };
 
   const remove = async (id: string) => {
-      const tenantId = await getCurrentTenantId();
-      const local = await table.get([id, tenantId]);
+    const tenantId = await getCurrentTenantId();
+    const local = await table.get([id, tenantId]);
+
     if (local) {
       // Mark for deletion instead of deleting immediately
       await table.put({
@@ -317,9 +318,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
         syncStatus: SyncStatus.PendingDelete,
         updatedAt: new Date().toISOString(),
       });
-      
       // Trigger sync asynchronously if online
       sync();
+    } else {
+      console.error("[remove] Item not found", id, tenantId);
     }
   };
 
