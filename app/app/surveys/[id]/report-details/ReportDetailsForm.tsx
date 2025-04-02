@@ -7,7 +7,7 @@ import { FormStatus, ReportDetails } from "../../building-survey-reports/Buildin
 import { surveyStore } from "@/app/app/clients/Database";
 import { memo } from "react";
 import { useRouter } from "next/navigation";
-import { InputImageComponent } from "@/app/app/components/Input/InputImage";
+import { RhfInputImage } from "@/app/app/components/InputImage";
 import { useDynamicDrawer } from "@/app/app/components/Drawer";
 import AddressInput from "@/app/app/components/Input/AddressInput";
 import { Button } from "@/components/ui/button";
@@ -140,7 +140,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
         </div>
 
         <div>
-          <InputImageComponent.rhfImage
+          <RhfInputImage
             labelText={"Cover Photo"}
             rhfProps={{
               name: "moneyShot",
@@ -156,7 +156,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
         </div>
 
         <div className="image-w-50">
-          <InputImageComponent.rhfImage
+          <RhfInputImage
             labelText={"Front Elevation"}
             rhfProps={{
               name: "frontElevationImagesUri",

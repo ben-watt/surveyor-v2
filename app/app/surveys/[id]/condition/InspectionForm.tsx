@@ -17,7 +17,7 @@ import {
   surveyStore,
   sectionStore,
 } from "@/app/app/clients/Database";
-import { RhfInputImage } from "@/app/app/components/Input/InputImage";
+import { RhfInputImage } from "@/app/app/components/InputImage";
 import TextAreaInput from "@/app/app/components/Input/TextAreaInput";
 import { Combobox } from "@/app/app/components/Input/ComboBox";
 import { useDynamicDrawer } from "@/app/app/components/Drawer";

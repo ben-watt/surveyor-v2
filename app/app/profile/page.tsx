@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import InputText from "../components/Input/InputText";
 import { FieldValues, FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { InputImageComponent } from "../components/Input/InputImage";
+import { RhfInputImage } from "../components/InputImage";
 import { PrimaryBtn } from "../components/Buttons";
 
 
@@ -129,8 +129,8 @@ function Page() {
               labelTitle="Signature Text"
               placeholder="Enter you signed name"
             />
-            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${sub}/profilePicture/`} rhfProps={{name: "profile" }} labelText="Profile Picture" />
-            <InputImageComponent.rhfImage maxNumberOfFiles={1} path={`profile/${sub}/signatureImage/`} rhfProps={{name: "picture" }} labelText="Signature Image" />
+            <RhfInputImage maxNumberOfFiles={1} path={`profile/${sub}/profilePicture/`} rhfProps={{name: "profile" }} labelText="Profile Picture" />
+            <RhfInputImage maxNumberOfFiles={1} path={`profile/${sub}/signatureImage/`} rhfProps={{name: "picture" }} labelText="Signature Image" />
             <PrimaryBtn 
               type="submit"
               disabled={!enableForm}
