@@ -102,7 +102,7 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
   const filepond = useRef<FilePond | null>(null);
 
   return (
-    <div className="relative">
+    <div className="relative" data-testid="filepond-wrapper" data-max-files={maxFiles} data-accepted-file-types={acceptedFileTypes.join(',')}>
       <FilePond
         ref={filepond}
         name={id || 'filepond'}
