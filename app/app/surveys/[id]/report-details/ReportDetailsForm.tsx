@@ -55,22 +55,15 @@ LevelField.displayName = 'LevelField';
 const SaveButtonWithUploadStatus = memo(({ 
   surveyId, 
   isSubmitting, 
-  setError, 
-  clearErrors 
+  paths,
 }: { 
   surveyId: string; 
   isSubmitting: boolean;
-  setError: any;
-  clearErrors: any;
+  paths: string[];
 }) => {
-  // Paths to check for upload status
-  const imagePaths = [
-    `report-images/${surveyId}/moneyShot/`,
-    `report-images/${surveyId}/frontElevationImagesUri/`
-  ];
 
   // Use the hook to track upload status
-  const { isUploading, checkUploadStatus } = useImageUploadStatus(imagePaths);
+  const { isUploading, checkUploadStatus } = useImageUploadStatus(paths);
 
   return (
     <>
@@ -94,6 +87,7 @@ const SaveButtonWithUploadStatus = memo(({
     </>
   );
 });
+
 SaveButtonWithUploadStatus.displayName = 'SaveButtonWithUploadStatus';
 
 const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) => {
@@ -114,23 +108,6 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
   const onValidHandler = async (data: any): Promise<void> => {
     if (!surveyId) return;
 
-    // We'll check upload status in the form submission
-    // this is handled in the save button component
-    const checkImageUploadComplete = () => {
-      const elements = document.querySelectorAll('[data-image-uploading="true"]');
-      return elements.length === 0;
-    };
-
-    if (!checkImageUploadComplete()) {
-      setError('root.imageUploading', { 
-        type: 'manual',
-        message: 'Please wait for all images to finish uploading before saving.'
-      });
-      return;
-    }
-    
-    clearErrors('root.imageUploading');
-
     await surveyStore.update(surveyId, (survey) => {
       survey.reportDetails = {
         ...data,
@@ -144,20 +121,6 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
 
   const onInvalidHandler: SubmitErrorHandler<ReportDetails> = async (errors) => {
     if (!surveyId) return;
-
-    // Check if any images are still uploading
-    const checkImageUploadComplete = () => {
-      const elements = document.querySelectorAll('[data-image-uploading="true"]');
-      return elements.length === 0;
-    };
-
-    if (!checkImageUploadComplete()) {
-      setError('root.imageUploading', { 
-        type: 'manual',
-        message: 'Please wait for all images to finish uploading before saving.'
-      });
-      return;
-    }
 
     await surveyStore.update(surveyId, (survey) => {
       survey.reportDetails.status = {
@@ -250,21 +213,14 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             path={`report-images/${surveyId}/frontElevationImagesUri/`}
           />
         </div>
-        
-        {errors.root?.imageUploading && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {errors.root.imageUploading.message}
-            </AlertDescription>
-          </Alert>
-        )}
 
         <SaveButtonWithUploadStatus 
           surveyId={surveyId}
           isSubmitting={isSubmitting}
-          setError={setError}
-          clearErrors={clearErrors}
+          paths={[
+            `report-images/${surveyId}/moneyShot/`,
+            `report-images/${surveyId}/frontElevationImagesUri/`
+          ]}
         />
       </form>
     </FormProvider>
