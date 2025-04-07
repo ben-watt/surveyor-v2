@@ -8,6 +8,7 @@ import FilePondPluginImageTransform from "filepond-plugin-image-transform";
 import {
   FilePondInitialFile,
   FilePondFile,
+  FileOrigin,
 } from "filepond";
 
 // Styles
@@ -122,6 +123,22 @@ const InputImage: React.FC<InputImageProps> = ({
     onChange?.(fileSources);
   }, [path, onChange]);
 
+  const handleProcessFile = useCallback((file: FilePondFile) => {
+    console.log('[InputImage][handleProcessFile] Processing file:', file);
+  }, []);
+
+  const handleAddFile = useCallback((file: FilePondFile) => {
+    if(file.origin === FileOrigin.INPUT) {
+      console.log('[InputImage][handleAddFile] Adding file:', file);
+    } 
+  }, []);
+
+  const handleAddFileComplete = useCallback((file: FilePondFile) => {
+    if(file.origin === FileOrigin.INPUT) {
+      console.log('[InputImage][handleAddFileComplete] Adding file:', file);
+    }
+  }, []);
+
   if (!hasLoaded) {
     return <div>Loading...</div>;
   }
@@ -133,6 +150,9 @@ const InputImage: React.FC<InputImageProps> = ({
       server={createServerConfig({ path })}
       onRemoveFile={handleRemoveFile}
       onUpdateFiles={handleUpdateFiles}
+      onProcessFile={handleProcessFile}
+      onAddFile={handleAddFile}
+      onAddFileComplete={handleAddFileComplete}
       {...DEFAULT_FILE_POND_CONFIG}
       maxFiles={maxNumberOfFiles}
       acceptedFileTypes={['image/*']}

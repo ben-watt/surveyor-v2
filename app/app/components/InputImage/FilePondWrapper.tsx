@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { FilePond, registerPlugin } from 'react-filepond';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
@@ -28,6 +28,7 @@ export interface FilePondWrapperProps {
   onRemoveFile?: (file: FilePondFile) => void;
   onUpdateFiles?: (files: FilePondFile[]) => void;
   onAddFile?: (file: FilePondFile) => void;
+  onAddFileComplete?: (file: FilePondFile) => void;
   onProcessFile?: (file: FilePondFile) => void;
   maxFiles?: number;
   allowMultiple?: boolean;
@@ -58,6 +59,7 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
   onRemoveFile,
   onUpdateFiles,
   onAddFile,
+  onAddFileComplete,
   onProcessFile,
   maxFiles = 10,
   allowMultiple = true,
@@ -124,7 +126,8 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
         credits={false}
         onremovefile={(err, file) => onRemoveFile?.(file)}
         onupdatefiles={(files) => onUpdateFiles?.(files)}
-        onaddfile={(err, file) => onAddFile?.(file)}
+        onaddfilestart={(file) => onAddFile?.(file)}
+        onaddfile={(err, file) => onAddFileComplete?.(file)}
         onprocessfile={(err, file) => onProcessFile?.(file)}
         server={server}
         files={files}
