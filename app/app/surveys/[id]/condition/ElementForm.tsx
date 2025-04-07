@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, memo } from "react";
 import { useForm, FormProvider, FieldErrors } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/app/components/FormSection";
@@ -16,6 +16,52 @@ import InspectionForm from "./InspectionForm";
 import { Edit, Trash2 } from "lucide-react";
 import { getElementSection, updateElementDetails, removeComponent } from "@/app/app/surveys/building-survey-reports/Survey";
 import SaveButtonWithUploadStatus from "@/app/app/components/SaveButtonWithUploadStatus";
+import { useImageUploadStatus } from "@/app/app/components/InputImage/useImageUploadStatus";
+
+// Memoized Add Component button component
+const AddComponentButton = memo(({ 
+  surveyId, 
+  elementId, 
+  elementName,
+  imageUploadPath 
+}: { 
+  surveyId: string;
+  elementId: string;
+  elementName: string;
+  imageUploadPath: string;
+}) => {
+  const drawer = useDynamicDrawer();
+  const { isUploading } = useImageUploadStatus([imageUploadPath]);
+
+  return (
+    <Button 
+      variant="secondary" 
+      type="button" 
+      className="w-full" 
+      disabled={isUploading}
+      onClick={() => {
+        drawer.openDrawer({
+          id: `${surveyId}-condition-add-component`,
+          title: `Add Component`,
+          description: `Add a component to the element`,
+          content: <InspectionForm
+            surveyId={surveyId}
+            defaultValues={{
+              element: {
+                id: elementId,
+                name: elementName,
+              }
+            }}
+          />
+        });
+      }}
+    >
+      {isUploading ? 'Please wait for images to finish uploading...' : 'Add Component'}
+    </Button>
+  );
+});
+
+AddComponentButton.displayName = 'AddComponentButton';
 
 type ElementFormData = {
   description: string;
@@ -43,6 +89,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
   const [elementsHydrated, elements] = elementStore.useList();
   const [sectionsHydrated, surveySections] = sectionStore.useList();
+  const imageUploadPath = `report-images/${surveyId}/elements/${elementId}`;
 
   useEffect(() => {
     const loadElementData = async () => {
@@ -196,28 +243,16 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
               </div>
             )}
           </div>
-          <Button variant="secondary" type="button" className="w-full" onClick={() => {
-            drawer.openDrawer({
-              id: `${surveyId}-condition-add-component`,
-              title: `Add Component`,
-              description: `Add a component to the element`,
-              content: <InspectionForm
-                surveyId={surveyId}
-                defaultValues={{
-                  element: {
-                    id: elementId,
-                    name: elementData?.name || "",
-                  }
-                }}
-              />
-            });
-          }}>
-          Add Component
-        </Button>
+          <AddComponentButton 
+            surveyId={surveyId}
+            elementId={elementId}
+            elementName={elementData?.name || ""}
+            imageUploadPath={imageUploadPath}
+          />
         </FormSection>
         <SaveButtonWithUploadStatus 
           isSubmitting={false}
-          paths={[`report-images/${surveyId}/elements/${elementId}`]}
+          paths={[imageUploadPath]}
           buttonText="Save Element Details"
         />
       </form>
