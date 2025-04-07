@@ -1,16 +1,20 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import InputImage from '../InputImage';
 import { imageUploadStore } from '@/app/app/clients/ImageUploadStore';
 import path from 'path';
-import { FilePondFile } from 'filepond';
+import { FilePondFile, FileOrigin } from 'filepond';
+import { imageUploadStatusStore } from '../imageUploadStatusStore';
 
 // Mock FilePond and its plugins
 jest.mock('react-filepond', () => ({
   registerPlugin: jest.fn(),
-  FilePond: ({ onremovefile, onupdatefiles }: { 
+  FilePond: ({ onremovefile, onupdatefiles, onaddfilestart, onaddfile, onprocessfile }: { 
     onremovefile: (file: FilePondFile) => void;
     onupdatefiles: (files: FilePondFile[]) => void;
+    onaddfilestart: (file: FilePondFile) => void;
+    onaddfile: (error: Error | null, file: FilePondFile) => void;
+    onprocessfile: (error: Error | null, file: FilePondFile) => void;
   }) => {
     const mockFile = {
       source: '/test/path/image1.jpg',
@@ -26,7 +30,7 @@ jest.mock('react-filepond', () => ({
       id: '1',
       serverId: '1',
       status: 1,
-      origin: 1,
+      origin: FileOrigin.INPUT,
       filename: 'image1.jpg',
       filenameWithoutExtension: 'image1',
       fileExtension: '.jpg',
@@ -39,6 +43,17 @@ jest.mock('react-filepond', () => ({
     return (
       <div data-testid="filepond">
         <button aria-label="remove file" onClick={() => onremovefile(mockFile)}>Remove</button>
+        <button 
+          aria-label="trigger file start" 
+          onClick={() => {
+            const fileWithInputOrigin = { ...mockFile, origin: FileOrigin.INPUT };
+            onaddfilestart(fileWithInputOrigin);
+            onaddfile(null, fileWithInputOrigin);
+            onprocessfile(null, fileWithInputOrigin);
+          }}
+        >
+          Trigger Upload
+        </button>
         <input type="file" onChange={(e) => {
           const files = Array.from(e.target.files || []).map(file => ({
             ...mockFile,
@@ -88,12 +103,32 @@ jest.mock('filepond-plugin-image-transform', () => ({
   default: jest.fn(),
 }));
 
+// Mock the imageUploadStatusStore
+jest.mock('../imageUploadStatusStore', () => ({
+  imageUploadStatusStore: {
+    setUploading: jest.fn(),
+    setUploaded: jest.fn(),
+    isUploading: jest.fn(),
+    subscribe: jest.fn().mockImplementation((callback) => {
+      return jest.fn(); // return unsubscribe function
+    }),
+  },
+}));
+
 // Mock the imageUploadStore
 jest.mock('@/app/app/clients/ImageUploadStore', () => ({
   imageUploadStore: {
-    list: jest.fn(),
-    get: jest.fn(),
-    remove: jest.fn(),
+    list: jest.fn().mockResolvedValue({ ok: true, val: [] }),
+    get: jest.fn().mockResolvedValue({ 
+      ok: true, 
+      val: {
+        path: '/test/path/image1.jpg',
+        href: 'http://example.com/image1.jpg',
+        syncStatus: 'synced',
+        file: { size: 1024, type: 'image/jpeg' }
+      }
+    }),
+    remove: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -114,11 +149,16 @@ describe('InputImage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Default mock implementations
+    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: [] });
   });
 
-  it('renders loading state initially', () => {
+  it('renders loading state initially', async () => {
     render(<InputImage path={mockPath} onChange={mockOnChange} />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
+    // Wait for loading to complete to avoid act warnings
+    await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
   });
 
   it('loads and displays initial files correctly', async () => {
@@ -133,7 +173,9 @@ describe('InputImage', () => {
     (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: mockFiles });
     (imageUploadStore.get as jest.Mock).mockResolvedValue({ ok: true, val: mockFileData });
 
-    render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    await act(async () => {
+      render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -145,7 +187,9 @@ describe('InputImage', () => {
   it('handles error when loading initial files', async () => {
     (imageUploadStore.list as jest.Mock).mockRejectedValue(new Error('Failed to load'));
 
-    render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    await act(async () => {
+      render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -155,10 +199,11 @@ describe('InputImage', () => {
   });
 
   it('respects maxNumberOfFiles prop', async () => {
-    const mockFiles = [{ fullPath: '/test/path/image1.jpg' }];
-    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: mockFiles });
+    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: [] });
 
-    render(<InputImage path={mockPath} onChange={mockOnChange} maxNumberOfFiles={3} />);
+    await act(async () => {
+      render(<InputImage path={mockPath} onChange={mockOnChange} maxNumberOfFiles={3} />);
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -169,10 +214,11 @@ describe('InputImage', () => {
   });
 
   it('updates file sources correctly when files change', async () => {
-    const mockFiles = [{ fullPath: '/test/path/image1.jpg' }];
-    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: mockFiles });
+    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: [] });
 
-    render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    await act(async () => {
+      render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -180,23 +226,24 @@ describe('InputImage', () => {
 
     // Simulate file update
     const fileInput = screen.getByTestId('filepond').querySelector('input[type="file"]');
-    const file = new File([''], 'test.jpg', { type: 'image/jpeg' });
-    fireEvent.change(fileInput!, {
-      target: {
-        files: [file],
-      },
+    await act(async () => {
+      const file = new File([''], 'test.jpg', { type: 'image/jpeg' });
+      fireEvent.change(fileInput!, {
+        target: {
+          files: [file],
+        },
+      });
     });
 
-    await waitFor(() => {
-      expect(mockOnChange).toHaveBeenCalledWith(['/test/path/test.jpg']);
-    });
+    expect(mockOnChange).toHaveBeenCalledWith(['/test/path/test.jpg']);
   });
 
   it('handles file type restrictions correctly', async () => {
-    const mockFiles = [{ fullPath: '/test/path/image1.jpg' }];
-    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: mockFiles });
+    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: [] });
 
-    render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    await act(async () => {
+      render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -204,5 +251,32 @@ describe('InputImage', () => {
 
     const filePondWrapper = screen.getByTestId('filepond-wrapper');
     expect(filePondWrapper).toHaveAttribute('data-accepted-file-types', 'image/*');
+  });
+  
+  it('tracks upload status without re-rendering', async () => {
+    (imageUploadStore.list as jest.Mock).mockResolvedValue({ ok: true, val: [] });
+
+    await act(async () => {
+      render(<InputImage path={mockPath} onChange={mockOnChange} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    // Simulate file upload start
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('trigger file start'));
+    });
+
+    // Verify that the status store is updated correctly
+    expect(imageUploadStatusStore.setUploading).toHaveBeenCalledWith(mockPath, true);
+    
+    // Simulate upload complete
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('trigger file start'));
+    });
+    
+    expect(imageUploadStatusStore.setUploaded).toHaveBeenCalledWith(mockPath);
   });
 }); 

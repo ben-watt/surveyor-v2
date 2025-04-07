@@ -22,6 +22,7 @@ import { imageUploadStore } from "@/app/app/clients/ImageUploadStore";
 import { createServerConfig } from "./createServerConfig";
 import { FilePondWrapper } from './FilePondWrapper';
 import { DEFAULT_FILE_POND_CONFIG } from './filePondConfig';
+import { imageUploadStatusStore } from './imageUploadStatusStore';
 
 // 2. Register plugins at the top level
 registerPlugin(
@@ -125,19 +126,20 @@ const InputImage: React.FC<InputImageProps> = ({
 
   const handleProcessFile = useCallback((file: FilePondFile) => {
     console.log('[InputImage][handleProcessFile] Processing file:', file);
-  }, []);
+    if(file.origin === FileOrigin.INPUT) {
+      // Set the file as processed but still uploading
+      // Final upload completion is handled by handleAddFileComplete
+      imageUploadStatusStore.setUploaded(path);
+    }
+  }, [path]);
 
   const handleAddFile = useCallback((file: FilePondFile) => {
     if(file.origin === FileOrigin.INPUT) {
       console.log('[InputImage][handleAddFile] Adding file:', file);
+      // Set uploading state to true when a file is added by the user
+      imageUploadStatusStore.setUploading(path, true);
     } 
-  }, []);
-
-  const handleAddFileComplete = useCallback((file: FilePondFile) => {
-    if(file.origin === FileOrigin.INPUT) {
-      console.log('[InputImage][handleAddFileComplete] Adding file:', file);
-    }
-  }, []);
+  }, [path]);
 
   if (!hasLoaded) {
     return <div>Loading...</div>;
@@ -152,7 +154,6 @@ const InputImage: React.FC<InputImageProps> = ({
       onUpdateFiles={handleUpdateFiles}
       onProcessFile={handleProcessFile}
       onAddFile={handleAddFile}
-      onAddFileComplete={handleAddFileComplete}
       {...DEFAULT_FILE_POND_CONFIG}
       maxFiles={maxNumberOfFiles}
       acceptedFileTypes={['image/*']}

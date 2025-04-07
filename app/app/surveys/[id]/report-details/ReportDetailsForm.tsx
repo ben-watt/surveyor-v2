@@ -11,6 +11,9 @@ import { RhfInputImage } from "@/app/app/components/InputImage";
 import { useDynamicDrawer } from "@/app/app/components/Drawer";
 import AddressInput from "@/app/app/components/Input/AddressInput";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useImageUploadStatus } from "@/app/app/components/InputImage/useImageUploadStatus";
 
 interface ReportDetailsFormProps {
   surveyId: string;
@@ -56,13 +59,35 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isSubmitting },
+    setError,
+    clearErrors,
   } = methods;
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
+  
+  // Paths to check for upload status
+  const imagePaths = [
+    `report-images/${surveyId}/moneyShot/`,
+    `report-images/${surveyId}/frontElevationImagesUri/`
+  ];
+
+  // Use the hook to track upload status
+  const { isUploading, checkUploadStatus } = useImageUploadStatus(imagePaths);
 
   const onValidHandler = async (data: any): Promise<void> => {
     if (!surveyId) return;
+
+    // Check if any images are still uploading
+    if (checkUploadStatus()) {
+      setError('root.imageUploading', { 
+        type: 'manual',
+        message: 'Please wait for all images to finish uploading before saving.'
+      });
+      return;
+    }
+    
+    clearErrors('root.imageUploading');
 
     await surveyStore.update(surveyId, (survey) => {
       survey.reportDetails = {
@@ -77,6 +102,15 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
 
   const onInvalidHandler: SubmitErrorHandler<ReportDetails> = async (errors) => {
     if (!surveyId) return;
+
+    // Check if any images are still uploading
+    if (checkUploadStatus()) {
+      setError('root.imageUploading', { 
+        type: 'manual',
+        message: 'Please wait for all images to finish uploading before saving.'
+      });
+      return;
+    }
 
     await surveyStore.update(surveyId, (survey) => {
       survey.reportDetails.status = {
@@ -169,10 +203,35 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             path={`report-images/${surveyId}/frontElevationImagesUri/`}
           />
         </div>
-        <Button variant="default" className="w-full" type="submit">Save</Button>
+        
+        {errors.root?.imageUploading && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {errors.root.imageUploading.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isUploading && (
+          <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-amber-700">
+              Images are currently uploading. Please wait until all uploads complete before saving.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        <Button 
+          variant="default" 
+          className="w-full" 
+          type="submit" 
+          disabled={isSubmitting || isUploading}
+        >
+          {isUploading ? 'Images Uploading...' : 'Save'}
+        </Button>
       </form>
     </FormProvider>
-
   );
 };
 
