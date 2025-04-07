@@ -51,6 +51,51 @@ const LevelField = memo(({ control }: any) => (
 ));
 LevelField.displayName = 'LevelField';
 
+// Isolated component for save button and upload status
+const SaveButtonWithUploadStatus = memo(({ 
+  surveyId, 
+  isSubmitting, 
+  setError, 
+  clearErrors 
+}: { 
+  surveyId: string; 
+  isSubmitting: boolean;
+  setError: any;
+  clearErrors: any;
+}) => {
+  // Paths to check for upload status
+  const imagePaths = [
+    `report-images/${surveyId}/moneyShot/`,
+    `report-images/${surveyId}/frontElevationImagesUri/`
+  ];
+
+  // Use the hook to track upload status
+  const { isUploading, checkUploadStatus } = useImageUploadStatus(imagePaths);
+
+  return (
+    <>
+      {isUploading && (
+        <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-700">
+            Images are currently uploading. Please wait until all uploads complete before saving.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <Button 
+        variant="default" 
+        className="w-full" 
+        type="submit" 
+        disabled={isSubmitting || isUploading}
+      >
+        {isUploading ? 'Images Uploading...' : 'Save'}
+      </Button>
+    </>
+  );
+});
+SaveButtonWithUploadStatus.displayName = 'SaveButtonWithUploadStatus';
+
 const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) => {
   const methods = useForm<ReportDetails>({
     defaultValues: reportDetails,
@@ -65,21 +110,18 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
   } = methods;
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
-  
-  // Paths to check for upload status
-  const imagePaths = [
-    `report-images/${surveyId}/moneyShot/`,
-    `report-images/${surveyId}/frontElevationImagesUri/`
-  ];
-
-  // Use the hook to track upload status
-  const { isUploading, checkUploadStatus } = useImageUploadStatus(imagePaths);
 
   const onValidHandler = async (data: any): Promise<void> => {
     if (!surveyId) return;
 
-    // Check if any images are still uploading
-    if (checkUploadStatus()) {
+    // We'll check upload status in the form submission
+    // this is handled in the save button component
+    const checkImageUploadComplete = () => {
+      const elements = document.querySelectorAll('[data-image-uploading="true"]');
+      return elements.length === 0;
+    };
+
+    if (!checkImageUploadComplete()) {
       setError('root.imageUploading', { 
         type: 'manual',
         message: 'Please wait for all images to finish uploading before saving.'
@@ -104,7 +146,12 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     if (!surveyId) return;
 
     // Check if any images are still uploading
-    if (checkUploadStatus()) {
+    const checkImageUploadComplete = () => {
+      const elements = document.querySelectorAll('[data-image-uploading="true"]');
+      return elements.length === 0;
+    };
+
+    if (!checkImageUploadComplete()) {
       setError('root.imageUploading', { 
         type: 'manual',
         message: 'Please wait for all images to finish uploading before saving.'
@@ -213,23 +260,12 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           </Alert>
         )}
 
-        {isUploading && (
-          <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
-            <AlertDescription className="text-amber-700">
-              Images are currently uploading. Please wait until all uploads complete before saving.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <Button 
-          variant="default" 
-          className="w-full" 
-          type="submit" 
-          disabled={isSubmitting || isUploading}
-        >
-          {isUploading ? 'Images Uploading...' : 'Save'}
-        </Button>
+        <SaveButtonWithUploadStatus 
+          surveyId={surveyId}
+          isSubmitting={isSubmitting}
+          setError={setError}
+          clearErrors={clearErrors}
+        />
       </form>
     </FormProvider>
   );

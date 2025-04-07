@@ -18,6 +18,8 @@ export const RhfInputImage: React.FC<RhfInputImageProps> = ({
 }) => {
   const { setValue, formState, register } = useFormContext();
 
+  console.log('[RhfInputImage] Rendering');
+
   const onChange = (fileSources: string[]) => {
     setValue(rhfProps.name, fileSources);
   };
