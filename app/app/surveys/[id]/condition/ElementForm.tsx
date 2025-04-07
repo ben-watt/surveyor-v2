@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import InspectionForm from "./InspectionForm";
 import { Edit, Trash2 } from "lucide-react";
 import { getElementSection, updateElementDetails, removeComponent } from "@/app/app/surveys/building-survey-reports/Survey";
+import SaveButtonWithUploadStatus from "@/app/app/components/SaveButtonWithUploadStatus";
 
 type ElementFormData = {
   description: string;
@@ -214,9 +215,11 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
           Add Component
         </Button>
         </FormSection>
-        <Button type="submit" className="w-full">
-          Save Element Details
-        </Button>
+        <SaveButtonWithUploadStatus 
+          isSubmitting={false}
+          paths={[`report-images/${surveyId}/elements/${elementId}`]}
+          buttonText="Save Element Details"
+        />
       </form>
     </FormProvider>
   );

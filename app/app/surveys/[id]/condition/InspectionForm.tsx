@@ -41,6 +41,7 @@ import {
   RAG_OPTIONS,
 } from "./types";
 import InputMoney from "@/app/app/components/Input/InputMoney";
+import SaveButtonWithUploadStatus from "@/app/app/components/SaveButtonWithUploadStatus";
 
 function CostingsFieldArray() {
   const { control, register } = useFormContext();
@@ -531,9 +532,11 @@ function InspectionFormContent({
             <CostingsFieldArray />
           </FormSection>
         )}
-        <Button type="submit" className="w-full">
-          Save Changes
-        </Button>
+        <SaveButtonWithUploadStatus 
+          isSubmitting={false}
+          paths={[imageUploadPath]}
+          buttonText="Save Changes"
+        />
       </form>
     </FormProvider>
   );

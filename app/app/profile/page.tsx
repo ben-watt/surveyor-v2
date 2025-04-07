@@ -3,8 +3,6 @@
 import {
   fetchUserAttributes,
   FetchUserAttributesOutput,
-} from "aws-amplify/auth";
-import {
   updateUserAttribute,
   type UpdateUserAttributeOutput,
 } from "aws-amplify/auth";
@@ -14,7 +12,7 @@ import { FieldValues, FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { RhfInputImage } from "../components/InputImage";
 import { PrimaryBtn } from "../components/Buttons";
-
+import SaveButtonWithUploadStatus from "@/app/app/components/SaveButtonWithUploadStatus";
 
 type ProfileFormData = {
   name: string;
@@ -131,12 +129,11 @@ function Page() {
             />
             <RhfInputImage maxNumberOfFiles={1} path={`profile/${sub}/profilePicture/`} rhfProps={{name: "profile" }} labelText="Profile Picture" />
             <RhfInputImage maxNumberOfFiles={1} path={`profile/${sub}/signatureImage/`} rhfProps={{name: "picture" }} labelText="Signature Image" />
-            <PrimaryBtn 
-              type="submit"
-              disabled={!enableForm}
-            >
-              Update
-            </PrimaryBtn>
+            <SaveButtonWithUploadStatus 
+              isSubmitting={!enableForm}
+              paths={[`profile/${sub}/profilePicture/`, `profile/${sub}/signatureImage/`]}
+              buttonText="Update"
+            />
           </div>
         </form>
       </FormProvider>
@@ -144,4 +141,4 @@ function Page() {
   );
 }
 
-export default Page;
+export default Page; 

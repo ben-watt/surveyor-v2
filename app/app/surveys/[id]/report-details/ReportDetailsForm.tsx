@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useImageUploadStatus } from "@/app/app/components/InputImage/useImageUploadStatus";
+import SaveButtonWithUploadStatus from "@/app/app/components/SaveButtonWithUploadStatus";
 
 interface ReportDetailsFormProps {
   surveyId: string;
@@ -50,45 +51,6 @@ const LevelField = memo(({ control }: any) => (
   </div>
 ));
 LevelField.displayName = 'LevelField';
-
-// Isolated component for save button and upload status
-const SaveButtonWithUploadStatus = memo(({ 
-  surveyId, 
-  isSubmitting, 
-  paths,
-}: { 
-  surveyId: string; 
-  isSubmitting: boolean;
-  paths: string[];
-}) => {
-
-  // Use the hook to track upload status
-  const { isUploading, checkUploadStatus } = useImageUploadStatus(paths);
-
-  return (
-    <>
-      {isUploading && (
-        <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="text-amber-700">
-            Images are currently uploading. Please wait until all uploads complete before saving.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <Button 
-        variant="default" 
-        className="w-full" 
-        type="submit" 
-        disabled={isSubmitting || isUploading}
-      >
-        {isUploading ? 'Images Uploading...' : 'Save'}
-      </Button>
-    </>
-  );
-});
-
-SaveButtonWithUploadStatus.displayName = 'SaveButtonWithUploadStatus';
 
 const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) => {
   const methods = useForm<ReportDetails>({
@@ -215,7 +177,6 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
         </div>
 
         <SaveButtonWithUploadStatus 
-          surveyId={surveyId}
           isSubmitting={isSubmitting}
           paths={[
             `report-images/${surveyId}/moneyShot/`,
