@@ -5,6 +5,7 @@ import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orien
 import FilePondPluginFilePoster from 'filepond-plugin-file-poster';
 import FilePondPluginImageResize from 'filepond-plugin-image-resize';
 import FilePondPluginImageTransform from 'filepond-plugin-image-transform';
+import FilePondPluginImageCrop from 'filepond-plugin-image-crop'
 import { FilePondInitialFile, FilePondFile } from 'filepond';
 
 // Styles
@@ -18,7 +19,8 @@ registerPlugin(
   FilePondPluginImagePreview,
   FilePondPluginImageExifOrientation,
   FilePondPluginImageResize,
-  FilePondPluginImageTransform
+  FilePondPluginImageTransform,
+  FilePondPluginImageCrop
 );
 
 export interface FilePondWrapperProps {
@@ -49,6 +51,8 @@ export interface FilePondWrapperProps {
   labelFileProcessingComplete?: string;
   labelFileProcessingAborted?: string;
   labelFileLoadError?: string;
+  allowImageCrop?: boolean;
+  imageCropAspectRatio?: string;
   labelFileProcessingError?: (error: any) => string;
 }
 
@@ -74,6 +78,8 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
   imageTransformOutputQuality = 80,
   imageTransformOutputMimeType = 'image/jpeg',
   allowImageTransform = true,
+  allowImageCrop = true,
+  imageCropAspectRatio = '4:3',
   imageTransformVariants = {
     thumbnail_: (transforms: any) => ({
       ...transforms,
@@ -102,7 +108,6 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
   labelFileProcessingError = (error: any) => error?.body || 'Upload failed, tap to retry',
 }) => {
   const filepond = useRef<FilePond | null>(null);
-
   return (
     <div className="relative" data-testid="filepond-wrapper" data-max-files={maxFiles} data-accepted-file-types={acceptedFileTypes.join(',')}>
       <FilePond
@@ -137,6 +142,8 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
         labelFileProcessingAborted={labelFileProcessingAborted}
         labelFileLoadError={labelFileLoadError}
         labelFileProcessingError={labelFileProcessingError}
+        allowImageCrop={allowImageCrop}
+        imageCropAspectRatio={imageCropAspectRatio}
       />
     </div>
   );

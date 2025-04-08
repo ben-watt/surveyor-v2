@@ -127,8 +127,6 @@ const InputImage: React.FC<InputImageProps> = ({
   const handleProcessFile = useCallback((file: FilePondFile) => {
     console.log('[InputImage][handleProcessFile] Processing file:', file);
     if(file.origin === FileOrigin.INPUT) {
-      // Set the file as processed but still uploading
-      // Final upload completion is handled by handleAddFileComplete
       imageUploadStatusStore.setUploaded(path);
     }
   }, [path]);
@@ -136,7 +134,6 @@ const InputImage: React.FC<InputImageProps> = ({
   const handleAddFile = useCallback((file: FilePondFile) => {
     if(file.origin === FileOrigin.INPUT) {
       console.log('[InputImage][handleAddFile] Adding file:', file);
-      // Set uploading state to true when a file is added by the user
       imageUploadStatusStore.setUploading(path, true);
     } 
   }, [path]);
