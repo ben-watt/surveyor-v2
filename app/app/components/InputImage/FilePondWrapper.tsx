@@ -7,11 +7,13 @@ import FilePondPluginImageResize from 'filepond-plugin-image-resize';
 import FilePondPluginImageTransform from 'filepond-plugin-image-transform';
 import FilePondPluginImageCrop from 'filepond-plugin-image-crop'
 import { FilePondInitialFile, FilePondFile } from 'filepond';
+import MetadataEditPlugin from '@/lib/filepond-plugin-metadata-edit/filepond-plugin-metadata-edit';
 
-// Styles
 import 'filepond/dist/filepond.min.css';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 import 'filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css';
+import '@/lib/filepond-plugin-metadata-edit/metadata-modifiers.css';
+import '@/lib/filepond-plugin-metadata-edit/metadata-edit-button.css';
 
 // Register plugins
 registerPlugin(
@@ -20,7 +22,8 @@ registerPlugin(
   FilePondPluginImageExifOrientation,
   FilePondPluginImageResize,
   FilePondPluginImageTransform,
-  FilePondPluginImageCrop
+  FilePondPluginImageCrop,
+  MetadataEditPlugin
 );
 
 export interface FilePondWrapperProps {

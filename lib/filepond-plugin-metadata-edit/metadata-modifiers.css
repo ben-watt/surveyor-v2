@@ -1,0 +1,12 @@
+/**
+ * FilePond Plugin Metadata Edit Modifiers
+ */
+
+/* Show the metadata edit button on item hover */
+.filepond--root[data-style-metadata-edit-button-only-on-hover='true'] .filepond--action-metadata-item {
+  opacity: 0;
+}
+
+.filepond--root[data-style-metadata-edit-button-only-on-hover='true'] .filepond--file-wrapper:hover .filepond--action-metadata-item {
+  opacity: 1;
+} 

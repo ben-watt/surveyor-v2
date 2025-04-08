@@ -14,6 +14,10 @@ export const DEFAULT_FILE_POND_CONFIG = {
   imageTransformOutputQuality: 80,
   imageTransformOutputMimeType: 'image/jpeg',
   allowImageTransform: true,
+  allowMetadataEdit: true,
+  metadataEditorCallback: (file: FilePondInitialFile, metadata: any, save: (metadata: any) => void) => {
+    console.log('metadataEditorCallback', file, metadata, save);
+  },
   imageTransformVariants: {
     thumbnail_: (transforms: any) => ({
       ...transforms,

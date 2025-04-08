@@ -1,0 +1,134 @@
+/**
+ * FilePond Plugin Metadata Edit Button
+ */
+
+.filepond--action-metadata-item {
+  --action-metadata-item-width: 2em;
+  --action-metadata-item-height: 2em;
+  --action-metadata-item-color: currentColor;
+
+  position: absolute;
+  width: var(--action-metadata-item-width);
+  height: var(--action-metadata-item-height);
+  z-index: 2;
+
+  color: var(--action-metadata-item-color);
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.filepond--action-metadata-item svg {
+  width: 100%;
+  height: 100%;
+}
+
+.filepond--action-metadata-item path {
+  fill: currentColor;
+}
+
+.filepond--action-metadata-item[data-align*="top"] {
+  top: 1em;
+}
+
+.filepond--action-metadata-item[data-align*="bottom"] {
+  bottom: 1em;
+}
+
+.filepond--action-metadata-item[data-align*="center"] {
+  left: calc(50% - (var(--action-metadata-item-width) * 0.5));
+}
+
+.filepond--action-metadata-item[data-align*="left"] {
+  left: 1em;
+}
+
+.filepond--action-metadata-item[data-align*="right"] {
+  right: 1em;
+}
+
+/* Metadata edit button for image previews */
+.filepond--action-metadata-edit-item {
+  opacity: 1 !important;
+  cursor: pointer;
+  transform: translateX(0) translateY(0) !important;
+}
+
+/* Special styling for the metadata edit button to make it more visible */
+.filepond--action-metadata-edit-item::after {
+  content: '';
+  position: absolute;
+  left: -0.75em;
+  right: -0.75em;
+  top: -0.5em;
+  bottom: -0.5em;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: -1;
+}
+
+/* Animation for hover effect */
+.filepond--action-metadata-edit-item:hover {
+  transform: scale(1.1) !important;
+}
+
+/* Hide if the item is being processed/removed */
+.filepond--file-wrapper[data-file-status="processing"] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status="processing-complete"] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status="processing-error"] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status="processing-revert-error"] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status="fetching"] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status="fetching-error"] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status="removing"] .filepond--action-metadata-edit-item {
+  display: none;
+}
+
+/* Alternative button style for non-image files */
+.filepond--action-metadata-item-alt {
+  padding: 0;
+  margin-left: 0.5em;
+  font-size: 0.75em;
+  background: none;
+  border: none;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.filepond--action-metadata-item-alt:hover {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.filepond--action-metadata-item-alt svg {
+  width: 1em;
+  height: 1em;
+  margin-right: 0.25em;
+}
+
+/* Add style for non-image file edit button to stand out more */
+.filepond--action-metadata-item-alt {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.25em 0.5em;
+  border-radius: 0.25em;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.filepond--action-metadata-item-alt:hover {
+  background-color: rgba(0,
+  0, 0, 0.1);
+}
+
+/* Debug - add this to see if CSS is loading */
+.filepond--root {
+  position: relative;
+}
+
+.filepond--root::after {
+  content: "Metadata Edit Plugin CSS loaded";
+  position: absolute;
+  bottom: -15px;
+  left: 0;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+} 

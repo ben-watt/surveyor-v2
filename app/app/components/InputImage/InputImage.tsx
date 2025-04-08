@@ -1,20 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { registerPlugin } from "react-filepond";
-import FilePondPluginImagePreview from "filepond-plugin-image-preview";
-import FilePondPluginImageExifOrientation from "filepond-plugin-image-exif-orientation";
-import FilePondPluginFilePoster from "filepond-plugin-file-poster";
-import FilePondPluginImageResize from "filepond-plugin-image-resize";
-import FilePondPluginImageTransform from "filepond-plugin-image-transform";
 import {
   FilePondInitialFile,
   FilePondFile,
   FileOrigin,
 } from "filepond";
-
-// Styles
-import "filepond/dist/filepond.min.css";
-import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
-import "filepond-plugin-file-poster/dist/filepond-plugin-file-poster.css";
 
 // Utils
 import { join } from "path";
@@ -24,14 +13,6 @@ import { FilePondWrapper } from './FilePondWrapper';
 import { DEFAULT_FILE_POND_CONFIG } from './filePondConfig';
 import { imageUploadStatusStore } from './imageUploadStatusStore';
 
-// 2. Register plugins at the top level
-registerPlugin(
-  FilePondPluginFilePoster,
-  FilePondPluginImagePreview,
-  FilePondPluginImageExifOrientation,
-  FilePondPluginImageResize,
-  FilePondPluginImageTransform
-);
 
 // 3. Type definitions
 export interface InputImageProps {
