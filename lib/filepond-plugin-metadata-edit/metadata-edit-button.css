@@ -51,24 +51,19 @@
   opacity: 1 !important;
   cursor: pointer;
   transform: translateX(0) translateY(0) !important;
-}
-
-/* Special styling for the metadata edit button to make it more visible */
-.filepond--action-metadata-edit-item::after {
-  content: '';
-  position: absolute;
-  left: -0.75em;
-  right: -0.75em;
-  top: -0.5em;
-  bottom: -0.5em;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.15);
-  z-index: -1;
+  padding: 5px;
 }
 
 /* Animation for hover effect */
 .filepond--action-metadata-edit-item:hover {
   transform: scale(1.1) !important;
+}
+
+/* Make the svg icon smaller */
+.filepond--file-action-button.filepond--file-action-button.filepond--action-metadata-edit-item svg {
+  width: 70%;
+  height: 70%;
+  margin: auto;
 }
 
 /* Hide if the item is being processed/removed */
