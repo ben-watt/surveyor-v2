@@ -1,9 +1,10 @@
-import { X } from "lucide-react";
+import { X, Archive, Pencil } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
 import { imageUploadStatusStore } from "./imageUploadStatusStore";
 import { useImageUploadStatus } from "./useImageUploadStatus";
+import { ImageMetadataDialog } from "./ImageMetadataDialog";
 
 interface DropZoneInputImageProps {
   path: string;
@@ -15,10 +16,12 @@ interface DropZoneInputImageProps {
 interface ThumbnailProps {
   file: FileWithPath;
   onDelete: (file: FileWithPath) => void;
+  onArchive: (file: FileWithPath) => void;
+  onEdit: (file: FileWithPath) => void;
   isUploading?: boolean;
 }
 
-const Thumbnail = ({ file, onDelete, isUploading }: ThumbnailProps) => {
+const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: ThumbnailProps) => {
   const toFileSize = useCallback((size: number): [number, string] => {
     if (size < 1024) {
       return [size, "B"];
@@ -30,7 +33,7 @@ const Thumbnail = ({ file, onDelete, isUploading }: ThumbnailProps) => {
       return [Math.round(size / 1024 / 1024 / 1024), "GB"];
     }
   }, []);
-
+  
   return (
     <div className="relative rounded-md overflow-hidden" key={file.name}>
       <div>
@@ -63,13 +66,39 @@ const Thumbnail = ({ file, onDelete, isUploading }: ThumbnailProps) => {
           <X />
         </button>
       </aside>
+      <aside className="absolute top-0 right-0">
+        <button
+          className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onEdit(file);
+          }}
+        >
+          <Pencil size={16} />
+        </button>
+      </aside>
+      <aside className="absolute bottom-0 right-0">
+        <button
+          className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onArchive(file);
+          }}
+        >
+          <Archive size={16} />
+        </button>
+      </aside>
     </div>
   );
 };
 
 export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [files, setFiles] = useState<FileWithPath[]>([]);
+  const [archivedFiles, setArchivedFiles] = useState<FileWithPath[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingFile, setEditingFile] = useState<FileWithPath | null>(null);
   const { isUploading } = useImageUploadStatus([props.path]);
 
   // Load existing files
@@ -98,7 +127,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               return null;
             })
           );
-
+          
           const validFiles = existingFiles.filter(
             (file): file is FileWithPath => file !== null
           );
@@ -136,14 +165,14 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           preview: URL.createObjectURL(file),
         })
       );
-
+      
       setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-
+      
       // Upload each file
       for (const file of newFiles) {
         const filePath = `${props.path}/${file.name}`;
         imageUploadStatusStore.setUploading(props.path, true);
-
+        
         try {
           await imageUploadStore.create({
             id: filePath,
@@ -157,7 +186,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               type: file.type,
             },
           });
-
+          
           props.onChange?.([
             ...files.map((f) => f.name),
             ...newFiles.map((f) => f.name),
@@ -179,6 +208,18 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       props.onChange?.(files.filter((f) => f !== file).map((f) => f.name));
     } catch (error) {
       console.error("Error removing file:", error);
+    }
+  };
+
+  const handleArchive = async (file: FileWithPath) => {
+    const filePath = `${props.path}/${file.name}`;
+    try {
+      await imageUploadStore.archive(filePath);
+      setFiles(files.filter((f) => f !== file));
+      setArchivedFiles((prev) => [...prev, file]);
+      props.onChange?.(files.filter((f) => f !== file).map((f) => f.name));
+    } catch (error) {
+      console.error("Error archiving file:", error);
     }
   };
 
@@ -214,11 +255,24 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               key={file.name}
               file={file}
               onDelete={handleDelete}
+              onArchive={handleArchive}
+              onEdit={setEditingFile}
               isUploading={isUploading}
             />
           ))}
         </ul>
       </aside>
+      {archivedFiles.length > 0 && (
+        <div className="mt-4 flex items-center justify-end gap-2 text-gray-500">
+          <Archive size={16} />
+          <span className="text-sm">{archivedFiles.length} archived</span>
+        </div>
+      )}
+      <ImageMetadataDialog
+        file={editingFile}
+        path={props.path}
+        onClose={() => setEditingFile(null)}
+      />
     </section>
   );
 };

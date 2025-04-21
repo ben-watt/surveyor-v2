@@ -1,4 +1,4 @@
-import { uploadData, remove, list, getProperties, getUrl, copy,  } from 'aws-amplify/storage';
+import { uploadData, remove, list, getProperties, getUrl, copy } from 'aws-amplify/storage';
 import { Err, Ok, Result } from 'ts-results';
 import { db, ImageUpload, SyncStatus } from './Dexie';
 import Dexie from 'dexie';
@@ -45,7 +45,7 @@ function createImageUploadStore(db: Dexie, name: string) {
                     },
                     destination: {
                         path: `archived/${item.path}`,
-                    },
+                    }
                 })
             });
         });
@@ -148,7 +148,7 @@ function createImageUploadStore(db: Dexie, name: string) {
                 return Err(new Error("[ImageUploadStore] archive: Image not found"));
             }
 
-            table.put({
+            await table.put({
                 ...image,
                 syncStatus: SyncStatus.Archived,
                 updatedAt: new Date().toISOString(),
@@ -163,7 +163,8 @@ function createImageUploadStore(db: Dexie, name: string) {
             if(!image) {
                 return Err(new Error("[ImageUploadStore] updateMetadata: Image not found"));
             }
-            table.put({
+
+            await table.put({
                 ...image,
                 metadata: metadata,
                 updatedAt: new Date().toISOString(),
