@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FilePondInitialFile,
   FilePondFile,
@@ -119,6 +119,12 @@ const InputImage: React.FC<InputImageProps> = ({
       imageUploadStatusStore.setUploading(path, true);
     } 
   }, [path]);
+
+  const handleMetadataEdit = useCallback((file: FilePondFile) => {
+    console.log('[InputImage][handleMetadataEdit] Editing metadata for file:', file);
+
+
+  }, []);
 
   if (!hasLoaded) {
     return <div>Loading...</div>;

@@ -12,9 +12,9 @@ import {
 import { Label } from '@/app/app/components/Input/Label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { initMetadataDialog } from './filePondConfig';
-
 interface MetadataDialogManagerProps {
   onInit?: () => void;
 }
@@ -83,11 +83,11 @@ export const MetadataDialogManager: React.FC<MetadataDialogManagerProps> = ({ on
         <div className="grid gap-4 py-4">
           
           <div className="grid gap-2">
-            <Label text="Description" />
-            <Textarea
-              placeholder="Enter image description"
-              value={metadata.description || ''}
-              onChange={(e) => handleMetadataChange('description', e.target.value)}
+            <Label text="Caption" />
+            <Input
+              placeholder="Enter image caption"
+              value={metadata.caption || ''}
+              onChange={(e) => handleMetadataChange('caption', e.target.value)}
             />
           </div>
           
