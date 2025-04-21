@@ -97,7 +97,11 @@ export const ImageMetadataDialog = ({ file, path, onClose }: ImageMetadataDialog
         />
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outline" onClick={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          onClose();
+        }}>
           Cancel
         </Button>
         <Button onClick={handleSave}>Save Metadata</Button>

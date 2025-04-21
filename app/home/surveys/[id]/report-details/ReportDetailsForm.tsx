@@ -161,23 +161,8 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             path={`report-images/${surveyId}/moneyShot/`}
           />
         </div>
-
-        <div className="image-w-50">
-          <RhfInputImage
-            labelText={"Front Elevation"}
-            rhfProps={{
-              name: "frontElevationImagesUri",
-              rules: {
-                required: true,
-                validate: (v: any) => v.length > 0 || "One or more images are required",
-              },
-            }}
-            minNumberOfFiles={1}
-            path={`report-images/${surveyId}/frontElevationImagesUri/`}
-          />
-        </div>
-
         <div>
+          <label>Front Elevation Images</label>
           <DropZoneInputImage
             path={`report-images/${surveyId}/frontElevationImagesUri/`}
             minFiles={1}

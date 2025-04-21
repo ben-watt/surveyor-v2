@@ -6,6 +6,8 @@ import { imageUploadStatusStore } from "./imageUploadStatusStore";
 import { useImageUploadStatus } from "./useImageUploadStatus";
 import { ImageMetadataDialog } from "./ImageMetadataDialog";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
+import Resizer from "react-image-file-resizer";
+import { join } from "path";
 
 interface DropZoneInputImageProps {
   path: string;
@@ -79,7 +81,7 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
           <Pencil size={16} />
         </button>
       </aside>
-      <aside className="absolute bottom-0 right-0">
+      <aside className="absolute bottom-0 left-0">
         <button
           className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
           onClick={(event) => {
@@ -102,6 +104,32 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const { isUploading } = useImageUploadStatus([props.path]);
   const { openDrawer, closeDrawer } = useDynamicDrawer();
 
+  const resizeImage = useCallback((file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      Resizer.imageFileResizer(
+        file,
+        400, // maxWidth
+        300, // maxHeight (for 3:2 aspect ratio)
+        "JPEG", // output format
+        100, // quality
+        0, // rotation
+        (uri) => {
+          // Convert the base64 URI to a File object
+          fetch(uri as string)
+            .then((res) => res.blob())
+            .then((blob) => {
+              const resizedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(resizedFile);
+            });
+        },
+        "base64" // output type
+      );
+    });
+  }, []);
+
   // Load existing files
   useEffect(() => {
     const loadExistingFiles = async () => {
@@ -123,6 +151,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
                 return Object.assign(file, {
                   preview: fileData.href,
                   path: fileData.path,
+                  isArchived: fileData.path.includes("archived")
                 });
               }
               return null;
@@ -130,9 +159,15 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           );
           
           const validFiles = existingFiles.filter(
-            (file): file is FileWithPath => file !== null
+            (file): file is FileWithPath => file !== null && !file.isArchived
           );
+
+          const archivedFiles = existingFiles.filter(
+            (file): file is FileWithPath => file !== null && file.isArchived
+          );
+
           setFiles(validFiles);
+          setArchivedFiles(archivedFiles);
           props.onChange?.(validFiles.map((f) => f.name));
         }
       } catch (error) {
@@ -161,17 +196,21 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     minFiles: props.minFiles,
     maxFiles: props.maxFiles,
     onDrop: async (acceptedFiles: FileWithPath[]) => {
-      const newFiles = acceptedFiles.map((file) =>
-        Object.assign(file, {
-          preview: URL.createObjectURL(file),
+      const processedFiles = await Promise.all(
+        acceptedFiles.map(async (file) => {
+          const resizedFile = await resizeImage(file);
+          return Object.assign(resizedFile, {
+            preview: URL.createObjectURL(resizedFile),
+            path: file.path,
+          });
         })
       );
       
-      setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+      setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
       
       // Upload each file
-      for (const file of newFiles) {
-        const filePath = `${props.path}/${file.name}`;
+      for (const file of processedFiles) {
+        const filePath = join(props.path, file.name);
         imageUploadStatusStore.setUploading(props.path, true);
         
         try {
@@ -190,7 +229,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           
           props.onChange?.([
             ...files.map((f) => f.name),
-            ...newFiles.map((f) => f.name),
+            ...processedFiles.map((f) => f.name),
           ]);
         } catch (error) {
           console.error("Error uploading file:", error);
@@ -202,7 +241,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   });
 
   const handleDelete = async (file: FileWithPath) => {
-    const filePath = `${props.path}/${file.name}`;
+    const filePath = join(props.path, file.name);
     try {
       await imageUploadStore.remove(filePath);
       setFiles(files.filter((f) => f !== file));
@@ -213,7 +252,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   };
 
   const handleArchive = async (file: FileWithPath) => {
-    const filePath = `${props.path}/${file.name}`;
+    const filePath = join(props.path, file.name);
     try {
       await imageUploadStore.archive(filePath);
       setFiles(files.filter((f) => f !== file));
@@ -228,6 +267,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     openDrawer({
       id: `image-metadata-${file.name}`,
       title: `Image Metadata`,
+      description: `${file.path}`,
       content: (
         <ImageMetadataDialog
           file={file}
@@ -278,7 +318,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
         </ul>
       </aside>
       {archivedFiles.length > 0 && (
-        <div className="mt-4 flex items-center justify-end gap-2 text-gray-500">
+        <div className="mt-4 flex items-center justify-start gap-2 text-gray-500">
           <Archive size={16} />
           <span className="text-sm">{archivedFiles.length} archived</span>
         </div>

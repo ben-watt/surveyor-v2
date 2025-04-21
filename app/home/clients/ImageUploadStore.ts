@@ -39,14 +39,26 @@ function createImageUploadStore(db: Dexie, name: string) {
         table.where('syncStatus').equals(SyncStatus.Archived).toArray().then(async items => {
             console.debug("[ImageUploadStore] sync archived", items);
             items.forEach(async (item: ImageUpload) => {
+                console.debug("[ImageUploadStore] sync archived", item.path);
+                const path = item.path.split("/");
+                const fileName = path.pop();
+                const folder = path.join("/");
+
                 await copy({
                     source: {
                         path: item.path,
                     },
                     destination: {
-                        path: `archived/${item.path}`,
-                    },
+                        path: `${folder}/archived/${fileName}`,
+                    }
                 })
+
+                await remove({
+                    path: item.path,
+                })
+
+                table.delete([item.path, item.tenantId]);
+                console.debug("[ImageUploadStore] deleted", [item.path, item.tenantId]);
             });
         });
     }
@@ -127,7 +139,7 @@ function createImageUploadStore(db: Dexie, name: string) {
         create: async (data: CreateImageUpload) => {
             console.debug("[ImageUploadStore] create", data);
             const tenantId = await getCurrentTenantId();
-            table.add({
+            await table.add({
                 id: data.path,
                 tenantId: tenantId || "",
                 path: data.path,
@@ -143,13 +155,13 @@ function createImageUploadStore(db: Dexie, name: string) {
         archive: async (path: string) => {
             console.debug("[ImageUploadStore] archive", path);
             const tenantId = await getCurrentTenantId();
-            const image = await table.get([path, tenantId]);
-            if(!image) {
-                return Err(new Error("[ImageUploadStore] archive: Image not found"));
-            }
-
             await table.put({
-                ...image,
+                id: path,
+                tenantId: tenantId || "",
+                path: path,
+                file: new Blob(),
+                href: "",
+                metadata: {},
                 syncStatus: SyncStatus.Archived,
                 updatedAt: new Date().toISOString(),
             });
