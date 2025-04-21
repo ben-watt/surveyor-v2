@@ -1,10 +1,10 @@
 "use client";
 
 import "./globals.css";
-import ConfigureAmplifyClientSide from "./app/components/ConfigureAmplify";
+import ConfigureAmplifyClientSide from "@/app/home/components/ConfigureAmplify";
 import "@aws-amplify/ui-react/styles.css";
 import "instantsearch.css/themes/satellite.css";
-import { ConfigureAwsRum } from "./app/components/ConfigureAwsRum";
+import { ConfigureAwsRum } from "@/app/home/components/ConfigureAwsRum";
 
 export const ClientSideDependencies = () => {
   return (

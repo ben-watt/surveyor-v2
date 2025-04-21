@@ -11,7 +11,7 @@ import {
   Building2,
   ChevronDown,
 } from "lucide-react"
-import { AppIcon } from "@/app/app/components/AppIcon"
+import { AppIcon } from "@/app/home/components/AppIcon"
 
 import { NavSection } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -26,7 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
-import { useTenant } from "@/app/app/utils/TenantContext"
+import { useTenant } from "@/app/home/utils/TenantContext"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,13 +36,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Tenant } from "@/app/app/utils/tenant-utils"
+import { Tenant } from "@/app/home/utils/tenant-utils"
 
 const applicationNavData = {
   items: [
     {
       title: "Surveys",
-      url: "/app/surveys",
+      url: "/home/surveys",
       icon: NotebookPen,
       isActive: true,
     }
@@ -53,33 +53,33 @@ const configurationNavData = {
   items: [
     {
       title: "Sections",
-      url: "/app/sections",
+      url: "/home/sections",
       icon: Layers,
     },
     {
       title: "Elements",
-      url: "/app/elements",
+      url: "/home/elements",
       icon: Grid2x2,
     },
     {
       title: "Components",
-      url: "/app/building-components",
+      url: "/home/building-components",
       icon: Blocks,
     },
     {
       title: "Conditions",
-      url: "/app/conditions",
+      url: "/home/conditions",
       icon: Award,
     },
 
     {
       title: "Settings",
-      url: "/app/settings",
+      url: "/home/settings",
       icon: Settings2,
       items: [
         {
           title: "Data Management",
-          url: "/app/settings",
+          url: "/home/settings",
         }
       ],
     },
@@ -155,7 +155,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/app/tenants">Manage Teams</Link>
+                  <Link href="/home/tenants">Manage Teams</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

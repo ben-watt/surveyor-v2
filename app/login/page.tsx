@@ -26,7 +26,7 @@ export default function SignIn() {
         password: password
       })
       
-      router.push("/app/surveys")
+      router.push("/home/surveys")
     } catch (err: any) {
       setError(err.message || "Failed to sign in")
     } finally {

@@ -1,8 +1,8 @@
 ## File structure
 
 - All shadcn components are stored in /components
-- The main application is stored in /app/app
-- All custom components are stored in /app/app/components
+- The main application is stored in /app/home
+- All custom components are stored in /app/home/components
 
 
 ## Data Storage
