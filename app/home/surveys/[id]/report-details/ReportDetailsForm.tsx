@@ -8,7 +8,7 @@ import { surveyStore } from "@/app/home/clients/Database";
 import { memo } from "react";
 import { useRouter } from "next/navigation";
 import { RhfInputImage } from "@/app/home/components/InputImage";
-import { DropZoneInputImage } from "@/app/home/components/InputImage";
+import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import AddressInput from "@/app/home/components/Input/AddressInput";
 import { Button } from "@/components/ui/button";
@@ -148,19 +148,27 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
 
         <div>
           <label className="text-sm">Cover Photo</label>
-          <DropZoneInputImage
+          <RhfDropZoneInputImage
             path={`report-images/${surveyId}/moneyShot/`}
             minFiles={1}
             maxFiles={1}
+            rhfProps={{
+              name: 'moneyShot',
+              rules: { required: true }
+            }}
           />
         </div>
 
         <div>
           <label className="text-sm">Front Elevation Images</label>
-          <DropZoneInputImage
+          <RhfDropZoneInputImage
             path={`report-images/${surveyId}/frontElevationImagesUri/`}
             minFiles={1}
             maxFiles={3}
+            rhfProps={{
+              name: 'frontElevationImagesUri',
+              rules: { required: true }
+            }}
           />
         </div>
 

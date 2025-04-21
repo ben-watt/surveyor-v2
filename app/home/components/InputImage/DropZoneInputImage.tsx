@@ -13,8 +13,10 @@ interface DropZoneInputImageProps {
   path: string;
   maxFiles?: number;
   minFiles?: number;
-  onChange?: (fileSources: string[]) => void;
+  onChange?: (filePaths: string[]) => void;
 }
+
+export type { DropZoneInputImageProps };
 
 interface ThumbnailProps {
   file: FileWithPath;
@@ -168,7 +170,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
 
           setFiles(validFiles);
           setArchivedFiles(archivedFiles);
-          props.onChange?.(validFiles.map((f) => f.name));
+          props.onChange?.(validFiles.map((f) => join(props.path, f.name)));
         }
       } catch (error) {
         console.error("Error loading existing files:", error);
@@ -228,8 +230,8 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           });
           
           props.onChange?.([
-            ...files.map((f) => f.name),
-            ...processedFiles.map((f) => f.name),
+            ...files.map((f) => join(props.path, f.name)),
+            ...processedFiles.map((f) => join(props.path, f.name)),
           ]);
         } catch (error) {
           console.error("Error uploading file:", error);
@@ -245,7 +247,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     try {
       await imageUploadStore.remove(filePath);
       setFiles(files.filter((f) => f !== file));
-      props.onChange?.(files.filter((f) => f !== file).map((f) => f.name));
+      props.onChange?.(files.filter((f) => f !== file).map((f) => join(props.path, f.name)));
     } catch (error) {
       console.error("Error removing file:", error);
     }
@@ -257,7 +259,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       await imageUploadStore.archive(filePath);
       setFiles(files.filter((f) => f !== file));
       setArchivedFiles((prev) => [...prev, file]);
-      props.onChange?.(files.filter((f) => f !== file).map((f) => f.name));
+      props.onChange?.(files.filter((f) => f !== file).map((f) => join(props.path, f.name)));
     } catch (error) {
       console.error("Error archiving file:", error);
     }
