@@ -27,7 +27,8 @@ export const SyncStatus = () => {
         item.syncStatus === SyncStatusEnum.Draft || 
         item.syncStatus === SyncStatusEnum.Queued ||
         item.syncStatus === SyncStatusEnum.Failed ||
-        item.syncStatus === SyncStatusEnum.PendingDelete
+        item.syncStatus === SyncStatusEnum.PendingDelete ||
+        item.syncStatus === SyncStatusEnum.Archived
     );
 
     // Count items by sync status
@@ -38,6 +39,7 @@ export const SyncStatus = () => {
             [SyncStatusEnum.Failed]: 0,
             [SyncStatusEnum.Synced]: 0,
             [SyncStatusEnum.PendingDelete]: 0,
+            [SyncStatusEnum.Archived]: 0,
         };
 
         [
@@ -59,7 +61,8 @@ export const SyncStatus = () => {
             setIsSyncing(
                 statusCounts[SyncStatusEnum.Queued] > 0 ||
                 statusCounts[SyncStatusEnum.Draft] > 0 ||
-                statusCounts[SyncStatusEnum.PendingDelete] > 0
+                statusCounts[SyncStatusEnum.PendingDelete] > 0 ||
+                statusCounts[SyncStatusEnum.Archived] > 0
             );
         }, 1000);
 

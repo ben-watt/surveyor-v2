@@ -1,10 +1,10 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useTenantData, withTenantFilter } from '../useTenantData';
-import { useTenant } from '../../contexts/TenantContext';
+import { useTenant } from '../../utils/TenantContext';
 import React from 'react';
 
 // Mock the TenantContext
-jest.mock('../../contexts/TenantContext', () => ({
+jest.mock('../../utils/TenantContext', () => ({
   useTenant: jest.fn()
 }));
 

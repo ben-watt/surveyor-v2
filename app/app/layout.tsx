@@ -13,7 +13,7 @@ import { surveyStore, componentStore, elementStore, phraseStore, sectionStore } 
 import { imageUploadStore } from "./clients/ImageUploadStore";
 import { OnlineStatus } from "./components/OnlineStatus";
 import { SyncStatus } from "./components/SyncStatus";
-import { TenantProvider } from "./contexts/TenantContext";
+import { TenantProvider } from "./utils/TenantContext";
 
 export default function RootLayout({
   children,

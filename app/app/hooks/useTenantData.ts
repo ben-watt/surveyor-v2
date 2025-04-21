@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { generateClient } from 'aws-amplify/api';
-import { useTenant } from '../contexts/TenantContext';
+import { useTenant } from '../utils/TenantContext';
 import { Schema } from '@/amplify/data/resource';
 
 // Create a client for data operations

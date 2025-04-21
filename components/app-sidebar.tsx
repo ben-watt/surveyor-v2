@@ -26,7 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
-import { useTenant } from "@/app/app/contexts/TenantContext"
+import { useTenant } from "@/app/app/utils/TenantContext"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tenant } from "@/app/app/utils/tenant-utils"
 
 const applicationNavData = {
   items: [
@@ -88,7 +89,7 @@ const configurationNavData = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { currentTenant, tenants, loading, setCurrentTenant } = useTenant();
 
-  const tenantsData = tenants.map(tenant => ({
+  const tenantsData = tenants.map((tenant: Tenant) => ({
     name: tenant.name,
     logo: Building2,
     createdAt: tenant.createdAt,
@@ -131,7 +132,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Teams</DropdownMenuLabel>
-                {tenantsData.map((tenant) => (
+                {tenantsData.map((tenant: Tenant) => (
                   <DropdownMenuItem
                     key={tenant.name}
                     className={

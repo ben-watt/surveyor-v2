@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { NavContainer } from './app/components/Navbar';
+import { NavContainer } from '@/app/app/components/Navbar';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 

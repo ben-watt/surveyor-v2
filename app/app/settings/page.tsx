@@ -95,6 +95,7 @@ export default function Page() {
       [SyncStatus.Failed]: elements.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: elements.filter(item => item.syncStatus === SyncStatus.Synced).length,
       [SyncStatus.PendingDelete]: elements.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
+      [SyncStatus.Archived]: elements.filter(item => item.syncStatus === SyncStatus.Archived).length,
     },
     components: {
       [SyncStatus.Draft]: components.filter(item => item.syncStatus === SyncStatus.Draft).length,
@@ -102,6 +103,7 @@ export default function Page() {
       [SyncStatus.Failed]: components.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: components.filter(item => item.syncStatus === SyncStatus.Synced).length,
       [SyncStatus.PendingDelete]: components.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
+      [SyncStatus.Archived]: components.filter(item => item.syncStatus === SyncStatus.Archived).length,
     },
     phrases: {
       [SyncStatus.Draft]: phrases.filter(item => item.syncStatus === SyncStatus.Draft).length,
@@ -109,6 +111,7 @@ export default function Page() {
       [SyncStatus.Failed]: phrases.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: phrases.filter(item => item.syncStatus === SyncStatus.Synced).length,
       [SyncStatus.PendingDelete]: phrases.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
+      [SyncStatus.Archived]: phrases.filter(item => item.syncStatus === SyncStatus.Archived).length,
     },
     sections: {
       [SyncStatus.Draft]: sections.filter(item => item.syncStatus === SyncStatus.Draft).length,
@@ -116,6 +119,7 @@ export default function Page() {
       [SyncStatus.Failed]: sections.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: sections.filter(item => item.syncStatus === SyncStatus.Synced).length,
       [SyncStatus.PendingDelete]: sections.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
+      [SyncStatus.Archived]: sections.filter(item => item.syncStatus === SyncStatus.Archived).length,
     },
     surveys: {
       [SyncStatus.Draft]: surveys.filter(item => item.syncStatus === SyncStatus.Draft).length,
@@ -123,6 +127,7 @@ export default function Page() {
       [SyncStatus.Failed]: surveys.filter(item => item.syncStatus === SyncStatus.Failed).length,
       [SyncStatus.Synced]: surveys.filter(item => item.syncStatus === SyncStatus.Synced).length,
       [SyncStatus.PendingDelete]: surveys.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
+      [SyncStatus.Archived]: surveys.filter(item => item.syncStatus === SyncStatus.Archived).length,
     },
   };
 
