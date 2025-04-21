@@ -15,10 +15,6 @@ export const storage = defineStorage({
     'profile/*': [
         allow.authenticated.to(['read', 'write', 'delete', 'list']),
         allow.groups(['global-admin']).to(['read', 'write', 'delete', 'list'])
-    ],
-    'archived/*': [
-        allow.authenticated.to(['read', 'write', 'delete', 'list']),
-        allow.groups(['global-admin']).to(['read', 'write', 'delete', 'list'])
     ]
   })
 });

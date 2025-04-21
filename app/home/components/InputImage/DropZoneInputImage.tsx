@@ -289,20 +289,22 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   return (
     <section className="container border border-gray-300 rounded-md p-4 bg-gray-100">
       <div {...getRootProps({ className: "dropzone" })}>
-        <div className="flex flex-col items-center justify-center">
-          <input {...getInputProps()} />
-          <p className="text-sm text-gray-500 m-2">
-            Drag & drop files, or{" "}
-            <u className="cursor-pointer">fetch from device</u>
-          </p>
-        </div>
+        {props.maxFiles !== files.length && (
+          <div className="flex flex-col items-center justify-center">
+            <input {...getInputProps()} />
+            <p className="text-sm text-gray-500 m-2">
+              Drag & drop files, or{" "}
+              <u className="cursor-pointer">fetch from device</u>
+            </p>
+          </div>
+        )}
       </div>
       <aside>
         <ul
           className={`${
             props.maxFiles && props.maxFiles > 1
               ? "grid grid-cols-2 gap-2"
-              : "flex flex-wrap gap-2"
+              : "flex flex-wrap gap-2 justify-center"
           }`}
         >
           {files.map((file: FileWithPath) => (
