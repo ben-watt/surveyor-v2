@@ -1,5 +1,14 @@
 import { FilePondInitialFile } from 'filepond';
 
+// Create a simple metadata editor component that uses the dialog component
+let metadataDialog: {
+  open: (file: FilePondInitialFile, metadata: any, save: (metadata: any) => void) => void;
+} | null = null;
+
+export const initMetadataDialog = (dialog: typeof metadataDialog) => {
+  metadataDialog = dialog;
+};
+
 export const DEFAULT_FILE_POND_CONFIG = {
   maxFiles: 10,
   allowMultiple: true,
@@ -16,7 +25,12 @@ export const DEFAULT_FILE_POND_CONFIG = {
   allowImageTransform: true,
   allowMetadataEdit: true,
   metadataEditorCallback: (file: FilePondInitialFile, metadata: any, save: (metadata: any) => void) => {
-    console.log('metadataEditorCallback', file, metadata, save);
+    // If the dialog manager is available, use it to open the metadata editor dialog
+    if (metadataDialog) {
+      metadataDialog.open(file, metadata, save);
+    } else {
+      console.warn('Metadata dialog not initialized. Call initMetadataDialog first.');
+    }
   },
   imageTransformVariants: {
     thumbnail_: (transforms: any) => ({

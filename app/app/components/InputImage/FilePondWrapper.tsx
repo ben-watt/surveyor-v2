@@ -57,6 +57,8 @@ export interface FilePondWrapperProps {
   allowImageCrop?: boolean;
   imageCropAspectRatio?: string;
   labelFileProcessingError?: (error: any) => string;
+  metadataEditorCallback?: (file: FilePondInitialFile, metadata: any, save: (metadata: any) => void) => void;
+  metadataEditorIcon?: string;
 }
 
 export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
@@ -109,6 +111,8 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
   labelFileProcessingAborted = 'Upload cancelled',
   labelFileLoadError = 'Error loading file',
   labelFileProcessingError = (error: any) => error?.body || 'Upload failed, tap to retry',
+  metadataEditorCallback,
+  metadataEditorIcon,
 }) => {
   const filepond = useRef<FilePond | null>(null);
   return (
@@ -147,6 +151,10 @@ export const FilePondWrapper: React.FC<FilePondWrapperProps> = ({
         labelFileProcessingError={labelFileProcessingError}
         allowImageCrop={allowImageCrop}
         imageCropAspectRatio={imageCropAspectRatio}
+        //@ts-ignore
+        allowMetadataEdit={true}
+        //@ts-ignore
+        metadataEditorCallback={metadataEditorCallback}
       />
     </div>
   );

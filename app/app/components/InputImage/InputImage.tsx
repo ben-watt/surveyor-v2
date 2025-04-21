@@ -12,6 +12,7 @@ import { createServerConfig } from "./createServerConfig";
 import { FilePondWrapper } from './FilePondWrapper';
 import { DEFAULT_FILE_POND_CONFIG } from './filePondConfig';
 import { imageUploadStatusStore } from './imageUploadStatusStore';
+import MetadataDialogManager from './MetadataDialog';
 
 
 // 3. Type definitions
@@ -124,21 +125,23 @@ const InputImage: React.FC<InputImageProps> = ({
   }
 
   return (
-    <FilePondWrapper
-      id={id}
-      files={initialFiles}
-      server={createServerConfig({ path })}
-      onRemoveFile={handleRemoveFile}
-      onUpdateFiles={handleUpdateFiles}
-      onProcessFile={handleProcessFile}
-      onAddFile={handleAddFile}
-      {...DEFAULT_FILE_POND_CONFIG}
-      maxFiles={maxNumberOfFiles}
-      acceptedFileTypes={['image/*']}
-    />
+    <>
+      <MetadataDialogManager />
+      <FilePondWrapper
+        id={id}
+        files={initialFiles}
+        server={createServerConfig({ path })}
+        onRemoveFile={handleRemoveFile}
+        onUpdateFiles={handleUpdateFiles}
+        onProcessFile={handleProcessFile}
+        onAddFile={handleAddFile}
+        {...DEFAULT_FILE_POND_CONFIG}
+        maxFiles={maxNumberOfFiles}
+        acceptedFileTypes={['image/*']}
+      />
+    </>
   );
 };
 
 export const MemoizedInputImage = React.memo(InputImage);
-
-export default MemoizedInputImage;
+export default InputImage;

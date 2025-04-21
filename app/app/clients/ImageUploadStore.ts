@@ -82,6 +82,8 @@ function createImageUploadStore(db: Dexie, name: string) {
                 return Ok(localImage);
             }
 
+            console.debug("[ImageUploadStore] get properties", fullPath);
+
             const response = await getProperties({
                 path: fullPath,
             });

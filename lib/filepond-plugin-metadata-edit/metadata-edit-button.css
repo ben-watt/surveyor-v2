@@ -112,18 +112,3 @@
   background-color: rgba(0,
   0, 0, 0.1);
 }
-
-/* Debug - add this to see if CSS is loading */
-.filepond--root {
-  position: relative;
-}
-
-.filepond--root::after {
-  content: "Metadata Edit Plugin CSS loaded";
-  position: absolute;
-  bottom: -15px;
-  left: 0;
-  font-size: 10px;
-  color: rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-} 
