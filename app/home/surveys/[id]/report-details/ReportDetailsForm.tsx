@@ -8,6 +8,7 @@ import { surveyStore } from "@/app/home/clients/Database";
 import { memo } from "react";
 import { useRouter } from "next/navigation";
 import { RhfInputImage } from "@/app/home/components/InputImage";
+import { DropZoneInputImage } from "@/app/home/components/InputImage";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import AddressInput from "@/app/home/components/Input/AddressInput";
 import { Button } from "@/components/ui/button";
@@ -173,6 +174,14 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             }}
             minNumberOfFiles={1}
             path={`report-images/${surveyId}/frontElevationImagesUri/`}
+          />
+        </div>
+
+        <div>
+          <DropZoneInputImage
+            path={`report-images/${surveyId}/frontElevationImagesUri/`}
+            minFiles={1}
+            maxFiles={3}
           />
         </div>
 
