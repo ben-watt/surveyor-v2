@@ -156,23 +156,6 @@ function createImageUploadStore(db: Dexie, name: string) {
 
             sync();
         },
-        updateMetadata: async (path: string, metadata: Record<string, string>) => {
-            console.debug("[ImageUploadStore] update", path, metadata);
-            const tenantId = await getCurrentTenantId();
-            const image = await table.get([path, tenantId]);
-            if(!image) {
-                return Err(new Error("[ImageUploadStore] updateMetadata: Image not found"));
-            }
-            
-            await table.put({
-                ...image,
-                metadata: metadata,
-                updatedAt: new Date().toISOString(),
-                syncStatus: SyncStatus.Queued,
-            });
-
-            sync();
-        },
         remove: async (path: string) => {
             console.debug("[ImageUploadStore] remove", path);
             const localImage = await table.get(path);

@@ -9,6 +9,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from 'react';
 import { debounce, DebouncedFunc } from 'lodash';
 import { getCurrentTenantId } from '../utils/tenant-utils';
+import { ImageMetadata } from './Database';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -375,6 +376,7 @@ const db = new Dexie('Surveys') as Dexie & {
   phrases: EntityTable<Phrase, "id", "tenantId">;
   sections: EntityTable<Section, "id", "tenantId">;
   imageUploads: EntityTable<ImageUpload, "id", "tenantId">;
+  imageMetadata: EntityTable<ImageMetadata, "id", "tenantId">;
 };
 
 db.version(1).stores({
@@ -384,6 +386,7 @@ db.version(1).stores({
   phrases: '[id+tenantId], updatedAt, syncStatus',
   sections: '[id+tenantId], updatedAt, syncStatus',
   imageUploads: '[id+tenantId], path, updatedAt, syncStatus',
+  imageMetadata: '[id+tenantId], imagePath, updatedAt, syncStatus',
 });
 
 

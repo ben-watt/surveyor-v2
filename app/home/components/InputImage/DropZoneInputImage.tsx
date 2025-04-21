@@ -5,6 +5,7 @@ import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
 import { imageUploadStatusStore } from "./imageUploadStatusStore";
 import { useImageUploadStatus } from "./useImageUploadStatus";
 import { ImageMetadataDialog } from "./ImageMetadataDialog";
+import { useDynamicDrawer } from "@/app/home/components/Drawer";
 
 interface DropZoneInputImageProps {
   path: string;
@@ -98,8 +99,8 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [files, setFiles] = useState<FileWithPath[]>([]);
   const [archivedFiles, setArchivedFiles] = useState<FileWithPath[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingFile, setEditingFile] = useState<FileWithPath | null>(null);
   const { isUploading } = useImageUploadStatus([props.path]);
+  const { openDrawer, closeDrawer } = useDynamicDrawer();
 
   // Load existing files
   useEffect(() => {
@@ -223,6 +224,20 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     }
   };
 
+  const handleEdit = (file: FileWithPath) => {
+    openDrawer({
+      id: `image-metadata-${file.name}`,
+      title: `Image Metadata`,
+      content: (
+        <ImageMetadataDialog
+          file={file}
+          path={props.path}
+          onClose={() => closeDrawer()}
+        />
+      ),
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="container border border-gray-300 rounded-md p-4 bg-gray-100">
@@ -256,7 +271,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               file={file}
               onDelete={handleDelete}
               onArchive={handleArchive}
-              onEdit={setEditingFile}
+              onEdit={handleEdit}
               isUploading={isUploading}
             />
           ))}
@@ -268,11 +283,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           <span className="text-sm">{archivedFiles.length} archived</span>
         </div>
       )}
-      <ImageMetadataDialog
-        file={editingFile}
-        path={props.path}
-        onClose={() => setEditingFile(null)}
-      />
     </section>
   );
 };

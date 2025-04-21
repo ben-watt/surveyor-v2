@@ -329,6 +329,71 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
   },
 });
 
+export interface ImageMetadata {
+  id: string;
+  syncStatus: SyncStatus;
+  createdAt: string;
+  updatedAt: string;
+  imagePath: string;
+  caption?: string;
+  notes?: string;
+  tenantId: string;
+}
+
+const mapToImageMetadata = (data: any): ImageMetadata => ({
+  id: data.id,
+  syncStatus: SyncStatus.Synced,
+  updatedAt: data.updatedAt,
+  createdAt: data.createdAt,
+  imagePath: data.imagePath,
+  caption: data.caption,
+  notes: data.notes,
+  tenantId: data.tenantId,
+});
+
+export type UpdateImageMetadata = Partial<ImageMetadata> & { id: string };
+export type CreateImageMetadata = Schema['ImageMetadata']['createType'];
+
+export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMetadata, UpdateImageMetadata>(
+  db,
+  "imageMetadata",
+  {
+    list: async (): Promise<Result<ImageMetadata[], Error>> => {
+      const response = await client.models.ImageMetadata.list();
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(response.data.map(mapToImageMetadata));
+    },
+    create: async (data): Promise<Result<ImageMetadata, Error>> => {
+      // Add tenant ID to new metadata
+      const serverData = await withTenantId(data);
+      const response = await client.models.ImageMetadata.create(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(mapToImageMetadata(response.data));
+    },
+    update: async (data): Promise<Result<ImageMetadata, Error>> => {
+      // Add tenant ID to update
+      const serverData = await withTenantId(data);
+      const response = await client.models.ImageMetadata.update(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(mapToImageMetadata(response.data));
+    },
+    delete: async (id): Promise<Result<string, Error>> => {
+      const tenantId = await getCurrentTenantId();
+      const response = await client.models.ImageMetadata.delete({ id, tenantId: tenantId || "" });
+      if (response.errors) {
+        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      }
+      return Ok(id);
+    },
+  }
+);
+
 export async function getRawCounts(): Promise<Result<{ [key: string]: number }, Error>> {
   try {
     const tenantId = await getCurrentTenantId();
@@ -341,13 +406,15 @@ export async function getRawCounts(): Promise<Result<{ [key: string]: number }, 
       components,
       phrases,
       sections,
-      surveys
+      surveys,
+      imageMetadata
     ] = await Promise.all([
       client.models.Elements.list({ filter: { tenantId: { eq: tenantId } } }),
       client.models.Components.list({ filter: { tenantId: { eq: tenantId } } }),
       client.models.Phrases.list({ filter: { tenantId: { eq: tenantId } } }),
       client.models.Sections.list({ filter: { tenantId: { eq: tenantId } } }),
-      client.models.Surveys.list({ filter: { tenantId: { eq: tenantId } } })
+      client.models.Surveys.list({ filter: { tenantId: { eq: tenantId } } }),
+      client.models.ImageMetadata.list({ filter: { tenantId: { eq: tenantId } } })
     ]);
 
     return Ok({
@@ -356,6 +423,7 @@ export async function getRawCounts(): Promise<Result<{ [key: string]: number }, 
       phrases: phrases.data?.length || 0,
       sections: sections.data?.length || 0,
       surveys: surveys.data?.length || 0,
+      imageMetadata: imageMetadata.data?.length || 0,
     });
   } catch (error) {
     return Err(new Error(getErrorMessage(error)));
