@@ -1,4 +1,4 @@
-import { uploadData, remove, list, getProperties, getUrl } from 'aws-amplify/storage';
+import { uploadData, remove, list, getProperties, getUrl, copy,  } from 'aws-amplify/storage';
 import { Err, Ok, Result } from 'ts-results';
 import { db, ImageUpload, SyncStatus } from './Dexie';
 import Dexie from 'dexie';
@@ -7,6 +7,7 @@ import { getCurrentTenantId } from '../utils/tenant-utils';
 // Types for the image upload store
 export type UpdateImageUpload = Partial<ImageUpload> & { id: string };
 export type CreateImageUpload = Omit<ImageUpload, "updatedAt" | "syncStatus" | "syncError">;
+export type UpdateMetadataImageUpload = Omit<CreateImageUpload, "path" | "file" | "href">;
 
 function createImageUploadStore(db: Dexie, name: string) {
     const table = db.table<ImageUpload>(name);
@@ -32,6 +33,20 @@ function createImageUploadStore(db: Dexie, name: string) {
                     table.delete([item.path, item.tenantId]);
                     console.debug("[ImageUploadStore] deleted", [item.path, item.tenantId]);
                 }
+            });
+        });
+
+        table.where('syncStatus').equals(SyncStatus.Archived).toArray().then(async items => {
+            console.debug("[ImageUploadStore] sync archived", items);
+            items.forEach(async (item: ImageUpload) => {
+                await copy({
+                    source: {
+                        path: item.path,
+                    },
+                    destination: {
+                        path: `archived/${item.path}`,
+                    },
+                })
             });
         });
     }
@@ -122,6 +137,38 @@ function createImageUploadStore(db: Dexie, name: string) {
                 updatedAt: new Date().toISOString(),
                 syncStatus: SyncStatus.Queued,
             })
+
+            sync();
+        },
+        archive: async (path: string) => {
+            console.debug("[ImageUploadStore] archive", path);
+            const tenantId = await getCurrentTenantId();
+            const image = await table.get([path, tenantId]);
+            if(!image) {
+                return Err(new Error("[ImageUploadStore] archive: Image not found"));
+            }
+
+            table.put({
+                ...image,
+                syncStatus: SyncStatus.Archived,
+                updatedAt: new Date().toISOString(),
+            });
+
+            sync();
+        },
+        updateMetadata: async (path: string, metadata: Record<string, string>) => {
+            console.debug("[ImageUploadStore] update", path, metadata);
+            const tenantId = await getCurrentTenantId();
+            const image = await table.get([path, tenantId]);
+            if(!image) {
+                return Err(new Error("[ImageUploadStore] updateMetadata: Image not found"));
+            }
+            table.put({
+                ...image,
+                metadata: metadata,
+                updatedAt: new Date().toISOString(),
+                syncStatus: SyncStatus.Queued,
+            });
 
             sync();
         },

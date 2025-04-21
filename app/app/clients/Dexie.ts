@@ -50,6 +50,7 @@ enum SyncStatus {
   Queued = "queued",
   Failed = "failed",
   PendingDelete = "pending_delete",
+  Archived = "archived",
 }
 
 export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
