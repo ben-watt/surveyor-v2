@@ -46,6 +46,7 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps
       try {
         const imagePath = join(path, file.name);
         const metadataResult = await imageMetadataStore.get(imagePath);
+        console.log("[metadataResult]", metadataResult);
         setHasMetadata(!!metadataResult && !!metadataResult.caption);
       } catch (error) {
         console.error("Error checking metadata:", error);
@@ -131,7 +132,7 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps
       {features?.metadata && (
         <aside className="absolute top-0 right-0">
           <button
-            className={`text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
+            className={`p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
               hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
             }`}
             onClick={(event) => {
