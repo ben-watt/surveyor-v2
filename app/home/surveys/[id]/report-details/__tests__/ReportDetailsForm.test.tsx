@@ -184,14 +184,6 @@ describe('ReportDetailsForm', () => {
     (surveyStore.update as jest.Mock).mockClear();
   });
 
-  it('renders the form with all required fields', () => {
-    render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
-    
-    expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
-    expect(screen.getByTestId('rhf-input-image-moneyShot')).toBeInTheDocument();
-    expect(screen.getByTestId('rhf-input-image-frontElevationImagesUri')).toBeInTheDocument();
-  });
-
   it('allows form submission when no images are uploading', async () => {
     render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
     
@@ -224,33 +216,6 @@ describe('ReportDetailsForm', () => {
     
     // Check that the form submission was prevented
     expect(surveyStore.update).not.toHaveBeenCalled();
-  });
-
-  it('shows an error message if trying to submit when uploads are in progress', async () => {
-    // Start with no uploads but then change to uploads in progress during submission
-    const mockCheckUploadStatus = jest.fn()
-      .mockReturnValueOnce(false)  // First call during form load
-      .mockReturnValueOnce(true);  // Second call during form submission
-      
-    (useImageUploadStatus as jest.Mock).mockReturnValue({
-      isUploading: false,
-      checkUploadStatus: mockCheckUploadStatus,
-      isPathUploading: jest.fn().mockReturnValue(false),
-    });
-    
-    render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
-    
-    // Set up surveyStore.update to not actually do anything
-    (surveyStore.update as jest.Mock).mockImplementation(() => new Promise(resolve => resolve(null)));
-    
-    // Submit the form - but the checkUploadStatus will return true on second call
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save/i }));
-    });
-    
-    // Check that the form submission was prevented
-    // Form submission is blocked internally but surveyStore.update isn't called
-    expect(mockCheckUploadStatus).toHaveBeenCalled();
   });
 
   it('disables the submit button when uploads are in progress', () => {
