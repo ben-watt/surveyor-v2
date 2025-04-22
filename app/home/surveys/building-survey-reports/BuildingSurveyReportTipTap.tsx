@@ -38,7 +38,7 @@ const TableBlock = ({
         isValidElement<any>(firstChildInRow) &&
         firstChildInRow.type === Fragment
       ) {
-        tableRows.push(...createTableRows(firstChildInRow.props.children));
+        tableRows.push(...createTableRows((firstChildInRow as React.ReactElement<{ children: React.ReactNode }>).props.children));
         i = i - widths.length + 1;
         continue;
       }
@@ -375,7 +375,7 @@ export default function PDF({ form }: PdfProps) {
             <div key={`frontElevation_img_${i}`}>
               <img
                 src={image.uri}
-              key={`frontElevation_img_${i}`}
+                key={`frontElevation_img_${i}`}
                 alt={`frontElevation_img_${i}`}
               />
               {image.hasMetadata && (
