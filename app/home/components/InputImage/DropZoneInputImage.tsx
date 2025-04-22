@@ -19,7 +19,7 @@ interface DropZoneInputImageProps {
 export type { DropZoneInputImageProps };
 
 interface ThumbnailProps {
-  file: FileWithPath;
+  file: DropZoneInputFile;
   onDelete: (file: FileWithPath) => void;
   onArchive: (file: FileWithPath) => void;
   onEdit: (file: FileWithPath) => void;
@@ -99,9 +99,11 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
   );
 };
 
+type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean };
+
 export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
-  const [files, setFiles] = useState<FileWithPath[]>([]);
-  const [archivedFiles, setArchivedFiles] = useState<FileWithPath[]>([]);
+  const [files, setFiles] = useState<DropZoneInputFile[]>([]);
+  const [archivedFiles, setArchivedFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isUploading } = useImageUploadStatus([props.path]);
   const { openDrawer, closeDrawer } = useDynamicDrawer();
@@ -110,8 +112,8 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     return new Promise((resolve) => {
       Resizer.imageFileResizer(
         file,
-        400, // maxWidth
-        300, // maxHeight (for 3:2 aspect ratio)
+        500, // maxWidth
+        400, // maxHeight (for 3:2 aspect ratio)
         "JPEG", // output format
         100, // quality
         0, // rotation
@@ -127,7 +129,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               resolve(resizedFile);
             });
         },
-        "base64" // output type
+        "base64",
       );
     });
   }, []);
@@ -154,18 +156,18 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
                   preview: fileData.href,
                   path: fileData.path,
                   isArchived: fileData.path.includes("archived")
-                });
+                }) as DropZoneInputFile;
               }
               return null;
             })
           );
           
           const validFiles = existingFiles.filter(
-            (file): file is FileWithPath => file !== null && !file.isArchived
+            (file): file is DropZoneInputFile => file !== null && !file.isArchived
           );
 
           const archivedFiles = existingFiles.filter(
-            (file): file is FileWithPath => file !== null && file.isArchived
+            (file): file is DropZoneInputFile => file !== null && file.isArchived
           );
 
           setFiles(validFiles);
@@ -195,7 +197,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
         ".webp",
       ],
     },
-    minFiles: props.minFiles,
     maxFiles: props.maxFiles,
     onDrop: async (acceptedFiles: FileWithPath[]) => {
       const processedFiles = await Promise.all(
@@ -204,40 +205,33 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           return Object.assign(resizedFile, {
             preview: URL.createObjectURL(resizedFile),
             path: file.path,
-          });
+            isArchived: false,
+          }) as DropZoneInputFile;
         })
       );
-      
+
       setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
       
       // Upload each file
       for (const file of processedFiles) {
         const filePath = join(props.path, file.name);
-        imageUploadStatusStore.setUploading(props.path, true);
-        
-        try {
-          await imageUploadStore.create({
-            id: filePath,
-            tenantId: "", // This will be set by the store
-            path: filePath,
-            file: file,
-            href: file.preview,
-            metadata: {
-              filename: file.name,
-              size: file.size.toString(),
-              type: file.type,
-            },
-          });
-          
-          props.onChange?.([
-            ...files.map((f) => join(props.path, f.name)),
-            ...processedFiles.map((f) => join(props.path, f.name)),
-          ]);
-        } catch (error) {
-          console.error("Error uploading file:", error);
-        } finally {
-          imageUploadStatusStore.setUploaded(props.path);
-        }
+
+        await imageUploadStore.create({
+          id: filePath,
+          path: filePath,
+          file: file,
+          href: file.preview,
+          metadata: {
+            filename: file.name,
+            size: file.size.toString(),
+            type: file.type,
+          },
+        });
+
+        props.onChange?.([
+          ...files.map((f) => join(props.path, f.name)),
+          ...processedFiles.map((f) => join(props.path, f.name)),
+        ]);
       }
     },
   });
@@ -258,7 +252,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     try {
       await imageUploadStore.archive(filePath);
       setFiles(files.filter((f) => f !== file));
-      setArchivedFiles((prev) => [...prev, file]);
+      setArchivedFiles((prev) => [...prev, { ...file, isArchived: true, preview: "" }]);
       props.onChange?.(files.filter((f) => f !== file).map((f) => join(props.path, f.name)));
     } catch (error) {
       console.error("Error archiving file:", error);
@@ -309,7 +303,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               : "flex flex-wrap gap-2 justify-center"
           }`}
         >
-          {files.map((file: FileWithPath) => (
+          {files.map((file: DropZoneInputFile) => (
             <Thumbnail
               key={file.name}
               file={file}

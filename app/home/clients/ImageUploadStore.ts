@@ -3,10 +3,11 @@ import { Err, Ok, Result } from 'ts-results';
 import { db, ImageUpload, SyncStatus } from './Dexie';
 import Dexie from 'dexie';
 import { getCurrentTenantId } from '../utils/tenant-utils';
+import { imageUploadStatusStore } from '../components/InputImage/imageUploadStatusStore';
 
 // Types for the image upload store
 export type UpdateImageUpload = Partial<ImageUpload> & { id: string };
-export type CreateImageUpload = Omit<ImageUpload, "updatedAt" | "syncStatus" | "syncError">;
+export type CreateImageUpload = Omit<ImageUpload, "updatedAt" | "syncStatus" | "syncError" | "tenantId">;
 export type UpdateMetadataImageUpload = Omit<CreateImageUpload, "path" | "file" | "href">;
 
 function createImageUploadStore(db: Dexie, name: string) {
@@ -137,20 +138,30 @@ function createImageUploadStore(db: Dexie, name: string) {
              });
         },
         create: async (data: CreateImageUpload) => {
-            console.debug("[ImageUploadStore] create", data);
-            const tenantId = await getCurrentTenantId();
-            await table.add({
-                id: data.path,
-                tenantId: tenantId || "",
-                path: data.path,
-                file: data.file,
-                href: data.href,
-                metadata: data.metadata,
-                updatedAt: new Date().toISOString(),
-                syncStatus: SyncStatus.Queued,
-            })
+            try {
+                imageUploadStatusStore.setUploading(data.path, true);
+                const tenantId = await getCurrentTenantId();
+                await table.add({
+                    id: data.path,
+                    tenantId: tenantId || "",
+                    path: data.path,
+                    file: data.file,
+                    href: data.href,
+                    metadata: data.metadata,
+                    updatedAt: new Date().toISOString(),
+                    syncStatus: SyncStatus.Queued,
+                })
 
-            sync();
+                sync();
+            }
+            catch(error) {
+                console.error("[ImageUploadStore] create", error);
+                imageUploadStatusStore.setUploading(data.path, false);
+                throw error;
+            }
+            finally {
+                imageUploadStatusStore.setUploaded(data.path);
+            }
         },
         archive: async (path: string) => {
             console.debug("[ImageUploadStore] archive", path);

@@ -6,6 +6,9 @@ export interface RhfDropZoneInputImageProps extends Omit<DropZoneInputImageProps
   rhfProps: UseControllerProps;
 }
 
+
+const MemoizedDropZoneInputImage = React.memo(DropZoneInputImage);
+
 export const RhfDropZoneInputImage: React.FC<RhfDropZoneInputImageProps> = ({
   path,
   rhfProps,
@@ -18,7 +21,7 @@ export const RhfDropZoneInputImage: React.FC<RhfDropZoneInputImageProps> = ({
   };
 
   return (
-    <DropZoneInputImage
+    <MemoizedDropZoneInputImage
       path={path}
       onChange={handleChange}
       {...props}
