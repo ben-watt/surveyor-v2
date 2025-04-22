@@ -3,7 +3,6 @@ import { generateClient } from 'aws-amplify/api';
 import { Schema } from '@/amplify/data/resource';
 import { useEffect, useState } from 'react';
 import { cognitoUserPoolsTokenProvider } from 'aws-amplify/auth/cognito';
-import { v4 as uuidv4 } from 'uuid';
 
 // Define types for tenant management
 export interface Tenant {

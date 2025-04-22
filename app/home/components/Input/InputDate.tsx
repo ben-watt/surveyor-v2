@@ -57,7 +57,6 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
               mode="single"
               selected={new Date(field.value)}
               onSelect={handleSelect}
-              initialFocus
             />
           </PopoverContent>
         </Popover>
