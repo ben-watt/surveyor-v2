@@ -6,7 +6,7 @@ import {
 import { ReactElement } from "react";
 
 export interface MenuItemProps {
-  icon?: ReactElement;
+  icon?: ReactElement<any>;
   title?: string;
   action?: () => void | boolean;
   isActive?: (() => boolean) | null;

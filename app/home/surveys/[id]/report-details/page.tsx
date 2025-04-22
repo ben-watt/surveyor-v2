@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense, useEffect, useState, useCallback, use } from "react";
 import { surveyStore } from "@/app/home/clients/Database";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
 import { useRouter } from "next/navigation";
@@ -12,14 +12,18 @@ const ReportDetailsForm = dynamic(() => import("./ReportDetailsForm"), {
 });
 
 interface ReportDetailsFormPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-const ReportDetailFormPage = ({
-  params: { id },
-}: ReportDetailsFormPageProps) => {
+const ReportDetailFormPage = (props: ReportDetailsFormPageProps) => {
+  const params = use(props.params);
+
+  const {
+    id
+  } = params;
+
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();

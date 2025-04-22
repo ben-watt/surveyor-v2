@@ -8,7 +8,7 @@ import {
 import { surveyStore } from "@/app/home/clients/Database";
 import { ClipboardList, MoreVertical, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,12 +25,18 @@ import { toggleElementSection } from "../../building-survey-reports/Survey";
 import { DataForm as ElementFormData } from "@/app/home/elements/form";
 
 interface ConditionPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-const ConditionPage = ({ params: { id } }: ConditionPageProps) => {
+const ConditionPage = (props: ConditionPageProps) => {
+  const params = use(props.params);
+
+  const {
+    id
+  } = params;
+
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();

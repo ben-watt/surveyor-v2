@@ -1,9 +1,11 @@
-"use client";
+"use client";;
+import { use } from "react";
 
 import { DataForm } from "../form";
 import { useRouter } from "next/navigation";
 
-export default function Page({ params }: { params: { slug: string }}) {
+export default function Page(props: { params: Promise<{ slug: string }>}) {
+  const params = use(props.params);
   const router = useRouter();
 
   return (

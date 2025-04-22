@@ -1,6 +1,7 @@
 import { DataForm } from "../form";
 
-export default function Page({ params }: { params: { id: string }}) {
+export default async function Page(props: { params: Promise<{ id: string }>}) {
+  const params = await props.params;
   return (
     <div className="container mx-auto px-5">
       <div className="flex mt-4 mb-4">

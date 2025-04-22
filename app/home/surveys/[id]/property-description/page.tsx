@@ -9,7 +9,7 @@ import {
 import { surveyStore } from "@/app/home/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
 import { Button } from "@/components/ui/button";
 
@@ -18,14 +18,18 @@ function isInputT<T>(input: any): input is Input<T> {
 }
 
 interface PropertyDescriptionPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-const PropertyDescriptionPage = ({
-  params: { id },
-}: PropertyDescriptionPageProps) => {
+const PropertyDescriptionPage = (props: PropertyDescriptionPageProps) => {
+  const params = use(props.params);
+
+  const {
+    id
+  } = params;
+
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();

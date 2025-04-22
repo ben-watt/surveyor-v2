@@ -1,18 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { use } from "react";
 import SectionForm from "../form";
 import client from "@/app/home/clients/AmplifyDataClient";
 import { notFound } from "next/navigation";
 import { sectionStore } from "@/app/home/clients/Database";
 
 interface EditSectionPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function EditSectionPage({ params }: EditSectionPageProps) {
+export default function EditSectionPage(props: EditSectionPageProps) {
+  const params = use(props.params);
   const [isHydrated, section] = sectionStore.useGet(params.id);
 
   if (!isHydrated) {

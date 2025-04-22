@@ -1,8 +1,10 @@
-"use client";
+"use client";;
+import { use } from "react";
 
 import { DataForm } from "../form";
 
-export default function Page({ params }: { params: { slug: string }}) {
+export default function Page(props: { params: Promise<{ slug: string }>}) {
+  const params = use(props.params);
   return (
     <div className="container mx-auto px-5">
       <div className="flex mt-4 mb-4">

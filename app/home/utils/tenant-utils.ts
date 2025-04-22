@@ -294,8 +294,11 @@ export async function setPreferredTenant(tenantName: string): Promise<void> {
  */
 export async function getPreferredTenant(): Promise<string | null> {
   try {
-    // Check cache first
+
+    console.debug("[getPreferredTenant] preferredTenantCache", preferredTenantCache);
+
     if (preferredTenantCache && Date.now() - preferredTenantCache.timestamp < CACHE_DURATION) {
+      console.debug("[getPreferredTenant] fetching from cache", preferredTenantCache);
       return preferredTenantCache.value;
     }
 
@@ -320,10 +323,12 @@ export async function getPreferredTenant(): Promise<string | null> {
       value: result,
       timestamp: Date.now()
     };
+
+    console.debug("[getPreferredTenant] preferredTenantCache", preferredTenantCache);
     
     return result;
   } catch (error) {
-    console.error('Error getting preferred tenant:', error);
+    console.error("[getPreferredTenant] Error getting preferred tenant:", error);
     return null;
   }
 }

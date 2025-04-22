@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, Suspense, useEffect, useState } from "react";
+import React, { memo, Suspense, useEffect, useState, use } from "react";
 import BuildingSurveyForm from "../building-survey-reports/BuildingSurveyForm";
 import Link from "next/link";
 import { LayoutGrid } from "lucide-react";
@@ -77,7 +77,8 @@ const PhotoGrid = ({ previewPhotos, totalPhotos, galleryUrl }: PhotoGridProps) =
   );
 }
 
-function Home({ params }: { params: { id: string } }) {
+function Home(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [isHydrated, survey] = surveyStore.useGet(params.id);
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoCount, setPhotoCount] = useState<number>(0);

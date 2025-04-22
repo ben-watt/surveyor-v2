@@ -1,12 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React from "react";
+import React, { use } from "react";
 import { NewEditor } from "@/app/home/components/Input/BlockEditor";
 import { PrintPreviewer } from "../components/PrintPreviewer";
 import { useEditorState } from "../hooks/useEditorState";
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [preview, setPreview] = React.useState(false);
   const { editorContent, previewContent, header, footer, titlePage, setPreviewContent } = useEditorState(params.id);
 

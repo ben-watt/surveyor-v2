@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, use } from "react";
 import { surveyStore } from "@/app/home/clients/Database";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
 interface PhotoGalleryProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 interface PhotoSection {
@@ -17,7 +17,8 @@ interface PhotoSection {
   photos: { url: string }[];
 }
 
-function PhotoGallery({ params }: PhotoGalleryProps) {
+function PhotoGallery(props: PhotoGalleryProps) {
+  const params = use(props.params);
   const [isHydrated, survey] = surveyStore.useGet(params.id);
   const [photoSections, setPhotoSections] = useState<PhotoSection[]>([]);
 

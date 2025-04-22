@@ -17,17 +17,21 @@ import { PrimaryBtn } from "@/app/home/components/Buttons";
 import { useRouter } from "next/navigation";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 
 interface ChecklistPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-const ChecklistPage = ({
-  params: { id },
-}: ChecklistPageProps) => {
+const ChecklistPage = (props: ChecklistPageProps) => {
+  const params = use(props.params);
+
+  const {
+    id
+  } = params;
+
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();

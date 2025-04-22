@@ -37,7 +37,7 @@ function CustomPlacesAutocomplete({
   inputRef, 
   onPlaceSelect 
 }: { 
-  inputRef: React.RefObject<HTMLInputElement>,
+  inputRef: React.RefObject<HTMLInputElement | null>,
   onPlaceSelect: (place: google.maps.places.PlaceResult) => void
 }) {
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
