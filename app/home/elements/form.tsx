@@ -30,8 +30,10 @@ export function DataForm({ id }: DataFormProps) {
       const fetch = async () => {
         try {
           const response = await elementStore.get(id);
-          form.reset(response);
-          console.debug("fetched existing data", response);
+          if (response) {
+            form.reset(response);
+            console.debug("fetched existing data", response);
+          }
         } catch (error) {
           console.error("Failed to fetch element", error);
           toast.error("Failed to fetch element");

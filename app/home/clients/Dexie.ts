@@ -66,7 +66,7 @@ export interface DexieStore<T, TCreate> {
   useList: () => [boolean, T[]];
   useGet: (id: string) => [boolean, T | undefined];
   add: (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt" | "tenantId">) => Promise<void>;
-  get: (id: string) => Promise<T>;
+  get: (id: string) => Promise<T | null>;
   update: (id: string, updateFn: (currentState: Draft<T>) => void) => Promise<void>;
   remove: (id: string) => Promise<void>;
   removeAll: (options: { options: boolean }) => Promise<void>;
@@ -272,7 +272,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       console.error("[get] Item not found with id: " + id);
       return null;
     }
-    
+
     return local;
   };
 

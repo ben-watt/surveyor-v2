@@ -9,6 +9,7 @@ import {
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
 import { formatDateWithSuffix } from '@/app/home/utils/dateFormatters';
+import { ImageMetadata } from "../../clients/Database";
 
 const TableBlock = ({
   children,
@@ -74,8 +75,29 @@ const Page = (props: React.PropsWithChildren<any>) => (
   </>
 );
 
+export type ImageWithMetadata = {
+  uri: string;
+  hasMetadata: boolean;
+  metadata: ImageMetadata | null;
+}
+
+export type BuildingSurveyReportTipTap = BuildingSurveyFormData & {
+  reportDetails : {
+    frontElevationImages: ImageWithMetadata[];
+    moneyShot: ImageWithMetadata[];
+  },
+  surveySections: {
+    elementSections: {
+      images: ImageWithMetadata[];
+      components: {
+        images: ImageWithMetadata[];
+      }[];
+    }[];
+  }[];
+};
+
 interface PdfProps {
-  form: BuildingSurveyFormData;
+  form: BuildingSurveyReportTipTap;
 }
 
 interface H2Props {
@@ -128,7 +150,7 @@ export default function PDF({ form }: PdfProps) {
           <div>
             <Image
               style={{ margin: "0 auto" }}
-              src={form.reportDetails.moneyShot[0]}
+              src={form.reportDetails.moneyShot[0].uri}
               alt="main page image"
               width="700"
               height="480"
@@ -349,12 +371,17 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <TableBlock widths={[50, 50]}>
-          {form.reportDetails.frontElevationImagesUri.map((uri, i) => (
-            <img
-              src={uri}
+          {form.reportDetails.frontElevationImages.map((image, i) => (
+            <div key={`frontElevation_img_${i}`}>
+              <img
+                src={image.uri}
               key={`frontElevation_img_${i}`}
-              alt={`frontElevation_img_${i}`}
-            ></img>
+                alt={`frontElevation_img_${i}`}
+              />
+              {image.hasMetadata && (
+                <p>{image.metadata?.caption}</p>
+              )}
+            </div>
           ))}
         </TableBlock>
       </Page>
@@ -365,7 +392,7 @@ export default function PDF({ form }: PdfProps) {
             {s.elementSections.map((cs, j) => (
               <ConditionSection
                 key={`${s.name}.${cs.name}`}
-                elementSection={cs}
+                elementSection={cs as ElementSection & { images: ImageWithMetadata[] }}
                 form={form}
               />
             ))}
@@ -825,8 +852,8 @@ Board's website. We have not undertaken any separate inquiries with the relevant
 
 type ConditionSectionProps = {
   key: string;
-  elementSection: ElementSection;
-  form: BuildingSurveyFormData;
+  elementSection: ElementSection & { images: ImageWithMetadata[] };
+  form: BuildingSurveyReportTipTap;
 };
 
 const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
@@ -841,19 +868,25 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
         <td>
           <img
             key={i}
-            src={es.images[i]}
+            src={es.images[i].uri}
             alt={elementSection.name + ".image." + i}
             style={{ maxHeight: "250px", margin: "0 auto" }}
           />
+          {es.images[i].hasMetadata && (
+            <p>{es.images[i].metadata?.caption}</p>
+          )}
         </td>
         <td>
           {es.images.at(i + 1) && (
             <img
               key={`${elementSection.id}.${i + 1}`}
-              src={es.images[i + 1]}
+              src={es.images[i + 1].uri}
               alt={elementSection.name + ".image." + i}
               style={{ maxHeight: "250px", margin: "0 auto" }}
             />
+          )}
+          {es.images[i + 1]?.hasMetadata && (
+            <p>{es.images[i + 1].metadata?.caption}</p>
           )}
         </td>
       </tr>

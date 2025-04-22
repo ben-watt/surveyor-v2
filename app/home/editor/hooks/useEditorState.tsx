@@ -19,7 +19,9 @@ export const useEditorState = (surveyId: string) => {
       try {
         setIsLoading(true);
         const survey = await surveyStore.get(surveyId);
-        setEditorData(survey.content);
+        if (survey) {
+          setEditorData(survey.content);
+        }
       } catch (error) {
         console.error("Failed to fetch survey:", error);
       } finally {

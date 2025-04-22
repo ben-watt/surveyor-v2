@@ -1,7 +1,45 @@
 import { BuildingSurveyFormData } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
-import BuildingSurveyReport from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportTipTap";
+import BuildingSurveyReport, { BuildingSurveyReportTipTap, ImageWithMetadata } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportTipTap";
 import { renderToStaticMarkup } from "react-dom/server";
-import { getImagesHref } from "./image";
+import { getImageHref, getImagesHref } from "./image";
+import { imageMetadataStore } from "../../clients/Database";
+
+const imageToImageWithMetadata = async (imageUris: string[]) : Promise<ImageWithMetadata[]> => {
+  return await Promise.all(imageUris.map(async uri => {
+    const metadata = await imageMetadataStore.get(uri);
+    const preSignedUrl = await getImageHref(uri);
+    return {
+      uri: preSignedUrl,
+      hasMetadata: !!metadata,
+      metadata: metadata ?? null
+    };
+  }));
+};
+
+const mapElement = async (elementSection: any) => {
+  const images = await imageToImageWithMetadata(elementSection.images);
+  const components = await Promise.all(
+    elementSection.components.map(async (component: any) => ({
+      ...component,
+      images: await imageToImageWithMetadata(component.images)
+    }))
+  );
+  return {
+    ...elementSection,
+    images,
+    components
+  };
+};
+
+const mapSection = async (section: any) => {
+  const elementSections = await Promise.all(
+    section.elementSections.map(mapElement)
+  );
+  return {
+    ...section,
+    elementSections
+  };
+};
 
 export async function mapFormDataToHtml(
   formData: BuildingSurveyFormData | undefined
@@ -9,29 +47,25 @@ export async function mapFormDataToHtml(
   if (!formData) return "";
 
   try {
-    const newFormData = { ...formData };
+    const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri ?? []);
+    const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot ?? []);
+    const signaturePath = await getImagesHref(formData.owner.signaturePath ?? []);
+    
+    const form = {
+      ...formData,
+      reportDetails: {
+        ...formData.reportDetails,
+        frontElevationImages,
+        moneyShot,
+      },
+      owner: {
+        ...formData.owner,
+        signaturePath
+      },
+      surveySections: await Promise.all(formData.sections.map(mapSection))
+    } as BuildingSurveyReportTipTap;
 
-    const [frontElevationImages, moneyShot, signaturePath] = await Promise.all([
-      getImagesHref(formData.reportDetails.frontElevationImagesUri ?? []),
-      getImagesHref(formData.reportDetails.moneyShot ?? []),
-      getImagesHref(formData.owner.signaturePath ?? []),
-    ]);
-
-    newFormData.reportDetails.frontElevationImagesUri = frontElevationImages;
-    newFormData.reportDetails.moneyShot = moneyShot;
-    newFormData.owner.signaturePath = signaturePath;
-
-    const sectionImageTasks = formData.sections.map(async (section, si) => {
-      const elementSectionTasks = section.elementSections.map(async (es, i) => {
-        const preSignedUrl = await getImagesHref(es.images ?? []);
-        newFormData.sections[si].elementSections[i].images = preSignedUrl;
-      });
-      await Promise.all(elementSectionTasks);
-    });
-
-    await Promise.all(sectionImageTasks);
-
-    return renderToStaticMarkup(<BuildingSurveyReport form={newFormData} />);
+    return renderToStaticMarkup(<BuildingSurveyReport form={form} />);
   } catch (error) {
     console.error("Failed to map form data to HTML:", error);
     return "";
