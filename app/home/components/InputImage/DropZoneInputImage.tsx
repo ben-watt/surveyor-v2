@@ -2,12 +2,12 @@ import { X, Archive, Pencil } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
-import { imageUploadStatusStore } from "./imageUploadStatusStore";
 import { useImageUploadStatus } from "./useImageUploadStatus";
 import { ImageMetadataDialog } from "./ImageMetadataDialog";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import Resizer from "react-image-file-resizer";
 import { join } from "path";
+import { imageMetadataStore } from "../../clients/Database";
 
 interface DropZoneInputImageProps {
   path: string;
@@ -73,7 +73,9 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
       </aside>
       <aside className="absolute top-0 right-0">
         <button
-          className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+          className={`text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
+            file.hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
+          }`}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -99,7 +101,7 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
   );
 };
 
-type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean };
+type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean, hasMetadata: boolean };
 
 export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
@@ -143,6 +145,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           const existingFiles = await Promise.all(
             result.val.map(async (item) => {
               const fileResult = await imageUploadStore.get(item.fullPath);
+              const metadataResult = await imageMetadataStore.get(item.fullPath);
               if (fileResult.ok) {
                 const fileData = fileResult.val;
                 const file = new File(
@@ -155,7 +158,8 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
                 return Object.assign(file, {
                   preview: fileData.href,
                   path: fileData.path,
-                  isArchived: fileData.path.includes("archived")
+                  isArchived: fileData.path.includes("archived"),
+                  hasMetadata: !metadataResult
                 }) as DropZoneInputFile;
               }
               return null;
@@ -182,7 +186,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     };
 
     loadExistingFiles();
-  }, [props.path, props.onChange]);
+  }, [props.path]);
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
@@ -252,7 +256,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     try {
       await imageUploadStore.archive(filePath);
       setFiles(files.filter((f) => f !== file));
-      setArchivedFiles((prev) => [...prev, { ...file, isArchived: true, preview: "" }]);
+      setArchivedFiles((prev) => [...prev, { ...file, isArchived: true, preview: "", hasMetadata: false }]);
       props.onChange?.(files.filter((f) => f !== file).map((f) => join(props.path, f.name)));
     } catch (error) {
       console.error("Error archiving file:", error);

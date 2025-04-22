@@ -269,8 +269,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     const tenantId = await getCurrentTenantId();
     const local = await table.get([id, tenantId]);
     if (!local || local.syncStatus === SyncStatus.PendingDelete) {
-      throw new Error("Item not found with id: " + id);
+      console.error("[get] Item not found with id: " + id);
+      return null;
     }
+    
     return local;
   };
 

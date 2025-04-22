@@ -17,15 +17,14 @@ export const ImageMetadataDialog = ({ file, path, onClose }: ImageMetadataDialog
   const [metadata, setMetadata] = useState<{ caption?: string; notes?: string }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [metadataId, setMetadataId] = useState<string | null>(null);
-  const [hydrated, metadataList] = imageMetadataStore.useList();
 
   useEffect(() => {
     const loadMetadata = async () => {
-      if (!file || !hydrated) return;
+      if (!file) return;
 
       try {
         const imagePath = join(path, file.name);
-        const existingMetadata = metadataList.find((m) => m.imagePath === imagePath);
+        const existingMetadata = await imageMetadataStore.get(imagePath);
         if (existingMetadata) {
           setMetadataId(existingMetadata.id);
           setMetadata({
@@ -41,7 +40,7 @@ export const ImageMetadataDialog = ({ file, path, onClose }: ImageMetadataDialog
     };
 
     loadMetadata();
-  }, [file, path, hydrated, metadataList]);
+  }, [file, path]);
 
   const handleSave = async () => {
     if (!file) return;
