@@ -10,9 +10,8 @@ import { useEffect, useState } from "react";
 import InputText from "../components/Input/InputText";
 import { FieldValues, FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { RhfInputImage } from "../components/InputImage";
-import { PrimaryBtn } from "../components/Buttons";
 import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
+import { RhfDropZoneInputImage } from "@/app/home/components/InputImage";
 
 type ProfileFormData = {
   name: string;
@@ -127,8 +126,20 @@ function Page() {
               labelTitle="Signature Text"
               placeholder="Enter you signed name"
             />
-            <RhfInputImage maxNumberOfFiles={1} path={`profile/${sub}/profilePicture/`} rhfProps={{name: "profile" }} labelText="Profile Picture" />
-            <RhfInputImage maxNumberOfFiles={1} path={`profile/${sub}/signatureImage/`} rhfProps={{name: "picture" }} labelText="Signature Image" />
+            <RhfDropZoneInputImage
+              path={`profile/${sub}/profilePicture/`}
+              rhfProps={{ name: "profile", rules: { required: "Profile picture is required" } }}
+              labelText="Profile Picture"
+              maxFiles={1}
+              minFiles={1}
+            />
+            <RhfDropZoneInputImage
+              path={`profile/${sub}/signatureImage/`}
+              rhfProps={{ name: "picture", rules: { required: "Signature image is required" } }}
+              labelText="Signature Image"
+              maxFiles={1}
+              minFiles={1}
+            />
             <SaveButtonWithUploadStatus 
               isSubmitting={!enableForm}
               paths={[`profile/${sub}/profilePicture/`, `profile/${sub}/signatureImage/`]}

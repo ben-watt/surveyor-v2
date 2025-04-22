@@ -35,7 +35,9 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
       const fetchData = async () => {
         try {
           const data = await componentStore.get(id);
-          methods.reset(data);
+          if(data) {
+            methods.reset(data);
+          }
           setIsLoading(false);
         } catch (error) {
           console.error("Failed to fetch data", error);

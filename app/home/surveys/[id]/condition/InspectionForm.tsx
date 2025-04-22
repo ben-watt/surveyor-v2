@@ -17,7 +17,6 @@ import {
   surveyStore,
   sectionStore,
 } from "@/app/home/clients/Database";
-import { RhfInputImage } from "@/app/home/components/InputImage";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { Combobox } from "@/app/home/components/Input/ComboBox";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
@@ -42,6 +41,7 @@ import {
 } from "./types";
 import InputMoney from "@/app/home/components/Input/InputMoney";
 import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
+import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 
 function CostingsFieldArray() {
   const { control, register } = useFormContext();
@@ -515,14 +515,20 @@ function InspectionFormContent({
           />
 
           <div className="space-y-2 image-w-50">
-            <Label>Images</Label>
-            <RhfInputImage
+            <RhfDropZoneInputImage
               path={imageUploadPath}
               rhfProps={{
                 name: "images",
                 rules: {
                   onChange: () => true,
                 },
+                }}
+              labelText="Images"
+              maxFiles={20}
+              minFiles={1}
+              features={{
+                archive: true,
+                metadata: true,
               }}
             />
           </div>

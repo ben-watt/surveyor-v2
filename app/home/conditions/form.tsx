@@ -35,7 +35,9 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     const load = async () => {  
       if(id) {
         const phrase = await phraseStore.get(id);
-        methods.reset(phrase);
+        if(phrase) {
+          methods.reset(phrase);
+        }
       }
     }
 

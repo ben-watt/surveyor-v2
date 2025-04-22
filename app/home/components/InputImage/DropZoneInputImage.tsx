@@ -14,6 +14,12 @@ interface DropZoneInputImageProps {
   maxFiles?: number;
   minFiles?: number;
   onChange?: (filePaths: string[]) => void;
+  features?: {
+    /** Whether to enable the archive functionality. Defaults to true */
+    archive?: boolean;
+    /** Whether to enable the metadata functionality. Defaults to true */
+    metadata?: boolean;
+  };
 }
 
 export type { DropZoneInputImageProps };
@@ -23,16 +29,19 @@ interface ThumbnailProps {
   onDelete: (file: FileWithPath) => void;
   onArchive: (file: FileWithPath) => void;
   path: string;
+  features?: DropZoneInputImageProps['features'];
 }
 
 type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean, hasMetadata: boolean };
 
-const Thumbnail = ({ file, onDelete, onArchive, path }: ThumbnailProps) => {
+const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps) => {
   const { openDrawer, closeDrawer } = useDynamicDrawer();
   const [hasMetadata, setHasMetadata] = useState(false);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
 
   useEffect(() => {
+    if (!features?.metadata) return;
+    
     const checkMetadata = async () => {
       try {
         const imagePath = join(path, file.name);
@@ -46,7 +55,7 @@ const Thumbnail = ({ file, onDelete, onArchive, path }: ThumbnailProps) => {
     };
 
     checkMetadata();
-  }, [file, path]);
+  }, [file, path, features?.metadata]);
 
   const toFileSize = useCallback((size: number): [number, string] => {
     if (size < 1024) {
@@ -119,32 +128,36 @@ const Thumbnail = ({ file, onDelete, onArchive, path }: ThumbnailProps) => {
           <X />
         </button>
       </aside>
-      <aside className="absolute top-0 right-0">
-        <button
-          className={`text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
-            hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
-          }`}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            handleEdit();
-          }}
-        >
-          <Pencil size={16} />
-        </button>
-      </aside>
-      <aside className="absolute bottom-0 left-0">
-        <button
-          className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onArchive(file);
-          }}
-        >
-          <Archive size={16} />
-        </button>
-      </aside>
+      {features?.metadata && (
+        <aside className="absolute top-0 right-0">
+          <button
+            className={`text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
+              hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
+            }`}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              handleEdit();
+            }}
+          >
+            <Pencil size={16} />
+          </button>
+        </aside>
+      )}
+      {features?.archive && (
+        <aside className="absolute bottom-0 left-0">
+          <button
+            className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onArchive(file);
+            }}
+          >
+            <Archive size={16} />
+          </button>
+        </aside>
+      )}
     </div>
   );
 };
@@ -154,6 +167,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [archivedFiles, setArchivedFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isUploading } = useImageUploadStatus([props.path]);
+  const features = props.features ?? { archive: false, metadata: false };
 
   const resizeImage = useCallback((file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -344,11 +358,12 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               onDelete={handleDelete}
               onArchive={handleArchive}
               path={props.path}
+              features={features}
             />
           ))}
         </ul>
       </aside>
-      {archivedFiles.length > 0 && (
+      {features.archive && archivedFiles.length > 0 && (
         <div className="mt-4 flex items-center justify-start gap-2 text-gray-500">
           <Archive size={16} />
           <span className="text-sm">{archivedFiles.length} archived</span>

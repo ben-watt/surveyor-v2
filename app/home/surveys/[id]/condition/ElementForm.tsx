@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 import { surveyStore, elementStore, sectionStore } from "@/app/home/clients/Database";
-import { RhfInputImage } from "@/app/home/components/InputImage";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import toast from "react-hot-toast";
@@ -17,7 +16,7 @@ import { Edit, Trash2 } from "lucide-react";
 import { getElementSection, updateElementDetails, removeComponent } from "@/app/home/surveys/building-survey-reports/Survey";
 import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
 import { useImageUploadStatus } from "@/app/home/components/InputImage/useImageUploadStatus";
-
+import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 // Memoized Add Component button component
 const AddComponentButton = memo(({ 
   surveyId, 
@@ -189,7 +188,17 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
             placeholder="Enter element description"
           />
           <div className="space-y-2 image-w-50">
-            <RhfInputImage rhfProps={{ name: "images" }} path={`report-images/${surveyId}/elements/${elementId}`} labelText="Images" />
+            <RhfDropZoneInputImage
+              rhfProps={{ name: "images", rules: { required: "At least one image is required" } }}
+              path={`report-images/${surveyId}/elements/${elementId}`}
+              labelText="Images"
+              maxFiles={20}
+              minFiles={1}
+              features={{
+                archive: true,
+                metadata: true
+              }}
+            />
           </div>
         </FormSection>
 

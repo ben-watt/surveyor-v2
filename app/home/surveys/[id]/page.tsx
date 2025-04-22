@@ -111,7 +111,7 @@ function Home({ params }: { params: { id: string } }) {
           <PhotoGrid 
             previewPhotos={photos}
             totalPhotos={photoCount}
-            galleryUrl={`/home/surveys/${params.id}/photos`}
+            galleryUrl={`/home/surveys/${survey?.id}/photos`}
           />
         </div>
         <div> 

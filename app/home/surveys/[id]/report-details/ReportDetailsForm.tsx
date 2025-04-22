@@ -7,14 +7,9 @@ import { FormStatus, ReportDetails } from "../../building-survey-reports/Buildin
 import { surveyStore } from "@/app/home/clients/Database";
 import { memo } from "react";
 import { useRouter } from "next/navigation";
-import { RhfInputImage } from "@/app/home/components/InputImage";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import AddressInput from "@/app/home/components/Input/AddressInput";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { useImageUploadStatus } from "@/app/home/components/InputImage/useImageUploadStatus";
 import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
 
 interface ReportDetailsFormProps {
@@ -95,7 +90,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onValidHandler, onInvalidHandler)}>
+      <form onSubmit={handleSubmit(onValidHandler, onInvalidHandler)} className="space-y-2">
         <LevelField control={control} />
         <AddressField control={control} errors={errors} />
         
@@ -152,26 +147,33 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             path={`report-images/${surveyId}/moneyShot/`}
             minFiles={1}
             maxFiles={1}
+            features={{
+              archive: true,
+              metadata: true
+            }}
             rhfProps={{
               name: 'moneyShot',
-              rules: { required: true }
+              rules: { required: "At least one image is required" }
             }}
           />
         </div>
 
         <div>
-          <label className="text-sm">Front Elevation Images</label>
+          <label className="text-sm">Front Elevation</label>
           <RhfDropZoneInputImage
             path={`report-images/${surveyId}/frontElevationImagesUri/`}
             minFiles={1}
-            maxFiles={3}
+            maxFiles={4}
+            features={{
+              archive: true,
+              metadata: true
+            }}
             rhfProps={{
               name: 'frontElevationImagesUri',
-              rules: { required: true }
+              rules: { required: "At least four images are required" }
             }}
           />
         </div>
-
         <SaveButtonWithUploadStatus 
           isSubmitting={isSubmitting}
           paths={[
