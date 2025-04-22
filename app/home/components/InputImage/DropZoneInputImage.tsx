@@ -22,11 +22,32 @@ interface ThumbnailProps {
   file: DropZoneInputFile;
   onDelete: (file: FileWithPath) => void;
   onArchive: (file: FileWithPath) => void;
-  onEdit: (file: FileWithPath) => void;
-  isUploading?: boolean;
+  path: string;
 }
 
-const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: ThumbnailProps) => {
+type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean, hasMetadata: boolean };
+
+const Thumbnail = ({ file, onDelete, onArchive, path }: ThumbnailProps) => {
+  const { openDrawer, closeDrawer } = useDynamicDrawer();
+  const [hasMetadata, setHasMetadata] = useState(false);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
+
+  useEffect(() => {
+    const checkMetadata = async () => {
+      try {
+        const imagePath = join(path, file.name);
+        const metadataResult = await imageMetadataStore.get(imagePath);
+        setHasMetadata(!!metadataResult && !!metadataResult.caption);
+      } catch (error) {
+        console.error("Error checking metadata:", error);
+      } finally {
+        setIsLoadingMetadata(false);
+      }
+    };
+
+    checkMetadata();
+  }, [file, path]);
+
   const toFileSize = useCallback((size: number): [number, string] => {
     if (size < 1024) {
       return [size, "B"];
@@ -38,6 +59,34 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
       return [Math.round(size / 1024 / 1024 / 1024), "GB"];
     }
   }, []);
+
+  const handleEdit = () => {
+    openDrawer({
+      id: `image-metadata-${file.name}`,
+      title: `Image Metadata`,
+      description: `${file.path}`,
+      content: (
+        <ImageMetadataDialog
+          file={file}
+          path={path}
+          onClose={() => {
+            closeDrawer();
+            // Refresh metadata status after dialog closes
+            const checkMetadata = async () => {
+              try {
+                const imagePath = join(path, file.name);
+                const metadataResult = await imageMetadataStore.get(imagePath);
+                setHasMetadata(!!metadataResult && !!metadataResult.caption);
+              } catch (error) {
+                console.error("Error checking metadata:", error);
+              }
+            };
+            checkMetadata();
+          }}
+        />
+      ),
+    });
+  };
   
   return (
     <div className="relative rounded-md overflow-hidden" key={file.name}>
@@ -57,7 +106,6 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
         <p className="text-background/50 text-[0.6rem]">
           {toFileSize(file.size)[0]} {toFileSize(file.size)[1]}
         </p>
-        {isUploading && <p className="text-yellow-400">Uploading...</p>}
       </aside>
       <aside className="absolute top-0 left-0">
         <button
@@ -74,12 +122,12 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
       <aside className="absolute top-0 right-0">
         <button
           className={`text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
-            file.hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
+            hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
           }`}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            onEdit(file);
+            handleEdit();
           }}
         >
           <Pencil size={16} />
@@ -101,14 +149,11 @@ const Thumbnail = ({ file, onDelete, onArchive, onEdit, isUploading }: Thumbnail
   );
 };
 
-type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean, hasMetadata: boolean };
-
 export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [archivedFiles, setArchivedFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isUploading } = useImageUploadStatus([props.path]);
-  const { openDrawer, closeDrawer } = useDynamicDrawer();
 
   const resizeImage = useCallback((file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -145,7 +190,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           const existingFiles = await Promise.all(
             result.val.map(async (item) => {
               const fileResult = await imageUploadStore.get(item.fullPath);
-              const metadataResult = await imageMetadataStore.get(item.fullPath);
               if (fileResult.ok) {
                 const fileData = fileResult.val;
                 const file = new File(
@@ -159,7 +203,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
                   preview: fileData.href,
                   path: fileData.path,
                   isArchived: fileData.path.includes("archived"),
-                  hasMetadata: !metadataResult
+                  hasMetadata: false // This will be managed by Thumbnail now
                 }) as DropZoneInputFile;
               }
               return null;
@@ -210,6 +254,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
             preview: URL.createObjectURL(resizedFile),
             path: file.path,
             isArchived: false,
+            hasMetadata: false // This will be managed by Thumbnail now
           }) as DropZoneInputFile;
         })
       );
@@ -263,21 +308,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     }
   };
 
-  const handleEdit = (file: FileWithPath) => {
-    openDrawer({
-      id: `image-metadata-${file.name}`,
-      title: `Image Metadata`,
-      description: `${file.path}`,
-      content: (
-        <ImageMetadataDialog
-          file={file}
-          path={props.path}
-          onClose={() => closeDrawer()}
-        />
-      ),
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="container border border-gray-300 rounded-md p-4 bg-gray-100">
@@ -313,8 +343,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               file={file}
               onDelete={handleDelete}
               onArchive={handleArchive}
-              onEdit={handleEdit}
-              isUploading={isUploading}
+              path={props.path}
             />
           ))}
         </ul>
