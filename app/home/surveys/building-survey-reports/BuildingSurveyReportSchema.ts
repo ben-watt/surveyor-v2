@@ -1,4 +1,4 @@
-import { useFormStatus } from "react-dom"
+import { DropZoneInputFile } from "@/app/home/components/InputImage/DropZoneInputImage"
 
 export type BuildingSurveyFormData = {
     id: string,
@@ -79,8 +79,8 @@ export type ReportDetails = {
     weather: string,
     orientation: string,
     situation: string,
-    moneyShot: string[],
-    frontElevationImagesUri: string[]
+    moneyShot: { path: string, isArchived: boolean, hasMetadata: boolean }[],
+    frontElevationImagesUri: { path: string, isArchived: boolean, hasMetadata: boolean }[],
     status: FormSectionStatus
 }
 

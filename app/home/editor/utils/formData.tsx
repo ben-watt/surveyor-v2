@@ -47,8 +47,8 @@ export async function mapFormDataToHtml(
   if (!formData) return "";
 
   try {
-    const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri ?? []);
-    const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot ?? []);
+    const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri.map(image => image.path));
+    const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot.map(image => image.path));
     const signaturePath = await getImagesHref(formData.owner.signaturePath ?? []);
     
     const form = {

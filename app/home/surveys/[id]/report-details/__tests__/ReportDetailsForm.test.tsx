@@ -164,8 +164,8 @@ describe('ReportDetailsForm', () => {
     weather: 'Sunny',
     orientation: 'North facing',
     situation: 'Urban area',
-    moneyShot: ['/path/to/image1.jpg'],
-    frontElevationImagesUri: ['/path/to/image2.jpg'],
+    moneyShot: [{ path: '/path/to/image1.jpg', isArchived: false, hasMetadata: false }],
+    frontElevationImagesUri: [{ path: '/path/to/image2.jpg', isArchived: false, hasMetadata: false }],
     status: { status: FormStatus.Incomplete, errors: [] }
   };
 

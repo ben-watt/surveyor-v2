@@ -17,7 +17,6 @@ interface ReportDetailsFormProps {
   reportDetails: ReportDetails;
 }
 
-// Memoized input components for better performance
 const AddressField = memo(({ control, errors }: any) => (
   <div>
     <AddressInput
@@ -65,6 +64,8 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
 
   const onValidHandler = async (data: any): Promise<void> => {
     if (!surveyId) return;
+
+    console.log("[ReportDetailsForm] onValidHandler", data);
 
     await surveyStore.update(surveyId, (survey) => {
       survey.reportDetails = {
@@ -170,7 +171,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             }}
             rhfProps={{
               name: 'frontElevationImagesUri',
-              rules: { required: "At least four images are required" }
+              rules: { validate: (v) => v.length >= 4 || "At least four images are required" }
             }}
           />
         </div>

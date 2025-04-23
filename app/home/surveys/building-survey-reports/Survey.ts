@@ -215,11 +215,11 @@ export function getAllSurveyImages(survey: BuildingSurveyFormData): string[] {
     const allImages: string[] = [];
 
     survey.reportDetails?.moneyShot?.forEach(image => {
-        allImages.push(image);
+        allImages.push(image.path);
     });
 
     survey.reportDetails?.frontElevationImagesUri?.forEach(image => {
-        allImages.push(image);
+        allImages.push(image.path);
     });
 
     survey.sections.forEach(section => {

@@ -5,6 +5,7 @@ import { surveyStore } from "@/app/home/clients/Database";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface PhotoGalleryProps {
   params: Promise<{
@@ -21,6 +22,7 @@ function PhotoGallery(props: PhotoGalleryProps) {
   const params = use(props.params);
   const [isHydrated, survey] = surveyStore.useGet(params.id);
   const [photoSections, setPhotoSections] = useState<PhotoSection[]>([]);
+  const router = useRouter();
 
   console.log("[PhotoGallery] photoSections", survey);
 
@@ -29,8 +31,8 @@ function PhotoGallery(props: PhotoGalleryProps) {
       imagePaths: string[]
     ): Promise<string[]> {
       return await Promise.all(
-        imagePaths.map(async (path) => {
-          const result = await imageUploadStore.get(path);
+        imagePaths.map(async (file) => {
+          const result = await imageUploadStore.get(file);
           return result.unwrap().href;
         })
       );
@@ -44,30 +46,34 @@ function PhotoGallery(props: PhotoGalleryProps) {
       // Load money shot
       if (survey.reportDetails?.moneyShot?.length) {
         const urls = await Promise.all(
-          survey.reportDetails.moneyShot.map(async (path) => {
-            const result = await imageUploadStore.get(path);
+          survey.reportDetails.moneyShot.map(async (file) => {
+            console.log("[PhotoGallery] moneyShot", file);
+            if (!file.path) return null;
+            
+            const result = await imageUploadStore.get(file.path);
             return { url: result.unwrap().href };
           })
         );
 
         sections.push({
-          name: "Money Shot",
-          photos: urls,
+          name: "Cover Image",
+          photos: urls.filter((url) => url !== null),
         });
       }
 
       // Load front elevation images
       if (survey.reportDetails?.frontElevationImagesUri?.length) {
         const urls = await Promise.all(
-          survey.reportDetails.frontElevationImagesUri.map(async (path) => {
-            const result = await imageUploadStore.get(path);
+          survey.reportDetails.frontElevationImagesUri.map(async (file) => {
+            if (!file.path) return null;
+            const result = await imageUploadStore.get(file.path);
             return { url: result.unwrap().href };
           })
         );
 
         sections.push({
           name: "Front Elevation",
-          photos: urls,
+          photos: urls.filter((url) => url !== null),
         });
       }
 
@@ -125,7 +131,7 @@ function PhotoGallery(props: PhotoGalleryProps) {
           </p>
         </div>
         <button
-          onClick={() => window.history.back()}
+          onClick={() => router.back()}
           className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors"
         >
           <ArrowLeft size={18} />

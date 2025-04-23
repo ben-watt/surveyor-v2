@@ -2,7 +2,6 @@ import { X, Archive, Pencil } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
-import { useImageUploadStatus } from "./useImageUploadStatus";
 import { ImageMetadataDialog } from "./ImageMetadataDialog";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import Resizer from "react-image-file-resizer";
@@ -13,7 +12,7 @@ interface DropZoneInputImageProps {
   path: string;
   maxFiles?: number;
   minFiles?: number;
-  onChange?: (filePaths: string[]) => void;
+  onChange?: (filePaths: DropZoneInputFile[]) => void;
   features?: {
     /** Whether to enable the archive functionality. Defaults to true */
     archive?: boolean;
@@ -32,7 +31,7 @@ interface ThumbnailProps {
   features?: DropZoneInputImageProps['features'];
 }
 
-type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean, hasMetadata: boolean };
+export type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean, hasMetadata: boolean };
 
 const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps) => {
   const { openDrawer, closeDrawer } = useDynamicDrawer();
@@ -46,7 +45,6 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps
       try {
         const imagePath = join(path, file.name);
         const metadataResult = await imageMetadataStore.get(imagePath);
-        console.log("[metadataResult]", metadataResult);
         setHasMetadata(!!metadataResult && !!metadataResult.caption);
       } catch (error) {
         console.error("Error checking metadata:", error);
@@ -167,7 +165,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [archivedFiles, setArchivedFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { isUploading } = useImageUploadStatus([props.path]);
   const features = props.features ?? { archive: false, metadata: false };
 
   const resizeImage = useCallback((file: File): Promise<File> => {
@@ -235,7 +232,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
 
           setFiles(validFiles);
           setArchivedFiles(archivedFiles);
-          props.onChange?.(validFiles.map((f) => join(props.path, f.name)));
+          props.onChange?.(validFiles);
         }
       } catch (error) {
         console.error("Error loading existing files:", error);
@@ -250,6 +247,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: props.maxFiles,
     onDrop: async (acceptedFiles: FileWithPath[]) => {
+
       const processedFiles = await Promise.all(
         acceptedFiles.map(async (file) => {
           const resizedFile = await resizeImage(file);
@@ -262,7 +260,9 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
         })
       );
 
-      setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
+      // Replace the files with the new ones if the file name matches
+      const deDupedFiles = processedFiles.filter((file) => !files.some((f) => f.name === file.name));
+      setFiles((prevFiles) => [...prevFiles, ...deDupedFiles]);
       
       // Upload each file
       for (const file of processedFiles) {
@@ -281,8 +281,8 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
         });
 
         props.onChange?.([
-          ...files.map((f) => join(props.path, f.name)),
-          ...processedFiles.map((f) => join(props.path, f.name)),
+          ...files,
+          ...deDupedFiles,
         ]);
       }
     },
@@ -293,7 +293,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     try {
       await imageUploadStore.remove(filePath);
       setFiles(files.filter((f) => f !== file));
-      props.onChange?.(files.filter((f) => f !== file).map((f) => join(props.path, f.name)));
+      props.onChange?.(files.filter((f) => f !== file));
     } catch (error) {
       console.error("Error removing file:", error);
     }
@@ -305,7 +305,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       await imageUploadStore.archive(filePath);
       setFiles(files.filter((f) => f !== file));
       setArchivedFiles((prev) => [...prev, { ...file, isArchived: true, preview: "", hasMetadata: false }]);
-      props.onChange?.(files.filter((f) => f !== file).map((f) => join(props.path, f.name)));
+      props.onChange?.(files.filter((f) => f !== file));
     } catch (error) {
       console.error("Error archiving file:", error);
     }

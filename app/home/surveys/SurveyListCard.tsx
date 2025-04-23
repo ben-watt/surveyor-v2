@@ -27,7 +27,7 @@ export function BuildingSurveyListCard({
   const [image, setImage] = useState<string>();
 
   useEffect(() => {
-    imageUploadStore.get(survey.reportDetails?.moneyShot[0]).then((image) => {
+    imageUploadStore.get(survey.reportDetails?.moneyShot[0].path).then((image) => {
       if (image.ok) {
         setImage(image.val.href);
       }
