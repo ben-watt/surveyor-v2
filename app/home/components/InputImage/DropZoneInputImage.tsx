@@ -248,18 +248,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   }, [props.path]);
 
   const { getRootProps, getInputProps } = useDropzone({
-    accept: {
-      "image/*": [
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".bmp",
-        ".tiff",
-        ".ico",
-        ".webp",
-      ],
-    },
     maxFiles: props.maxFiles,
     onDrop: async (acceptedFiles: FileWithPath[]) => {
       const processedFiles = await Promise.all(
@@ -269,7 +257,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
             preview: URL.createObjectURL(resizedFile),
             path: file.path,
             isArchived: false,
-            hasMetadata: false // This will be managed by Thumbnail now
+            hasMetadata: false
           }) as DropZoneInputFile;
         })
       );
