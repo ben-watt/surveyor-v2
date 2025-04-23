@@ -161,7 +161,7 @@ export function DynamicDrawer({
 
   return (
     <Drawer key={id} open={isOpen} onOpenChange={handleOpenChange}>
-      <DrawerContent className="max-h-lvh">
+      <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle>{title}</DrawerTitle>
           <DrawerDescription>{description}</DrawerDescription>
