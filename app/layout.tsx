@@ -1,6 +1,5 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import "@aws-amplify/ui-react/styles.css";
 import { Metadata, Viewport } from "next";
 import { ClientSideDependencies } from "./dependencies";
 

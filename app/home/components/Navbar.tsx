@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthenticator } from "@aws-amplify/ui-react";
 import {
   CircleUserRound,
   LogOut,
@@ -21,6 +20,8 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { v4 } from "uuid";
+import { signOut } from "aws-amplify/auth";
+import useUser from "../utils/useUser";
 
 const NetworkStatus = dynamic(
   () => import("./NetworkStatus").then((mod) => mod.NetworkStatus),
@@ -64,7 +65,7 @@ interface CommandBarProps {
 
 const CommandBar = forwardRef<HTMLInputElement, CommandBarProps>(
   function CommandBar({ onSelected, onBlur }: CommandBarProps, ref) {
-    const { user, signOut } = useAuthenticator((context) => [context.user]);
+    const user = useUser();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
 

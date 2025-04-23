@@ -2,7 +2,6 @@
 
 import "./globals.css";
 import ConfigureAmplifyClientSide from "@/app/home/components/ConfigureAmplify";
-import "@aws-amplify/ui-react/styles.css";
 import { ConfigureAwsRum } from "@/app/home/components/ConfigureAwsRum";
 
 export const ClientSideDependencies = () => {
