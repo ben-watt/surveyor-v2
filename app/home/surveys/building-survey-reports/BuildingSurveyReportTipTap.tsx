@@ -603,8 +603,8 @@ decreasing, or indeed increasing, the amount of moisture to be drawn from the ce
 expand, as well as negatively affecting drainage causing subsidence. The risk posed is subject to the following:
 * Proximity of the tree * the height, age and species of the tree *the design and depth of the building's foundations *the type
 of sub-soil
-A mature tree is present in the rear garden, located close to the raised patio. The tree could be contrubiting to the movement
-observed to the wall. However, there was no evidence to suggest that this is causing any structural issues to the property.`}
+A mature tree is present in the rear garden, located close to the raised patio. The tree could be contributing to the movement
+observed in the wall. However, there was no evidence to suggest that this is causing any structural issues to the property.`}
         />
         <RiskRow
           id={"flood-risk"}
@@ -810,7 +810,7 @@ Board's website. We have not undertaken any separate inquiries with the relevant
         <p>Important Note:</p>
         <p></p>
         <p style={{ textAlign: "justify" }}>
-          We carry out a desk-top study and make oral enquiries for information
+          We carry out a desktop study and make oral enquiries for information
           about matters affecting the property. We carefully and thoroughly
           inspect the property using our best endeavours to see as much of it as
           is physically accessible. Where this is not possible an explanation
@@ -961,7 +961,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                   <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
                   {mc.costings.map(c => 
                     <p key={c.description}>
-                      <strong>{c.cost}</strong> + " " + <span>({c.description})</span>
+                      <strong>£{c.cost}</strong>{" "}<span>({c.description})</span>
                     </p>
                   )}
                   {mc.costings.length === 0 && (<p>N/A</p>)}

@@ -148,8 +148,8 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             minFiles={1}
             maxFiles={1}
             features={{
-              archive: true,
-              metadata: true
+              archive: false,
+              metadata: false
             }}
             rhfProps={{
               name: 'moneyShot',
