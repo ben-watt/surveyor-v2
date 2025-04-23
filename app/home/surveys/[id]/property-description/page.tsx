@@ -80,10 +80,6 @@ const PropertyDescriptionForm = ({
   const { register, handleSubmit, control, reset } = methods;
   const router = useRouter();
 
-  useEffect(() => {
-    reset(initValues);
-  }, [initValues, reset]);
-
   const onValidSubmit: SubmitHandler<PropertyDescription> = async (data) => {
     await surveyStore.update(id, (currentState) => {
       currentState.propertyDescription = {
