@@ -86,7 +86,7 @@ function Home(props: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     async function loadPhotos() {
       if (!survey) return [];
-      const allPhotos = getAllSurveyImages(survey).slice(0, 5);
+      const allPhotos = getAllSurveyImages(survey);
       setPhotoCount(allPhotos.length);
 
       const photos = allPhotos.slice(0, 5);
