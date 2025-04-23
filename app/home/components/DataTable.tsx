@@ -2,7 +2,6 @@ import {
   Column,
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
   flexRender,
   VisibilityState,
   getCoreRowModel,
@@ -22,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
+import React from "react";
 import { ArrowUpDown, PlusIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -36,7 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type DataTableProps<TData> = {
   initialState?: InitialTableState;
-  columns: ColumnDef<TData>[];
+  columns: ColumnDef<TData, any>[];
   data: TData[];
   asyncData?: Promise<TData[]>;
   isLoading?: boolean;
@@ -128,7 +127,7 @@ export function DataTable<TData>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className={header.column.columnDef.meta?.tw.headerClassName}>
+                    <TableHead key={header.id} className={(header.column.columnDef.meta as any)?.tw.headerClassName}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -151,7 +150,7 @@ export function DataTable<TData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={cell.column.columnDef.meta?.tw.cellClassName}
+                      className={(cell.column.columnDef.meta as any)?.tw.cellClassName}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
