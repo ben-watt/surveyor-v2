@@ -5,11 +5,12 @@ interface AppIconProps {
 export function AppIcon({ color = "black" }: AppIconProps) {
   return (
     <svg
-      width="227"
-      height="287"
+      width="100%"
+      height="100%"
       viewBox="0 0 227 287"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid meet"
     >
       <g filter="url(#filter0_i_3_12)">
         <path
