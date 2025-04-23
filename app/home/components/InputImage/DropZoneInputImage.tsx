@@ -167,7 +167,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [archivedFiles, setArchivedFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { isUploading } = useImageUploadStatus([props.path]);
   const features = props.features ?? { archive: false, metadata: false };
 
   const resizeImage = useCallback((file: File): Promise<File> => {
@@ -248,18 +247,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   }, [props.path]);
 
   const { getRootProps, getInputProps } = useDropzone({
-    accept: {
-      "image/*": [
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".bmp",
-        ".tiff",
-        ".ico",
-        ".webp",
-      ],
-    },
     maxFiles: props.maxFiles,
     onDrop: async (acceptedFiles: FileWithPath[]) => {
       const processedFiles = await Promise.all(
