@@ -14,12 +14,16 @@ import { imageUploadStore } from "./clients/ImageUploadStore";
 import { OnlineStatus } from "./components/OnlineStatus";
 import { SyncStatus } from "./components/SyncStatus";
 import { TenantProvider } from "./utils/TenantContext";
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     // Start periodic sync for all tables (every 30 seconds)
     const cleanupFns = [
@@ -44,14 +48,26 @@ export default function RootLayout({
 
     window.addEventListener('online', handleOnline);
 
+    // Set loading to false after a short delay to ensure auth is initialized
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+
     return () => {
       cleanupFns.forEach(cleanup => cleanup());
       window.removeEventListener('online', handleOnline);
+      clearTimeout(timer);
     };
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
   return (
-    <>
+    <Authenticator>
       <DynamicDrawerProvider>
         <TooltipProvider>
           <TenantProvider>
@@ -90,6 +106,6 @@ export default function RootLayout({
           <Toaster position="top-right" />
         </TooltipProvider>
       </DynamicDrawerProvider>
-    </>
+    </Authenticator>
   );
 }

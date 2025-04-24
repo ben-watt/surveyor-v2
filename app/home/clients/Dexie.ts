@@ -102,7 +102,6 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     const [hydrated, setHydrated] = useState<boolean>(false);
     const [tenantId, setTenantId] = useState<string | null>(null);
 
-    // Get current tenant ID
     useState(() => {
       getCurrentTenantId().then(setTenantId);
     });

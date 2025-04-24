@@ -15,7 +15,7 @@ interface PhotoGalleryProps {
 
 interface PhotoSection {
   name: string;
-  photos: { url: string }[];
+  photos: { url: string; isArchived: boolean }[];
 }
 
 function PhotoGallery(props: PhotoGalleryProps) {
@@ -51,7 +51,15 @@ function PhotoGallery(props: PhotoGalleryProps) {
             if (!file.path) return null;
             
             const result = await imageUploadStore.get(file.path);
-            return { url: result.unwrap().href };
+            if (result.err) {
+              console.error("[PhotoGallery] moneyShot", result.err);
+              return null;
+            }
+
+            return { 
+              url: result.unwrap().href,
+              isArchived: file.isArchived || false
+            };
           })
         );
 
@@ -63,11 +71,19 @@ function PhotoGallery(props: PhotoGalleryProps) {
 
       // Load front elevation images
       if (survey.reportDetails?.frontElevationImagesUri?.length) {
+        console.log("[PhotoGallery] frontElevationImagesUri", survey.reportDetails.frontElevationImagesUri);
         const urls = await Promise.all(
           survey.reportDetails.frontElevationImagesUri.map(async (file) => {
             if (!file.path) return null;
             const result = await imageUploadStore.get(file.path);
-            return { url: result.unwrap().href };
+            if (result.err) {
+              console.error("[PhotoGallery] frontElevationImagesUri", result.err);
+              return null;
+            }
+            return { 
+              url: result.unwrap().href,
+              isArchived: file.isArchived || false
+            };
           })
         );
 
@@ -83,11 +99,13 @@ function PhotoGallery(props: PhotoGalleryProps) {
           for (const elementSection of section.elementSections || []) {
             if (elementSection.images?.length) {
               const urls = await getImagesFromStore(elementSection.images);
-              
               console.log("[PhotoGallery] getImagesFromStore", elementSection.name, urls);
               sections.push({
                 name: elementSection.name,
-                photos: urls.map((url) => ({ url })),
+                photos: urls.map((url) => ({ 
+                  url,
+                  isArchived: false // Component images don't have archive status
+                })),
               });
             }
 
@@ -96,7 +114,10 @@ function PhotoGallery(props: PhotoGalleryProps) {
                 const urls = await getImagesFromStore(component.images);
                 sections.push({
                   name: `${elementSection.name} - ${component.name}`,
-                  photos: urls.map((url) => ({ url })),
+                  photos: urls.map((url) => ({ 
+                    url,
+                    isArchived: false // Component images don't have archive status
+                  })),
                 });
               }
             }
@@ -152,17 +173,15 @@ function PhotoGallery(props: PhotoGalleryProps) {
               {section.photos.map((photo, photoIndex) => (
                 <div
                   key={photoIndex}
-                  className="relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-gray-800"
+                  className={`relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-gray-800 ${photo.isArchived ? 'grayscale' : ''}`}
                 >
                   <Image
                     src={photo.url}
                     alt={`${section.name} photo ${photoIndex + 1}`}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                    className="object-cover hover:scale-105 transition-transform duration-300"
-                    loading={
-                      sectionIndex === 0 && photoIndex < 6 ? "eager" : "lazy"
-                    }
+                    className={`object-cover hover:scale-105 transition-transform duration-300 ${photo.isArchived ? 'grayscale' : ''}`}
+                    loading={sectionIndex === 0 && photoIndex < 6 ? "eager" : "lazy"}
                     quality={75}
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy02Mi85OEI2PTZFOT5ZXVlZfG1+fW6Ghn6QjpCOd3p3gHj/2wBDARUXFx4eHR8fHXhwLicucHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHD/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="

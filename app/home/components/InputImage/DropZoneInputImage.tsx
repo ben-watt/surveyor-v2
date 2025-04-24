@@ -14,9 +14,7 @@ interface DropZoneInputImageProps {
   minFiles?: number;
   onChange?: (filePaths: DropZoneInputFile[]) => void;
   features?: {
-    /** Whether to enable the archive functionality. Defaults to true */
     archive?: boolean;
-    /** Whether to enable the metadata functionality. Defaults to true */
     metadata?: boolean;
   };
 }
@@ -303,7 +301,8 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     const filePath = join(props.path, file.name);
     try {
       await imageUploadStore.archive(filePath);
-      setFiles(files.filter((f) => f !== file));
+      // Mark file as archived
+      setFiles(files.map((f) => f === file ? { ...f, isArchived: true } : f));
       setArchivedFiles((prev) => [...prev, { ...file, isArchived: true, preview: "", hasMetadata: false }]);
       props.onChange?.(files.filter((f) => f !== file));
     } catch (error) {
@@ -319,10 +318,12 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     );
   }
 
+  const activeFiles = files.filter((f) => !f.isArchived);
+
   return (
     <section className="container border border-gray-300 rounded-md p-4 bg-gray-100">
       <div {...getRootProps({ className: "dropzone" })}>
-        {props.maxFiles !== files.length && (
+        {props.maxFiles !== activeFiles.length && (
           <div className="flex flex-col items-center justify-center">
             <input {...getInputProps()} />
             <p className="text-sm text-gray-500 m-2">
@@ -340,7 +341,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               : "flex flex-wrap gap-2 justify-center"
           }`}
         >
-          {files.map((file: DropZoneInputFile) => (
+          {activeFiles.map((file: DropZoneInputFile) => (
             <Thumbnail
               key={file.name}
               file={file}
