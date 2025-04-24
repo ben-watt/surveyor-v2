@@ -11,7 +11,7 @@ import { surveyStore } from "@/app/home/clients/Database";
 import { BuildingSurveyListCard } from "./SurveyListCard";
 import { Input } from "@/components/ui/input";
 import React from "react";
-import { ListFilter, Plus, ClipboardList, Search } from "lucide-react";
+import { ListFilter, Plus, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,7 +85,12 @@ function HomePage() {
     <div>
       <div className="flex justify-between mb-5 mt-5 items-end">
         <div>
-          <h1 className="text-3xl font-bold dark:text-white">Surveys</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold dark:text-white">Surveys</h1>
+            <Badge variant="outline" className="text-sm">
+              {data.length} total
+            </Badge>
+          </div>
           <p className="text-sm text-muted-foreground">
             Surveys are used to generate reports for building inspections.
           </p>
@@ -139,11 +144,15 @@ function HomePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredData.length > 0 ? (
+        {!isHydrated ? (
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+            <Loader2 className="h-10 w-10 animate-spin" />
+          </div>
+        ) : filteredData.length > 0 ? (
           filteredData.map((x) => (
             <BuildingSurveyListCard
               key={x.id}
-              survey={x}
+              survey={x}    
               onView={() => router.push(`/home/surveys/${x.id}`)}
             />
           ))

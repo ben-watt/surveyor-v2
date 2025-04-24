@@ -118,6 +118,7 @@ const createDefaultFormValues = (
       inspectionDate: new Date(),
       weather: "",
       orientation: "",
+      
       situation: "",
       moneyShot: [],
       frontElevationImagesUri: [],

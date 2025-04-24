@@ -83,7 +83,6 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   const table = db.table<T>(tableName);
   let syncInProgress = false;
   
-  // Create a debounced version of syncWithServer
   const sync = async () => {
     if (navigator.onLine && !syncInProgress) {
       const syncResult = await syncWithServer();
@@ -91,6 +90,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
         return Ok(undefined);
       }
 
+      console.error("[sync] Error syncing with server", syncResult.val);
       return Err(new Error(syncResult.val.message));
     }
 
@@ -104,31 +104,25 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     const [tenantId, setTenantId] = useState<string | null>(null);
     const [authReady, setAuthReady] = useState(false);
 
-    // Check auth state
     useEffect(() => {
-      let mounted = true;
-
       const checkAuth = async () => {
         try {
-          await getCurrentUser();
-          if (mounted) {
+          const user = await getCurrentUser();
+          if (user) {
             setAuthReady(true);
           }
         } catch (error) {
-          if (mounted) {
-            setAuthReady(true); // Still set to true as auth might be ready but no user
-          }
+          setAuthReady(false);
         }
       };
 
-      checkAuth();
+      const timeout = setTimeout(() => {
+        checkAuth();
+      }, 200);
 
-      return () => {
-        mounted = false;
-      };
+      return () => clearTimeout(timeout);
     }, []);
 
-    // Get tenant ID
     useEffect(() => {
       if (authReady) {
         getCurrentTenantId().then(setTenantId);
