@@ -10,7 +10,12 @@ type ConnectionStatus = 'online' | 'offline' | 'poor';
 
 export const OnlineStatus = () => {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('online');
-  const [isManuallyOffline, setIsManuallyOffline] = useState(false);
+  const [isManuallyOffline, setIsManuallyOffline] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('isManuallyOffline') === 'true';
+    }
+    return false;
+  });
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -108,8 +113,11 @@ export const OnlineStatus = () => {
   };
 
   const toggleOfflineMode = () => {
-    setIsManuallyOffline(!isManuallyOffline);
-    setConnectionStatus(!isManuallyOffline ? 'offline' : (navigator.onLine ? 'online' : 'offline'));
+    const newOfflineMode = !isManuallyOffline;
+    setIsManuallyOffline(newOfflineMode);
+    // Persist the setting in localStorage
+    localStorage.setItem('isManuallyOffline', String(newOfflineMode));
+    setConnectionStatus(newOfflineMode ? 'offline' : (navigator.onLine ? 'online' : 'offline'));
   };
 
   return (
