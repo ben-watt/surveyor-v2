@@ -20,8 +20,8 @@ export default function EditSectionPage(props: EditSectionPageProps) {
     return <div>Loading...</div>;
   }
 
-  if (!section) {
-    notFound();
+  if (isHydrated && !section) {
+    return <div>Section not found with an id '{params.id}'</div>;
   }
 
   return (

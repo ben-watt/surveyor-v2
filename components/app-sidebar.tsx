@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import {
   Award,
@@ -111,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <span className="truncate font-semibold">
                       Survii - {loading ? <Skeleton className="h-4 w-24" /> : currentTenant?.name || "Personal"}
                     </span>
-                    <span className="truncate text-xs">v0.0.1</span>
+                    <span className="truncate text-xs">{process.env.NEXT_PUBLIC_APP_VERSION}</span>
                   </div>
                   <ChevronDown className="ml-auto h-4 w-4" />
                 </SidebarMenuButton>

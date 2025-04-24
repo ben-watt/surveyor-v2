@@ -149,7 +149,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       [tenantId, authReady]
     );
 
-    return [hydrated && authReady, data ?? []];
+    return [hydrated && authReady && tenantId !== null, data ?? []];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
@@ -200,7 +200,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       [id, tenantId, authReady]
     );
     
-    return [result !== undefined && authReady, result?.value];
+    return [result !== undefined && authReady && tenantId !== null, result?.value];
   };
 
   const syncWithServer = async (): Promise<Result<void, Error>> => {

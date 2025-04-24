@@ -27,9 +27,13 @@ export function BuildingSurveyListCard({
   const [image, setImage] = useState<string>();
 
   useEffect(() => {
-    imageUploadStore.get(survey.reportDetails?.moneyShot[0].path).then((image) => {
+    if (!survey.reportDetails?.moneyShot || survey.reportDetails.moneyShot.length === 0) {
+      return;
+    }
+
+    imageUploadStore.get(survey.reportDetails.moneyShot[0].path).then((image) => {
       if (image.ok) {
-        setImage(image.val.href);
+        setImage(image.unwrap().href);
       }
     });
   }, [survey.reportDetails?.moneyShot]);
