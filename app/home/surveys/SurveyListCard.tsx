@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { surveyStore } from "../clients/Database";
 import { toast } from "react-hot-toast";
+import { useUserAttributes } from "../utils/useUser";
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData;
@@ -26,6 +27,7 @@ export function BuildingSurveyListCard({
   onView,
 }: BuildingSurveyListCardProps) {
   const [image, setImage] = useState<string>();
+  const [isUserHydrated, user] = useUserAttributes();
 
   useEffect(() => {
     if (!survey.reportDetails?.moneyShot || survey.reportDetails.moneyShot.length === 0) {
@@ -41,6 +43,16 @@ export function BuildingSurveyListCard({
 
   const handleDelete = async () => {
     try {
+      if (!isUserHydrated || !user) {
+        toast.error("You are not authorized to delete this survey");
+        return;
+      }
+
+      if (user.sub !== survey.owner?.id) {
+        toast.error("You are not authorized to delete this survey");
+        return;
+      }
+
       await surveyStore.remove(survey.id);
     } catch (error) {
       toast.error("Failed to delete survey, please try again later");

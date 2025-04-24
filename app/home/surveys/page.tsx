@@ -25,6 +25,7 @@ import { EmptyState } from "./components/EmptyState";
 
 interface FilterState {
   status: string[];
+  owner: string[];
 }
 
 function HomePage() {
@@ -34,6 +35,7 @@ function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     status: [],
+    owner: [],
   });
 
   // Get unique status values from data
@@ -42,7 +44,13 @@ function HomePage() {
     return Array.from(statuses).filter(Boolean);
   }, [data]);
 
-  const activeFilterCount = filters.status.length;
+  // Get unique owner values from data
+  const availableOwners = React.useMemo(() => {
+    const owners = new Set(data.map(survey => survey.owner?.name).filter(Boolean));
+    return Array.from(owners);
+  }, [data]);
+
+  const activeFilterCount = filters.status.length + filters.owner.length;
 
   const filteredData = React.useMemo(() => {
     let filtered = data;
@@ -50,6 +58,16 @@ function HomePage() {
     // Apply status filters
     if (filters.status.length > 0) {
       filtered = filtered.filter(survey => filters.status.includes(survey.status || ''));
+    }
+
+    // Apply owner filters
+    if (filters.owner.length > 0) {
+      filtered = filtered.filter(survey => {
+        if (filters.owner.includes('My Surveys')) {
+          return survey.owner?.name === 'Current User'; // Replace with actual current user check
+        }
+        return filters.owner.includes(survey.owner?.name || '');
+      });
     }
 
     // Apply search query
@@ -74,6 +92,15 @@ function HomePage() {
       status: prev.status.includes(status)
         ? prev.status.filter(s => s !== status)
         : [...prev.status, status]
+    }));
+  };
+
+  const toggleOwnerFilter = (owner: string) => {
+    setFilters(prev => ({
+      ...prev,
+      owner: prev.owner.includes(owner)
+        ? prev.owner.filter(o => o !== owner)
+        : [...prev.owner, owner]
     }));
   };
 
@@ -130,6 +157,25 @@ function HomePage() {
                 {status}
               </DropdownMenuCheckboxItem>
             ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Filter by Owner</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              key="my-surveys"
+              checked={filters.owner.includes('My Surveys')}
+              onCheckedChange={() => toggleOwnerFilter('My Surveys')}
+            >
+              My Surveys
+            </DropdownMenuCheckboxItem>
+            {availableOwners.map((owner) => (
+              <DropdownMenuCheckboxItem
+                key={owner}
+                checked={filters.owner.includes(owner)}
+                onCheckedChange={() => toggleOwnerFilter(owner)}
+              >
+                {owner}
+              </DropdownMenuCheckboxItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
         <Button
@@ -159,7 +205,7 @@ function HomePage() {
         ) : (
           <EmptyState 
             searchQuery={searchQuery} 
-            hasFilters={filters.status.length > 0} 
+            hasFilters={filters.status.length > 0 || filters.owner.length > 0} 
           />
         )}
       </div>
