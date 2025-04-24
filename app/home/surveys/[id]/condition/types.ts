@@ -1,4 +1,4 @@
-import { Costing, RagStatus } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { Costing, RagStatus, SurveyImage } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 
 export type FormPhrase = {
   id: string;
@@ -24,7 +24,7 @@ export type InspectionFormData = {
   nameOverride: string;
   useNameOverride: boolean;
   additionalDescription: string;
-  images: string[];
+  images: SurveyImage[];
   ragStatus: RagStatus;
   conditions: FormPhrase[];
   costings: Costing[];

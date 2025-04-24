@@ -1,4 +1,4 @@
-import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus } from "./BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus, SurveyImage } from "./BuildingSurveyReportSchema";
 
 // Find or create a section
 function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
@@ -57,7 +57,7 @@ export function addOrUpdateComponent(
     useNameOverride?: boolean,
     location?: string,
     additionalDescription?: string,
-    images?: string[],
+    images?: SurveyImage[],
     conditions?: Phrase[],
     ragStatus?: RagStatus,
     costings?: Costing[],
@@ -211,26 +211,26 @@ export function toggleElementSection(
 
 
 // Get all images from a survey
-export function getAllSurveyImages(survey: BuildingSurveyFormData): string[] {
-    const allImages: string[] = [];
+export function getAllSurveyImages(survey: BuildingSurveyFormData): {path: string, isArchived: boolean}[] {
+    const allImages: {path: string, isArchived: boolean}[] = [];
 
     survey.reportDetails?.moneyShot?.forEach(image => {
-        allImages.push(image.path);
+        allImages.push({path: image.path, isArchived: image.isArchived});
     });
 
     survey.reportDetails?.frontElevationImagesUri?.forEach(image => {
-        allImages.push(image.path);
+        allImages.push({path: image.path, isArchived: image.isArchived});
     });
 
     survey.sections.forEach(section => {
         section.elementSections.forEach(elementSection => {
             if (elementSection.images) {
-                allImages.push(...elementSection.images);
+                allImages.push(...elementSection.images.map(x => ({path: x.path, isArchived: x.isArchived})));
             }
 
             elementSection.components.forEach(component => {
                 if (component.images) {
-                    allImages.push(...component.images);
+                    allImages.push(...component.images.map(x => ({path: x.path, isArchived: x.isArchived})));
                 }
             });
         });

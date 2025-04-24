@@ -87,12 +87,12 @@ function Home(props: { params: Promise<{ id: string }> }) {
     async function loadPhotos() {
       if (!survey) return [];
       const allPhotos = getAllSurveyImages(survey);
-      setPhotoCount(allPhotos.length);
+      setPhotoCount(allPhotos.filter(x => !x.isArchived).length);
 
       const photos = allPhotos.slice(0, 5);
 
       const result = await Promise.all(photos.filter(Boolean).map(async x => {
-        const url = await imageUploadStore.get(x);
+        const url = await imageUploadStore.get(x.path);
         return url;
       }));
 

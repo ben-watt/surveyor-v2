@@ -2,7 +2,7 @@ import React, { useEffect, memo } from "react";
 import { useForm, FormProvider, FieldErrors } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/home/components/FormSection";
-import { ElementSection, FormStatus, SurveySection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { ElementSection, FormStatus, SurveyImage, SurveySection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -64,7 +64,7 @@ AddComponentButton.displayName = 'AddComponentButton';
 
 type ElementFormData = {
   description: string;
-  images: string[];
+  images: SurveyImage[];
 }
 
 interface ElementFormProps {

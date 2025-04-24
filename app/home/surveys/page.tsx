@@ -11,7 +11,7 @@ import { surveyStore } from "@/app/home/clients/Database";
 import { BuildingSurveyListCard } from "./SurveyListCard";
 import { Input } from "@/components/ui/input";
 import React from "react";
-import { Filter, ListFilter, Plus } from "lucide-react";
+import { ListFilter, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

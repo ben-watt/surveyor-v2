@@ -70,6 +70,12 @@ export const parseFormattedAddress = (formatted: string): Partial<Address> => {
     };
 }
 
+export type SurveyImage = {
+    path: string,
+    isArchived: boolean,
+    hasMetadata: boolean,
+}
+
 export type ReportDetails = {
     level: "2" | "3"
     address: Address,
@@ -79,8 +85,8 @@ export type ReportDetails = {
     weather: string,
     orientation: string,
     situation: string,
-    moneyShot: { path: string, isArchived: boolean, hasMetadata: boolean }[],
-    frontElevationImagesUri: { path: string, isArchived: boolean, hasMetadata: boolean }[],
+    moneyShot: SurveyImage[],
+    frontElevationImagesUri: SurveyImage[],
     status: FormSectionStatus
 }
 
@@ -141,7 +147,7 @@ export type ElementSection = {
     isPartOfSurvey: boolean,
     description: string,
     components: Inspection[],
-    images: string[],
+    images: SurveyImage[],
     status: FormSectionStatus
 }
 
@@ -155,7 +161,7 @@ export type Inspection = {
     nameOverride: string,
     location: string,
     additionalDescription: string,
-    images: string[],
+    images: SurveyImage[],
     costings: Costing[],
 }
 

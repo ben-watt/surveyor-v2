@@ -161,7 +161,6 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps
 
 export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
-  const [archivedFiles, setArchivedFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const features = props.features ?? { archive: false, metadata: false };
 
@@ -196,6 +195,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     const loadExistingFiles = async () => {
       try {
         const result = await imageUploadStore.list(props.path);
+        console.debug("[DropZoneInputImage] loadExistingFiles", result);
         if (result.ok) {
           const existingFiles = await Promise.all(
             result.val.map(async (item) => {
@@ -221,15 +221,10 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           );
           
           const validFiles = existingFiles.filter(
-            (file): file is DropZoneInputFile => file !== null && !file.isArchived
-          );
-
-          const archivedFiles = existingFiles.filter(
-            (file): file is DropZoneInputFile => file !== null && file.isArchived
+            (file): file is DropZoneInputFile => file !== null
           );
 
           setFiles(validFiles);
-          setArchivedFiles(archivedFiles);
           props.onChange?.(validFiles);
         }
       } catch (error) {
@@ -251,7 +246,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           const resizedFile = await resizeImage(file);
           return Object.assign(resizedFile, {
             preview: URL.createObjectURL(resizedFile),
-            path: file.path,
+            path: join(props.path, file.name),
             isArchived: false,
             hasMetadata: false
           }) as DropZoneInputFile;
@@ -303,7 +298,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       await imageUploadStore.archive(filePath);
       // Mark file as archived
       setFiles(files.map((f) => f === file ? { ...f, isArchived: true } : f));
-      setArchivedFiles((prev) => [...prev, { ...file, isArchived: true, preview: "", hasMetadata: false }]);
       props.onChange?.(files.filter((f) => f !== file));
     } catch (error) {
       console.error("Error archiving file:", error);
@@ -319,6 +313,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   }
 
   const activeFiles = files.filter((f) => !f.isArchived);
+  const archivedFiles = files.filter((f) => f.isArchived);
 
   return (
     <section className="container border border-gray-300 rounded-md p-4 bg-gray-100">
