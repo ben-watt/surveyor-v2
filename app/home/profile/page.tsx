@@ -2,7 +2,6 @@
 
 import {
   fetchUserAttributes,
-  FetchUserAttributesOutput,
   updateUserAttribute,
   type UpdateUserAttributeOutput,
 } from "aws-amplify/auth";
@@ -20,7 +19,7 @@ type ProfileFormData = {
   picture: string;
   sub: string;
   email: string;
-}
+};
 
 function Page() {
   const methods = useForm<ProfileFormData>();
@@ -42,14 +41,17 @@ function Page() {
   }, [reset]);
 
   async function handleUpdateUserAttribute(form: FieldValues) {
-    setEnableForm(false);    
-    async function handleUpdateUserAttribute(attributeKey: string, value: string) {
+    setEnableForm(false);
+    async function handleUpdateUserAttribute(
+      attributeKey: string,
+      value: string
+    ) {
       try {
         const output = await updateUserAttribute({
           userAttribute: {
             attributeKey,
-            value
-          }
+            value,
+          },
         });
         handleUpdateUserAttributeNextSteps(output);
       } catch (error) {
@@ -57,19 +59,21 @@ function Page() {
       }
     }
 
-    Object.keys(form).filter(k => (k !== "email" && k !== "sub")).forEach(async (k) => {
-      try {
-        if(k === "profile" || k === "picture") {
-          console.log(form[k]);
-          form[k] = form[k][0];
-        }
+    Object.keys(form)
+      .filter((k) => k !== "email" && k !== "sub")
+      .forEach(async (k) => {
+        try {
+          if (k === "profile" || k === "picture") {
+            console.log(form[k]);
+            form[k] = form[k][0];
+          }
 
-        handleUpdateUserAttribute(k, form[k]);
-        setEnableForm(true);
-      } catch (error) {
-        console.log(error);
-      }
-    });
+          handleUpdateUserAttribute(k, form[k]);
+          setEnableForm(true);
+        } catch (error) {
+          console.log(error);
+        }
+      });
   }
 
   function handleUpdateUserAttributeNextSteps(
@@ -93,7 +97,7 @@ function Page() {
 
   const sub = watch("sub");
 
-  if(!enableForm) {
+  if (!enableForm) {
     return <div>Loading...</div>;
   }
 
@@ -121,28 +125,39 @@ function Page() {
               labelTitle="Name"
               placeholder="Enter your name"
             />
-            <InputText
-              register={() => register("nickname", { required: true })}
-              labelTitle="Signature Text"
-              placeholder="Enter you signed name"
-            />
+
             <RhfDropZoneInputImage
               path={`profile/${sub}/profilePicture/`}
-              rhfProps={{ name: "profile", rules: { required: "Profile picture is required" } }}
+              rhfProps={{
+                name: "profile",
+                rules: { required: "Profile picture is required" },
+              }}
               labelText="Profile Picture"
               maxFiles={1}
               minFiles={1}
             />
+
             <RhfDropZoneInputImage
               path={`profile/${sub}/signatureImage/`}
-              rhfProps={{ name: "picture", rules: { required: "Signature image is required" } }}
+              rhfProps={{
+                name: "picture",
+                rules: { required: "Signature image is required" },
+              }}
               labelText="Signature Image"
               maxFiles={1}
               minFiles={1}
             />
-            <SaveButtonWithUploadStatus 
+            <InputText
+              register={() => register("nickname", { required: true })}
+              labelTitle="Signature Text"
+              placeholder="Enter your signature text"
+            />
+            <SaveButtonWithUploadStatus
               isSubmitting={!enableForm}
-              paths={[`profile/${sub}/profilePicture/`, `profile/${sub}/signatureImage/`]}
+              paths={[
+                `profile/${sub}/profilePicture/`,
+                `profile/${sub}/signatureImage/`,
+              ]}
               buttonText="Update"
             />
           </div>
@@ -152,4 +167,4 @@ function Page() {
   );
 }
 
-export default Page; 
+export default Page;

@@ -59,14 +59,6 @@ const createDefaultFormValues = (
   dbElements: Element[],
   user: { sub?: string; name?: string; email?: string; picture?: string }
 ): Result<BuildingSurveyForm, Error> => {
-  if (!user.sub || !user.name || !user.email || !user.picture) {
-    toast(
-      "Your profile is missing some information. Please check you've added all your profile information."
-    );
-    console.error(user);
-    return Err(new Error("Missing user information"));
-  }
-
   // Sort sections by order
   const orderedSections = [...dbSections].sort(
     (a, b) => (a.order || 0) - (b.order || 0)
@@ -101,9 +93,9 @@ const createDefaultFormValues = (
     id: id,
     status: "draft",
     owner: {
-      id: user.sub,
-      name: user.name,
-      email: user.email,
+      id: user.sub || "",
+      name: user.name || "",
+      email: user.email || "",
       signaturePath: user.picture ? [user.picture] : [],
     },
     reportDetails: {
@@ -275,6 +267,14 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
         const user = await fetchUserAttributes();
         if (!sectionsHydrated || !elementsHydrated) {
           console.log("[ReportWrapper] waiting for data to hydrate");
+          return;
+        }
+
+        if (!user.sub || !user.name || !user.email || !user.picture) {
+          toast(
+            "Your profile is missing some information. Please check you've added all your profile information before creating a survey."
+          );
+          router.push("/home/profile");
           return;
         }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, Suspense, useEffect, useState, use } from "react";
+import React, { Suspense, useEffect, useState, use } from "react";
 import BuildingSurveyForm from "../building-survey-reports/BuildingSurveyForm";
 import Link from "next/link";
 import { LayoutGrid } from "lucide-react";
