@@ -64,7 +64,7 @@ export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
 }
 
 export interface DexieStore<T, TCreate> {
-  useList: () => [boolean, T[]];
+  useList: () => [boolean, T[]];  
   useGet: (id: string) => [boolean, T | undefined];
   add: (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt" | "tenantId">) => Promise<void>;
   get: (id: string) => Promise<T | null>;
@@ -132,6 +132,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     const data = useLiveQuery(
       async () => {
         if (!authReady || !tenantId) return [];
+        console.debug("[useList] Getting data", tenantId, authReady);
         const items = await table
           .where('syncStatus')
           .notEqual(SyncStatus.PendingDelete)
@@ -210,8 +211,6 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
         return Ok(undefined);
       }
 
-      // Default sync implementation
-      // Handle pending deletes first
       const pendingDeletes = await table
         .where('syncStatus')
         .equals(SyncStatus.PendingDelete)
@@ -225,7 +224,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
           } else {
             await table.put({
               ...item,
-              syncStatus: SyncStatus.Failed,
+              syncStatus: SyncStatus.PendingDelete,
               syncError: deleteResult.val.message,
               updatedAt: new Date().toISOString(),
             });
@@ -234,7 +233,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
           console.error(`[syncWithServer] Failed to delete item ${item.id}:`, error);
           await table.put({
             ...item,
-            syncStatus: SyncStatus.Failed,
+            syncStatus: SyncStatus.PendingDelete,
             syncError: error instanceof Error ? error.message : "Failed to delete item",
             updatedAt: new Date().toISOString(),
           });
@@ -243,6 +242,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
       // Then sync with remote
       const remoteDataResult = await remoteHandlers.list();
+
       let remoteData: T[];
       if (remoteDataResult instanceof Ok) {
         remoteData = remoteDataResult.val;
@@ -255,18 +255,36 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
       for (const remote of remoteData) {
         const tenantId = await getCurrentTenantId();
         const local = await table.get([remote.id, tenantId]);
-        if (!local || 
-            (local.syncStatus !== SyncStatus.PendingDelete && 
-             new Date(remote.updatedAt) > new Date(local.updatedAt))) {
+
+        if(!local) {
+          console.debug("[syncWithServer] Local item not found, creating...", remote);
+          await table.add({ ...remote, syncStatus: SyncStatus.Queued });
+          continue;
+        }
+        
+        if(local?.syncStatus === SyncStatus.PendingDelete) {
+          console.debug("[syncWithServer] Skipping pending delete", remote);
+          continue;
+        }
+
+        if(new Date(remote.updatedAt) > new Date(local.updatedAt)) {
+          console.debug("[syncWithServer] Found newer version on server, updating local version...", remote);
           await table.put({ ...remote, syncStatus: SyncStatus.Synced });
+          continue;
         }
       }
 
-      // Handle local changes
-      const allLocal = await table.toArray();
-      for (const local of allLocal) {
-        if (local.syncStatus === SyncStatus.Queued || local.syncStatus === SyncStatus.Failed) {
-          try {
+      const tenantId = await getCurrentTenantId();
+      const localRecords = await table.where('syncStatus')
+        .equals(SyncStatus.Queued)
+        .or('syncStatus')
+        .equals(SyncStatus.Failed)
+        .and(item => item.tenantId === tenantId)
+        .toArray();
+
+      for (const local of localRecords) {
+        console.log("[syncWithServer] Processing local record", local);
+        try {
             const exists = remoteData.find(r => r.id === local.id);
             if(exists) {
               console.log("[syncWithServer] Updating...", local);
@@ -301,7 +319,6 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
             console.log("[syncWithServer] Error...", error);
             await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.message });
           }
-        }
       }
 
       console.debug("[syncWithServer] Synced with server successfully"); 
@@ -366,11 +383,12 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
     if (local) {
       // Mark for deletion instead of deleting immediately
-      await table.put({
+      const result = await table.put({
         ...local,
         syncStatus: SyncStatus.PendingDelete,
         updatedAt: new Date().toISOString(),
       });
+      
       // Trigger sync asynchronously if online
       sync();
     } else {

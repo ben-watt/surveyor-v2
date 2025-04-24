@@ -77,7 +77,7 @@ const createSurveyStore = () => {
       },
       delete: async (id): Promise<Result<string, Error>> => {
         const tenantId = await getCurrentTenantId();
-        const response = await client.models.Surveys.delete({ id, tenantId: tenantId || "" });
+        const response = await client.models.Surveys.delete({ id, tenantId: tenantId || "" }, { authMode: 'userPool' });
         if (response.errors) {
           return Err(new Error(response.errors.map(e => e.message).join(", ")));
         }

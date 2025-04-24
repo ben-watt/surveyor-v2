@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { surveyStore } from "../clients/Database";
+import { toast } from "react-hot-toast";
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData;
@@ -42,13 +43,9 @@ export function BuildingSurveyListCard({
     try {
       await surveyStore.remove(survey.id);
     } catch (error) {
-      console.error("Failed to delete survey:", error);
+      toast.error("Failed to delete survey, please try again later");
     }
   };
-
-  if (!survey) {
-    return null;
-  }
 
   return (
     <Card className="overflow-hidden relative">
