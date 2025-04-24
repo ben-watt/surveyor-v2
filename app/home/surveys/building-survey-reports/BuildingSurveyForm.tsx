@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Zap } from "lucide-react";
 import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
+import useUser, { useUserAttributes } from "../../utils/useUser";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -256,6 +257,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
   const [isHydrated, report] = surveyStore.useGet(id);
   const [sectionsHydrated, dbSections] = sectionStore.useList();
   const [elementsHydrated, dbElements] = elementStore.useList();
+  const [isUserHydrated, user] = useUserAttributes();
   const router = useRouter();
   const throwError = useAsyncError();
 
@@ -265,11 +267,17 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
       const newId = uuidv4();
 
       try {
-        const user = await fetchUserAttributes();
         if (!sectionsHydrated || !elementsHydrated) {
           console.log("[ReportWrapper] waiting for data to hydrate");
           return;
         }
+
+        if (!isUserHydrated || !user) {
+          console.log("[ReportWrapper] waiting for user to hydrate");
+          return;
+        }
+
+        console.debug("[ReportWrapper] user", user);
 
         if (!user.sub || !user.name || !user.email || !user.picture) {
           toast(
@@ -285,6 +293,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
           dbElements,
           user
         );
+
         if (formResult.ok) {
           await surveyStore.add({
             id: newId,
@@ -317,6 +326,8 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
     elementsHydrated,
     dbSections,
     dbElements,
+    isUserHydrated,
+    user,
   ]);
 
   if (!sectionsHydrated || !elementsHydrated) {
