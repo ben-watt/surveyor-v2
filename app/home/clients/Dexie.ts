@@ -6,10 +6,11 @@ import { Draft, produce } from "immer";
 import { Err, Ok, Result } from 'ts-results';
 import { getErrorMessage } from '../utils/handleError';
 import { useLiveQuery } from "dexie-react-hooks";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { debounce, DebouncedFunc } from 'lodash';
 import { getCurrentTenantId } from '../utils/tenant-utils';
 import { ImageMetadata } from './Database';
+import { getCurrentUser } from 'aws-amplify/auth';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -101,14 +102,42 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
   const useList = (): [boolean, T[]] => {
     const [hydrated, setHydrated] = useState<boolean>(false);
     const [tenantId, setTenantId] = useState<string | null>(null);
+    const [authReady, setAuthReady] = useState(false);
 
-    useState(() => {
-      getCurrentTenantId().then(setTenantId);
-    });
+    // Check auth state
+    useEffect(() => {
+      let mounted = true;
+
+      const checkAuth = async () => {
+        try {
+          await getCurrentUser();
+          if (mounted) {
+            setAuthReady(true);
+          }
+        } catch (error) {
+          if (mounted) {
+            setAuthReady(true); // Still set to true as auth might be ready but no user
+          }
+        }
+      };
+
+      checkAuth();
+
+      return () => {
+        mounted = false;
+      };
+    }, []);
+
+    // Get tenant ID
+    useEffect(() => {
+      if (authReady) {
+        getCurrentTenantId().then(setTenantId);
+      }
+    }, [authReady]);
 
     const data = useLiveQuery(
       async () => {
-        if (!tenantId) return [];
+        if (!authReady || !tenantId) return [];
         const items = await table
           .where('syncStatus')
           .notEqual(SyncStatus.PendingDelete)
@@ -117,23 +146,50 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
         setHydrated(true);
         return items;
       },
-      [tenantId]
+      [tenantId, authReady]
     );
 
-    return [hydrated, data ?? []];
+    return [hydrated && authReady, data ?? []];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
     const [tenantId, setTenantId] = useState<string | null>(null);
+    const [authReady, setAuthReady] = useState(false);
 
-    // Get current tenant ID
-    useState(() => {
-      getCurrentTenantId().then(setTenantId);
-    });
+    // Check auth state
+    useEffect(() => {
+      let mounted = true;
+
+      const checkAuth = async () => {
+        try {
+          await getCurrentUser();
+          if (mounted) {
+            setAuthReady(true);
+          }
+        } catch (error) {
+          if (mounted) {
+            setAuthReady(true); // Still set to true as auth might be ready but no user
+          }
+        }
+      };
+
+      checkAuth();
+
+      return () => {
+        mounted = false;
+      };
+    }, []);
+
+    // Get tenant ID
+    useEffect(() => {
+      if (authReady) {
+        getCurrentTenantId().then(setTenantId);
+      }
+    }, [authReady]);
 
     const result = useLiveQuery(
       async () => {
-        if (!tenantId) return { value: undefined };
+        if (!authReady || !tenantId) return { value: undefined };
         const item = await table.get([id, tenantId]);
         return item && 
                item.syncStatus !== SyncStatus.PendingDelete && 
@@ -141,10 +197,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
           ? { value: item } 
           : { value: undefined };
       },
-      [id, tenantId]
+      [id, tenantId, authReady]
     );
     
-    return [result !== undefined, result?.value];
+    return [result !== undefined && authReady, result?.value];
   };
 
   const syncWithServer = async (): Promise<Result<void, Error>> => {

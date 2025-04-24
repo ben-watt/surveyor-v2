@@ -19,7 +19,7 @@ import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData } f
 import { getRawCounts } from "../clients/Database";
 import { withTenantId } from "../utils/tenant-utils";
 
-export default function Page() {
+function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [localOnly, setLocalOnly] = useState(false);
@@ -484,3 +484,5 @@ export default function Page() {
     </div>
   );
 }
+
+export default SettingsPage;
