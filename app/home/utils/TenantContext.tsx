@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { listUserTenants, getPreferredTenant, setPreferredTenant, Tenant } from "../utils/tenant-utils";
+import { useRouter } from "next/navigation";
 
 interface TenantContextType {
   currentTenant: Tenant | null;
@@ -19,6 +20,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Load tenants and set the current tenant
   const loadTenants = async () => {
@@ -60,11 +62,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const setCurrentTenant = async (tenant: Tenant | null) => {
     try {
       setCurrentTenantState(tenant);
-      if (tenant) {
-        await setPreferredTenant(tenant.name);
-      } else {
-        await setPreferredTenant("personal");
-      }
+      await setPreferredTenant(tenant ? tenant.name : "personal");
+      router.push("/home");
     } catch (err) {
       console.error("Error setting preferred tenant:", err);
       setError("Failed to set preferred tenant");
