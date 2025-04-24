@@ -11,7 +11,7 @@ import { surveyStore } from "@/app/home/clients/Database";
 import { BuildingSurveyListCard } from "./SurveyListCard";
 import { Input } from "@/components/ui/input";
 import React from "react";
-import { ListFilter, Plus } from "lucide-react";
+import { ListFilter, Plus, ClipboardList, Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "./components/EmptyState";
 
 interface FilterState {
   status: string[];
@@ -138,13 +139,20 @@ function HomePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredData.map((x) => (
-          <BuildingSurveyListCard
-            key={x.id}
-            survey={x}
-            onView={() => router.push(`/home/surveys/${x.id}`)}
+        {filteredData.length > 0 ? (
+          filteredData.map((x) => (
+            <BuildingSurveyListCard
+              key={x.id}
+              survey={x}
+              onView={() => router.push(`/home/surveys/${x.id}`)}
+            />
+          ))
+        ) : (
+          <EmptyState 
+            searchQuery={searchQuery} 
+            hasFilters={filters.status.length > 0} 
           />
-        ))}
+        )}
       </div>
     </div>
   );
