@@ -4,38 +4,49 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { getImageHref, getImagesHref } from "./image";
 import { imageMetadataStore } from "../../clients/Database";
 
+
+const EmptyImageWithMetadata: ImageWithMetadata = {
+  uri: "/placeholder.png",
+  hasMetadata: false,
+  metadata: null,
+  isArchived: false
+}
+
 const imageToImageWithMetadata = async (images: SurveyImage[]) : Promise<ImageWithMetadata[]> => {
   return await Promise.all(images.map(async image => {
     try {
       const preSignedUrl = await getImageHref(image.path);
-      const metadata = await imageMetadataStore.get(image.path);
-      return {
-        uri: preSignedUrl,
-        hasMetadata: !!metadata,
-        metadata: metadata ?? null,
-        isArchived: image.isArchived,
-        path: image.path
-      };
+      if(image.hasMetadata) {
+        const metadata = await imageMetadataStore.get(image.path);
+        return {
+          uri: preSignedUrl,
+          hasMetadata: !!metadata,
+          metadata: metadata ?? null,
+          isArchived: image.isArchived,
+          path: image.path
+        };
+      } else {
+        return {
+          uri: preSignedUrl,
+          hasMetadata: false,
+          metadata: null,
+          isArchived: image.isArchived,
+          path: image.path
+        };
+      }
     } catch (error) {
       console.error("[imageToImageWithMetadata] Failed to get image metadata", image.path, error);
-      
-      return {
-        uri: "/placeholder.png",
-        hasMetadata: false,
-        metadata: null,
-        isArchived: image.isArchived,
-        path: image.path
-      };
+      return EmptyImageWithMetadata;
     }
   }));
 };
 
 const mapElement = async (elementSection: ElementSection) => {
-  const images = await imageToImageWithMetadata(elementSection.images);
+  const images = await imageToImageWithMetadata(elementSection.images.filter((image: SurveyImage) => !image.isArchived));
   const components = await Promise.all(
     elementSection.components.map(async (component: any) => ({
       ...component,
-      images: await imageToImageWithMetadata(component.images)
+      images: await imageToImageWithMetadata(component.images.filter((image: SurveyImage) => !image.isArchived))
     }))
   );
   return {
@@ -61,8 +72,8 @@ export async function mapFormDataToHtml(
   if (!formData) return "";
 
   try {
-    const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri);
-    const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot);
+    const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri.filter(image => !image.isArchived));
+    const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot.filter(image => !image.isArchived));
     const signaturePath = await getImagesHref(formData.owner.signaturePath ?? []);
     
     const form = {

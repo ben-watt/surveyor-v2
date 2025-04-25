@@ -964,7 +964,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                     {mc.costings.map((c, index) => (
                       <React.Fragment key={index}>
                         <strong>£{c.cost}</strong>
-                        <span>({c.description})</span>
+                        {' '}<span>({c.description})</span>
                         {index < mc.costings.length - 1 && " & "}
                       </React.Fragment>
                     ))}
