@@ -75,7 +75,9 @@ export interface DexieStore<T, TCreate> {
   startPeriodicSync: (intervalMs?: number) => () => void;
 }
 
-function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: string }>(
+const getId = (id: string, tenantId: string) => tenantId + '#' + id;
+
+function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string }, TUpdate extends { id: string }>(
   db: Dexie,
   tableName: string,
   remoteHandlers: DexieRemoteHandlers<T, TCreate, TUpdate>
@@ -185,7 +187,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
     const result = useLiveQuery(
       async () => {
         if (!authReady || !tenantId) return { value: undefined };
-        const item = await table.get([id, tenantId]);
+        const item = await table.get([getId(id, tenantId), tenantId]);
         return item && 
                item.syncStatus !== SyncStatus.PendingDelete && 
                item.tenantId === tenantId 
@@ -333,7 +335,9 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
   const get = async (id: string) => {
     const tenantId = await getCurrentTenantId();
-    const local = await table.get([id, tenantId]);
+    if (!tenantId) return null;
+
+    const local = await table.get([getId(id, tenantId), tenantId]);
     if (!local || local.syncStatus === SyncStatus.PendingDelete) {
       console.error("[get] Item not found with id: " + id);
       return null;
@@ -344,8 +348,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
   const add = async (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt" | "tenantId">) => {
       const tenantId = await getCurrentTenantId();
+      if (!tenantId) return;
       await table.add({
         ...data,
+        id: getId(data.id, tenantId),
         syncStatus: SyncStatus.Queued,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -358,12 +364,14 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
   const update = async (id: string, updateFn: (currentState: Draft<T>) => void) => {
       const tenantId = await getCurrentTenantId();
-      const local = await table.get([id, tenantId]);
+      if (!tenantId) return;
+      const local = await table.get([getId(id, tenantId), tenantId]);
       if (!local) {
-      throw new Error("Item not found");
+        throw new Error("Item not found");
       }
+
       if (local.syncStatus === SyncStatus.PendingDelete) {
-      throw new Error("Cannot update a deleted item");
+        throw new Error("Cannot update a deleted item");
       }
 
       const data = produce(local, updateFn);
@@ -379,11 +387,11 @@ function CreateDexieHooks<T extends TableEntity, TCreate, TUpdate extends { id: 
 
   const remove = async (id: string) => {
     const tenantId = await getCurrentTenantId();
-    const local = await table.get([id, tenantId]);
+    if (!tenantId) return;
+    const local = await table.get([getId(id, tenantId), tenantId]);
 
     if (local) {
-      // Mark for deletion instead of deleting immediately
-      const result = await table.put({
+      await table.put({
         ...local,
         syncStatus: SyncStatus.PendingDelete,
         updatedAt: new Date().toISOString(),

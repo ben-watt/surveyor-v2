@@ -189,7 +189,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
           />
           <div className="space-y-2 image-w-50">
             <RhfDropZoneInputImage
-              rhfProps={{ name: "images", rules: { required: "At least one image is required" } }}
+              rhfProps={{ name: "images" }}
               path={`report-images/${surveyId}/elements/${elementId}`}
               labelText="Images"
               maxFiles={20}
