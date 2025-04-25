@@ -376,6 +376,7 @@ export default function PDF({ form }: PdfProps) {
             <div key={`frontElevation_img_${i}`}>
               <img
                 src={image.uri}
+                style={{ maxHeight: "250px" }}
                 key={`frontElevation_img_${i}`}
                 alt={`frontElevation_img_${i}`}
               />

@@ -63,7 +63,8 @@ function CustomPlacesAutocomplete({
       }
 
       const request: google.maps.places.AutocompletionRequest = {
-        input
+        input,
+        componentRestrictions: { country: 'gb' } // Restrict to UK addresses
       };
 
       try {

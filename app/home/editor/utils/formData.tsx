@@ -23,7 +23,6 @@ const imageToImageWithMetadata = async (images: SurveyImage[]) : Promise<ImageWi
           hasMetadata: !!metadata,
           metadata: metadata ?? null,
           isArchived: image.isArchived,
-          path: image.path
         };
       } else {
         return {
@@ -31,7 +30,6 @@ const imageToImageWithMetadata = async (images: SurveyImage[]) : Promise<ImageWi
           hasMetadata: false,
           metadata: null,
           isArchived: image.isArchived,
-          path: image.path
         };
       }
     } catch (error) {
