@@ -182,10 +182,6 @@
 
 /* Custom to match tiptap */
 
-.pagedjs_page table {
-    margin: 1.5rem 0;
-}
-
 hr {
     page-break-before: always;
 }

@@ -387,7 +387,7 @@ export default function PDF({ form }: PdfProps) {
             <div key={`frontElevation_img_${i}`}>
               <img
                 src={image.uri}
-                style={{ maxHeight: "250px" }}
+                style={{ maxHeight: "280px", margin: "0 auto" }}
                 key={`frontElevation_img_${i}`}
                 alt={`frontElevation_img_${i}`}
               />
@@ -879,13 +879,15 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   let tableRows = [];
   for (let i = 0; i < allImages.length; i = i + 2) {
     tableRows.push(
-      <tr key={`${elementSection.id}.${i}`}>
-        <td>
+      <table>
+        <tbody>
+          <tr key={`${elementSection.id}.${i}`}>
+            <td>
           <img
             key={i}
             src={allImages[i].uri}
             alt={elementSection.name + ".image." + i}
-            style={{ maxHeight: "250px", margin: "0 auto" }}
+            style={{ maxHeight: "280px", margin: "0 auto" }}
           />
           {allImages[i].hasMetadata && (
             <p>{allImages[i].metadata?.caption}</p>
@@ -897,14 +899,16 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               key={`${elementSection.id}.${i + 1}`}
               src={allImages[i + 1].uri}
               alt={elementSection.name + ".image." + i}
-              style={{ maxHeight: "250px", margin: "0 auto" }}
+              style={{ maxHeight: "280px", margin: "0 auto" }}
             />
           )}
           {allImages[i + 1]?.hasMetadata && (
             <p>{allImages[i + 1].metadata?.caption}</p>
           )}
-        </td>
-      </tr>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     );
   }
 
@@ -922,79 +926,80 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   }
 
   return (
-    <Page>
-      <H2 id={es.id}>{es.name}</H2>
-      <TableBlock widths={[10, 20, 70]}>
-        <p></p>
-        <p>
-          <strong>Description</strong>
-        </p>
-        <p>{es.description}</p>
-      </TableBlock>
-      {es.components
-        .map((mc) => ({ mc: mc, id: uuidv4() }))
-        .map(({ mc, id }, i) => (
-            <TableBlock widths={[10, 20, 64, 6]} key={`${elementSection.id}.${i}`}>
-              <p id={id}></p>
-              <h3 data-add-toc-here-id={id}>
-                <strong>Component</strong>
-              </h3>
-              <p>{mc.useNameOverride ? mc.nameOverride : mc.name}</p>
-              <p
-                style={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  fontSize: "18pt"
-                }}
-              >
-                {mc.ragStatus === "N/I" ? "NI" : <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus)}}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>}
-              </p>
-              <p></p>
-              <p>
-                <strong>Condition / Defect</strong>
-              </p>
-              <div>
-                {mc.conditions.map((d) => (
-                  <React.Fragment key={d.name}>
-                    <p style={{ textAlign: "justify"}}>
-                      {d.phrase}
+    <>
+      <Page>
+        <H2 id={es.id}>{es.name}</H2>
+        <TableBlock widths={[10, 20, 70]}>
+          <p></p>
+          <p>
+            <strong>Description</strong>
+          </p>
+          <p>{es.description}</p>
+        </TableBlock>
+        {es.components
+          .map((mc) => ({ mc: mc, id: uuidv4() }))
+          .map(({ mc, id }, i) => (
+              <TableBlock widths={[10, 20, 64, 6]} key={`${elementSection.id}.${i}`}>
+                <p id={id}></p>
+                <h3 data-add-toc-here-id={id}>
+                  <strong>Component</strong>
+                </h3>
+                <p>{mc.useNameOverride ? mc.nameOverride : mc.name}</p>
+                <p
+                  style={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    fontSize: "18pt"
+                  }}
+                >
+                  {mc.ragStatus === "N/I" ? "NI" : <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus)}}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>}
+                </p>
+                <p></p>
+                <p>
+                  <strong>Condition / Defect</strong>
+                </p>
+                <div>
+                  {mc.conditions.map((d) => (
+                    <React.Fragment key={d.name}>
+                      <p style={{ textAlign: "justify"}}>
+                        {d.phrase}
+                      </p>
+                      <p style={{ fontSize: "6pt"}}></p>
+                    </React.Fragment>
+                  ))}
+                  {mc.additionalDescription && (
+                    <p style={{ textAlign: "justify" }}>
+                      {mc.additionalDescription}
                     </p>
-                    <p style={{ fontSize: "6pt"}}></p>
-                  </React.Fragment>
-                ))}
-                {mc.additionalDescription && (
-                  <p style={{ textAlign: "justify" }}>
-                    {mc.additionalDescription}
-                  </p>
+                  )}
+                </div>
+                <p></p>
+                {form.reportDetails.level === "3" && (
+                  <>
+                    <p></p>
+                    <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
+                    <p>
+                      {mc.costings.map((c, index) => (
+                        <React.Fragment key={c.description + index}>
+                          <strong>£{c.cost}</strong>
+                          {' '}<span>({c.description})</span>
+                          {index < mc.costings.length - 1 && " & "}
+                        </React.Fragment>
+                      ))}
+                    </p>
+                    {mc.costings.length === 0 && (<p>N/A</p>)}
+                    <p></p>
+                  </>
                 )}
-              </div>
-              <p></p>
-              {form.reportDetails.level === "3" && (
-                <>
-                  <p></p>
-                  <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
-                  <p>
-                    {mc.costings.map((c, index) => (
-                      <React.Fragment key={c.description + index}>
-                        <strong>£{c.cost}</strong>
-                        {' '}<span>({c.description})</span>
-                        {index < mc.costings.length - 1 && " & "}
-                      </React.Fragment>
-                    ))}
-                  </p>
-                  {mc.costings.length === 0 && (<p>N/A</p>)}
-                  <p></p>
-                </>
-              )}
-            </TableBlock>
-        ))}
-      <p></p>
-      <div>
-        <table style={{ width: "100%" }}>
-          <tbody>{tableRows}</tbody>
-        </table>
-      </div>
-    </Page>
+              </TableBlock>
+          ))}
+        <p></p>
+
+      </Page>
+      <Page>
+        {tableRows}
+      </Page>
+    </>
   );
 };
 
