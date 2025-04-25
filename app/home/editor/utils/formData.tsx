@@ -67,7 +67,7 @@ export async function mapFormDataToHtml(
 
     return renderToStaticMarkup(<BuildingSurveyReport form={form} />);
   } catch (error) {
-    console.error("Failed to map form data to HTML:", error);
+    console.error("[mapFormDataToHtml] Failed to map form data to HTML", error);
     return "";
   }
 } 

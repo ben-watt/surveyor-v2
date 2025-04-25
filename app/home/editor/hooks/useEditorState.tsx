@@ -52,7 +52,7 @@ export const useEditorState = (surveyId: string) => {
       const html = await mapFormDataToHtml(editorData);
       setEditorContent(html);
     } catch (error) {
-      console.error("Failed to map form data to HTML:", error);
+      console.error("[useEditorState] Failed to map form data to HTML", error);
     }
   }, [editorData]);
 
