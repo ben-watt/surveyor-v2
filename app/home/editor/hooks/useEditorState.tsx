@@ -4,8 +4,9 @@ import { surveyStore } from "@/app/home/clients/Database";
 import { mapFormDataToHtml } from "../utils/formData";
 import { Footer, Header, TitlePage } from "../components/HeaderFooter";
 import { renderToStaticMarkup } from "react-dom/server";
+import { Editor } from "@tiptap/react";
 
-export const useEditorState = (surveyId: string) => {
+export const useBuildingSurveyFormTemplate = (surveyId: string) => {
   const [editorContent, setEditorContent] = React.useState<string>("");
   const [editorData, setEditorData] = React.useState<BuildingSurveyFormData>();
   const [previewContent, setPreviewContent] = React.useState<string>("");
@@ -56,6 +57,10 @@ export const useEditorState = (surveyId: string) => {
     }
   }, [editorData]);
 
+  const updateHandler = React.useCallback(({editor}: {editor: Editor}) => {
+    setPreviewContent( titlePage + header + footer + editor.getHTML());
+  }, [titlePage, header, footer]);
+
   React.useEffect(() => {
     mapToEditorContent();
   }, [mapToEditorContent]);
@@ -79,6 +84,7 @@ export const useEditorState = (surveyId: string) => {
     footer,
     titlePage,
     setPreviewContent,
+    updateHandler,
     isLoading,
   };
-}; 
+};

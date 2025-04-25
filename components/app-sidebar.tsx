@@ -8,6 +8,7 @@ import {
   Settings2,
   Building2,
   ChevronDown,
+  FileText,
 } from "lucide-react"
 import { AppIcon } from "@/app/home/components/AppIcon"
 
@@ -42,6 +43,12 @@ const applicationNavData = {
       title: "Surveys",
       url: "/home/surveys",
       icon: NotebookPen,
+      isActive: true,
+    },
+    {
+      title: "Editor",
+      url: "/home/editor",
+      icon: FileText,
       isActive: true,
     }
   ]

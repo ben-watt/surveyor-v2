@@ -448,7 +448,7 @@ function Report({ initFormValues }: ReportProps) {
                       <DropdownMenuItem
                         onClick={(ev) => {
                           ev.preventDefault();
-                          router.push(`/home/editor/${initFormValues.id}`);
+                          router.push(`/home/editor/${initFormValues.id}/building-survey`);
                         }}
                         disabled={!isFormValid()}
                       >

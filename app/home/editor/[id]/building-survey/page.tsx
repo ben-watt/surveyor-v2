@@ -3,25 +3,13 @@
 
 import React, { use, useState } from "react";
 import { NewEditor } from "@/app/home/components/Input/BlockEditor";
-import { PrintPreviewer } from "../components/PrintPreviewer";
-import { useBuildingSurveyFormTemplate } from "../hooks/useEditorState";
-import { Editor } from "@tiptap/react";
+import { PrintPreviewer } from "@/app/home/editor/components/PrintPreviewer";
+import { useBuildingSurveyFormTemplate } from "@/app/home/editor/hooks/useEditorState";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const [preview, setPreview] = useState<boolean>(false);
-
-  const initialContent = `
-    <h1>This is your document</h1>
-    <p>Write some stuff...</p>
-  `
-  const [editorContent, setEditorContent] = useState<string>(initialContent);
-  const [previewContent, setPreviewContent] = useState<string>(initialContent);
-
-  const updateHandler = ({editor}: {editor: Editor}) => {
-    setEditorContent(editor.getHTML());
-    setPreviewContent(editor.getHTML());
-  }
+  const { editorContent, previewContent, updateHandler } = useBuildingSurveyFormTemplate(params.id);
 
   return (
     <div>
@@ -37,7 +25,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
       </div>
       {preview && (
         <PrintPreviewer 
-          content={previewContent || ""} 
+          content={previewContent} 
           onBack={() => setPreview(false)}
         />
       )}
