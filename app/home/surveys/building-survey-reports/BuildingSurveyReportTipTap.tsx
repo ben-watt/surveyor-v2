@@ -960,11 +960,15 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 <>
                   <p></p>
                   <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
-                  {mc.costings.map(c => 
-                    <p key={c.description}>
-                      <strong>£{c.cost}</strong>{" "}<span>({c.description})</span>
-                    </p>
-                  )}
+                  <p>
+                    {mc.costings.map((c, index) => (
+                      <React.Fragment key={index}>
+                        <strong>£{c.cost}</strong>
+                        <span>({c.description})</span>
+                        {index < mc.costings.length - 1 && " & "}
+                      </React.Fragment>
+                    ))}
+                  </p>
                   {mc.costings.length === 0 && (<p>N/A</p>)}
                   <p></p>
                 </>
