@@ -1,11 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 
-import React, { Fragment, isValidElement } from "react";
+import React, { Component, Fragment, isValidElement } from "react";
 import Image from "next/image";
 import {
   mapAddress,
+  SurveySection,
   type BuildingSurveyFormData,
   type ElementSection,
+  type Inspection,
 } from "./BuildingSurveyReportSchema";
 import { v4 as uuidv4 } from "uuid";
 import { formatDateWithSuffix } from '@/app/home/utils/dateFormatters';
@@ -82,19 +84,27 @@ export type ImageWithMetadata = {
   isArchived: boolean;
 }
 
-export type BuildingSurveyReportTipTap = Omit<BuildingSurveyFormData, 'reportDetails' | 'surveySections'> & {
-  reportDetails: Omit<BuildingSurveyFormData['reportDetails'], 'frontElevationImages' | 'moneyShot'> & {
-    frontElevationImages: ImageWithMetadata[];
-    moneyShot: ImageWithMetadata[];
-  };
-  surveySections: {
-    elementSections: {
-      images: ImageWithMetadata[];
-      components: {
-        images: ImageWithMetadata[];
-      }[];
-    }[];
-  }[];
+export type ReportComponent = Omit<Inspection, 'images'> & {
+  images: ImageWithMetadata[];
+}
+
+export type ReportElementSection = Omit<ElementSection, 'images' | 'components'> & {
+  images: ImageWithMetadata[];
+  components: ReportComponent[];
+}
+
+export type ReportSurveySection = Omit<SurveySection, 'elementSections'> & {
+  elementSections: ReportElementSection[];
+}
+
+export type ReportDetails = Omit<BuildingSurveyFormData['reportDetails'], 'frontElevationImagesUri' | 'moneyShot'> & {
+  frontElevationImagesUri: ImageWithMetadata[];
+  moneyShot: ImageWithMetadata[];
+}
+
+export type BuildingSurveyReportTipTap = Omit<BuildingSurveyFormData, 'reportDetails' | 'sections'> & {
+  reportDetails: ReportDetails;
+  sections: ReportSurveySection[];
 };
 
 interface PdfProps {
@@ -166,7 +176,8 @@ export default function PDF({ form }: PdfProps) {
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}  className="m-0">
               {address && mapAddress(address, (line) => 
-              <p style={{ textAlign: "right" }}><strong>{line}</strong></p>)}
+                <p style={{ textAlign: "right" }} key={line}><strong>{line}</strong></p>
+              )}
             </p>
             <p style={{ textAlign: "right" }}></p>
             <p style={{ textAlign: "right" }}>For and on behalf of</p>
@@ -372,7 +383,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <TableBlock widths={[50, 50]}>
-          {form.reportDetails.frontElevationImages.map((image, i) => (
+          {form.reportDetails.frontElevationImagesUri.map((image, i) => (
             <div key={`frontElevation_img_${i}`}>
               <img
                 src={image.uri}
@@ -394,7 +405,7 @@ export default function PDF({ form }: PdfProps) {
             {s.elementSections.map((cs, j) => (
               <ConditionSection
                 key={`${s.name}.${cs.name}`}
-                elementSection={cs as ElementSection & { images: ImageWithMetadata[] }}
+                elementSection={cs}
                 form={form}
               />
             ))}
@@ -854,41 +865,43 @@ Board's website. We have not undertaken any separate inquiries with the relevant
 
 type ConditionSectionProps = {
   key: string;
-  elementSection: ElementSection & { images: ImageWithMetadata[] };
+  elementSection: ReportElementSection;
   form: BuildingSurveyReportTipTap;
 };
 
 const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   const es = elementSection;
+  const componentImages = es.components.flatMap(x => x.images);
+  const allImages = [...es.images, ...componentImages];
 
   if (!es.isPartOfSurvey) return <></>;
 
   let tableRows = [];
-  for (let i = 0; i < es.images.length; i = i + 2) {
+  for (let i = 0; i < allImages.length; i = i + 2) {
     tableRows.push(
       <tr key={`${elementSection.id}.${i}`}>
         <td>
           <img
             key={i}
-            src={es.images[i].uri}
+            src={allImages[i].uri}
             alt={elementSection.name + ".image." + i}
             style={{ maxHeight: "250px", margin: "0 auto" }}
           />
-          {es.images[i].hasMetadata && (
-            <p>{es.images[i].metadata?.caption}</p>
+          {allImages[i].hasMetadata && (
+            <p>{allImages[i].metadata?.caption}</p>
           )}
         </td>
         <td>
-          {es.images.at(i + 1) && (
+          {allImages[i + 1] && (
             <img
               key={`${elementSection.id}.${i + 1}`}
-              src={es.images[i + 1].uri}
+              src={allImages[i + 1].uri}
               alt={elementSection.name + ".image." + i}
               style={{ maxHeight: "250px", margin: "0 auto" }}
             />
           )}
-          {es.images[i + 1]?.hasMetadata && (
-            <p>{es.images[i + 1].metadata?.caption}</p>
+          {allImages[i + 1]?.hasMetadata && (
+            <p>{allImages[i + 1].metadata?.caption}</p>
           )}
         </td>
       </tr>
@@ -921,7 +934,6 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
       {es.components
         .map((mc) => ({ mc: mc, id: uuidv4() }))
         .map(({ mc, id }, i) => (
-          <>
             <TableBlock widths={[10, 20, 64, 6]} key={`${elementSection.id}.${i}`}>
               <p id={id}></p>
               <h3 data-add-toc-here-id={id}>
@@ -943,12 +955,12 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               </p>
               <div>
                 {mc.conditions.map((d) => (
-                  <>
-                    <p style={{ textAlign: "justify"}} key={d.name}>
+                  <React.Fragment key={d.name}>
+                    <p style={{ textAlign: "justify"}}>
                       {d.phrase}
                     </p>
                     <p style={{ fontSize: "6pt"}}></p>
-                  </>
+                  </React.Fragment>
                 ))}
                 {mc.additionalDescription && (
                   <p style={{ textAlign: "justify" }}>
@@ -963,7 +975,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                   <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
                   <p>
                     {mc.costings.map((c, index) => (
-                      <React.Fragment key={index}>
+                      <React.Fragment key={c.description + index}>
                         <strong>£{c.cost}</strong>
                         {' '}<span>({c.description})</span>
                         {index < mc.costings.length - 1 && " & "}
@@ -975,7 +987,6 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 </>
               )}
             </TableBlock>
-          </>
         ))}
       <p></p>
       <div>

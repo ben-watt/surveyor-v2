@@ -45,7 +45,7 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps
         const metadataResult = await imageMetadataStore.get(imagePath);
         setHasMetadata(!!metadataResult && !!metadataResult.caption);
       } catch (error) {
-        console.error("Error checking metadata:", error);
+        console.debug("[Thumbnail] Error checking metadata:", error);
       } finally {
         setIsLoadingMetadata(false);
       }

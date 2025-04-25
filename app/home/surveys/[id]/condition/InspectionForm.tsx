@@ -519,10 +519,7 @@ function InspectionFormContent({
               path={imageUploadPath}
               rhfProps={{
                 name: "images",
-                rules: {
-                  onChange: () => true,
-                },
-                }}
+              }}
               labelText="Images"
               maxFiles={20}
               minFiles={1}

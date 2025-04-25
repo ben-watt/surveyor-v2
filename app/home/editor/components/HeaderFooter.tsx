@@ -58,7 +58,7 @@ export const TitlePage = ({ editorData }: HeaderFooterHtmlProps) => {
         <div className="flex justify-between px-16 w-full min-h-40">
           <div>
             <p>Level {editorData?.reportDetails.level} Building Survey Report</p>
-            {editorData?.reportDetails.address && mapAddress(editorData?.reportDetails.address, (line) => <p>{line}</p>)}
+            {editorData?.reportDetails.address && mapAddress(editorData?.reportDetails.address, (line) => <p key={line}>{line}</p>)}
           </div>
           <div className="self-end text-right">
             <p>

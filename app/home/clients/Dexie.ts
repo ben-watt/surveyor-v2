@@ -340,7 +340,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   const get = async (id: string) => {
     const local = await getItem(id);
     if (!local || local.syncStatus === SyncStatus.PendingDelete) {
-      console.error("[get] Item not found with id: " + id);
+      console.debug("[get] Item not found with id: " + id);
       return null;
     }
 
