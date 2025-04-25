@@ -246,17 +246,14 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
       return Ok(response.data.map(mapToSection));
     },
     create: async (data): Promise<Result<Section, Error>> => {
-      // Add tenant ID to new section
       const serverData = await withTenantId(data);
       const response = await client.models.Sections.create(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
-      console.log("[createSectionStore] Created section", response);
       return Ok(mapToSection(response.data));
     },
     update: async (data): Promise<Result<Section, Error>> => {
-      // Add tenant ID to update
       const serverData = await withTenantId(data);
       const response = await client.models.Sections.update(serverData);
       if (response.errors) {

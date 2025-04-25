@@ -24,7 +24,6 @@ const schema = a.schema({
     ])
     .handler(a.handler.function(tenantAdmin))
     .returns(a.json()),
-
   Tenant: a
     .model({
       id: a.id().required(),
@@ -42,6 +41,7 @@ const schema = a.schema({
     .model({
       id: a.id().required(),
       syncStatus: a.string().required(),
+      syncError: a.string(),
       createdAt: a.string().required(),
       updatedAt: a.string().required(),
       content: a.json().required(),
@@ -60,6 +60,7 @@ const schema = a.schema({
     name: a.string().required(),
     order: a.float(),
     syncStatus: a.string().required(),
+    syncError: a.string(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     elements: a.hasMany("Elements", ["sectionId", "tenantId"]),
@@ -82,6 +83,7 @@ const schema = a.schema({
     description: a.string(),
     components: a.hasMany("Components", ["elementId", "tenantId"]),
     syncStatus: a.string().required(),
+    syncError: a.string(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     tenantId: a.string().required(),
@@ -100,6 +102,7 @@ const schema = a.schema({
   Phrases: a.model({
     id: a.id().required(),
     syncStatus: a.string().required(),
+    syncError: a.string(),
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     name: a.string().required(),
@@ -124,6 +127,7 @@ const schema = a.schema({
       name: a.string().required(),
       materials: a.ref("Material").required().array().required(),
       syncStatus: a.string().required(),
+      syncError: a.string(),
       elementId: a.id().required(),
       element: a.belongsTo("Elements", ["elementId", "tenantId"]),
       createdAt: a.datetime().required(),
@@ -142,6 +146,7 @@ const schema = a.schema({
     .model({
       id: a.id().required(),
       syncStatus: a.string().required(),
+      syncError: a.string(),
       createdAt: a.datetime().required(),
       updatedAt: a.datetime().required(),
       imagePath: a.string().required(),
