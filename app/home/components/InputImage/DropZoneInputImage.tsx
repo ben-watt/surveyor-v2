@@ -27,11 +27,12 @@ interface ThumbnailProps {
   onArchive: (file: FileWithPath) => void;
   path: string;
   features?: DropZoneInputImageProps['features'];
+  onMetadataChange: (file: DropZoneInputFile) => void;
 }
 
 export type DropZoneInputFile = FileWithPath & { preview: string; isArchived: boolean, hasMetadata: boolean };
 
-const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps) => {
+const Thumbnail = ({ file, onDelete, onArchive, path, features, onMetadataChange }: ThumbnailProps) => {
   const { openDrawer, closeDrawer } = useDynamicDrawer();
   const [hasMetadata, setHasMetadata] = useState(false);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
@@ -43,7 +44,13 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps
       try {
         const imagePath = join(path, file.name);
         const metadataResult = await imageMetadataStore.get(imagePath);
-        setHasMetadata(!!metadataResult && !!metadataResult.caption);
+        const newHasMetadata = !!metadataResult && !!metadataResult.caption;
+        setHasMetadata(newHasMetadata);
+        // Update the file's hasMetadata property and notify parent
+        if (file.hasMetadata !== newHasMetadata) {
+          file.hasMetadata = newHasMetadata;
+          onMetadataChange(file);
+        }
       } catch (error) {
         console.debug("[Thumbnail] Error checking metadata:", error);
       } finally {
@@ -52,7 +59,7 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features }: ThumbnailProps
     };
 
     checkMetadata();
-  }, [file, path, features?.metadata]);
+  }, [file, path, features?.metadata, onMetadataChange]);
 
   const toFileSize = useCallback((size: number): [number, string] => {
     if (size < 1024) {
@@ -304,6 +311,13 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     }
   };
 
+  const handleMetadataChange = (updatedFile: DropZoneInputFile) => {
+    setFiles(prevFiles => 
+      prevFiles.map(f => f.name === updatedFile.name ? updatedFile : f)
+    );
+    props.onChange?.(files);
+  };
+
   if (isLoading) {
     return (
       <div className="container border border-gray-300 rounded-md p-4 bg-gray-100">
@@ -344,6 +358,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               onArchive={handleArchive}
               path={props.path}
               features={features}
+              onMetadataChange={handleMetadataChange}
             />
           ))}
         </ul>

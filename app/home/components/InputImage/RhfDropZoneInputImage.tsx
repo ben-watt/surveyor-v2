@@ -21,7 +21,6 @@ export const RhfDropZoneInputImage: React.FC<RhfDropZoneInputImageProps> = ({
   const { field } = useController(rhfProps);
   
   const handleChange = (files: DropZoneInputFile[]) => {
-    // Files don't seralise nicely to JSON, so we need to convert them to a simplified type
     field.onChange(files.map(file => ({ path: file.path, isArchived: file.isArchived, hasMetadata: file.hasMetadata })));
   };
 
