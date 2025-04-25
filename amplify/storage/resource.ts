@@ -15,6 +15,11 @@ export const storage = defineStorage({
     'profile/*': [
         allow.authenticated.to(['read', 'write', 'delete', 'list']),
         allow.groups(['global-admin']).to(['read', 'write', 'delete', 'list'])
+    ],
+    'editor/{entity_id}/*': [
+      allow.authenticated.to(['read']),
+      allow.groups(['global-admin']).to(['read', 'write', 'delete', 'list']),
+      allow.entity('identity').to(['read', 'write', 'delete'])
     ]
   })
 });

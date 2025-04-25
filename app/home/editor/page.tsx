@@ -5,14 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
+import { DocumentList } from "../components/DocumentList";
+import useUser, { useUserHook } from "../utils/useUser";
+import { useCurrentTenantId } from "../utils/tenant-utils";
 
 function EditorPage() {
   const router = useRouter();
+  const [isUserHydrated, user] = useUserHook();
+  const [isTenantHydrated, tenantId] = useCurrentTenantId();
 
   const handleCreate = () => {
     const newDocId = uuidv4();
     router.push(`/home/editor/${newDocId}`);
   };
+
+  if (!isUserHydrated || !isTenantHydrated) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -54,6 +63,14 @@ function EditorPage() {
               </Button>
             </CardContent>
           </Card>
+        </div>
+        <div>
+          {user && tenantId && (
+            <DocumentList
+              userId={user.userId}
+              tenantId={tenantId}
+            />
+          )}
         </div>
       </div>
     </div>

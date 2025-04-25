@@ -380,4 +380,24 @@ export async function withTenantId<T>(data: T): Promise<T & { tenantId: string }
     throw new Error('No tenant selected. Please ensure a tenant is selected.');
   }
   return { ...data, tenantId: tenantName };
-} 
+}
+
+/**
+ * Hook to get the current tenant ID
+ * Returns the current tenant ID and loading state
+ */
+export function useCurrentTenantId(): [boolean, string | null] {
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    const fetchTenantId = async () => {
+      const tenantId = await getCurrentTenantId();
+      setTenantId(tenantId);
+    };
+    fetchTenantId();
+    setIsHydrated(true);
+  }, []);
+
+  return [isHydrated, tenantId];
+}

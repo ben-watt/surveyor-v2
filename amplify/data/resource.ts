@@ -162,6 +162,24 @@ const schema = a.schema({
       .to(["create", "read", "update", "delete"]),
       allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
     ]),
+  Documents: a
+    .model({
+      id: a.id().required(),
+      content: a.string().required(),
+      syncStatus: a.string().required(),
+      syncError: a.string(),
+      createdAt: a.datetime().required(),
+      updatedAt: a.datetime().required(),
+      tenantId: a.string().required(),
+    })
+    .identifier(['tenantId', 'id'])
+    .authorization((allow) => [
+      allow.owner().to(["create", "read", "update", "delete"]),
+      allow
+      .groupDefinedIn("tenantId")
+      .to(["create", "read", "update", "delete"]),
+      allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

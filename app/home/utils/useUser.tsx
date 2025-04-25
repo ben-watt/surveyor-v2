@@ -1,4 +1,4 @@
-import { fetchUserAttributes, FetchUserAttributesOutput, getCurrentUser } from 'aws-amplify/auth';
+import { AuthUser, fetchUserAttributes, FetchUserAttributesOutput, getCurrentUser } from 'aws-amplify/auth';
 import { useState, useEffect } from 'react';
 
 async function useAuth() {  
@@ -10,6 +10,27 @@ async function useAuth() {
   } catch (err) {
     console.log(err);
   }
+}
+
+export function useUserHook(): [boolean, AuthUser | null] {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    async function fetch() {
+      try {
+        const user = await getCurrentUser();
+        setUser(user);
+        setIsHydrated(true);
+      } catch (err) {
+        console.error("[useUserHook] error", err);
+      }
+    }
+
+    fetch();
+  }, []); 
+
+  return [isHydrated, user];
 }
 
 export function useUserAttributes(): [boolean, FetchUserAttributesOutput | null] {
