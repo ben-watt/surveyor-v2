@@ -42,7 +42,7 @@ type TableEntity = {
   id: string;
   updatedAt: string;
   syncStatus: string;
-  syncError?: string;
+  syncError?: string | undefined | null;
   tenantId: string;
 }
 
