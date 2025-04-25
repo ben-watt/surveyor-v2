@@ -370,7 +370,7 @@ function InspectionFormContent({
             name="surveySection"
             control={control}
             errors={errors}
-            rules={{ required: "Survey section is required" }}
+            rules={{ validate: (value) => value.id !== "" || "Survey section is required" }}
           />
           <div className="flex items-end gap-2 justify-between">
             <Combobox
@@ -387,7 +387,7 @@ function InspectionFormContent({
                   content: <ElementDataForm />,
                 });
               }}
-              rules={{ required: "Element is required" }}
+              rules={{ validate: (value) => value.id !== "" || "Element is required" }}
             />
             <Button
               className="flex-none"

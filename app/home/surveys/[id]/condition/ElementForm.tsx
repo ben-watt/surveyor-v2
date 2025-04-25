@@ -141,7 +141,6 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
           errors: [errors.description?.message || ""],
         }
       });
-
     });
   };
 
@@ -173,8 +172,6 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
       </div>
     );
   }
-
-  console.debug("[ElementForm] render", `report-images/${surveyId}/elements/${elementId}`);
 
   return (
     <FormProvider {...methods}>

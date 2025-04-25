@@ -211,10 +211,6 @@ export function Combobox({
     <div className="w-full">
       <div className="flex items-center space-x-2">
         <Label text={labelTitle} />
-        <ErrorMessage
-          name={field.name}
-          errors={errors}
-          render={({ message }) => InputError({ message })} />
       </div>
       <Popover open={open} onOpenChange={(isOpen) => {
         setOpen(isOpen);
@@ -342,6 +338,10 @@ export function Combobox({
           </Command>
         </PopoverContent>
       </Popover>
+      <ErrorMessage
+        name={field.name}
+        errors={errors}
+        render={({ message }) => InputError({ message })} />
     </div>
   );
 }

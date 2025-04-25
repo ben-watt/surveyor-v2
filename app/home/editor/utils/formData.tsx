@@ -1,27 +1,36 @@
-import { BuildingSurveyFormData } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, ElementSection, SurveyImage, SurveySection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import BuildingSurveyReport, { BuildingSurveyReportTipTap, ImageWithMetadata } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportTipTap";
 import { renderToStaticMarkup } from "react-dom/server";
 import { getImageHref, getImagesHref } from "./image";
 import { imageMetadataStore } from "../../clients/Database";
 
-const imageToImageWithMetadata = async (imageUris: string[]) : Promise<ImageWithMetadata[]> => {
-  return await Promise.all(imageUris.map(async uri => {
+const imageToImageWithMetadata = async (images: SurveyImage[]) : Promise<ImageWithMetadata[]> => {
+  return await Promise.all(images.map(async image => {
     try {
-      const metadata = await imageMetadataStore.get(uri);
-      const preSignedUrl = await getImageHref(uri);
+      const preSignedUrl = await getImageHref(image.path);
+      const metadata = await imageMetadataStore.get(image.path);
       return {
         uri: preSignedUrl,
         hasMetadata: !!metadata,
-        metadata: metadata ?? null
+        metadata: metadata ?? null,
+        isArchived: image.isArchived,
+        path: image.path
       };
     } catch (error) {
-      console.error("[imageToImageWithMetadata] Failed to get image metadata", uri, error);
-      return { uri, hasMetadata: false, metadata: null };
+      console.error("[imageToImageWithMetadata] Failed to get image metadata", image.path, error);
+      
+      return {
+        uri: "/placeholder.png",
+        hasMetadata: false,
+        metadata: null,
+        isArchived: image.isArchived,
+        path: image.path
+      };
     }
   }));
 };
 
-const mapElement = async (elementSection: any) => {
+const mapElement = async (elementSection: ElementSection) => {
   const images = await imageToImageWithMetadata(elementSection.images);
   const components = await Promise.all(
     elementSection.components.map(async (component: any) => ({
@@ -36,7 +45,7 @@ const mapElement = async (elementSection: any) => {
   };
 };
 
-const mapSection = async (section: any) => {
+const mapSection = async (section: SurveySection) => {
   const elementSections = await Promise.all(
     section.elementSections.map(mapElement)
   );
@@ -52,8 +61,8 @@ export async function mapFormDataToHtml(
   if (!formData) return "";
 
   try {
-    const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri.map(image => image.path));
-    const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot.map(image => image.path));
+    const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri);
+    const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot);
     const signaturePath = await getImagesHref(formData.owner.signaturePath ?? []);
     
     const form = {

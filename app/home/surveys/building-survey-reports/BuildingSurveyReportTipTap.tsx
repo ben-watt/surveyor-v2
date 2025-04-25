@@ -79,13 +79,14 @@ export type ImageWithMetadata = {
   uri: string;
   hasMetadata: boolean;
   metadata: ImageMetadata | null;
+  isArchived: boolean;
 }
 
-export type BuildingSurveyReportTipTap = BuildingSurveyFormData & {
-  reportDetails : {
+export type BuildingSurveyReportTipTap = Omit<BuildingSurveyFormData, 'reportDetails' | 'surveySections'> & {
+  reportDetails: Omit<BuildingSurveyFormData['reportDetails'], 'frontElevationImages' | 'moneyShot'> & {
     frontElevationImages: ImageWithMetadata[];
     moneyShot: ImageWithMetadata[];
-  },
+  };
   surveySections: {
     elementSections: {
       images: ImageWithMetadata[];
