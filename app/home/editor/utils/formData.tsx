@@ -6,13 +6,18 @@ import { imageMetadataStore } from "../../clients/Database";
 
 const imageToImageWithMetadata = async (imageUris: string[]) : Promise<ImageWithMetadata[]> => {
   return await Promise.all(imageUris.map(async uri => {
-    const metadata = await imageMetadataStore.get(uri);
-    const preSignedUrl = await getImageHref(uri);
-    return {
-      uri: preSignedUrl,
-      hasMetadata: !!metadata,
-      metadata: metadata ?? null
-    };
+    try {
+      const metadata = await imageMetadataStore.get(uri);
+      const preSignedUrl = await getImageHref(uri);
+      return {
+        uri: preSignedUrl,
+        hasMetadata: !!metadata,
+        metadata: metadata ?? null
+      };
+    } catch (error) {
+      console.error("[imageToImageWithMetadata] Failed to get image metadata", uri, error);
+      return { uri, hasMetadata: false, metadata: null };
+    }
   }));
 };
 
