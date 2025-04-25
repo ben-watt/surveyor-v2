@@ -5,7 +5,6 @@ import Dexie from 'dexie';
 import { getCurrentTenantId } from '../utils/tenant-utils';
 import { imageUploadStatusStore } from '../components/InputImage/imageUploadStatusStore';
 
-// Types for the image upload store
 export type UpdateImageUpload = Partial<ImageUpload> & { id: string };
 export type CreateImageUpload = Omit<ImageUpload, "updatedAt" | "syncStatus" | "syncError" | "tenantId">;
 export type UpdateMetadataImageUpload = Omit<CreateImageUpload, "path" | "file" | "href">;
