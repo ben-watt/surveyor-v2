@@ -68,7 +68,7 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
   }, [content]);  // Re-run when content changes
 
   return (
-    <div>
+    <div className="absolute inset-0 bg-white">
       <div className="flex items-center justify-between p-4 border-b print:!hidden">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
