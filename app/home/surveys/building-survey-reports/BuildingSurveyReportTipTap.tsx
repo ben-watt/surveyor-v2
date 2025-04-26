@@ -220,14 +220,14 @@ export default function PDF({ form }: PdfProps) {
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
           <Image
-            style={{ width: "80mm" }}
+            style={{ height: "30mm" }}
             src={form.owner.signaturePath[0]}
             alt="signature"
             width={400}
             height={200}
           />
           <img
-            style={{ width: "80mm" }}
+            style={{ height: "30mm" }}
             src="data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3Ctext x='300' y='200' font-family='Arial' font-size='24' fill='%23666666' text-anchor='middle' dominant-baseline='middle'%3EPlaceholder%3C/text%3E%3C/svg%3E"
             alt="signature"
             width="400"
@@ -374,7 +374,7 @@ export default function PDF({ form }: PdfProps) {
         </p>
         <p></p>
         <img
-          style={{ margin: "0 auto", width: "180mm" }}
+          style={{ margin: "0 auto", width: "175mm" }}
           src="data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3Ctext x='300' y='200' font-family='Arial' font-size='24' fill='%23666666' text-anchor='middle' dominant-baseline='middle'%3ELocation Plan Placeholder%3C/text%3E%3C/svg%3E"
           alt="placeholder"
           width="600"
@@ -387,7 +387,7 @@ export default function PDF({ form }: PdfProps) {
             <div key={`frontElevation_img_${i}`}>
               <img
                 src={image.uri}
-                style={{ maxHeight: "280px", margin: "0 auto" }}
+                style={{ maxHeight: "75mm", margin: "0 auto" }}
                 key={`frontElevation_img_${i}`}
                 alt={`frontElevation_img_${i}`}
               />
@@ -887,7 +887,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
             key={i}
             src={allImages[i].uri}
             alt={elementSection.name + ".image." + i}
-            style={{ maxHeight: "280px", margin: "0 auto" }}
+            style={{ maxHeight: "75mm", margin: "0 auto" }}
           />
           {allImages[i].hasMetadata && (
             <p>{allImages[i].metadata?.caption}</p>
@@ -899,7 +899,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               key={`${elementSection.id}.${i + 1}`}
               src={allImages[i + 1].uri}
               alt={elementSection.name + ".image." + i}
-              style={{ maxHeight: "280px", margin: "0 auto" }}
+              style={{ maxHeight: "75mm", margin: "0 auto" }}
             />
           )}
           {allImages[i + 1]?.hasMetadata && (
@@ -994,9 +994,6 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               </TableBlock>
           ))}
         <p></p>
-
-      </Page>
-      <Page>
         {tableRows}
       </Page>
     </>
@@ -1014,7 +1011,7 @@ const RiskRow = ({id, risk, description} : RiskRowProps) => {
     <TableBlock widths={[10, 20, 64, 6]}>
       <p id={id}></p>
       <h3 data-add-toc-here-id={id}>{risk}</h3>
-      <p>{description}</p>
+      <p style={{ textAlign: "justify" }}>{description}</p>
       <p></p>
     </TableBlock>
   );
