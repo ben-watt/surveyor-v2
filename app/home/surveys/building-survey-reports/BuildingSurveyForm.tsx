@@ -18,8 +18,7 @@ import {
   elementStore,
 } from "@/app/home/clients/Database";
 import { Section, Element } from "@/app/home/clients/Dexie";
-import { fetchUserAttributes } from "aws-amplify/auth";
-import { Ok, Result, Err } from "ts-results";
+import { Ok, Result } from "ts-results";
 import { useAsyncError } from "@/app/home/hooks/useAsyncError";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -39,7 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Zap } from "lucide-react";
 import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
-import useUser, { useUserAttributes } from "../../utils/useUser";
+import { useUserAttributes } from "../../utils/useUser";
 
 interface BuildingSurveyFormProps {
   id: string;

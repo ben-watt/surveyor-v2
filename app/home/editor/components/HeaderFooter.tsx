@@ -13,8 +13,8 @@ export const Footer = ({ editorData }: HeaderFooterHtmlProps) => {
         className="footerImage object-contain"
         src="/rics-purple-logo.jpg"
         alt="RICS Logo"
-        width="150"
-        height="40"
+        width="100mm"
+        height="30mm"
         style={{ maxWidth: "200px", height: "auto" }}
       />
     </div>
@@ -24,27 +24,27 @@ export const Footer = ({ editorData }: HeaderFooterHtmlProps) => {
 export const Header = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="header-container">
-    <img
-      className="absolute top-0 headerImage object-contain"
-      src="/cwbc_header.jpg"
-      alt="CWBC Header"
-      width="550px"
-    />
-    <div className="headerAddress mt-2">
-      <p className="text-xs text-gray-600">
-        {editorData
-          ? editorData.reportDetails.address.formatted
-          : "Unknown"}
-      </p>
-      <p>{editorData ? "#" + editorData.id.substring(0, 8) : "Unknown"}</p>
-      <p>
-        {editorData
-          ? formatDateWithSuffix(
-              new Date(editorData.reportDetails.reportDate)
-            )
-          : "Unknown"}
-      </p>
-    </div>
+      <img
+        className="absolute top-0 headerImage object-contain"
+        src="/cwbc_header.jpg"
+        alt="CWBC Header"
+        width="550px"
+      />
+      <div className="headerAddress mt-2">
+        <p className="text-xs text-gray-600">
+          {editorData
+            ? editorData.reportDetails.address.formatted
+            : "Unknown"}
+        </p>
+        <p>{editorData ? "#" + editorData.id.substring(0, 8) : "Unknown"}</p>
+        <p>
+          {editorData
+            ? formatDateWithSuffix(
+                new Date(editorData.reportDetails.reportDate)
+              )
+            : "Unknown"}
+        </p>
+      </div>
   </div>
   )
 }

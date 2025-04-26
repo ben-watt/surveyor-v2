@@ -329,6 +329,7 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={{ fontSize: "14pt", fontWeight: "bold" }}>Description Of the Property</h1>
+        <h2>REMOVE THIS - REQUIRED FOR PDF GENERATION</h2>
         <TableBlock widths={[30, 70]}>
           <h3><strong>Property Type</strong></h3>
           <p>{form.propertyDescription.propertyType.value}</p>
@@ -364,9 +365,9 @@ export default function PDF({ form }: PdfProps) {
           <p>{form.propertyDescription.tenure.value}</p>
         </TableBlock>
 
-      </Page>
+      </Page> 
       <Page>
-        <h3 style={{ fontSize: "14pt", fontWeight: "bold" }}>Location Plan</h3>
+        <h2 style={{ fontSize: "14pt", fontWeight: "bold" }}>Location Plan</h2>
         <p style={{ textAlign: "justify" }}>
           Red line demarcations do not represent the legal boundary of the
           property and are to indicate the approximate areas of the property

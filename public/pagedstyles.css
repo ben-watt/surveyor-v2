@@ -35,6 +35,8 @@
     width: 920px;
 }
 
+
+
 .headerAddress {
     position: running(addressRunning);
 }
@@ -43,6 +45,13 @@
 .headerAddress p {
     line-height: normal;
     min-height: auto;
+}
+
+/* footer */
+.pagedjs_margin .pagedjs_margin-bottom-right .pagedjs_margin-content {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 2mm;
 }
 
 .footerImage {

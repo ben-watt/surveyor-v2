@@ -53,7 +53,7 @@
     "name": "Roof Structure",
     "description": "Traditional timber roof trusses with purlins and rafters. Includes roof void insulation, ventilation, and structural timbers supporting roof coverings.",
     "order": 8,
-    "sectionId": "external-condition-of-property"
+    "sectionId": "internal-condition-of-property"
   },
   {
     "id": "ceilings",
