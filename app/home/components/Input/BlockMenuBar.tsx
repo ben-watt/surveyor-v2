@@ -477,7 +477,8 @@ const HighlightColorPicker = ({ editor }: { editor: Editor }) => {
   const colours = [
     { name: "Red", value: "#ff0000" },
     { name: "Yellow", value: "#ffff00" },
-    { name: "Green", value: "#00ff00" },
+    { name: "Light Green", value: "#90ee90" },
+    { name: "Dark Green", value: "#008000" },
     { name: "Blue", value: "#0000ff" },
     { name: "Pink", value: "#ffc0cb" },
     { name: "Orange", value: "#ffa500" },
