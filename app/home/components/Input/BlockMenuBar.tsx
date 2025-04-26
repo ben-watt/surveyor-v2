@@ -31,6 +31,8 @@ import {
   TableCellsMergeIcon,
   TableCellsSplitIcon,
   TableOfContents,
+  Image,
+  ImagePlus,
 } from "lucide-react";
 import {
   Select,
@@ -42,8 +44,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Level } from "@tiptap/extension-heading";
-import { Input } from "@/components/ui/input";
-import { Combobox } from "./ComboBox";
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -151,6 +151,26 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       isActive: () => false,
     },
     {
+      icon: <ImagePlus />,
+      title: "Add Image",
+      action: () => {
+        // open file browser to upload image
+        const file = document.createElement("input");
+        file.type = "file";
+        file.accept = "image/*";
+        file.onchange = (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) {
+            editor.chain().focus().setImage({
+              src: URL.createObjectURL(file),
+              alt: "Image",
+            }).run();
+          }
+        };
+        file.click();
+      },
+    },
+    {
       type: "divider",
       render: () => <Divider />,
     },
@@ -198,11 +218,11 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
       type: "divider",
       render: () => <Divider />,
     },
-    {
-      icon: <TableOfContents />,
-      title: "Table of Contents",
-      action: () => editor.chain().focus(),
-    },
+    // {
+    //   icon: <TableOfContents />,
+    //   title: "Table of Contents",
+    //   action: () => editor.chain().focus(),
+    // },
     {
       icon: <Printer />,
       title: "Print",
@@ -253,8 +273,8 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
   };
 
   return (
-    <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b">
-      <div className="flex justify-left">
+    <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b border-l">
+      <div className="flex justify-between flex-shrink-1">
         {items.map((item, index) => (
           <div key={index} className="flex m-[1px]">
             {item.render ? (
