@@ -162,6 +162,12 @@ const schema = a.schema({
       .to(["create", "read", "update", "delete"]),
       allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
     ]),
+  VersionHistory: a.customType({
+    version: a.integer().required(),
+    timestamp: a.datetime().required(),
+    author: a.string().required(),
+    changeType: a.string().required()
+  }),
   Documents: a
     .model({
       id: a.id().required(),
@@ -184,7 +190,7 @@ const schema = a.schema({
         tags: a.string().array(),
         description: a.string(),
       }),
-      versionHistory: a.json().array().required(),
+      versionHistory: a.ref("VersionHistory").array(),
     })
     .identifier(['tenantId', 'id'])
     .authorization((allow) => [

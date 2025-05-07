@@ -1,0 +1,17 @@
+---
+description: This rule is used for any time amplify client libraries are being used such as amplify storage or amplify data.
+globs: 
+alwaysApply: false
+---
+This project is using amplify gen 2, ensure we're using the latest api and documentation.
+
+When using amplify storage this is the correct way to call `uploadData`.
+
+await uploadData({
+    path: path,
+    data: content,
+    options: {
+        contentType: 'text/markdown',
+    },
+
+});

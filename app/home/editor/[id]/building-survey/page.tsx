@@ -1,43 +1,68 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { use, useState, useEffect } from "react";
+import React, { use, useState } from "react";
 import { NewEditor } from "@/app/home/components/Input/BlockEditor";
 import { PrintPreviewer } from "@/app/home/editor/components/PrintPreviewer";
 import { useDocumentTemplate } from "@/app/home/editor/hooks/useEditorState";
-import { useDocumentStorage } from "@/app/home/editor/hooks/useDocumentStorage";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { documentStore } from "@/app/home/clients/DocumentStore";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const [preview, setPreview] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const { isLoading, editorContent, previewContent, addTitleHeaderFooter } = useDocumentTemplate(params.id, "building-survey");
-
-  const getDocumentPath = (docId: string, userId: string, tenantId: string) => {
-    return `editor/${userId}/${tenantId}/building-survey/${docId}`;
-  };
-
-  const {
-    isSaving,
-    handleSave 
-  } = useDocumentStorage({
-    documentId: params.id,
-    getDocumentPath,
-  });
 
   const updateHandler = ({ editor }: { editor: any }) => {
     addTitleHeaderFooter({ editor });
   };
 
-  const save = () => {
-    handleSave(editorContent);
-    toast.success("Template saved as document");
-    router.push(`/home/editor/${params.id}`);
-  }
+  const save = async () => {
+    try {
+      setIsSaving(true);
+      
+      // Check if document exists
+      const existingDoc = await documentStore.get(params.id);
+      
+      if (existingDoc.ok) {
+        // Update existing document
+        const result = await documentStore.updateContent(params.id, editorContent);
+        if (!result.ok) {
+          throw new Error(result.val.message);
+        }
+      } else {
+        // Create new document
+        const result = await documentStore.create({
+          content: editorContent,
+          metadata: {
+            fileName: `${params.id}.md`,
+            fileType: 'markdown',
+            size: editorContent.length,
+            lastModified: new Date().toISOString(),
+            version: 1,
+            checksum: '', // TODO: Implement checksum calculation
+          }
+        });
+        
+        if (!result.ok) {
+          throw new Error(result.val.message);
+        }
+      }
+
+      toast.success("Document saved successfully");
+      router.push(`/home/editor/${params.id}`);
+    } catch (error) {
+      console.error('Failed to save document:', error);
+      toast.error('Failed to save document');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="w-[962px] m-auto">Loading...</div>;

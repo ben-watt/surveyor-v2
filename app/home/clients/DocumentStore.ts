@@ -7,6 +7,7 @@ import { validateMarkdown } from '../utils/markdown-utils';
 import { rateLimiter } from '../utils/rate-limiter';
 import { type Schema } from '@/amplify/data/resource';
 import { getCurrentUser } from 'aws-amplify/auth';
+import client from './AmplifyDataClient';
 
 // Types for store operations
 type CreateDocument = {
@@ -49,14 +50,6 @@ interface DynamoDocument {
     timestamp: string;
     author: string;
     changeType: 'create' | 'update' | 'delete';
-    metadata: {
-      fileName: string;
-      fileType: string;
-      size: number;
-      lastModified: string;
-      version: number;
-      checksum: string;
-    };
   }[];
 }
 
@@ -115,11 +108,10 @@ function createDocumentStore() {
 
       // Upload to S3
       const uploadResult = await uploadData({
-        key: path,
+        path: path,
         data: document.content,
         options: {
           contentType: 'text/markdown',
-          accessLevel: 'private',
         },
       });
 
@@ -129,7 +121,7 @@ function createDocumentStore() {
 
       // Create DynamoDB record
       const now = new Date().toISOString();
-      const result = await getDataClient().models.Documents.create({
+      const result = await client.models.Documents.create({
         id: documentId,
         displayName: documentId,
         fileName: document.metadata.fileName,
@@ -152,12 +144,11 @@ function createDocumentStore() {
           timestamp: now,
           author: user.username,
           changeType: 'create',
-          metadata: document.metadata,
         }],
       });
 
       if (!result.data) {
-        return Err(new Error('Failed to create document record'));
+        return Err(new Error(`Failed to create document record with errors ${JSON.stringify(result.errors)}`));
       }
 
       return Ok(result.data as DynamoDocument);
@@ -180,7 +171,7 @@ function createDocumentStore() {
         return Err(new Error('No tenant ID found'));
       }
 
-      const result = await getDataClient().models.Documents.update({
+      const result = await client.models.Documents.update({
         ...document,
         tenantId,
         updatedAt: now,
@@ -214,7 +205,7 @@ function createDocumentStore() {
       await remove(path);
 
       // Delete from DynamoDB
-      await getDataClient().models.Documents.delete({ id, tenantId });
+      await client.models.Documents.delete({ id, tenantId });
 
       return Ok(undefined);
     } catch (error) {
@@ -230,7 +221,7 @@ function createDocumentStore() {
         return Err(new Error('No tenant ID found'));
       }
 
-      const result = await getDataClient().models.Documents.get({ id, tenantId });
+      const result = await client.models.Documents.get({ id, tenantId });
       
       if (!result.data) {
         return Err(new Error('Document not found'));
@@ -250,7 +241,7 @@ function createDocumentStore() {
         return Err(new Error('No tenant ID found'));
       }
 
-      const result = await getDataClient().models.Documents.list({ tenantId });
+      const result = await client.models.Documents.list({ tenantId });
       return Ok(result.data as DynamoDocument[]);
     } catch (error) {
       return Err(error instanceof Error ? error : new Error('Failed to list documents'));
@@ -293,22 +284,21 @@ function createDocumentStore() {
 
       // Upload to S3
       await uploadData({
-        key: path,
+        path: path,
         data: content,
         options: {
           contentType: 'text/markdown',
-          accessLevel: 'private',
         },
       });
 
       // Update DynamoDB record
-      const result = await getDataClient().models.Documents.get({ id, tenantId });
+      const result = await client.models.Documents.get({ id, tenantId });
       if (!result.data) {
         return Err(new Error('Document not found'));
       }
 
       const doc = result.data as DynamoDocument;
-      const updateResult = await getDataClient().models.Documents.update({
+      const updateResult = await client.models.Documents.update({
         id,
         tenantId,
         version: doc.version + 1,
@@ -321,14 +311,6 @@ function createDocumentStore() {
             timestamp: now,
             author: user.username,
             changeType: 'update',
-            metadata: {
-              fileName: doc.fileName,
-              fileType: doc.fileType,
-              size: content.length,
-              lastModified: now,
-              version: doc.version + 1,
-              checksum: '', // TODO: Calculate checksum
-            },
           },
         ],
       });
@@ -362,13 +344,13 @@ function createDocumentStore() {
       const user = await getCurrentUser();
       const now = new Date().toISOString();
 
-      const result = await getDataClient().models.Documents.get({ id, tenantId });
+      const result = await client.models.Documents.get({ id, tenantId });
       if (!result.data) {
         return Err(new Error('Document not found'));
       }
 
       const doc = result.data as DynamoDocument;
-      const updateResult = await getDataClient().models.Documents.update({
+      const updateResult = await client.models.Documents.update({
         id,
         tenantId,
         displayName: newName,
@@ -380,14 +362,6 @@ function createDocumentStore() {
             timestamp: now,
             author: user.username,
             changeType: 'update',
-            metadata: {
-              fileName: doc.fileName,
-              fileType: doc.fileType,
-              size: doc.size,
-              lastModified: now,
-              version: doc.version + 1,
-              checksum: doc.metadata.checksum,
-            },
           },
         ],
       });
