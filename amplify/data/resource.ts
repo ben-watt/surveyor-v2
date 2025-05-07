@@ -165,12 +165,26 @@ const schema = a.schema({
   Documents: a
     .model({
       id: a.id().required(),
-      content: a.string().required(),
-      syncStatus: a.string().required(),
-      syncError: a.string(),
+      displayName: a.string().required(),
+      fileName: a.string().required(),
+      fileType: a.string().required(),
+      size: a.integer().required(),
+      version: a.integer().required(),
+      lastModified: a.datetime().required(),
       createdAt: a.datetime().required(),
       updatedAt: a.datetime().required(),
       tenantId: a.string().required(),
+      owner: a.string().required(),
+      editors: a.string().array().required(),
+      viewers: a.string().array().required(),
+      syncStatus: a.string().required(),
+      syncError: a.string(),
+      metadata: a.customType({
+        checksum: a.string().required(),
+        tags: a.string().array(),
+        description: a.string(),
+      }),
+      versionHistory: a.json().array().required(),
     })
     .identifier(['tenantId', 'id'])
     .authorization((allow) => [

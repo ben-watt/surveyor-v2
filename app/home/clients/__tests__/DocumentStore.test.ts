@@ -1,152 +1,229 @@
 import { documentStore } from '../DocumentStore';
-import { db } from '../Dexie';
-import { Err, Ok } from 'ts-results';
+import { uploadData, remove, getUrl } from 'aws-amplify/storage';
+import { generateClient } from 'aws-amplify/data';
+import { getCurrentTenantId } from '../../utils/tenant-utils';
+import { getCurrentUser } from 'aws-amplify/auth';
+import { validateMarkdown } from '../../utils/markdown-utils';
+import { sanitizeFileName } from '../../utils/file-utils';
+import { Ok } from 'ts-results';
 
-// Mock getCurrentTenantId
-jest.mock('../../utils/tenant-utils', () => ({
-  getCurrentTenantId: jest.fn().mockResolvedValue('test-tenant'),
-}));
-
-// Mock AWS Amplify Storage
+// Mock dependencies
 jest.mock('aws-amplify/storage', () => ({
-  uploadData: jest.fn().mockImplementation(() => ({
-    result: Promise.resolve(true)
-  })),
+  uploadData: jest.fn(),
+  remove: jest.fn(),
+  getUrl: jest.fn(),
 }));
 
-// Mock Dexie
-jest.mock('../Dexie', () => {
-  const mockDb = {
-    table: jest.fn().mockReturnValue({
-      add: jest.fn().mockResolvedValue(undefined),
-      clear: jest.fn().mockResolvedValue(undefined),
-    }),
-  };
-  return { db: mockDb };
-});
+jest.mock('aws-amplify/data', () => ({
+  generateClient: jest.fn(),
+}));
+
+jest.mock('../../utils/tenant-utils', () => ({
+  getCurrentTenantId: jest.fn(),
+}));
+
+jest.mock('aws-amplify/auth', () => ({
+  getCurrentUser: jest.fn(),
+}));
+
+jest.mock('../../utils/markdown-utils', () => ({
+  validateMarkdown: jest.fn(),
+}));
+
+jest.mock('../../utils/file-utils', () => ({
+  sanitizeFileName: jest.fn(),
+}));
 
 describe('DocumentStore', () => {
+  const mockDataClient = {
+    models: {
+      Documents: {
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        get: jest.fn(),
+        list: jest.fn(),
+      },
+    },
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    (generateClient as jest.Mock).mockReturnValue(mockDataClient);
+    (getCurrentTenantId as jest.Mock).mockResolvedValue('test-tenant');
+    (getCurrentUser as jest.Mock).mockResolvedValue({ username: 'test-user' });
+    (uploadData as jest.Mock).mockResolvedValue({ result: true });
+    (remove as jest.Mock).mockResolvedValue(undefined);
+    (getUrl as jest.Mock).mockResolvedValue({ url: 'https://test-url.com' });
+    (validateMarkdown as jest.Mock).mockReturnValue(Ok(undefined));
+    (sanitizeFileName as jest.Mock).mockImplementation((name) => name);
+    Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
   });
 
   describe('create', () => {
-    it('should create document when online', async () => {
-      // Mock navigator.onLine
-      Object.defineProperty(navigator, 'onLine', { 
-        configurable: true,
-        value: true 
-      });
-
-      const doc = {
-        path: 'test', // This will be used to construct the final path
-        content: '# Test',
+    it('should create a document when online', async () => {
+      const mockDocument = {
+        content: '# Test Document\n\nThis is a test document.',
         metadata: {
           fileName: 'test.md',
           fileType: 'markdown',
-          size: 6,
-          lastModified: new Date().toISOString(),
+          size: 100,
+          lastModified: '2024-01-01T00:00:00Z',
           version: 1,
-          checksum: 'abc123',
+          checksum: 'test-checksum',
         },
       };
 
-      const result = await documentStore.create(doc);
-      
-      if (result.err) {
-        console.error('Create document failed:', result.val);
-      }
-      
+      const mockCreatedDoc = {
+        id: 'test',
+        displayName: 'test',
+        fileName: 'test.md',
+        fileType: 'markdown',
+        size: 100,
+        version: 1,
+        lastModified: '2024-01-01T00:00:00Z',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+        tenantId: 'test-tenant',
+        owner: 'test-user',
+        editors: ['test-user'],
+        viewers: ['test-user'],
+        syncStatus: 'Synced',
+        metadata: {
+          checksum: 'test-checksum',
+        },
+        versionHistory: [{
+          version: 1,
+          timestamp: '2024-01-01T00:00:00Z',
+          author: 'test-user',
+          changeType: 'create',
+          metadata: mockDocument.metadata,
+        }],
+      };
+
+      mockDataClient.models.Documents.create.mockResolvedValue({ data: mockCreatedDoc });
+
+      const result = await documentStore.create(mockDocument);
+      console.log('Create result:', result);
+
       expect(result.ok).toBe(true);
       if (result.ok) {
-        expect(result.val.version).toBe(1);
-        expect(result.val.syncStatus).toBe('Synced');
-        expect(result.val.id).toBe('documents/test-tenant/test#test-tenant');
-        expect(result.val.path).toBe('documents/test-tenant/test');
-        expect(db.table).toHaveBeenCalledTimes(2); // Once for documents, once for versions
+        expect(result.val).toEqual(mockCreatedDoc);
       }
+
+      expect(uploadData).toHaveBeenCalledWith({
+        key: 'documents/test-tenant/test',
+        data: mockDocument.content,
+        options: {
+          contentType: 'text/markdown',
+          accessLevel: 'private',
+        },
+      });
+
+      expect(mockDataClient.models.Documents.create).toHaveBeenCalledWith({
+        id: 'test',
+        displayName: 'test',
+        fileName: 'test.md',
+        fileType: 'markdown',
+        size: 100,
+        version: 1,
+        lastModified: '2024-01-01T00:00:00Z',
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+        tenantId: 'test-tenant',
+        owner: 'test-user',
+        editors: ['test-user'],
+        viewers: ['test-user'],
+        syncStatus: 'Synced',
+        metadata: {
+          checksum: 'test-checksum',
+        },
+        versionHistory: [{
+          version: 1,
+          timestamp: expect.any(String),
+          author: 'test-user',
+          changeType: 'create',
+          metadata: mockDocument.metadata,
+        }],
+      });
     });
 
     it('should fail when offline', async () => {
-      // Mock navigator.onLine
-      Object.defineProperty(navigator, 'onLine', { 
-        configurable: true,
-        value: false 
-      });
+      Object.defineProperty(navigator, 'onLine', { value: false });
 
-      const doc = {
-        path: 'test',
-        content: '# Test',
+      const mockDocument = {
+        content: '# Test Document\n\nThis is a test document.',
         metadata: {
           fileName: 'test.md',
           fileType: 'markdown',
-          size: 6,
-          lastModified: new Date().toISOString(),
+          size: 100,
+          lastModified: '2024-01-01T00:00:00Z',
           version: 1,
-          checksum: 'abc123',
+          checksum: 'test-checksum',
         },
       };
 
-      const result = await documentStore.create(doc);
-      expect(result.err).toBe(true);
-      if (result.err) {
-        expect(result.val.message).toContain('online connection');
+      const result = await documentStore.create(mockDocument);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.val.message).toBe('Cannot create document while offline');
       }
-      expect(db.table).not.toHaveBeenCalled();
+
+      expect(uploadData).not.toHaveBeenCalled();
+      expect(mockDataClient.models.Documents.create).not.toHaveBeenCalled();
     });
 
     it('should validate markdown content', async () => {
-      Object.defineProperty(navigator, 'onLine', { 
-        configurable: true,
-        value: true 
-      });
+      (validateMarkdown as jest.Mock).mockReturnValue({ ok: false, val: 'Content cannot be empty' });
 
-      const doc = {
-        path: 'test',
-        content: '', // Empty content
+      const mockDocument = {
+        content: '',
         metadata: {
           fileName: 'test.md',
           fileType: 'markdown',
-          size: 0,
-          lastModified: new Date().toISOString(),
+          size: 100,
+          lastModified: '2024-01-01T00:00:00Z',
           version: 1,
-          checksum: 'abc123',
+          checksum: 'test-checksum',
         },
       };
 
-      const result = await documentStore.create(doc);
-      expect(result.err).toBe(true);
-      if (result.err) {
-        expect(result.val.message).toContain('empty');
+      const result = await documentStore.create(mockDocument);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.val.message).toBe('Content cannot be empty');
       }
-      expect(db.table).not.toHaveBeenCalled();
+
+      expect(uploadData).not.toHaveBeenCalled();
+      expect(mockDataClient.models.Documents.create).not.toHaveBeenCalled();
     });
 
     it('should sanitize file names', async () => {
-      Object.defineProperty(navigator, 'onLine', { 
-        configurable: true,
-        value: true 
-      });
+      (sanitizeFileName as jest.Mock).mockReturnValue('invalid');
 
-      const doc = {
-        path: 'test file',
-        content: '# Test',
+      const mockDocument = {
+        content: '# Test Document\n\nThis is a test document.',
         metadata: {
-          fileName: 'test file.md', // Invalid file name
+          fileName: 'test/../test.md',
           fileType: 'markdown',
-          size: 6,
-          lastModified: new Date().toISOString(),
+          size: 100,
+          lastModified: '2024-01-01T00:00:00Z',
           version: 1,
-          checksum: 'abc123',
+          checksum: 'test-checksum',
         },
       };
 
-      const result = await documentStore.create(doc);
-      expect(result.err).toBe(true);
-      if (result.err) {
-        expect(result.val.message).toContain('Invalid file name');
+      const result = await documentStore.create(mockDocument);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.val.message).toBe('Invalid file name');
       }
-      expect(db.table).not.toHaveBeenCalled();
+
+      expect(uploadData).not.toHaveBeenCalled();
+      expect(mockDataClient.models.Documents.create).not.toHaveBeenCalled();
     });
   });
 }); 
