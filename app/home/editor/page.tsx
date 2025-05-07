@@ -6,7 +6,7 @@ import { PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentList } from "../components/DocumentList";
-import useUser, { useUserHook } from "../utils/useUser";
+import { useUserHook } from "../utils/useUser";
 import { useCurrentTenantId } from "../utils/tenant-utils";
 
 function EditorPage() {
@@ -18,6 +18,11 @@ function EditorPage() {
     const newDocId = uuidv4();
     router.push(`/home/editor/${newDocId}`);
   };
+
+  const handleOpen = async (path: string) => {
+    const encodedPath = encodeURIComponent(path);
+    router.push(`/home/editor/${encodedPath}`);
+  }
 
   if (!isUserHydrated || !isTenantHydrated) {
     return <div>Loading...</div>;
@@ -69,6 +74,7 @@ function EditorPage() {
             <DocumentList
               userId={user.userId}
               tenantId={tenantId}
+              onOpen={handleOpen}
             />
           )}
         </div>

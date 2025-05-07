@@ -46,11 +46,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Level } from "@tiptap/extension-heading";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@uidotdev/usehooks";
@@ -292,7 +287,7 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
 
   return (
     <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b border-l">
-      <div className="flex justify-between flex-shrink-1">
+      <div className="flex justify-between flex-shrink-1 overflow-y-scroll no-scrollbar">
         {items.map((item, index) => (
           <div key={index} className="flex m-[1px]">
             {item.render ? (

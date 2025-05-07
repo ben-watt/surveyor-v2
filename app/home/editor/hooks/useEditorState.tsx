@@ -6,7 +6,9 @@ import { Footer, Header, TitlePage } from "../components/HeaderFooter";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Editor } from "@tiptap/react";
 
-export const useBuildingSurveyFormTemplate = (surveyId: string) => {
+type TemplateId = "building-survey";
+
+export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) => {
   const [editorContent, setEditorContent] = React.useState<string>("");
   const [editorData, setEditorData] = React.useState<BuildingSurveyFormData>();
   const [previewContent, setPreviewContent] = React.useState<string>("");
@@ -15,13 +17,17 @@ export const useBuildingSurveyFormTemplate = (surveyId: string) => {
   const [footer, setFooter] = React.useState<string>("");
   const [titlePage, setTitlePage] = React.useState<string>("");
 
+  if(templateId !== "building-survey") {
+    throw new Error("Invalid template id");
+  }
+
   React.useEffect(() => {
     const getReport = async () => {
       try {
         setIsLoading(true);
-        const survey = await surveyStore.get(surveyId);
-        if (survey) {
-          setEditorData(survey.content);
+        const document = await surveyStore.get(surveyId);
+        if (document) {
+          setEditorData(document.content);
         }
       } catch (error) {
         console.error("Failed to fetch survey:", error);
@@ -57,7 +63,7 @@ export const useBuildingSurveyFormTemplate = (surveyId: string) => {
     }
   }, [editorData]);
 
-  const updateHandler = React.useCallback(({editor}: {editor: Editor}) => {
+  const addTitleHeaderFooter = React.useCallback(({editor}: {editor: Editor}) => {
     setPreviewContent( titlePage + header + footer + editor.getHTML());
   }, [titlePage, header, footer]);
 
@@ -84,7 +90,7 @@ export const useBuildingSurveyFormTemplate = (surveyId: string) => {
     footer,
     titlePage,
     setPreviewContent,
-    updateHandler,
+    addTitleHeaderFooter,
     isLoading,
   };
 };

@@ -976,7 +976,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 </div>
                 <p></p>
                 {form.reportDetails.level === "3" && mc.costings.length > 0 && (
-                  <>
+                  <React.Fragment key={mc.name}>
                     <p></p>
                     <p style={{ "fontWeight" : "500" }}>Budget Cost</p>
                     <p>
@@ -989,7 +989,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                       ))}
                     </p>
                     <p></p>
-                  </>
+                  </React.Fragment>
                 )}
               </TableBlock>
           ))}

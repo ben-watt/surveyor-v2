@@ -2,7 +2,6 @@ import React from 'react';
 import { list } from 'aws-amplify/storage';
 import { Button } from '@/components/ui/button';
 import { FileText, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { remove } from 'aws-amplify/storage';
 import toast from 'react-hot-toast';
 
@@ -10,11 +9,11 @@ interface DocumentListProps {
   userId: string;
   tenantId: string;
   currentDocumentId?: string;
+  onOpen?: (path: string) => void;
 }
 
-export function DocumentList({ userId, tenantId, currentDocumentId }: DocumentListProps) {
-  const router = useRouter();
-  const [documents, setDocuments] = React.useState<{ key: string; lastModified: Date }[]>([]);
+export function DocumentList({ userId, tenantId, currentDocumentId, onOpen }: DocumentListProps) {
+  const [documents, setDocuments] = React.useState<{ path: string; lastModified: Date }[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -28,7 +27,7 @@ export function DocumentList({ userId, tenantId, currentDocumentId }: DocumentLi
         const docs = result.items
           .filter(item => item.path !== prefix) // Exclude the prefix itself
           .map(item => ({
-            key: item.path,
+            path: item.path,
             lastModified: item.lastModified ? new Date(item.lastModified) : new Date()
           }))
           .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
@@ -50,7 +49,7 @@ export function DocumentList({ userId, tenantId, currentDocumentId }: DocumentLi
     
     try {
       await remove({ path: key });
-      setDocuments(docs => docs.filter(doc => doc.key !== key));
+      setDocuments(docs => docs.filter(doc => doc.path !== key));
       toast.success('Document deleted successfully');
     } catch (error) {
       console.error('Failed to delete document:', error);
@@ -61,6 +60,7 @@ export function DocumentList({ userId, tenantId, currentDocumentId }: DocumentLi
   const getDocumentId = (key: string) => {
     const parts = key.split('/');
     return parts[parts.length - 1];
+
   };
 
   if (isLoading) {
@@ -75,10 +75,10 @@ export function DocumentList({ userId, tenantId, currentDocumentId }: DocumentLi
           <p className="text-gray-500">No documents found</p>
         ) : (
           documents.map((doc) => {
-            const docId = getDocumentId(doc.key);
+            const docId = getDocumentId(doc.path);
             return (
               <div
-                key={doc.key}
+                key={doc.path}
                 className={`flex items-center justify-between p-3 rounded-lg ${
                   currentDocumentId === docId
                     ? 'bg-blue-50 border border-blue-200'
@@ -96,14 +96,14 @@ export function DocumentList({ userId, tenantId, currentDocumentId }: DocumentLi
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push(`/home/editor/${docId}`)}
+                    onClick={() => onOpen?.(doc.path)}
                   >
                     Open
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDelete(doc.key)}
+                    onClick={() => handleDelete(doc.path)}
                     className="text-red-500 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4" />
