@@ -11,6 +11,7 @@ import { debounce, DebouncedFunc } from 'lodash';
 import { getCurrentTenantId } from '../utils/tenant-utils';
 import { ImageMetadata } from './Database';
 import { getCurrentUser } from 'aws-amplify/auth';
+import { Document, VersionHistory } from './DocumentStore';
 
 type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
@@ -451,6 +452,8 @@ const db = new Dexie('Surveys') as Dexie & {
   sections: EntityTable<Section, "id", "tenantId">;
   imageUploads: EntityTable<ImageUpload, "id", "tenantId">;
   imageMetadata: EntityTable<ImageMetadata, "id", "tenantId">;
+  documents: EntityTable<Document, "id", "tenantId">;
+  documentVersions: EntityTable<VersionHistory, "path", "tenantId">;
 };
 
 db.version(1).stores({
@@ -461,6 +464,8 @@ db.version(1).stores({
   sections: '[id+tenantId], updatedAt, syncStatus',
   imageUploads: '[id+tenantId], path, updatedAt, syncStatus',
   imageMetadata: '[id+tenantId], imagePath, updatedAt, syncStatus',
+  documents: '[id+tenantId], path, updatedAt, syncStatus',
+  documentVersions: '[id+tenantId], path, updatedAt, syncStatus',
 });
 
 export { db, CreateDexieHooks, SyncStatus };
