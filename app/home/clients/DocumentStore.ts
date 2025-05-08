@@ -11,6 +11,7 @@ import client from './AmplifyDataClient';
 
 // Types for store operations
 type CreateDocument = {
+  displayName?: string;
   content: string;
   metadata: {
     fileName: string;
@@ -54,15 +55,6 @@ interface DynamoDocument {
 }
 
 function createDocumentStore() {
-  // Initialize data client
-  let _dataClient: ReturnType<typeof generateClient<Schema>> | null = null;
-  const getDataClient = () => {
-    if (!_dataClient) {
-      _dataClient = generateClient<Schema>();
-    }
-    return _dataClient;
-  };
-
   // Network status check
   const isOnline = () => navigator.onLine;
 
@@ -123,7 +115,7 @@ function createDocumentStore() {
       const now = new Date().toISOString();
       const result = await client.models.Documents.create({
         id: documentId,
-        displayName: documentId,
+        displayName: document.displayName || documentId,
         fileName: document.metadata.fileName,
         fileType: document.metadata.fileType,
         size: document.metadata.size,

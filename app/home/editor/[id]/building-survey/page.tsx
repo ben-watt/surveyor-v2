@@ -16,7 +16,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
   const [preview, setPreview] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-  const { isLoading, editorContent, previewContent, addTitleHeaderFooter } = useDocumentTemplate(params.id, "building-survey");
+  const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } = useDocumentTemplate(params.id, "building-survey");
 
   const updateHandler = ({ editor }: { editor: any }) => {
     addTitleHeaderFooter({ editor });
@@ -26,7 +26,6 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
     try {
       setIsSaving(true);
       
-      // Check if document exists
       const existingDoc = await documentStore.get(params.id);
       
       if (existingDoc.ok) {
@@ -38,6 +37,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
       } else {
         // Create new document
         const result = await documentStore.create({
+          displayName: await getDocName(),
           content: editorContent,
           metadata: {
             fileName: `${params.id}.md`,

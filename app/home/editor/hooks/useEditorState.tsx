@@ -1,10 +1,11 @@
 import React from "react";
-import { BuildingSurveyFormData } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, formatAddress } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
 import { mapFormDataToHtml } from "../utils/formData";
 import { Footer, Header, TitlePage } from "../components/HeaderFooter";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Editor } from "@tiptap/react";
+import { documentStore } from "../../clients/DocumentStore";
 
 type TemplateId = "building-survey";
 
@@ -77,6 +78,14 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
     setPreviewContent(titlePage + header + footer + currentEditorHtml);
   }, [titlePage, header, footer]);
 
+  const getDocName = async () => {
+    const document = await surveyStore.get(surveyId);
+    if (document) {
+      return formatAddress(document.content.reportDetails.address);
+    }
+    return surveyId;
+  }
+
   return {
     editorContent,
     previewContent,
@@ -85,6 +94,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
     titlePage,
     setPreviewContent,
     addTitleHeaderFooter,
+    getDocName,
     isLoading,
   };
 };
