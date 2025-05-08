@@ -4,6 +4,7 @@ import ReportDetailsForm from '../ReportDetailsForm';
 import { FormStatus } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 import { surveyStore } from '@/app/home/clients/Database';
 import { useImageUploadStatus } from '@/app/home/components/InputImage/useImageUploadStatus';
+import { imageUploadStore } from '@/app/home/clients/ImageUploadStore';
 
 // Mock dependencies
 jest.mock('next/navigation', () => ({
@@ -15,6 +16,13 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/app/home/clients/Database', () => ({
   surveyStore: {
     update: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+jest.mock('@/app/home/clients/ImageUploadStore', () => ({
+  imageUploadStore: {
+    list: jest.fn().mockResolvedValue({ ok: true, val: [] }),
+    get: jest.fn().mockResolvedValue({ ok: true, val: { file: new Blob(), path: '', href: '' } }),
   },
 }));
 
@@ -171,7 +179,7 @@ describe('ReportDetailsForm', () => {
 
   let mockHook: ReturnType<typeof createMockHookState>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     
     // Create a fresh mock hook state with no uploads by default
@@ -185,7 +193,9 @@ describe('ReportDetailsForm', () => {
   });
 
   it('allows form submission when no images are uploading', async () => {
-    render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    await act(async () => {
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    });
     
     // Submit the form
     await act(async () => {
@@ -200,7 +210,9 @@ describe('ReportDetailsForm', () => {
     // Set up that images are uploading
     (useImageUploadStatus as jest.Mock).mockReturnValue(mockHook.update(true));
     
-    render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    await act(async () => {
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    });
     
     // Check that the warning is displayed
     expect(screen.getByText(/Images are currently uploading/i)).toBeInTheDocument();
@@ -218,11 +230,13 @@ describe('ReportDetailsForm', () => {
     expect(surveyStore.update).not.toHaveBeenCalled();
   });
 
-  it('disables the submit button when uploads are in progress', () => {
+  it('disables the submit button when uploads are in progress', async () => {
     // Mock that uploads are in progress
     (useImageUploadStatus as jest.Mock).mockReturnValue(mockHook.update(true));
     
-    render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    await act(async () => {
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    });
     
     // Verify button is disabled with "Images Uploading..." text
     const submitButton = screen.getByRole('button', { name: /Images Uploading/i });
@@ -230,11 +244,13 @@ describe('ReportDetailsForm', () => {
     expect(submitButton.textContent).toBe('Images Uploading...');
   });
 
-  it('enables the submit button when no uploads are in progress', () => {
+  it('enables the submit button when no uploads are in progress', async () => {
     // Mock that no uploads are in progress
     (useImageUploadStatus as jest.Mock).mockReturnValue(mockHook.update(false));
     
-    render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    await act(async () => {
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
+    });
     
     // Verify button is enabled with "Save" text
     const submitButton = screen.getByRole('button', { name: /Save/i });
