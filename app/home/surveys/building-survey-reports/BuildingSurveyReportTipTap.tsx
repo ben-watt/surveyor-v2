@@ -401,11 +401,11 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         {form.sections.map((s, i) => (
-          <div key={s.name}>
+          <div key={`section.${s.name}.${i}`}>
             <h1 style={{ fontSize: "14pt", fontWeight: "bold" }}>{s.name}</h1>
             {s.elementSections.map((cs, j) => (
               <ConditionSection
-                key={`${s.name}.${cs.name}`}
+                key={`${s.name}.${cs.name}.${j}`}
                 elementSection={cs}
                 form={form}
               />
@@ -880,36 +880,36 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   let tableRows = [];
   for (let i = 0; i < allImages.length; i = i + 2) {
     tableRows.push(
-      <table>
+      <table key={`${elementSection.id}.table.${i}`}>
         <tbody>
-          <tr key={`${elementSection.id}.${i}`}>
-            <td>
-          <img
-            key={i}
-            src={allImages[i].uri}
-            alt={elementSection.name + ".image." + i}
-            style={{ maxHeight: "75mm", margin: "0 auto" }}
-          />
-          {allImages[i].hasMetadata && (
-            <p>{allImages[i].metadata?.caption}</p>
-          )}
-        </td>
-        <td>
-          {allImages[i + 1] && (
-            <img
-              key={`${elementSection.id}.${i + 1}`}
-              src={allImages[i + 1].uri}
-              alt={elementSection.name + ".image." + i}
-              style={{ maxHeight: "75mm", margin: "0 auto" }}
-            />
-          )}
-          {allImages[i + 1]?.hasMetadata && (
-            <p>{allImages[i + 1].metadata?.caption}</p>
-          )}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          <tr key={`${elementSection.id}.row.${i}`}>
+            <td key={`${elementSection.id}.cell.${i}`}>
+              <img
+                key={`${elementSection.id}.img.${i}`}
+                src={allImages[i].uri}
+                alt={elementSection.name + ".image." + i}
+                style={{ maxHeight: "75mm", margin: "0 auto" }}
+              />
+              {allImages[i].hasMetadata && (
+                <p key={`${elementSection.id}.caption.${i}`}>{allImages[i].metadata?.caption}</p>
+              )}
+            </td>
+            <td key={`${elementSection.id}.cell.${i + 1}`}>
+              {allImages[i + 1] && (
+                <img
+                  key={`${elementSection.id}.img.${i + 1}`}
+                  src={allImages[i + 1].uri}
+                  alt={elementSection.name + ".image." + i}
+                  style={{ maxHeight: "75mm", margin: "0 auto" }}
+                />
+              )}
+              {allImages[i + 1]?.hasMetadata && (
+                <p key={`${elementSection.id}.caption.${i + 1}`}>{allImages[i + 1].metadata?.caption}</p>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     );
   }
 
