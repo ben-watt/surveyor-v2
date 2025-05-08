@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { SurveyDocuments } from '@/app/components/SurveyDocuments';
 import { documentStore } from '@/app/home/clients/DocumentStore';
 import { Ok, Err } from 'ts-results';
-import userEvent from '@testing-library/user-event';
 import { useRouter } from 'next/navigation';
 
 // Mock next/navigation
@@ -97,7 +96,6 @@ describe('SurveyDocuments', () => {
   });
 
   it('navigates to editor when document is clicked', async () => {
-    const user = userEvent.setup();
     (documentStore.list as jest.Mock).mockResolvedValue(Ok(mockDocuments));
     
     render(<SurveyDocuments surveyId="123" />);
