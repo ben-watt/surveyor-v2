@@ -287,7 +287,7 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
 
   return (
     <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b border-l">
-      <div className="flex justify-between flex-shrink-1 overflow-y-scroll no-scrollbar">
+      <div className="flex justify-between flex-shrink-1 no-scrollbar">
         {items.map((item, index) => (
           <div key={index} className="flex m-[1px]">
             {item.render ? (

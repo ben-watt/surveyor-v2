@@ -21,6 +21,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
     throw new Error("Invalid template id");
   }
 
+  // Load initial data
   React.useEffect(() => {
     const getReport = async () => {
       try {
@@ -31,7 +32,6 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
         }
       } catch (error) {
         console.error("Failed to fetch survey:", error);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -39,49 +39,43 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
     getReport();
   }, [surveyId]);
 
-  const renderFooter = React.useCallback(
-    () => renderToStaticMarkup(<Footer editorData={editorData} />),
-    [editorData]
-  );
-
-  const renderTitlePage = React.useCallback(
-    () => renderToStaticMarkup(<TitlePage editorData={editorData} />),
-    [editorData]
-  );
-
-  const renderHeader = React.useCallback(
-    () => renderToStaticMarkup(<Header editorData={editorData} />),
-    [editorData]
-  );
-
-  const mapToEditorContent = React.useCallback(async () => {
-    try {
-      const html = await mapFormDataToHtml(editorData);
-      setEditorContent(html);
-    } catch (error) {
-      console.error("[useEditorState] Failed to map form data to HTML", error);
+  // Render header, footer, and title page when editorData changes
+  React.useEffect(() => {
+    if (editorData) {
+      const newHeader = renderToStaticMarkup(<Header editorData={editorData} />);
+      const newFooter = renderToStaticMarkup(<Footer editorData={editorData} />);
+      const newTitlePage = renderToStaticMarkup(<TitlePage editorData={editorData} />);
+      
+      setHeader(newHeader);
+      setFooter(newFooter);
+      setTitlePage(newTitlePage);
     }
   }, [editorData]);
 
+  // Map form data to HTML when editorData changes
+  React.useEffect(() => {
+    const updateContent = async () => {
+      if (editorData && header && footer && titlePage) {
+        try {
+          const html = await mapFormDataToHtml(editorData);
+          setEditorContent(html);
+          setPreviewContent(titlePage + header + footer + html);
+          setIsLoading(false);
+        } catch (error) {
+          console.error("[useEditorState] Failed to map form data to HTML", error);
+          setIsLoading(false);
+        }
+      }
+    };
+
+    updateContent();
+  }, [editorData, header, footer, titlePage]);
+
   const addTitleHeaderFooter = React.useCallback(({editor}: {editor: Editor}) => {
-    setPreviewContent( titlePage + header + footer + editor.getHTML());
+    const currentEditorHtml = editor.getHTML();
+    setEditorContent(currentEditorHtml);
+    setPreviewContent(titlePage + header + footer + currentEditorHtml);
   }, [titlePage, header, footer]);
-
-  React.useEffect(() => {
-    mapToEditorContent();
-  }, [mapToEditorContent]);
-
-  React.useEffect(() => {
-    setHeader(renderHeader());
-  }, [renderHeader]);
-
-  React.useEffect(() => {
-    setFooter(renderFooter());
-  }, [renderFooter]);
-
-  React.useEffect(() => { 
-    setTitlePage(renderTitlePage());
-  }, [renderTitlePage]);
 
   return {
     editorContent,
