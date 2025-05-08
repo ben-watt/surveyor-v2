@@ -2,7 +2,7 @@
 
 ## Overview
 
-The document store will provide a robust system for managing markdown documents with version control, online-only operations, and S3 integration. This implementation will follow the project's offline-first architecture while maintaining strict online requirements for document operations.
+The document store provides a robust system for managing markdown documents with version control, online-only operations, and S3 integration. This implementation follows the project's offline-first architecture while maintaining strict online requirements for document operations.
 
 ## Architecture
 
@@ -11,6 +11,10 @@ The document store will provide a robust system for managing markdown documents 
   - AWS S3 via Amplify for document content
   - DynamoDB via Amplify Data for document metadata, access control, and version history
 - **Folder Structure**: `/documents/{tenantId}/{documentId}` in S3
+- **Access Control**:
+  - Authenticated users can read documents
+  - Global admins have full access (read, write, delete, list)
+  - Entity-based access control for document operations
 
 ### Data Model
 
@@ -42,14 +46,6 @@ interface DynamoDocument {
     timestamp: string;
     author: string;
     changeType: 'create' | 'update' | 'delete';
-    metadata: {
-      fileName: string;
-      fileType: string;
-      size: number;
-      lastModified: string;
-      version: number;
-      checksum: string;
-    };
   }[];
 }
 
@@ -67,247 +63,59 @@ type CreateDocument = {
 };
 
 type UpdateDocument = Partial<DynamoDocument> & { id: string };
-type UploadProgress = {
-  progress: number;
-  status: 'uploading' | 'completed' | 'failed';
-  error?: string;
-};
 ```
 
 ## Technical Implementation
 
-### 1. Store Setup
+### 1. Store Operations
+
+The document store provides the following operations:
 
 ```typescript
-// app/home/clients/DocumentStore.ts
-import { uploadData, remove, getUrl } from 'aws-amplify/storage';
-import { generateClient } from 'aws-amplify/data';
-import { Err, Ok, Result } from 'ts-results';
-import { getCurrentTenantId } from '../utils/tenant-utils';
-import { sanitizeFileName } from '../utils/file-utils';
-import { validateMarkdown } from '../utils/markdown-utils';
-import { rateLimiter } from '../utils/rate-limiter';
-import { type Schema } from '@/amplify/data/resource';
-
-const dataClient = generateClient<Schema>();
-
-function createDocumentStore() {
-  // Network status check
-  const isOnline = () => navigator.onLine;
-
-  // Content validation
-  const validateContent = (content: string, fileName: string): Result<void, Error> => {
-    if (!content) return Err(new Error('Content cannot be empty'));
-    if (content.length > 10 * 1024 * 1024) return Err(new Error('Content too large'));
-    
-    const markdownValidation = validateMarkdown(content);
-    if (markdownValidation.err) return Err(markdownValidation.val);
-    
-    const sanitizedFileName = sanitizeFileName(fileName);
-    if (sanitizedFileName !== fileName) {
-      return Err(new Error('Invalid file name'));
-    }
-    
-    return Ok(undefined);
-  };
-
-  return {
-    create: async (document: CreateDocument): Promise<Result<DynamoDocument, Error>> => {
-      if (!isOnline()) {
-        return Err(new Error('Operation requires online connection'));
-      }
-
-      // Rate limiting
-      if (!rateLimiter.checkLimit('create')) {
-        return Err(new Error('Rate limit exceeded'));
-      }
-
-      const validation = validateContent(document.content, document.metadata.fileName);
-      if (validation.err) return Err(validation.val);
-
-      try {
-        const tenantId = await getCurrentTenantId();
-        const fileName = document.metadata.fileName;
-        const displayName = fileName.replace(/\.md$/, '');
-        const path = `documents/${tenantId}/${fileName}`;
-        const version = 1;
-
-        // Upload to S3
-        const uploadResult = await uploadData({
-          path,
-          data: document.content,
-          options: {
-            contentType: 'text/markdown',
-            metadata: {
-              ...document.metadata,
-              version: version.toString(),
-              checksum: document.metadata.checksum,
-            },
-          },
-        }).result;
-
-        if (!uploadResult) {
-          return Err(new Error('Upload failed'));
-        }
-
-        // Create DynamoDB record
-        const dynamoDoc: DynamoDocument = {
-          id: path,
-          displayName,
-          fileName,
-          fileType: document.metadata.fileType,
-          size: document.metadata.size,
-          version,
-          lastModified: document.metadata.lastModified,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          tenantId,
-          owner: 'system', // TODO: Get from auth context
-          editors: [],     // TODO: Get from auth context or settings
-          viewers: [],     // TODO: Get from auth context or settings
-          syncStatus: 'Synced',
-          metadata: {
-            checksum: document.metadata.checksum,
-          },
-          versionHistory: [{
-            version,
-            timestamp: new Date().toISOString(),
-            author: 'system', // TODO: Get from auth context
-            changeType: 'create',
-            metadata: document.metadata,
-          }],
-        };
-
-        await dataClient.models.Documents.create(dynamoDoc);
-        return Ok(dynamoDoc);
-      } catch (error) {
-        return Err(error instanceof Error ? error : new Error('Unknown error'));
-      }
-    },
-
-    rename: async (
-      documentId: string,
-      newDisplayName: string
-    ): Promise<Result<void, Error>> => {
-      if (!isOnline()) {
-        return Err(new Error('Operation requires online connection'));
-      }
-
-      try {
-        // Validate new name
-        if (!newDisplayName || newDisplayName.trim().length === 0) {
-          return Err(new Error('Display name cannot be empty'));
-        }
-
-        // Get current document
-        const doc = await dataClient.models.Documents.get({
-          id: documentId,
-          tenantId: await getCurrentTenantId(),
-        });
-
-        if (!doc) {
-          return Err(new Error('Document not found'));
-        }
-
-        // Update display name
-        await dataClient.models.Documents.update({
-          id: documentId,
-          tenantId: doc.tenantId,
-          displayName: newDisplayName,
-          updatedAt: new Date().toISOString(),
-        });
-
-        return Ok(undefined);
-      } catch (error) {
-        return Err(error instanceof Error ? error : new Error('Failed to rename document'));
-      }
-    },
-
-    updateAccess: async (
-      documentId: string,
-      updates: {
-        editors?: string[];
-        viewers?: string[];
-      }
-    ): Promise<Result<void, Error>> => {
-      // Implementation
-    },
-
-    getAccess: async (documentId: string): Promise<Result<{
-      owner: string;
-      editors: string[];
-      viewers: string[];
-    }, Error>> => {
-      // Implementation
-    },
-
-    list: async (prefix: string): Promise<Result<DynamoDocument[], Error>> => {
-      // Implementation
-    },
-
-    getVersionHistory: async (
-      documentId: string,
-      page: number = 1,
-      pageSize: number = 10
-    ): Promise<Result<DynamoDocument['versionHistory'], Error>> => {
-      // Implementation
-    },
-  };
+interface DocumentStore {
+  // Core CRUD operations
+  create(document: CreateDocument): Promise<Result<DynamoDocument, Error>>;
+  get(id: string): Promise<Result<DynamoDocument, Error>>;
+  update(document: UpdateDocument): Promise<Result<DynamoDocument, Error>>;
+  remove(id: string): Promise<Result<void, Error>>;
+  
+  // Content operations
+  getContent(id: string): Promise<Result<string, Error>>;
+  updateContent(id: string, content: string): Promise<Result<DynamoDocument, Error>>;
+  
+  // List operations
+  list(): Promise<Result<DynamoDocument[], Error>>;
 }
-
-export const documentStore = createDocumentStore();
 ```
 
-## Testing Implementation
+### 2. Key Features
 
-### Unit Tests
+1. **Online-Only Operations**
+   - All write operations require online connection
+   - Network status checked before operations
+   - Clear error messages for offline state
 
-```typescript
-describe('DocumentStore', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+2. **Content Validation**
+   - Markdown validation
+   - File size limits (10MB max)
+   - File name sanitization
+   - Empty content checks
 
-  describe('create', () => {
-    it('should create document when online', async () => {
-      const doc = {
-        content: '# Test',
-        metadata: {
-          fileName: 'test.md',
-          fileType: 'markdown',
-          size: 6,
-          lastModified: new Date().toISOString(),
-          version: 1,
-          checksum: 'abc123',
-        },
-      };
+3. **Version Control**
+   - Automatic version incrementing
+   - Version history tracking
+   - Author attribution
+   - Change type tracking
 
-      const result = await documentStore.create(doc);
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.val.version).toBe(1);
-        expect(result.val.syncStatus).toBe('Synced');
-        expect(result.val.displayName).toBe('test');
-        expect(result.val.fileName).toBe('test.md');
-        expect(result.val.versionHistory).toHaveLength(1);
-        expect(result.val.versionHistory[0].changeType).toBe('create');
-      }
-    });
+4. **Tenant Isolation**
+   - Strict path separation in S3
+   - Tenant-based access control
+   - Tenant ID validation
 
-    // ... existing tests ...
-  });
-
-  // ... existing test sections ...
-});
-```
-
-## Dependencies
-
-- AWS Amplify
-- TypeScript
-- ts-results (for Result type)
-- AWS S3
-- AWS DynamoDB (via Amplify Data)
+5. **User Integration**
+   - Current user context
+   - Owner/editor/viewer management
+   - User-based access control
 
 ## Security Considerations
 
@@ -323,6 +131,12 @@ describe('DocumentStore', () => {
    - Data segregation
    - DynamoDB tenant-based access control
    - Role-based access control (owner, editor, viewer)
+
+3. **Access Control**
+   - S3 bucket policies
+   - DynamoDB access rules
+   - User-based permissions
+   - Group-based permissions
 
 ## Success Criteria
 
@@ -342,4 +156,13 @@ describe('DocumentStore', () => {
    - Documentation complete
    - DynamoDB consistency maintained
    - Access control changes properly synchronized
-   - Rename operations properly synchronized 
+   - Rename operations properly synchronized
+
+## Dependencies
+
+- AWS Amplify
+- TypeScript
+- ts-results (for Result type)
+- AWS S3
+- AWS DynamoDB (via Amplify Data)
+- React (for hooks integration) 
