@@ -3,6 +3,7 @@ import { FileText, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { DynamoDocument } from '@/app/home/clients/DocumentStore';
 import { documentStore } from '@/app/home/clients/DocumentStore';
+import { format } from 'date-fns';
 
 interface SurveyDocumentsProps {
   surveyId: string;
@@ -39,7 +40,9 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-6">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" role="status">
+          <span className="sr-only">Loading documents...</span>
+        </div>
       </div>
     );
   }
@@ -79,7 +82,7 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
                   <div className="flex items-center text-sm text-gray-500 space-x-2">
                     <Clock className="h-4 w-4" />
                     <span>
-                      Version {doc.version} • Updated {new Date(doc.updatedAt).toLocaleDateString()}
+                      Version {doc.version} • Updated {format(new Date(doc.updatedAt), 'MM/dd/yyyy')}
                     </span>
                   </div>
                 </div>
