@@ -1,25 +1,23 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { documentStore } from '../clients/DocumentStore';
 
 interface DocumentListProps {
-  userId: string;
-  tenantId: string;
   currentDocumentId?: string;
   onOpen?: (id: string) => void;
 }
 
-export function DocumentList({ userId, tenantId, currentDocumentId, onOpen }: DocumentListProps) {
-  const [documents, setDocuments] = React.useState<Array<{
+export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
+  const [documents, setDocuments] = useState<Array<{
     id: string;
     displayName: string;
     lastModified: string;
   }>>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const loadDocuments = async () => {
       try {
         setIsLoading(true);

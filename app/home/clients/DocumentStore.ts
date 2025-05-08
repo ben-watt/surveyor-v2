@@ -1,4 +1,4 @@
-import { uploadData, remove, getUrl } from 'aws-amplify/storage';
+import { uploadData, remove as removeStorage, getUrl } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/data';
 import { Err, Ok, Result } from 'ts-results';
 import { getCurrentTenantId } from '../utils/tenant-utils';
@@ -202,7 +202,7 @@ function createDocumentStore() {
       const path = `documents/${tenantId}/${id}`;
 
       // Delete from S3
-      await remove(path);
+      await removeStorage({ path });
 
       // Delete from DynamoDB
       await client.models.Documents.delete({ id, tenantId });
@@ -257,10 +257,9 @@ function createDocumentStore() {
       }
 
       const path = `documents/${tenantId}/${id}`;
-      const url = await getUrl({ key: path });
-      const response = await fetch(url.url);
-      const content = await response.text();
-      return Ok(content);
+      const url = await getUrl({ path: path });
+      const content = await fetch(url.url);
+      return Ok(await content.text());
     } catch (error) {
       return Err(error instanceof Error ? error : new Error('Failed to get document content'));
     }
