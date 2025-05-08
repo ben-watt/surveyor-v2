@@ -34,8 +34,10 @@ jest.mock('../../utils/file-utils', () => ({
   sanitizeFileName: jest.fn(),
 }));
 
-describe('DocumentStore', () => {
-  const mockDataClient = {
+// Mock the AmplifyDataClient
+jest.mock('../AmplifyDataClient', () => ({
+  __esModule: true,
+  default: {
     models: {
       Documents: {
         create: jest.fn(),
@@ -45,11 +47,20 @@ describe('DocumentStore', () => {
         list: jest.fn(),
       },
     },
-  };
+  },
+}));
 
+// Import the mocked client
+import client from '../AmplifyDataClient';
+
+describe('DocumentStore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (generateClient as jest.Mock).mockReturnValue(mockDataClient);
+    (generateClient as jest.Mock).mockReturnValue({
+      models: {
+        Documents: client.models.Documents,
+      },
+    });
     (getCurrentTenantId as jest.Mock).mockResolvedValue('test-tenant');
     (getCurrentUser as jest.Mock).mockResolvedValue({ username: 'test-user' });
     (uploadData as jest.Mock).mockResolvedValue({ result: true });
@@ -97,11 +108,18 @@ describe('DocumentStore', () => {
           timestamp: '2024-01-01T00:00:00Z',
           author: 'test-user',
           changeType: 'create',
-          metadata: mockDocument.metadata,
+          metadata: {
+            fileName: 'test.md',
+            fileType: 'markdown',
+            size: 100,
+            lastModified: '2024-01-01T00:00:00Z',
+            version: 1,
+            checksum: 'test-checksum',
+          },
         }],
       };
 
-      mockDataClient.models.Documents.create.mockResolvedValue({ data: mockCreatedDoc });
+      (client.models.Documents.create as jest.Mock).mockResolvedValue({ data: mockCreatedDoc, errors: null });
 
       const result = await documentStore.create(mockDocument);
       console.log('Create result:', result);
@@ -112,15 +130,14 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).toHaveBeenCalledWith({
-        key: 'documents/test-tenant/test',
+        path: 'documents/test-tenant/test',
         data: mockDocument.content,
         options: {
           contentType: 'text/markdown',
-          accessLevel: 'private',
         },
       });
 
-      expect(mockDataClient.models.Documents.create).toHaveBeenCalledWith({
+      expect(client.models.Documents.create).toHaveBeenCalledWith({
         id: 'test',
         displayName: 'test',
         fileName: 'test.md',
@@ -143,7 +160,6 @@ describe('DocumentStore', () => {
           timestamp: expect.any(String),
           author: 'test-user',
           changeType: 'create',
-          metadata: mockDocument.metadata,
         }],
       });
     });
@@ -171,7 +187,7 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).not.toHaveBeenCalled();
-      expect(mockDataClient.models.Documents.create).not.toHaveBeenCalled();
+      expect(client.models.Documents.create).not.toHaveBeenCalled();
     });
 
     it('should validate markdown content', async () => {
@@ -197,7 +213,7 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).not.toHaveBeenCalled();
-      expect(mockDataClient.models.Documents.create).not.toHaveBeenCalled();
+      expect(client.models.Documents.create).not.toHaveBeenCalled();
     });
 
     it('should sanitize file names', async () => {
@@ -223,7 +239,7 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).not.toHaveBeenCalled();
-      expect(mockDataClient.models.Documents.create).not.toHaveBeenCalled();
+      expect(client.models.Documents.create).not.toHaveBeenCalled();
     });
   });
 }); 
