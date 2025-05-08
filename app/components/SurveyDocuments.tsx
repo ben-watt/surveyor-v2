@@ -21,9 +21,9 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
         setIsLoading(true);
         const result = await documentStore.list();
         if (result.ok) {
-          // Sort by version, showing latest first
-          result.val.sort((a, b) => b.version - a.version);
-          setDocuments(result.val);
+          const surveyDocs = result.val.filter(doc => doc.id === surveyId);
+          surveyDocs.sort((a, b) => b.version - a.version);
+          setDocuments(surveyDocs);
         } else {
           setError('Failed to load documents');
         }
