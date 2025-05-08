@@ -10,6 +10,7 @@ import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import { useRouter } from "next/navigation";
 import ImagePlaceholder from "../../components/ImagePlaceholder";
+import { SurveyDocuments } from "@/app/components/SurveyDocuments";
 
 
 interface PhotoGridProps {
@@ -115,6 +116,7 @@ function Home(props: { params: Promise<{ id: string }> }) {
             galleryUrl={`/home/surveys/${survey?.id}/photos`}
           />
         </div>
+        <SurveyDocuments surveyId={params.id} />
         <div> 
           <Suspense fallback={<div>Loading...</div>}>
             <BuildingSurveyForm id={params.id} />

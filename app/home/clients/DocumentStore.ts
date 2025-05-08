@@ -25,7 +25,7 @@ type CreateDocument = {
 
 type UpdateDocument = Partial<DynamoDocument> & { id: string };
 
-interface DynamoDocument {
+export interface DynamoDocument {
   id: string;
   displayName: string;
   fileName: string;
