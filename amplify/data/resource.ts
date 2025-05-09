@@ -182,13 +182,6 @@ const schema = a.schema({
       owner: a.string().required(),
       editors: a.string().array().required(),
       viewers: a.string().array().required(),
-      syncStatus: a.string().required(),
-      syncError: a.string(),
-      metadata: a.customType({
-        checksum: a.string().required(),
-        tags: a.string().array(),
-        description: a.string(),
-      }),
       versionHistory: a.ref("VersionHistory").array(),
     })
     .identifier(['tenantId', 'id'])
