@@ -1,5 +1,4 @@
 import { defineFunction } from "@aws-amplify/backend";
-import { auth } from "../../auth/resource";
 
 export const tenantAdmin = defineFunction({
   name: "tenant-admin",

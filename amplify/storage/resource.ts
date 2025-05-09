@@ -19,7 +19,7 @@ export const storage = defineStorage({
     'documents/*': [
       allow.authenticated.to(['read']),
       allow.groups(['global-admin']).to(['read', 'write', 'delete', 'list']),
-      allow.entity('identity').to(['read', 'write', 'delete'])
+      allow.entity('identity').to(['read', 'write', 'delete']),
     ]
   })
 });

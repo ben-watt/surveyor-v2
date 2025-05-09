@@ -44,8 +44,6 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
             fileType: 'markdown',
             size: editorContent.length,
             lastModified: new Date().toISOString(),
-            version: 1,
-            checksum: '', // TODO: Implement checksum calculation
           }
         });
         

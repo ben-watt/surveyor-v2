@@ -129,6 +129,56 @@ To efficiently retrieve all documents owned by the current user, add a Global Se
 
 ---
 
+## **Server-Side Conflict Prevention & Atomic Versioning in Amplify Gen 2**
+
+### **Why Server-Side Conflict Prevention?**
+- To prevent race conditions and version conflicts when multiple clients attempt to update a document concurrently, all versioning and metadata updates must be performed atomically on the server side.
+- This is especially important because Amplify Gen 2's generated data client does **not** natively support conditional writes or transactions. Instead, you must implement this logic using custom business logic (custom mutations) as described in the [Amplify Gen 2 documentation](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/).
+
+### **Recommended Approach**
+- Implement a **custom mutation** (using a Lambda function or custom resolver) that:
+  - Receives the update request with the expected current version.
+  - Performs a DynamoDB transaction (TransactWriteItems) to:
+    - Conditionally update the `#LATEST` item only if its `currentVersion` matches the expected value.
+    - Create the new version item.
+    - Prune the oldest version if over the limit.
+  - Returns success or a conflict error to the client.
+- The client should handle conflict errors by refetching and retrying, or surfacing the conflict to the user.
+
+### **Implementation Steps (Amplify Gen 2)**
+1. **Schema Design & Table Setup**
+   - As before, define the single-table schema in Amplify Data/CloudFormation.
+2. **Custom Mutation for Atomic Versioning**
+   - Define a custom mutation in your Amplify Gen 2 schema using `a.mutation().handler(a.handler.function(...))` or `a.handler.custom(...)`.
+   - Implement the handler (Lambda or custom resolver) to perform the transactional, conditional update logic in DynamoDB.
+   - Reference: [Amplify Gen 2 Custom Business Logic](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/)
+3. **Code Implementation**
+   - Update `DocumentStore.ts` and related client code to call the custom mutation for all document updates.
+   - Ensure the client passes the expected current version and handles conflict errors.
+4. **Testing**
+   - Add/expand tests for concurrent updates, conflict handling, and atomicity.
+5. **Rollout & Cleanup**
+   - As before, deploy, monitor, and document the new approach.
+
+### **Example Flow**
+1. Client fetches `currentVersion` from `#LATEST`.
+2. Client sends update request to custom mutation with `expectedCurrentVersion` and new content.
+3. Handler (Lambda/custom resolver):
+   - Reads `#LATEST` and checks `currentVersion`.
+   - If matches, performs DynamoDB transaction:
+     - Updates `#LATEST` (increment version, update metadata)
+     - Puts new version item
+     - Deletes oldest version if needed
+   - If not, returns a conflict error.
+4. Client handles success or conflict.
+
+---
+
+## **References**
+- [Amplify Gen 2: Custom Business Logic (Custom Mutations)](https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/)
+
+---
+
 ## Implementation Files
 
 - **Core Implementation:** `app/home/clients/DocumentStore.ts`

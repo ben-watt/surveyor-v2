@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "$amplify/*": ["../.amplify/generated/*"]
     },
     "types": ["@serwist/next/typings", "jest", "@testing-library/jest-dom"]
   },

@@ -1,5 +1,6 @@
-import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/backend";
 import { tenantAdmin } from "./tenant-admin/resource";
+import { updateDocument } from "./update-document/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -161,38 +162,72 @@ const schema = a.schema({
       .to(["create", "read", "update", "delete"]),
       allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
     ]),
-  VersionHistory: a.customType({
-    version: a.integer().required(),
-    timestamp: a.datetime().required(),
-    author: a.string().required(),
-    changeType: a.string().required()
-  }),
-  Documents: a
-    .model({
-      id: a.id().required(),
-      displayName: a.string().required(),
-      fileName: a.string().required(),
-      fileType: a.string().required(),
-      size: a.integer().required(),
-      version: a.integer().required(),
-      lastModified: a.datetime().required(),
-      createdAt: a.datetime().required(),
-      updatedAt: a.datetime().required(),
-      tenantId: a.string().required(),
-      owner: a.string().required(),
-      editors: a.string().array().required(),
-      viewers: a.string().array().required(),
-      versionHistory: a.ref("VersionHistory").array(),
+  /**
+   * DocumentRecord: Single-table design for documents and versions
+   * PK: tenantId#documentId
+   * SK: #LATEST (for latest/metadata), v0/v1/etc for versions
+   * type: 'Document' | 'Version'
+   */
+  DocumentRecord: a.model({
+    pk: a.string().required(), // tenantId#documentId
+    sk: a.string().required(), // #LATEST or v0/v1/etc
+    type: a.string().required(), // 'Document' or 'Version'
+    // Metadata fields (for #LATEST)
+    id: a.id(),
+    displayName: a.string(),
+    fileName: a.string(),
+    fileType: a.string(),
+    size: a.integer(),
+    currentVersion: a.integer(),
+    lastModified: a.datetime(),
+    createdAt: a.datetime(),
+    updatedAt: a.datetime(),
+    tenantId: a.string(),
+    editors: a.string().required().array(),
+    viewers: a.string().required().array(),
+    owner: a.string(),
+    // Version fields (for version items)
+    version: a.integer(),
+    author: a.string(),
+    changeType: a.string(),
+    // This is the s3 path to the file
+    path: a.string(),
+    fileSize: a.integer(),
+  })
+  .identifier(['pk', 'sk'])
+  /**
+   * GSI: byOwner
+   * Allows efficient queries for all documents owned by a user (filter for sk = #LATEST)
+   * Partition Key: owner
+   */
+  .secondaryIndexes(index => [index('owner').sortKeys(['sk']), index('tenantId').sortKeys(['sk'])])
+  .authorization((allow) => [
+    allow.owner().to(["create", "read", "update", "delete"]),
+    allow
+    .groupDefinedIn("tenantId")
+    .withClaimIn("tenantId")
+    .to(["create", "read", "update", "delete"]),
+    allow.groupsDefinedIn("editors").to(["read", "update"]),
+    allow.groupsDefinedIn("viewers").to(["read"]),
+    allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
+  ]),
+
+  // Custom mutation for atomic versioning and conflict prevention
+  updateDocumentWithVersioning: a
+    .mutation()
+    .arguments({
+      pk: a.string().required(),
+      content: a.string().required(),
+      changeType: a.string(),
     })
-    .identifier(['tenantId', 'id'])
-    .authorization((allow) => [
-      allow.owner().to(["create", "read", "update", "delete"]),
-      allow
-      .groupDefinedIn("tenantId")
-      .to(["create", "read", "update", "delete"]),
-      allow.groups(['global-admin']).to(["create", "read", "update", "delete"]),
-    ]),
-});
+    .returns(a.ref('DocumentRecord'))
+    .authorization(allow => [allow.authenticated()])
+    .handler(a.handler.function(updateDocument)),
+}).authorization(
+  (allow) => [
+    allow.resource(updateDocument).to(["mutate", "query"]),
+  ]
+);
 
 export type Schema = ClientSchema<typeof schema>;
 
@@ -202,32 +237,3 @@ export const data = defineData({
     defaultAuthorizationMode: "userPool",
   },
 });
-
-/*== STEP 2 ===============================================================
-Go to your frontend source code. From your client-side code, generate a
-Data client to make CRUDL requests to your table. (THIS SNIPPET WILL ONLY
-WORK IN THE FRONTEND CODE FILE.)
-
-Using JavaScript or Next.js React Server Components, Middleware, Server 
-Actions or Pages Router? Review how to generate Data clients for those use
-cases: https://docs.amplify.aws/gen2/build-a-backend/data/connect-to-API/
-=========================================================================*/
-
-/*
-"use client"
-import { generateClient } from "aws-amplify/data";
-import { type Schema } from "@/amplify/data/resource";
-
-const client = generateClient<Schema>() // use this Data client for CRUDL requests
-*/
-
-/*== STEP 3 ===============================================================
-Fetch records from the database and use them in your frontend component.
-(THIS SNIPPET WILL ONLY WORK IN THE FRONTEND CODE FILE.)
-=========================================================================*/
-
-/* For example, in a React component, you can use this snippet in your
-  function's RETURN statement */
-// const { data: todos } = client.models.Todo.list()
-
-// return <ul>{todos.map(todo => <li key={todo.id}>{todo.content}</li>)}</ul>

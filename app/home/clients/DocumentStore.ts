@@ -1,15 +1,16 @@
 import { uploadData, remove as removeStorage, getUrl } from 'aws-amplify/storage';
-import { generateClient } from 'aws-amplify/data';
 import { Err, Ok, Result } from 'ts-results';
 import { getCurrentTenantId } from '../utils/tenant-utils';
 import { sanitizeFileName } from '../utils/file-utils';
 import { validateMarkdown } from '../utils/markdown-utils';
-import { rateLimiter } from '../utils/rate-limiter';
-import { type Schema } from '@/amplify/data/resource';
 import { getCurrentUser } from 'aws-amplify/auth';
 import client from './AmplifyDataClient';
+import { Schema } from '@/amplify/data/resource';
 
 // Types for store operations
+/**
+ * Document metadata for creation
+ */
 type CreateDocument = {
   displayName?: string;
   content: string;
@@ -18,237 +19,192 @@ type CreateDocument = {
     fileType: string;
     size: number;
     lastModified: string;
-    version: number;
-    checksum: string;
   };
 };
 
-type UpdateDocument = Partial<DynamoDocument> & { id: string };
-
-export interface DynamoDocument {
-  id: string;
-  displayName: string;
-  fileName: string;
-  fileType: string;
-  size: number;
-  version: number;
-  lastModified: string;
-  createdAt: string;
-  updatedAt: string;
-  tenantId: string;
-  owner: string;
-  editors: string[];
-  viewers: string[];
-  syncStatus: string;
-  syncError?: string;
-  metadata: {
-    checksum: string;
-    tags?: string[];
-    description?: string;
-  };
-  versionHistory: {
-    version: number;
-    timestamp: string;
-    author: string;
-    changeType: 'create' | 'update' | 'delete';
-  }[];
-}
+/**
+ * DocumentRecord type for single-table design
+ */
+export type DocumentRecord = Schema['DocumentRecord']['type'];
 
 function createDocumentStore() {
   // Network status check
+
   const isOnline = () => navigator.onLine;
 
   // Content validation
   const validateContent = (content: string, fileName: string): Result<void, Error> => {
     if (!content) return Err(new Error('Content cannot be empty'));
     if (content.length > 10 * 1024 * 1024) return Err(new Error('Content too large'));
-    
     const validationResult = validateMarkdown(content);
     if (!validationResult.ok) {
       return Err(new Error(`Invalid markdown: ${validationResult.val}`));
     }
-
     const sanitizedFileName = sanitizeFileName(fileName);
     if (sanitizedFileName !== fileName) {
       return Err(new Error('Invalid file name'));
     }
-    
     return Ok(undefined);
   };
 
-  // Create document
-  const create = async (document: CreateDocument): Promise<Result<DynamoDocument, Error>> => {
-    // Validate content first
+  /**
+   * Create a new document (writes #LATEST and v0)
+   */
+  const create = async (document: CreateDocument): Promise<Result<DocumentRecord, Error>> => {
     const validation = validateContent(document.content, document.metadata.fileName);
-    if (!validation.ok) {
-      return Err(validation.val);
-    }
-
-    if (!isOnline()) {
-      return Err(new Error('Cannot create document while offline'));
-    }
-
+    if (!validation.ok) return Err(validation.val);
+    if (!isOnline()) return Err(new Error('Cannot create document while offline'));
     try {
       const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
-      }
-
+      if (!tenantId) return Err(new Error('No tenant ID found'));
       const user = await getCurrentUser();
       const documentId = document.metadata.fileName.replace(/\.md$/, '');
-      const path = `documents/${tenantId}/${documentId}`;
-
-      // Upload to S3
-      const uploadResult = await uploadData({
-        path: path,
-        data: document.content,
-        options: {
-          contentType: 'text/markdown',
-        },
-      });
-
-      if (!uploadResult.result) {
-        return Err(new Error('Failed to upload document content'));
-      }
-
-      // Create DynamoDB record
+      const pk = `${tenantId}#${documentId}`;
       const now = new Date().toISOString();
-      const result = await client.models.Documents.create({
+      const path = `documents/${tenantId}/${documentId}/v0.html`;
+      // Upload to S3
+      const uploadResult = await uploadData({ path, data: document.content, options: { contentType: 'text/html' } });
+      if (!uploadResult.result) return Err(new Error('Failed to upload document content'));
+      // Write v0 version
+      await client.models.DocumentRecord.create({
+        pk,
+        sk: 'v0',
+        type: 'Version',
+        version: 0,
+        author: user.username,
+        createdAt: now,
+        changeType: 'create',
+        path,
+        fileSize: document.metadata.size,
+        fileType: document.metadata.fileType,
+        fileName: document.metadata.fileName,
+        tenantId,
+        editors: [],
+        viewers: [],
+      });
+      // Write #LATEST
+      const latest = await client.models.DocumentRecord.create({
+        pk,
+        sk: '#LATEST',
+        type: 'Document',
         id: documentId,
         displayName: document.displayName || documentId,
         fileName: document.metadata.fileName,
         fileType: document.metadata.fileType,
         size: document.metadata.size,
-        version: document.metadata.version,
+        currentVersion: 0,
         lastModified: document.metadata.lastModified,
         createdAt: now,
         updatedAt: now,
         tenantId,
-        owner: user.username,
-        editors: [user.username],
-        viewers: [user.username],
-        syncStatus: 'Synced',
-        metadata: {
-          checksum: document.metadata.checksum,
-        },
-        versionHistory: [{
-          version: document.metadata.version,
-          timestamp: now,
-          author: user.username,
-          changeType: 'create',
-        }],
+        editors: [],
+        viewers: [],
       });
-
-      if (!result.data) {
-        return Err(new Error(`Failed to create document record with errors ${JSON.stringify(result.errors)}`));
-      }
-
-      return Ok(result.data as DynamoDocument);
+      if (!latest.data) return Err(new Error('Failed to create document metadata'));
+      return Ok(latest.data);
     } catch (error) {
       return Err(error instanceof Error ? error : new Error('Failed to create document'));
     }
   };
 
-  // Update document
-  const update = async (document: UpdateDocument): Promise<Result<DynamoDocument, Error>> => {
-    if (!isOnline()) {
-      return Err(new Error('Cannot update document while offline'));
-    }
+  /**
+   * Update document: creates new version, updates #LATEST, prunes to 10 versions
+   */
+  const update = async (id: string, content: string, changeType: string = 'update'): Promise<Result<DocumentRecord, Error>> => {
+    const tenantId = await getCurrentTenantId();
+    if (!tenantId) return Err(new Error('No tenant ID found'));
+    const pk = `${tenantId}#${id}`;
+
+    if (!isOnline()) return Err(new Error('Cannot update document while offline'));
 
     try {
-      const now = new Date().toISOString();
-      const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
-      }
-
-      const result = await client.models.Documents.update({
-        ...document,
-        tenantId,
-        updatedAt: now,
+      const mutationRes = await client.mutations.updateDocumentWithVersioning({
+        pk,
+        content,
+        changeType,
       });
-
-      if (!result.data) {
-        return Err(new Error('Failed to update document record'));
-      }
-
-      return Ok(result.data as DynamoDocument);
+      if (mutationRes.errors) return Err(new Error(mutationRes.errors.map(e => e.message).join(', ')));
+      if (!mutationRes.data) return Err(new Error('Failed to update document metadata'));
+      return Ok(mutationRes.data as DocumentRecord);
     } catch (error) {
       return Err(error instanceof Error ? error : new Error('Failed to update document'));
     }
   };
 
-  // Delete document
-  const remove = async (id: string): Promise<Result<void, Error>> => {
-    if (!isOnline()) {
-      return Err(new Error('Cannot delete document while offline'));
-    }
-
+  /**
+   * Get latest document metadata
+   */
+  const get = async (id: string): Promise<Result<DocumentRecord, Error>> => {
     try {
       const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
+      if (!tenantId) return Err(new Error('No tenant ID found'));
+      const pk = `${tenantId}#${id}`;
+      const result = await client.models.DocumentRecord.get({ pk, sk: '#LATEST' });
+      if (!result.data) return Err(new Error('Document not found'));
+      return Ok(result.data as DocumentRecord);
+    } catch (error) {
+      return Err(error instanceof Error ? error : new Error('Failed to get document'));
+    }
+  };
+
+  /**
+   * List all documents
+   */
+  const list = async (): Promise<Result<DocumentRecord[], Error>> => {
+    try {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) return Err(new Error('No tenant ID found'));
+      const result = await client.models.DocumentRecord.listDocumentRecordByTenantIdAndSk({ tenantId, sk: { eq: '#LATEST' } });
+      return Ok(result.data as DocumentRecord[]);
+    } catch (error) {
+      return Err(error instanceof Error ? error : new Error('Failed to list documents'));
+    }
+  };
+
+  /**
+   * Remove all records for a document (all versions and metadata)
+   */
+  const remove = async (id: string): Promise<Result<void, Error>> => {
+    if (!isOnline()) return Err(new Error('Cannot delete document while offline'));
+
+    const tenantId = await getCurrentTenantId();
+    if (!tenantId) return Err(new Error('No tenant ID found'));
+    const pk = `${tenantId}#${id}`;
+
+    try {
+      // List all items for pk
+      const itemsRes = await client.models.DocumentRecord.list({ pk });
+      const items = itemsRes.data as DocumentRecord[];
+
+      console.log('[remove] items', items);
+      // Delete from S3 and DynamoDB
+      for (const item of items) {
+        if (item.path) await removeStorage({ path: item.path });
+        await client.models.DocumentRecord.delete({ pk, sk: item.sk });
       }
-
-      const path = `documents/${tenantId}/${id}`;
-
-      // Delete from S3
-      await removeStorage({ path });
-
-      // Delete from DynamoDB
-      await client.models.Documents.delete({ id, tenantId });
-
       return Ok(undefined);
     } catch (error) {
       return Err(error instanceof Error ? error : new Error('Failed to delete document'));
     }
   };
 
-  // Get document
-  const get = async (id: string): Promise<Result<DynamoDocument, Error>> => {
-    try {
-      const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
-      }
-
-      const result = await client.models.Documents.get({ id, tenantId });
-      
-      if (!result.data) {
-        return Err(new Error('Document not found'));
-      }
-
-      return Ok(result.data as DynamoDocument);
-    } catch (error) {
-      return Err(error instanceof Error ? error : new Error('Failed to get document'));
-    }
-  };
-
-  // List documents
-  const list = async (): Promise<Result<DynamoDocument[], Error>> => {
-    try {
-      const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
-      }
-
-      const result = await client.models.Documents.list({ tenantId });
-      return Ok(result.data as DynamoDocument[]);
-    } catch (error) {
-      return Err(error instanceof Error ? error : new Error('Failed to list documents'));
-    }
-  };
-
-  // Get document content
+  /**
+   * Get document content (latest)
+   */
   const getContent = async (id: string): Promise<Result<string, Error>> => {
     try {
       const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
-      }
+      if (!tenantId) return Err(new Error('No tenant ID found'));
+      const pk = `${tenantId}#${id}`;
+      const latestRes = await client.models.DocumentRecord.get({ pk, sk: '#LATEST' });
+      if (!latestRes.data) return Err(new Error('Document not found'));
+      const latest = latestRes.data as DocumentRecord;
+      const versionSk = `v${latest.currentVersion ?? 0}`;
+      const versionRes = await client.models.DocumentRecord.get({ pk, sk: versionSk });
+      if (!versionRes.data) return Err(new Error('Version not found'));
+      if (!versionRes.data.path) return Err(new Error('Version path not found'));
 
-      const path = `documents/${tenantId}/${id}`;
-      const url = await getUrl({ path: path });
+      const url = await getUrl({ path: versionRes.data.path });
       const content = await fetch(url.url);
       return Ok(await content.text());
     } catch (error) {
@@ -256,111 +212,27 @@ function createDocumentStore() {
     }
   };
 
-  // Update document content
-  const updateContent = async (id: string, content: string): Promise<Result<DynamoDocument, Error>> => {
-    if (!isOnline()) {
-      return Err(new Error('Cannot update document while offline'));
-    }
-
-    try {
-      const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
-      }
-
-      const user = await getCurrentUser();
-      const path = `documents/${tenantId}/${id}`;
-      const now = new Date().toISOString();
-
-      // Upload to S3
-      await uploadData({
-        path: path,
-        data: content,
-        options: {
-          contentType: 'text/markdown',
-        },
-      });
-
-      // Update DynamoDB record
-      const result = await client.models.Documents.get({ id, tenantId });
-      if (!result.data) {
-        return Err(new Error('Document not found'));
-      }
-
-      const doc = result.data as DynamoDocument;
-      const updateResult = await client.models.Documents.update({
-        id,
-        tenantId,
-        version: doc.version + 1,
-        lastModified: now,
-        updatedAt: now,
-        versionHistory: [
-          ...doc.versionHistory,
-          {
-            version: doc.version + 1,
-            timestamp: now,
-            author: user.username,
-            changeType: 'update',
-          },
-        ],
-      });
-
-      if (!updateResult.data) {
-        return Err(new Error('Failed to update document record'));
-      }
-
-      return Ok(updateResult.data as DynamoDocument);
-    } catch (error) {
-      return Err(error instanceof Error ? error : new Error('Failed to update document content'));
-    }
+  /**
+   * Update document content (creates new version)
+   */
+  const updateContent = async (id: string, content: string): Promise<Result<DocumentRecord, Error>> => {
+    return update(id, content, 'update');
   };
 
-  // Rename document
-  const rename = async (id: string, newName: string): Promise<Result<DynamoDocument, Error>> => {
-    if (!isOnline()) {
-      return Err(new Error('Cannot rename document while offline'));
-    }
+  /**
+   * Rename document (updates displayName on #LATEST)
+   */
+  const rename = async (id: string, newName: string): Promise<Result<DocumentRecord, Error>> => {
+    const tenantId = await getCurrentTenantId();
+    if (!tenantId) return Err(new Error('No tenant ID found'));
+    const pk = `${tenantId}#${id}`;
 
-    if (!newName) {
-      return Err(new Error('New name cannot be empty'));
-    }
-
+    if (!isOnline()) return Err(new Error('Cannot rename document while offline'));
+    if (!newName) return Err(new Error('New name cannot be empty'));
     try {
-      const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error('No tenant ID found'));
-      }
-
-      const user = await getCurrentUser();
-      const now = new Date().toISOString();
-
-      const result = await client.models.Documents.get({ id, tenantId });
-      if (!result.data) {
-        return Err(new Error('Document not found'));
-      }
-
-      const doc = result.data as DynamoDocument;
-      const updateResult = await client.models.Documents.update({
-        id,
-        tenantId,
-        displayName: newName,
-        updatedAt: now,
-        versionHistory: [
-          ...doc.versionHistory,
-          {
-            version: doc.version + 1,
-            timestamp: now,
-            author: user.username,
-            changeType: 'update',
-          },
-        ],
-      });
-
-      if (!updateResult.data) {
-        return Err(new Error('Failed to update document record'));
-      }
-
-      return Ok(updateResult.data as DynamoDocument);
+      const updated = await client.models.DocumentRecord.update({ pk, sk: '#LATEST', displayName: newName });
+      if (!updated.data) return Err(new Error('Failed to update document metadata'));
+      return Ok(updated.data as DocumentRecord);
     } catch (error) {
       return Err(error instanceof Error ? error : new Error('Failed to rename document'));
     }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { documentStore } from '../clients/DocumentStore';
+import { DocumentRecord, documentStore } from '../clients/DocumentStore';
 
 interface DocumentListProps {
   currentDocumentId?: string;
@@ -10,11 +10,7 @@ interface DocumentListProps {
 }
 
 export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
-  const [documents, setDocuments] = useState<Array<{
-    id: string;
-    displayName: string;
-    lastModified: string;
-  }>>([]);
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +21,6 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
         
         if (result.ok) {
           const docs = result.val
-            .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
           setDocuments(docs);
         } else {
           throw new Error(result.val.message);
@@ -84,19 +79,19 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">
-                  {new Date(doc.lastModified).toLocaleDateString()}
+                  {doc.lastModified ? new Date(doc.lastModified).toLocaleDateString() : ''}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onOpen?.(doc.id)}
+                  onClick={() => onOpen?.(doc.id ?? '')}
                 >
                   Open
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(doc.id)}
+                  onClick={() => handleDelete(doc.id ?? '')}
                   className="text-red-500 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />

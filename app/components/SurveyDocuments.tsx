@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FileText, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { DynamoDocument } from '@/app/home/clients/DocumentStore';
-import { documentStore } from '@/app/home/clients/DocumentStore';
+import { DocumentRecord, documentStore } from '@/app/home/clients/DocumentStore';
 import { format } from 'date-fns';
 
 interface SurveyDocumentsProps {
@@ -11,7 +10,7 @@ interface SurveyDocumentsProps {
 }
 
 export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, className }) => {
-  const [documents, setDocuments] = useState<DynamoDocument[]>([]);
+  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +21,6 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
         const result = await documentStore.list();
         if (result.ok) {
           const surveyDocs = result.val.filter(doc => doc.id === surveyId);
-          surveyDocs.sort((a, b) => b.version - a.version);
           setDocuments(surveyDocs);
         } else {
           setError('Failed to load documents');
@@ -82,7 +80,7 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
                   <div className="flex items-center text-sm text-gray-500 space-x-2">
                     <Clock className="h-4 w-4" />
                     <span>
-                      Version {doc.version} • Updated {format(new Date(doc.updatedAt), 'MM/dd/yyyy')}
+                      Version {doc.version} • Updated {format(new Date(doc.lastModified ?? ''), 'MM/dd/yyyy')}
                     </span>
                   </div>
                 </div>

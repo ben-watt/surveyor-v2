@@ -21,6 +21,7 @@ export default function Page(props: PageProps) {
   const [content, setContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExisting, setIsExisting] = useState(false);
 
   useEffect(() => {
     const loadDocument = async () => {
@@ -28,6 +29,7 @@ export default function Page(props: PageProps) {
         setIsLoading(true);
         const result = await documentStore.get(params.id);
         if (result.ok) {
+          setIsExisting(true);
           const contentResult = await documentStore.getContent(params.id);
           if (contentResult.ok) {
             setContent(contentResult.val);
@@ -35,7 +37,7 @@ export default function Page(props: PageProps) {
             throw new Error(contentResult.val.message);
           }
         } else {
-          // If document doesn't exist, start with empty content
+          setIsExisting(false);
           setContent('');
         }
       } catch (error) {
@@ -53,28 +55,21 @@ export default function Page(props: PageProps) {
     try {
       setIsSaving(true);
       
-      // Check if document exists
-      const existingDoc = await documentStore.get(params.id);
-      
-      if (existingDoc.ok) {
-        // Update existing document
+      if (isExisting) {
         const result = await documentStore.updateContent(params.id, newContent);
         if (!result.ok) {
-          throw new Error(result.val.message);
+            throw new Error(result.val.message);
         }
       } else {
-
         console.log('Creating new document with content:', newContent, content);
         // Create new document
         const result = await documentStore.create({
           content: newContent,
           metadata: {
-            fileName: `${params.id}.md`,
-            fileType: 'markdown',
+            fileName: `${params.id}.html`,
+            fileType: 'html',
             size: newContent.length,
             lastModified: new Date().toISOString(),
-            version: 1,
-            checksum: '', // TODO: Implement checksum calculation
           }
         });
         

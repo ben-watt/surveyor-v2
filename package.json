@@ -12,7 +12,8 @@
     "ts-lint": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepare": "husky"
+    "prepare": "husky",
+    "sandbox": "npx dotenvx run --env-file=.env.local -- ampx sandbox"
   },
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.6.1",
@@ -20,6 +21,7 @@
     "@aws-lambda-powertools/logger": "^2.18.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.787.0",
     "@aws-sdk/client-rum": "^3.787.0",
+    "@dotenvx/dotenvx": "^1.43.0",
     "@googlemaps/extended-component-library": "^0.6.13",
     "@heroicons/react": "^2.2.0",
     "@hookform/error-message": "^2.0.1",

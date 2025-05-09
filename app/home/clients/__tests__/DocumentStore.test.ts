@@ -58,7 +58,7 @@ describe('DocumentStore', () => {
     jest.clearAllMocks();
     (generateClient as jest.Mock).mockReturnValue({
       models: {
-        Documents: client.models.Documents,
+        DocumentRecord: client.models.DocumentRecord,
       },
     });
     (getCurrentTenantId as jest.Mock).mockResolvedValue('test-tenant');
@@ -119,7 +119,7 @@ describe('DocumentStore', () => {
         }],
       };
 
-      (client.models.Documents.create as jest.Mock).mockResolvedValue({ data: mockCreatedDoc, errors: null });
+      (client.models.DocumentRecord.create as jest.Mock).mockResolvedValue({ data: mockCreatedDoc, errors: null });
 
       const result = await documentStore.create(mockDocument);
       console.log('Create result:', result);
@@ -137,7 +137,7 @@ describe('DocumentStore', () => {
         },
       });
 
-      expect(client.models.Documents.create).toHaveBeenCalledWith({
+      expect(client.models.DocumentRecord.create).toHaveBeenCalledWith({
         id: 'test',
         displayName: 'test',
         fileName: 'test.md',
@@ -187,7 +187,7 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).not.toHaveBeenCalled();
-      expect(client.models.Documents.create).not.toHaveBeenCalled();
+      expect(client.models.DocumentRecord.create).not.toHaveBeenCalled();
     });
 
     it('should validate markdown content', async () => {
@@ -213,7 +213,7 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).not.toHaveBeenCalled();
-      expect(client.models.Documents.create).not.toHaveBeenCalled();
+      expect(client.models.DocumentRecord.create).not.toHaveBeenCalled();
     });
 
     it('should sanitize file names', async () => {
@@ -239,7 +239,7 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).not.toHaveBeenCalled();
-      expect(client.models.Documents.create).not.toHaveBeenCalled();
+      expect(client.models.DocumentRecord.create).not.toHaveBeenCalled();
     });
   });
 }); 
