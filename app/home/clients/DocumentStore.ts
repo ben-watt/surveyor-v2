@@ -156,7 +156,6 @@ function createDocumentStore() {
     }
 
     try {
-      const user = await getCurrentUser();
       const now = new Date().toISOString();
       const tenantId = await getCurrentTenantId();
       if (!tenantId) {

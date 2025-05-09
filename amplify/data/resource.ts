@@ -10,7 +10,6 @@ authenticated via an API key, can only "read" records.
 =========================================================================*/
 
 const schema = a.schema({
-  // Add tenant admin mutations
   tenantAdmin: a
     .mutation()
     .arguments({

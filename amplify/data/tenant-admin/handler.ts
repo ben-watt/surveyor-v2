@@ -8,28 +8,49 @@ import {
   ListUsersInGroupCommand,
   DeleteGroupCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
+import { Schema } from "../resource";
 
 const client = new CognitoIdentityProviderClient();
 
-export const handler = async (event: any) => {
+function mapNullsToUndefined<T extends object>(obj: T): { [K in keyof T]: Exclude<T[K], null> | undefined } {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k, v === null ? undefined : v])
+  ) as any;
+}
+
+export const handler : Schema['tenantAdmin']['functionHandler'] = async (event) => {
   console.log("Event:", JSON.stringify(event, null, 2));
 
   const { action, ...params } = event.arguments;
+  const safeParams = mapNullsToUndefined(params);
 
   try {
     switch (action) {
-      case "createGroup":
-        return await createGroup(params);
-      case "addUserToGroup":
-        return await addUserToGroup(params);
-      case "removeUserFromGroup":
-        return await removeUserFromGroup(params);
+      case "createGroup": {
+        const { groupName, description } = safeParams;
+        if (!groupName) throw new Error("Group name is required");
+        return await createGroup({ groupName, description });
+      }
+      case "addUserToGroup": {
+        const { username, groupName } = safeParams;
+        return await addUserToGroup({ username, groupName });
+      }
+      case "removeUserFromGroup": {
+        const { username, groupName } = safeParams;
+        return await removeUserFromGroup({ username, groupName });
+      }
       case "listGroups":
         return await listGroups();
-      case "listUsersInGroup":
-        return await listUsersInGroup(params);
-      case "deleteGroup":
-        return await deleteGroup(params);
+      case "listUsersInGroup": {
+        const { groupName } = safeParams;
+        if (!groupName) throw new Error("Group name is required");
+        return await listUsersInGroup({ groupName });
+      }
+      case "deleteGroup": {
+        const { groupName } = safeParams;
+        if (!groupName) throw new Error("Group name is required");
+        return await deleteGroup({ groupName });
+      }
       default:
         throw new Error(`Unsupported action: ${action}`);
     }
@@ -47,10 +68,14 @@ async function createGroup({ groupName, description }: { groupName: string; desc
   });
 
   const response = await client.send(command);
-  return response.Group;
+  return response.Group as any;
 }
 
-async function addUserToGroup({ username, groupName }: { username: string; groupName: string }) {
+async function addUserToGroup({ username, groupName }: { username?: string; groupName?: string }) {
+  if (!username || !groupName) {
+    throw new Error("Username and group name are required");
+  }
+
   const command = new AdminAddUserToGroupCommand({
     Username: username,
     GroupName: groupName,
@@ -61,7 +86,11 @@ async function addUserToGroup({ username, groupName }: { username: string; group
   return { success: true, message: `User ${username} added to group ${groupName}` };
 }
 
-async function removeUserFromGroup({ username, groupName }: { username: string; groupName: string }) {
+async function removeUserFromGroup({ username, groupName }: { username?: string; groupName?: string }) {
+  if (!username || !groupName) {
+    throw new Error("Username and group name are required");
+  }
+
   const command = new AdminRemoveUserFromGroupCommand({
     Username: username,
     GroupName: groupName,
