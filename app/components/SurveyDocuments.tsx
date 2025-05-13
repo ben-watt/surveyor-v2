@@ -21,6 +21,7 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
         const result = await documentStore.list();
         if (result.ok) {
           const surveyDocs = result.val.filter(doc => doc.id === surveyId);
+          console.log("[SurveyDocuments] surveyDocs", surveyDocs);
           setDocuments(surveyDocs);
         } else {
           setError('Failed to load documents');
