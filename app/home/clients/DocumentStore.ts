@@ -6,21 +6,23 @@ import { validateMarkdown } from '../utils/markdown-utils';
 import { getCurrentUser } from 'aws-amplify/auth';
 import client from './AmplifyDataClient';
 import { Schema } from '@/amplify/data/resource';
+import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 
-// Types for store operations
-/**
- * Document metadata for creation
- */
-type CreateDocument = {
-  displayName?: string;
-  content: string;
-  metadata: {
-    fileName: string;
-    fileType: string;
-    size: number;
-    lastModified: string;
-  };
-};
+
+const CreateDocumentSchema = z.object({
+  id: z.string().uuid().optional(),
+  displayName: z.string().optional(),
+  content: z.string().max(10 * 1024 * 1024),
+  metadata: z.object({
+    fileName: z.string(),
+    fileType: z.string(),
+    size: z.number(),
+    lastModified: z.string(),
+  }),
+});
+
+type CreateDocument = z.infer<typeof CreateDocumentSchema>;
 
 /**
  * DocumentRecord type for single-table design
@@ -32,36 +34,22 @@ function createDocumentStore() {
 
   const isOnline = () => navigator.onLine;
 
-  // Content validation
-  const validateContent = (content: string, fileName: string): Result<void, Error> => {
-    if (!content) return Err(new Error('Content cannot be empty'));
-    if (content.length > 10 * 1024 * 1024) return Err(new Error('Content too large'));
-    const validationResult = validateMarkdown(content);
-    if (!validationResult.ok) {
-      return Err(new Error(`Invalid markdown: ${validationResult.val}`));
-    }
-    const sanitizedFileName = sanitizeFileName(fileName);
-    if (sanitizedFileName !== fileName) {
-      return Err(new Error('Invalid file name'));
-    }
-    return Ok(undefined);
-  };
-
   /**
    * Create a new document (writes #LATEST and v0)
    */
   const create = async (document: CreateDocument): Promise<Result<DocumentRecord, Error>> => {
-    const validation = validateContent(document.content, document.metadata.fileName);
-    if (!validation.ok) return Err(validation.val);
+    const validation = CreateDocumentSchema.safeParse(document);
+    if (!validation.success) return Err(new Error(validation.error.message));
+    
     if (!isOnline()) return Err(new Error('Cannot create document while offline'));
     try {
       const tenantId = await getCurrentTenantId();
       if (!tenantId) return Err(new Error('No tenant ID found'));
       const user = await getCurrentUser();
-      const documentId = document.metadata.fileName.replace(/\.md$/, '');
+      const documentId = document.id ?? uuidv4();
       const pk = `${tenantId}#${documentId}`;
       const now = new Date().toISOString();
-      const path = `documents/${tenantId}/${documentId}/v0.html`;
+      const path = `documents/${tenantId}/${documentId}.tiptap`;
       // Upload to S3
       const uploadResult = await uploadData({ path, data: document.content, options: { contentType: 'text/html' } });
       if (!uploadResult.result) return Err(new Error('Failed to upload document content'));

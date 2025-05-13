@@ -37,11 +37,12 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
       } else {
         // Create new document
         const result = await documentStore.create({
+          id: params.id,
           displayName: await getDocName(),
           content: editorContent,
           metadata: {
-            fileName: `${params.id}.md`,
-            fileType: 'markdown',
+            fileName: `${params.id}.tiptap`,
+            fileType: 'text/html',
             size: editorContent.length,
             lastModified: new Date().toISOString(),
           }

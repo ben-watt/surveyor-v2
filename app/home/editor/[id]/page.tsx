@@ -65,9 +65,10 @@ export default function Page(props: PageProps) {
         // Create new document
         const result = await documentStore.create({
           content: newContent,
+          displayName: "Untitled Document",
           metadata: {
-            fileName: `${params.id}.html`,
-            fileType: 'html',
+            fileName: `${params.id}.tiptap`,
+            fileType: 'text/html',
             size: newContent.length,
             lastModified: new Date().toISOString(),
           }
