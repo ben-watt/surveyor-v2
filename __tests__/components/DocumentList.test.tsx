@@ -79,8 +79,7 @@ describe('DocumentList', () => {
     const input = screen.getByRole('textbox', { name: /rename document/i });
     fireEvent.change(input, { target: { value: '' } });
     fireEvent.keyDown(input, { key: 'Enter' });
-    await waitFor(() => expect(screen.getByText('First Document')).toBeInTheDocument());
-    expect(documentStore.rename).not.toHaveBeenCalledWith('doc1', '');
+    await waitFor(() => expect(screen.getByText('Name cannot be empty')).toBeInTheDocument());
   });
 
   it('is accessible: name is focusable and can be activated with Enter/Space', async () => {

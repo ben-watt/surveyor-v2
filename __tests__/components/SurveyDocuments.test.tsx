@@ -33,7 +33,7 @@ describe('SurveyDocuments', () => {
       },
     },
     {
-      id: 'doc2',
+      id: 'doc1',
       displayName: 'Test Document 2',
       version: 1,
       updatedAt: '2024-03-19T10:00:00Z',
@@ -51,7 +51,7 @@ describe('SurveyDocuments', () => {
   it('renders loading state initially', () => {
     (documentStore.list as jest.Mock).mockImplementation(() => new Promise(() => {}));
     
-    render(<SurveyDocuments surveyId="123" />);
+    render(<SurveyDocuments surveyId="doc1" />);
     
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
@@ -59,7 +59,7 @@ describe('SurveyDocuments', () => {
   it('renders error message when document fetch fails', async () => {
     (documentStore.list as jest.Mock).mockResolvedValue(Err(new Error('Failed to load')));
     
-    render(<SurveyDocuments surveyId="123" />);
+    render(<SurveyDocuments surveyId="unknown" />);
     
     await waitFor(() => {
       expect(screen.getByText('Failed to load documents')).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe('SurveyDocuments', () => {
   it('renders empty state when no documents are found', async () => {
     (documentStore.list as jest.Mock).mockResolvedValue(Ok([]));
     
-    render(<SurveyDocuments surveyId="123" />);
+    render(<SurveyDocuments surveyId="no-documents" />);
     
     await waitFor(() => {
       expect(screen.getByText('No reports found for this survey')).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe('SurveyDocuments', () => {
   it('renders documents sorted by version', async () => {
     (documentStore.list as jest.Mock).mockResolvedValue(Ok(mockDocuments));
     
-    render(<SurveyDocuments surveyId="123" />);
+    render(<SurveyDocuments surveyId="doc1" />);
     
     await waitFor(() => {
       expect(screen.getByText('Test Document 1')).toBeInTheDocument();
@@ -89,16 +89,16 @@ describe('SurveyDocuments', () => {
       expect(screen.getByText(/Version 2/)).toBeInTheDocument();
       expect(screen.getByText(/Version 1/)).toBeInTheDocument();
       
-      // Check dates - using the new MM/dd/yyyy format
-      expect(screen.getByText(/03\/20\/2024/)).toBeInTheDocument();
-      expect(screen.getByText(/03\/19\/2024/)).toBeInTheDocument();
+      // Check dates - using the new dd/MM/yyyy format
+      expect(screen.getByText(/20\/03\/2024/)).toBeInTheDocument();
+      expect(screen.getByText(/19\/03\/2024/)).toBeInTheDocument();
     });
   });
 
   it('navigates to editor when document is clicked', async () => {
     (documentStore.list as jest.Mock).mockResolvedValue(Ok(mockDocuments));
     
-    render(<SurveyDocuments surveyId="123" />);
+    render(<SurveyDocuments surveyId="doc1" />);
     
     await waitFor(() => {
       expect(screen.getByText('Test Document 1')).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('SurveyDocuments', () => {
   it('applies custom className when provided', async () => {
     (documentStore.list as jest.Mock).mockResolvedValue(Ok(mockDocuments));
     
-    const { container } = render(<SurveyDocuments surveyId="123" className="custom-class" />);
+    const { container } = render(<SurveyDocuments surveyId="doc1" className="custom-class" />);
     
     await waitFor(() => {
       expect(container.firstChild).toHaveClass('custom-class');
@@ -121,13 +121,13 @@ describe('SurveyDocuments', () => {
   it('reloads documents when surveyId changes', async () => {
     (documentStore.list as jest.Mock).mockResolvedValue(Ok(mockDocuments));
     
-    const { rerender } = render(<SurveyDocuments surveyId="123" />);
+    const { rerender } = render(<SurveyDocuments surveyId="doc1" />);
     
     await waitFor(() => {
       expect(documentStore.list).toHaveBeenCalledTimes(1);
     });
 
-    rerender(<SurveyDocuments surveyId="456" />);
+    rerender(<SurveyDocuments surveyId="doc2" />);
     
     await waitFor(() => {
       expect(documentStore.list).toHaveBeenCalledTimes(2);

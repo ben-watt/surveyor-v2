@@ -21,7 +21,6 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
         const result = await documentStore.list();
         if (result.ok) {
           const surveyDocs = result.val.filter(doc => doc.id === surveyId);
-          console.log("[SurveyDocuments] surveyDocs", surveyDocs);
           setDocuments(surveyDocs);
         } else {
           setError('Failed to load documents');
@@ -81,7 +80,7 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
                   <div className="flex items-center text-sm text-gray-500 space-x-2">
                     <Clock className="h-4 w-4" />
                     <span>
-                      Version {doc.version} • Updated {format(new Date(doc.lastModified ?? ''), 'MM/dd/yyyy')}
+                      Version {doc.version} • Updated {doc.lastModified ? format(new Date(doc.lastModified), 'dd/MM/yyyy') : ''}
                     </span>
                   </div>
                 </div>

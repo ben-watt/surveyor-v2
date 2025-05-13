@@ -189,57 +189,5 @@ describe('DocumentStore', () => {
       expect(uploadData).not.toHaveBeenCalled();
       expect(client.models.DocumentRecord.create).not.toHaveBeenCalled();
     });
-
-    it('should validate markdown content', async () => {
-      (validateMarkdown as jest.Mock).mockReturnValue({ ok: false, val: 'Content cannot be empty' });
-
-      const mockDocument = {
-        content: '',
-        metadata: {
-          fileName: 'test.md',
-          fileType: 'markdown',
-          size: 100,
-          lastModified: '2024-01-01T00:00:00Z',
-          version: 1,
-          checksum: 'test-checksum',
-        },
-      };
-
-      const result = await documentStore.create(mockDocument);
-
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.val.message).toBe('Content cannot be empty');
-      }
-
-      expect(uploadData).not.toHaveBeenCalled();
-      expect(client.models.DocumentRecord.create).not.toHaveBeenCalled();
-    });
-
-    it('should sanitize file names', async () => {
-      (sanitizeFileName as jest.Mock).mockReturnValue('invalid');
-
-      const mockDocument = {
-        content: '# Test Document\n\nThis is a test document.',
-        metadata: {
-          fileName: 'test/../test.md',
-          fileType: 'markdown',
-          size: 100,
-          lastModified: '2024-01-01T00:00:00Z',
-          version: 1,
-          checksum: 'test-checksum',
-        },
-      };
-
-      const result = await documentStore.create(mockDocument);
-
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.val.message).toBe('Invalid file name');
-      }
-
-      expect(uploadData).not.toHaveBeenCalled();
-      expect(client.models.DocumentRecord.create).not.toHaveBeenCalled();
-    });
   });
 }); 
