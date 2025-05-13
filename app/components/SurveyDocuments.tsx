@@ -80,7 +80,7 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
                   <div className="flex items-center text-sm text-gray-500 space-x-2">
                     <Clock className="h-4 w-4" />
                     <span>
-                      Version {doc.version} • Updated {doc.lastModified ? format(new Date(doc.lastModified), 'dd/MM/yyyy') : ''}
+                      Version {doc.version} • Updated {doc.updatedAt == null ? 'N/A' : format(new Date(doc.updatedAt), 'dd/MM/yyyy')}
                     </span>
                   </div>
                 </div>

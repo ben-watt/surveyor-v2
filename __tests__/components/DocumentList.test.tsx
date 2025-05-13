@@ -3,8 +3,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { DocumentList } from '../../app/home/components/DocumentList';
 import { documentStore } from '../../app/home/clients/DocumentStore';
+import toast from 'react-hot-toast';
 
 jest.mock('../../app/home/clients/DocumentStore');
+jest.mock('react-hot-toast', () => ({
+  __esModule: true,
+  default: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
 
 const mockDocuments = [
   {
@@ -79,7 +87,7 @@ describe('DocumentList', () => {
     const input = screen.getByRole('textbox', { name: /rename document/i });
     fireEvent.change(input, { target: { value: '' } });
     fireEvent.keyDown(input, { key: 'Enter' });
-    await waitFor(() => expect(screen.getByText('Name cannot be empty')).toBeInTheDocument());
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Name cannot be empty'));
   });
 
   it('is accessible: name is focusable and can be activated with Enter/Space', async () => {
