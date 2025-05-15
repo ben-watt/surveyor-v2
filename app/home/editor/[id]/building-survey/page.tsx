@@ -33,7 +33,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
 
   return (
     <div>
-      <div className="w-[962px] m-auto">
+      <div>
         {!preview && (
           <>
             <NewEditor

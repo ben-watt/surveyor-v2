@@ -121,7 +121,7 @@ export default function Page(props: PageProps) {
 
   return (
     <div className="flex">
-      <div className="flex-1 relative">
+      <div>
         {!preview && !isPreviewingVersion && (
           <>
             <NewEditor
