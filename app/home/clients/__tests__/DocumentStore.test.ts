@@ -39,7 +39,7 @@ jest.mock('../AmplifyDataClient', () => ({
   __esModule: true,
   default: {
     models: {
-      Documents: {
+      DocumentRecord: {
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
@@ -74,6 +74,7 @@ describe('DocumentStore', () => {
   describe('create', () => {
     it('should create a document when online', async () => {
       const mockDocument = {
+        id: 'test',
         content: '# Test Document\n\nThis is a test document.',
         metadata: {
           fileName: 'test.md',
@@ -118,7 +119,7 @@ describe('DocumentStore', () => {
           },
         }],
       };
-
+      
       // Mock the create method to return the expected structure
       (client.models.DocumentRecord.create as jest.Mock).mockResolvedValue({ data: mockCreatedDoc, errors: null });
 

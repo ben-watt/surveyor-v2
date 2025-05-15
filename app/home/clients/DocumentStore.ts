@@ -11,7 +11,7 @@ import { z } from 'zod';
 
 
 const CreateDocumentSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.string().optional(),
   displayName: z.string().optional(),
   content: z.string().max(10 * 1024 * 1024),
   metadata: z.object({
@@ -49,9 +49,13 @@ function createDocumentStore() {
       const documentId = document.id ?? uuidv4();
       const pk = `${tenantId}#${documentId}`;
       const now = new Date().toISOString();
-      const path = `documents/${tenantId}/${documentId}.tiptap`;
+      const path = `documents/${tenantId}/${documentId}`;
       // Upload to S3
-      const uploadResult = await uploadData({ path, data: document.content, options: { contentType: 'text/html' } });
+      // map to content type
+      const fileType = document.metadata.fileType;
+
+      const contentType = fileType === 'markdown' ? 'text/markdown' : 'text/html';
+      const uploadResult = await uploadData({ path, data: document.content, options: { contentType } });
       if (!uploadResult.result) return Err(new Error('Failed to upload document content'));
       // Write v0 version
       await client.models.DocumentRecord.create({
