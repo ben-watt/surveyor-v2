@@ -78,6 +78,7 @@ export type SurveyImage = {
 
 export type ReportDetails = {
     level: "2" | "3"
+    reference: string,
     address: Address,
     clientName: string,
     reportDate: Date,

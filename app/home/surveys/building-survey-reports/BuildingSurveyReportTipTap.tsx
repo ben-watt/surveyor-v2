@@ -203,7 +203,7 @@ export default function PDF({ form }: PdfProps) {
               Date: {reportDate.toDateString()}
             </p>
 
-            <p style={{ textAlign: "right", fontSize: "8pt" }}>Ref: #{form.id.substring(0,8)}</p>
+            <p style={{ textAlign: "right", fontSize: "8pt" }}>Ref: {form.reportDetails.reference}</p>
           </div>
         </TableBlock>
       </Page>

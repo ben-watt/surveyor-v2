@@ -100,6 +100,7 @@ const createDefaultFormValues = (
     },
     reportDetails: {
       level: "2",
+      reference: "",
       address: {
         formatted: "",
         line1: "",

@@ -104,6 +104,14 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
         </div>
         
         <div>
+          <Input
+            labelTitle="Reference"
+            placeholder="24.123"
+            register={() => register("reference", { required: true })}
+          />
+        </div>
+
+        <div>
           <InputDate
             labelTitle="Inspection Date"
             controllerProps={{
@@ -115,6 +123,18 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
                   endOfDay.setHours(23, 59, 59, 999);
                   return new Date(v) < endOfDay || "Date cannot be in the future";
                 },
+              },
+            }}
+          />
+        </div>
+
+        <div>
+          <InputDate
+            labelTitle="Report Date"
+            controllerProps={{
+              name: "reportDate",
+              rules: {
+                required: true,
               },
             }}
           />

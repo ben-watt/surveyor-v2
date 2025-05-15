@@ -36,7 +36,7 @@ export const Header = ({ editorData }: HeaderFooterHtmlProps) => {
             ? editorData.reportDetails.address.formatted
             : "Unknown"}
         </p>
-        <p>{editorData ? "#" + editorData.id.substring(0, 8) : "Unknown"}</p>
+        <p>{editorData ? "Ref: " + editorData.reportDetails.reference : "Unknown"}</p>
         <p>
           {editorData
             ? formatDateWithSuffix(

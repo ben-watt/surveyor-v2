@@ -158,6 +158,7 @@ describe('ReportDetailsForm', () => {
   const mockSurveyId = 'test-survey-123';
   // Mock with all required ReportDetails fields
   const mockReportDetails = {
+    reference: '123',
     clientName: 'Test Client',
     address: {
       formatted: '123 Test St, Test City, TE1 1ST',
