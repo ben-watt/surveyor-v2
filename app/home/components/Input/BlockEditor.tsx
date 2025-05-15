@@ -191,10 +191,12 @@ export const NewEditor = ({
   }, [tocRepo]);
   
   return (
-    <div className="print:hidden border border-grey-200">
+    <div className="print:hidden border border-grey-200 bg-gray-100">
       <BlockMenuBar editor={editor} onPrint={onPrint} onSave={onSave} isSaving={isSaving} saveStatus={saveStatus} />
       <TocContext.Provider value={tocData}>
-        <EditorContent id={editorIdentifier} editor={editor} />
+        <div className="w-[962px] m-auto bg-white">
+          <EditorContent id={editorIdentifier} editor={editor} />
+        </div>
       </TocContext.Provider>
     </div>
   );

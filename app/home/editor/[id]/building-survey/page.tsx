@@ -5,11 +5,6 @@ import React, { use, useState } from "react";
 import { NewEditor } from "@/app/home/components/Input/BlockEditor";
 import { PrintPreviewer } from "@/app/home/editor/components/PrintPreviewer";
 import { useDocumentTemplate } from "@/app/home/editor/hooks/useEditorState";
-import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
-import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { documentStore } from "@/app/home/clients/DocumentStore";
 import { useDocumentSave } from "@/app/home/editor/hooks/useDocumentSave";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {

@@ -74,21 +74,19 @@ export default function Page(props: PageProps) {
   return (
     <div className="flex">
       <div className="flex-1">
-        <div className="w-[962px] m-auto">
-          {!preview && (
-            <>
-              <NewEditor
-                content={content}
-                onCreate={updateHandler}
-                onUpdate={updateHandler}
-                onPrint={() => setPreview(true)}
-                onSave={(options) => save(previewContent || '', options)}
-                isSaving={documentSaveIsSaving}
-                saveStatus={saveStatus}
-              />
-            </>
-          )}
-        </div>
+        {!preview && (
+          <>
+            <NewEditor
+              content={content}
+              onCreate={updateHandler}
+              onUpdate={updateHandler}
+              onPrint={() => setPreview(true)}
+              onSave={(options) => save(previewContent || '', options)}
+              isSaving={documentSaveIsSaving}
+              saveStatus={saveStatus}
+            />
+          </>
+        )}
         {preview && (
           <PrintPreviewer
             content={previewContent}
