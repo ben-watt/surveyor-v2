@@ -56,13 +56,14 @@ interface MenuBarProps {
   onPrint: () => void;
   onSave: () => void;
   isSaving: boolean;
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
 }
 
 const Divider = () => (
   <span className="m-auto h-[1.5rem] bg-gray-300 pl-[1px]" />
 );
 
-export default function MenuBar({ editor, onPrint, onSave, isSaving }: MenuBarProps) {
+export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus }: MenuBarProps) {
   if (!editor) return null;
 
   const items = [
@@ -300,16 +301,24 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving }: MenuBarPr
 
   return (
     <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b border-l">
-      <div className="flex justify-between flex-shrink-1 no-scrollbar">
-        {items.map((item, index) => (
-          <div key={index} className="flex m-[1px]">
-            {item.render ? (
-              item.render()
-            ) : (
-              <MenuItem {...(item as MenuItemProps)} />
-            )}
-          </div>
-        ))}
+      <div className="flex justify-between flex-shrink-1 no-scrollbar items-center">
+        <div className="flex">
+          {items.map((item, index) => (
+            <div key={index} className="flex m-[1px]">
+              {item.render ? (
+                item.render()
+              ) : (
+                <MenuItem {...(item as MenuItemProps)} />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="ml-4 min-w-[120px] text-xs text-gray-500 text-right h-6 flex items-center justify-end">
+          {saveStatus === 'saving' && 'Saving...'}
+          {saveStatus === 'saved' && 'All changes saved'}
+          {saveStatus === 'autosaved' && 'Auto-saved'}
+          {saveStatus === 'error' && <span className="text-red-500">Save failed</span>}
+        </div>
       </div>
       {tableContextMenu.isActive() && (
         <div className="flex justify-left">

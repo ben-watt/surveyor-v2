@@ -21,7 +21,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
     addTitleHeaderFooter({ editor });
   };
 
-  const { save, isSaving } = useDocumentSave({
+  const { save, isSaving, saveStatus } = useDocumentSave({
     id: params.id,
     getDisplayName: getDocName,
     getMetadata: (content: string) => ({
@@ -46,8 +46,9 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
               onCreate={updateHandler}
               onUpdate={updateHandler}
               onPrint={() => setPreview(true)}
-              onSave={() => save(editorContent)}
+              onSave={(options) => save(editorContent, options)}
               isSaving={isSaving}
+              saveStatus={saveStatus}
             />
           </>
         )}

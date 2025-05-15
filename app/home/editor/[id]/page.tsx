@@ -21,10 +21,9 @@ export default function Page(props: PageProps) {
   const [previewContent, setPreviewContent] = useState<string>('');
   const [content, setContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [isExisting, setIsExisting] = useState(false);
 
-  const { save, isSaving: documentSaveIsSaving } = useDocumentSave({
+  const { save, isSaving: documentSaveIsSaving, saveStatus } = useDocumentSave({
     id: params.id,
     getDisplayName: () => "Untitled Document",
     getMetadata: (content: string) => ({
@@ -63,43 +62,6 @@ export default function Page(props: PageProps) {
     loadDocument();
   }, [params.id]);
 
-  const handleSave = async (newContent: string) => {
-    try {
-      setIsSaving(true);
-      
-      if (isExisting) {
-        const result = await documentStore.updateContent(params.id, newContent);
-        if (!result.ok) {
-            throw new Error(result.val.message);
-        }
-      } else {
-        console.log('Creating new document with content:', newContent, content);
-        // Create new document
-        const result = await documentStore.create({
-          content: newContent,
-          displayName: "Untitled Document",
-          metadata: {
-            fileName: `${params.id}.tiptap`,
-            fileType: 'text/html',
-            size: newContent.length,
-            lastModified: new Date().toISOString(),
-          }
-        });
-        
-        if (!result.ok) {
-          throw new Error(result.val.message);
-        }
-      }
-
-      toast.success('Document saved successfully');
-    } catch (error) {
-      console.error('Failed to save document:', error);
-      toast.error('Failed to save document');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const updateHandler = ({ editor }: { editor: Editor }) => {
     const newContent = editor.getHTML();
     setPreviewContent(newContent);
@@ -120,8 +82,9 @@ export default function Page(props: PageProps) {
                 onCreate={updateHandler}
                 onUpdate={updateHandler}
                 onPrint={() => setPreview(true)}
-                onSave={() => save(previewContent || '')}
+                onSave={(options) => save(previewContent || '', options)}
                 isSaving={documentSaveIsSaving}
+                saveStatus={saveStatus}
               />
             </>
           )}

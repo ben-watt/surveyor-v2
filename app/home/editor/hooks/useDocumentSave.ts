@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
  * @param id - Document ID
  * @param getDisplayName - Function to get the document display name
  * @param getMetadata - Function to get the document metadata (given content)
- * @returns { save, isSaving }
+ * @returns { save, isSaving, saveStatus }
  */
 export function useDocumentSave({
   id,
@@ -19,10 +19,12 @@ export function useDocumentSave({
   getMetadata?: (content: string) => any;
 }) {
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'autosaved'>('idle');
 
-  const save = async (content: string) => {
+  const save = async (content: string, { auto = false }: { auto?: boolean } = {}) => {
     try {
       setIsSaving(true);
+      setSaveStatus('saving');
       const existingDoc = await documentStore.get(id);
       if (existingDoc.ok) {
         const result = await documentStore.updateContent(id, content);
@@ -42,13 +44,17 @@ export function useDocumentSave({
         });
         if (!result.ok) throw new Error(result.val.message);
       }
-      toast.success('Document saved successfully');
+      setSaveStatus(auto ? 'autosaved' : 'saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+      if (!auto) toast.success('Document saved successfully');
     } catch (error) {
-      toast.error('Failed to save document');
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+      if (!auto) toast.error('Failed to save document');
     } finally {
       setIsSaving(false);
     }
   };
 
-  return { save, isSaving };
+  return { save, isSaving, saveStatus };
 } 

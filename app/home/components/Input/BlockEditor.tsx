@@ -12,7 +12,7 @@ import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
 import FileHandler from "@tiptap-pro/extension-file-handler";
@@ -57,8 +57,9 @@ interface NewEditorProps {
   onUpdate?: (props: EditorEvents["update"]) => void;
   onCreate?: (props: EditorEvents["create"]) => void;
   onPrint: () => void;
-  onSave: () => void;
+  onSave: (options?: { auto?: boolean }) => void;
   isSaving: boolean;
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
 }
 
 const ImageResizeWithAttributes = extendAttributesWithDefaults(ImageResize, { "style" : "width: 100%; height: auto; cursor: pointer;"});
@@ -71,14 +72,33 @@ export const NewEditor = ({
   onCreate,
   onSave,
   isSaving,
+  saveStatus,
 }: NewEditorProps) => {
   const [tocData, setTocData] = React.useState<TocContext>();
   const [editorIdentifier, setEditorIdentifier] = React.useState<string>(editorId ?? v4());
   const [tocRepo, setTocRepo] = React.useState<TocRepo>();
+  const lastContentRef = useRef<string>("");
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setTocRepo(createTocRepo(editorIdentifier));
   }, [editorIdentifier]);
+
+  // Auto-save with 30s debounce
+  useEffect(() => {
+    if (isSaving) return; // Don't auto-save while saving
+    if (typeof content !== 'string') return; // Only auto-save for string content
+    if (content === lastContentRef.current) return;
+    if (!content) return;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      onSave({ auto: true });
+      lastContentRef.current = content;
+    }, 3000);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [content, isSaving, onSave]);
 
   const extensions = [
     FileHandler.configure({
@@ -172,7 +192,7 @@ export const NewEditor = ({
   
   return (
     <div className="print:hidden border border-grey-200">
-      <BlockMenuBar editor={editor} onPrint={onPrint} onSave={onSave} isSaving={isSaving} />
+      <BlockMenuBar editor={editor} onPrint={onPrint} onSave={onSave} isSaving={isSaving} saveStatus={saveStatus} />
       <TocContext.Provider value={tocData}>
         <EditorContent id={editorIdentifier} editor={editor} />
       </TocContext.Provider>
