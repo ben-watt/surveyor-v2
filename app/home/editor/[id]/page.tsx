@@ -10,7 +10,7 @@ import { Save } from "lucide-react";
 import { documentStore } from "@/app/home/clients/DocumentStore";
 import toast from "react-hot-toast";
 import { useDocumentSave } from "@/app/home/editor/hooks/useDocumentSave";
-import { VersionHistorySidebar } from '../../../app/components/VersionHistorySidebar';
+import { VersionHistorySidebar } from '../../components/VersionHistorySidebar';
 
 interface PageProps {
   params: Promise<{ id: string }>;
