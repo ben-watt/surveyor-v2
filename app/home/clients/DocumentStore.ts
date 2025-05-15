@@ -230,6 +230,51 @@ function createDocumentStore() {
     }
   };
 
+  /**
+   * List all versions for a document (sk starts with 'v')
+   */
+  const listVersions = async (id: string): Promise<Result<DocumentRecord[], Error>> => {
+    try {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) return Err(new Error('No tenant ID found'));
+      const pk = `${tenantId}#${id}`;
+      // List all items for pk where sk starts with 'v'
+      const itemsRes = await client.models.DocumentRecord.list({ pk });
+      const items = (itemsRes.data as DocumentRecord[]).filter(item =>
+        typeof item.sk === 'string' && item.sk.startsWith('v')
+      );
+      // Sort by version ascending (v0, v1, ...)
+      items.sort((a, b) => {
+        const va = parseInt((a.sk as string).slice(1), 10);
+        const vb = parseInt((b.sk as string).slice(1), 10);
+        return va - vb;
+      });
+      return Ok(items);
+    } catch (error) {
+      return Err(error instanceof Error ? error : new Error('Failed to list versions'));
+    }
+  };
+
+  /**
+   * Get content for a specific version
+   */
+  const getVersionContent = async (id: string, version: number): Promise<Result<string, Error>> => {
+    try {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) return Err(new Error('No tenant ID found'));
+      const pk = `${tenantId}#${id}`;
+      const sk = `v${version}`;
+      const versionRes = await client.models.DocumentRecord.get({ pk, sk });
+      if (!versionRes.data) return Err(new Error('Version not found'));
+      if (!versionRes.data.path) return Err(new Error('Version path not found'));
+      const url = await getUrl({ path: versionRes.data.path });
+      const content = await fetch(url.url);
+      return Ok(await content.text());
+    } catch (error) {
+      return Err(error instanceof Error ? error : new Error('Failed to get version content'));
+    }
+  };
+
   return {
     create,
     update,
@@ -239,6 +284,8 @@ function createDocumentStore() {
     getContent,
     updateContent,
     rename,
+    listVersions,
+    getVersionContent,
   };
 }
 

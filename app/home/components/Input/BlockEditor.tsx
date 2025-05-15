@@ -60,6 +60,7 @@ interface NewEditorProps {
   onSave: (options?: { auto?: boolean }) => void;
   isSaving: boolean;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
+  onOpenVersionHistory?: () => void;
 }
 
 const ImageResizeWithAttributes = extendAttributesWithDefaults(ImageResize, { "style" : "width: 100%; height: auto; cursor: pointer;"});
@@ -73,6 +74,7 @@ export const NewEditor = ({
   onSave,
   isSaving,
   saveStatus,
+  onOpenVersionHistory,
 }: NewEditorProps) => {
   const [tocData, setTocData] = React.useState<TocContext>();
   const [editorIdentifier, setEditorIdentifier] = React.useState<string>(editorId ?? v4());
@@ -192,7 +194,14 @@ export const NewEditor = ({
   
   return (
     <div className="print:hidden border border-grey-200 bg-gray-100">
-      <BlockMenuBar editor={editor} onPrint={onPrint} onSave={onSave} isSaving={isSaving} saveStatus={saveStatus} />
+      <BlockMenuBar
+        editor={editor}
+        onPrint={onPrint}
+        onSave={onSave}
+        isSaving={isSaving}
+        saveStatus={saveStatus}
+        onOpenVersionHistory={onOpenVersionHistory}
+      />
       <TocContext.Provider value={tocData}>
         <div className="w-[962px] m-auto bg-white">
           <EditorContent id={editorIdentifier} editor={editor} />

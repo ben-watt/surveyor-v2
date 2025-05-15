@@ -36,6 +36,7 @@ import {
   Brush,
   Highlighter,
   Save,
+  History,
 } from "lucide-react";
 import {
   Select,
@@ -57,13 +58,14 @@ interface MenuBarProps {
   onSave: () => void;
   isSaving: boolean;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
+  onOpenVersionHistory?: () => void;
 }
 
 const Divider = () => (
   <span className="m-auto h-[1.5rem] bg-gray-300 pl-[1px]" />
 );
 
-export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus }: MenuBarProps) {
+export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus, onOpenVersionHistory }: MenuBarProps) {
   if (!editor) return null;
 
   const items = [
@@ -235,11 +237,11 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus 
       type: "divider",
       render: () => <Divider />,
     },
-    // {
-    //   icon: <TableOfContents />,
-    //   title: "Table of Contents",
-    //   action: () => editor.chain().focus(),
-    // },
+    {
+      icon: <History />,
+      title: "Version History",
+      action: () => onOpenVersionHistory && onOpenVersionHistory(),
+    },
     {
       icon: isSaving ? (
         <span className="animate-spin h-4 w-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full inline-block" />
