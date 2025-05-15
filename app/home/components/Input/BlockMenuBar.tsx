@@ -35,6 +35,7 @@ import {
   ImagePlus,
   Brush,
   Highlighter,
+  Save,
 } from "lucide-react";
 import {
   Select,
@@ -53,13 +54,15 @@ import { useLocalStorage } from "@uidotdev/usehooks";
 interface MenuBarProps {
   editor: Editor | null;
   onPrint: () => void;
+  onSave: () => void;
+  isSaving: boolean;
 }
 
 const Divider = () => (
   <span className="m-auto h-[1.5rem] bg-gray-300 pl-[1px]" />
 );
 
-export default function MenuBar({ editor, onPrint }: MenuBarProps) {
+export default function MenuBar({ editor, onPrint, onSave, isSaving }: MenuBarProps) {
   if (!editor) return null;
 
   const items = [
@@ -236,6 +239,16 @@ export default function MenuBar({ editor, onPrint }: MenuBarProps) {
     //   title: "Table of Contents",
     //   action: () => editor.chain().focus(),
     // },
+    {
+      icon: isSaving ? (
+        <span className="animate-spin h-4 w-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full inline-block" />
+      ) : (
+        <Save />
+      ),
+      title: "Save",
+      action: () => onSave(),
+      disabled: isSaving,
+    },
     {
       icon: <Printer />,
       title: "Print",

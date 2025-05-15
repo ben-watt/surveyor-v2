@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { documentStore } from "@/app/home/clients/DocumentStore";
 import toast from "react-hot-toast";
+import { useDocumentSave } from "@/app/home/editor/hooks/useDocumentSave";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -22,6 +23,17 @@ export default function Page(props: PageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isExisting, setIsExisting] = useState(false);
+
+  const { save, isSaving: documentSaveIsSaving } = useDocumentSave({
+    id: params.id,
+    getDisplayName: () => "Untitled Document",
+    getMetadata: (content: string) => ({
+      fileName: `${params.id}.tiptap`,
+      fileType: 'text/html',
+      size: content.length,
+      lastModified: new Date().toISOString(),
+    }),
+  });
 
   useEffect(() => {
     const loadDocument = async () => {
@@ -108,17 +120,9 @@ export default function Page(props: PageProps) {
                 onCreate={updateHandler}
                 onUpdate={updateHandler}
                 onPrint={() => setPreview(true)}
+                onSave={() => save(previewContent || '')}
+                isSaving={documentSaveIsSaving}
               />
-              <div className="flex justify-end mt-4">
-                <Button
-                  onClick={() => handleSave(previewContent || '')}
-                  disabled={isSaving}
-                  className="gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
-              </div>
             </>
           )}
         </div>
