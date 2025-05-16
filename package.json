@@ -16,6 +16,9 @@
     "sandbox": "npx dotenvx run --env-file=.env.local -- ampx sandbox"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.806.0",
+    "@aws-sdk/client-s3": "^3.806.0",
+    "@aws-sdk/util-dynamodb": "^3.806.0",
     "@aws-amplify/adapter-nextjs": "^1.6.1",
     "@aws-amplify/ui-react": "^6.11.1",
     "@aws-lambda-powertools/logger": "^2.18.0",
