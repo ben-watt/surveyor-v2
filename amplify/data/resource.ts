@@ -193,6 +193,7 @@ const schema = a.schema({
     // This is the s3 path to the file
     path: a.string(),
     fileSize: a.integer(),
+    templateId: a.string(),
   })
   .identifier(['pk', 'sk'])
   /**

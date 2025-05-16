@@ -26,8 +26,10 @@ export function useDocumentSave({
       setIsSaving(true);
       setSaveStatus('saving');
       const existingDoc = await documentStore.get(id);
+      const metadata = getMetadata ? getMetadata(content) : {};
+      const templateId = metadata.templateId;
       if (existingDoc.ok) {
-        const result = await documentStore.updateContent(id, content);
+        const result = await documentStore.updateContent(id, content, templateId);
         if (!result.ok) throw new Error(result.val.message);
       } else {
         const displayName = getDisplayName
@@ -35,7 +37,6 @@ export function useDocumentSave({
             ? await getDisplayName()
             : getDisplayName
           : 'Untitled Document';
-        const metadata = getMetadata ? getMetadata(content) : {};
         const result = await documentStore.create({
           id,
           displayName,

@@ -20,6 +20,7 @@ const CreateDocumentSchema = z.object({
     size: z.number(),
     lastModified: z.string(),
   }),
+  templateId: z.string().optional(),
 });
 
 type CreateDocument = z.infer<typeof CreateDocumentSchema>;
@@ -91,6 +92,7 @@ function createDocumentStore() {
         tenantId,
         editors: [],
         viewers: [],
+        templateId: document.templateId,
       });
       if (!latest.data) return Err(new Error('Failed to create document metadata'));
       return Ok(latest.data);
@@ -102,7 +104,7 @@ function createDocumentStore() {
   /**
    * Update document: creates new version, updates #LATEST, prunes to 10 versions
    */
-  const update = async (id: string, content: string, changeType: string = 'update'): Promise<Result<DocumentRecord, Error>> => {
+  const update = async (id: string, content: string, templateId?: string, changeType: string = 'update'): Promise<Result<DocumentRecord, Error>> => {
     const tenantId = await getCurrentTenantId();
     if (!tenantId) return Err(new Error('No tenant ID found'));
     const pk = `${tenantId}#${id}`;
@@ -110,6 +112,14 @@ function createDocumentStore() {
     if (!isOnline()) return Err(new Error('Cannot update document while offline'));
 
     try {
+      // Update the #LATEST record with the new templateId if provided
+      if (templateId) {
+        await client.models.DocumentRecord.update({
+          pk,
+          sk: '#LATEST',
+          templateId,
+        });
+      }
       const mutationRes = await client.mutations.updateDocumentWithVersioning({
         pk,
         content,
@@ -207,8 +217,8 @@ function createDocumentStore() {
   /**
    * Update document content (creates new version)
    */
-  const updateContent = async (id: string, content: string): Promise<Result<DocumentRecord, Error>> => {
-    return update(id, content, 'update');
+  const updateContent = async (id: string, content: string, templateId?: string): Promise<Result<DocumentRecord, Error>> => {
+    return update(id, content, templateId, 'update');
   };
 
   /**

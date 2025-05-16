@@ -1,30 +1,26 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { use, useState, useEffect } from "react";
+import React, { use, useState, useEffect, useRef } from "react";
 import { NewEditor } from "@/app/home/components/Input/BlockEditor";
 import { PrintPreviewer } from "../components/PrintPreviewer";
-import { Editor } from "@tiptap/react";
-import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
-import { documentStore } from "@/app/home/clients/DocumentStore";
-import toast from "react-hot-toast";
+import { useEditorState } from "@/app/home/editor/hooks/useEditorState";
 import { useDocumentSave } from "@/app/home/editor/hooks/useDocumentSave";
 import { VersionHistorySidebar } from '../../components/VersionHistorySidebar';
+import toast from "react-hot-toast";
+import { documentStore } from '@/app/home/clients/DocumentStore';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ templateId: string }>;
 }
 
 export default function Page(props: PageProps) {
   const params = use(props.params);
+  const { id } = params;
+  const searchParams = use(props.searchParams);
+  const [templateId, setTemplateId] = useState<string | undefined>(searchParams.templateId);
   const [preview, setPreview] = useState<boolean>(false);
-  const [previewContent, setPreviewContent] = useState<string>('');
-  const [content, setContent] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isExisting, setIsExisting] = useState(false);
-
-  // Version history state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [versions, setVersions] = useState<any[]>([]);
   const [isVersionsLoading, setIsVersionsLoading] = useState(false);
@@ -32,69 +28,65 @@ export default function Page(props: PageProps) {
   const [versionPreviewContent, setVersionPreviewContent] = useState<string>('');
   const [isPreviewingVersion, setIsPreviewingVersion] = useState(false);
 
+  // Fetch templateId from document if not provided
+  useEffect(() => {
+    if (!templateId && id) {
+      documentStore.get(id).then(result => {
+        if (result.ok && result.val?.templateId) {
+          setTemplateId(result.val.templateId);
+        }
+      });
+    }
+  }, [id, templateId]);
+
+  const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } = useEditorState(id, templateId);
+
+  const editorRef = useRef<any>(null);
+
   const { save, isSaving: documentSaveIsSaving, saveStatus } = useDocumentSave({
-    id: params.id,
-    getDisplayName: () => "Untitled Document",
+    id,
+    getDisplayName: getDocName,
     getMetadata: (content: string) => ({
-      fileName: `${params.id}.tiptap`,
+      fileName: `${id}.tiptap`,
       fileType: 'text/html',
       size: content.length,
       lastModified: new Date().toISOString(),
+      templateId,
     }),
   });
 
-  useEffect(() => {
-    const loadDocument = async () => {
-      try {
-        setIsLoading(true);
-        const result = await documentStore.get(params.id);
-        if (result.ok) {
-          setIsExisting(true);
-          const contentResult = await documentStore.getContent(params.id);
-          if (contentResult.ok) {
-            setContent(contentResult.val);
-          } else {
-            throw new Error(contentResult.val.message);
-          }
-        } else {
-          setIsExisting(false);
-          setContent('');
-        }
-      } catch (error) {
-        console.error('Failed to load document:', error);
-        toast.error('Failed to load document');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  function getComposedHtml() {
+    if (editorRef.current) {
+      return editorRef.current.getHTML();
+    }
+    return editorContent;
+  }
 
-    loadDocument();
-  }, [params.id]);
-
-  // Fetch versions when sidebar opens
   useEffect(() => {
     if (sidebarOpen) {
       setIsVersionsLoading(true);
-      documentStore.listVersions(params.id)
-        .then(result => {
-          if (result.ok) {
-            setVersions(result.val);
-          } else {
-            setVersions([]);
-            toast.error('Failed to load version history');
-          }
-        })
-        .finally(() => setIsVersionsLoading(false));
+      import("@/app/home/clients/DocumentStore").then(({ documentStore }) => {
+        documentStore.listVersions(id)
+          .then(result => {
+            if (result.ok) {
+              setVersions(result.val);
+            } else {
+              setVersions([]);
+              toast.error('Failed to load version history');
+            }
+          })
+          .finally(() => setIsVersionsLoading(false));
+      });
     }
-  }, [sidebarOpen, params.id]);
+  }, [sidebarOpen, id]);
 
-  // Handler for selecting a version
   const handleSelectVersion = async (version: any) => {
     setSelectedVersion(version);
     setIsPreviewingVersion(true);
     setVersionPreviewContent('');
     const versionNum = typeof version.version === 'number' ? version.version : parseInt((version.sk || '').replace('v', ''), 10);
-    const result = await documentStore.getVersionContent(params.id, versionNum);
+    const { documentStore } = await import("@/app/home/clients/DocumentStore");
+    const result = await documentStore.getVersionContent(id, versionNum);
     if (result.ok) {
       setVersionPreviewContent(result.val);
     } else {
@@ -103,16 +95,14 @@ export default function Page(props: PageProps) {
     }
   };
 
-  // Handler to return to editing latest version
   const handleReturnToLatest = () => {
     setIsPreviewingVersion(false);
     setSelectedVersion(null);
     setVersionPreviewContent('');
   };
 
-  const updateHandler = ({ editor }: { editor: Editor }) => {
-    const newContent = editor.getHTML();
-    setPreviewContent(newContent);
+  const updateHandler = ({ editor }: { editor: any }) => {
+    if (addTitleHeaderFooter) addTitleHeaderFooter({ editor });
   };
 
   if (isLoading) {
@@ -120,16 +110,17 @@ export default function Page(props: PageProps) {
   }
 
   return (
-    <div className="flex">
+    <div>
       <div>
         {!preview && !isPreviewingVersion && (
           <>
             <NewEditor
-              content={content}
+              ref={editorRef}
+              content={editorContent}
               onCreate={updateHandler}
               onUpdate={updateHandler}
               onPrint={() => setPreview(true)}
-              onSave={(options) => save(previewContent || '', options)}
+              onSave={(options) => save(getComposedHtml(), options)}
               isSaving={documentSaveIsSaving}
               saveStatus={saveStatus}
               onOpenVersionHistory={() => setSidebarOpen(true)}

@@ -98,3 +98,130 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
     isLoading,
   };
 };
+
+// Helper to get template initial content (not a hook)
+async function getTemplateInitialContent(surveyId: string, templateId: TemplateId) {
+  if (templateId !== 'building-survey') throw new Error('Invalid template id');
+  const document = await surveyStore.get(surveyId);
+  if (!document) return { editorContent: '', previewContent: '', header: '', footer: '', titlePage: '', addTitleHeaderFooter: undefined, getDocName: async () => surveyId, isLoading: false };
+  const editorData = document.content;
+  const header = renderToStaticMarkup(<Header editorData={editorData} />);
+  const footer = renderToStaticMarkup(<Footer editorData={editorData} />);
+  const titlePage = renderToStaticMarkup(<TitlePage editorData={editorData} />);
+  const html = await mapFormDataToHtml(editorData);
+  const previewContent = titlePage + header + footer + html;
+  const addTitleHeaderFooter = ({ editor }: { editor: Editor }) => {
+    const currentEditorHtml = editor.getHTML();
+    // Compose preview with template wrappers
+    setTimeout(() => {
+      // setTimeout to avoid React state update in render
+      // (since this is not a hook, we can't use state directly)
+    }, 0);
+  };
+  const getDocName = async () => formatAddress(document.content.reportDetails.address);
+  return {
+    editorContent: html,
+    previewContent,
+    header,
+    footer,
+    titlePage,
+    addTitleHeaderFooter,
+    getDocName,
+    isLoading: false,
+  };
+}
+
+export function useEditorState(id: string, templateId?: string) {
+  const [editorContent, setEditorContent] = React.useState<string>('');
+  const [previewContent, setPreviewContent] = React.useState<string>('');
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [header, setHeader] = React.useState<string>('');
+  const [footer, setFooter] = React.useState<string>('');
+  const [titlePage, setTitlePage] = React.useState<string>('');
+  const [addTitleHeaderFooter, setAddTitleHeaderFooter] = React.useState<any>(null);
+  const [getDocName, setGetDocName] = React.useState<any>(() => async () => id);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setIsLoading(true);
+      // Try to load existing document
+      const result = await documentStore.get(id);
+      if (result && result.ok) {
+        const contentResult = await documentStore.getContent(id);
+        if (contentResult.ok) {
+          if (!cancelled) {
+            setEditorContent(contentResult.val);
+            // If the document has a templateId, use the template logic
+            if (result.val.templateId) {
+              const template = await getTemplateInitialContent(id, result.val.templateId as TemplateId);
+              setPreviewContent(template.previewContent);
+              setHeader(template.header);
+              setFooter(template.footer);
+              setTitlePage(template.titlePage);
+              setAddTitleHeaderFooter(() => template.addTitleHeaderFooter);
+              setGetDocName(() => template.getDocName);
+            } else {
+              setPreviewContent(contentResult.val);
+              setHeader('');
+              setFooter('');
+              setTitlePage('');
+              setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
+                const html = editor.getHTML();
+                setEditorContent(html);
+                setPreviewContent(html);
+              });
+              setGetDocName(() => async () => id);
+            }
+            setIsLoading(false);
+          }
+          return;
+        }
+      }
+      // If not found and templateId is provided, use template logic
+      if (templateId) {
+        const template = await getTemplateInitialContent(id, templateId as TemplateId);
+        if (!cancelled) {
+          setEditorContent(template.editorContent);
+          setPreviewContent(template.previewContent);
+          setIsLoading(template.isLoading);
+          setHeader(template.header);
+          setFooter(template.footer);
+          setTitlePage(template.titlePage);
+          setAddTitleHeaderFooter(() => template.addTitleHeaderFooter);
+          setGetDocName(() => template.getDocName);
+        }
+      } else {
+        // Blank new document
+        if (!cancelled) {
+          setEditorContent('');
+          setPreviewContent('');
+          setIsLoading(false);
+          setHeader('');
+          setFooter('');
+          setTitlePage('');
+          setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
+            const html = editor.getHTML();
+            setEditorContent(html);
+            setPreviewContent(html);
+          });
+          setGetDocName(() => async () => id);
+        }
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [id, templateId]);
+
+  return {
+    editorContent,
+    previewContent,
+    header,
+    footer,
+    titlePage,
+    setPreviewContent,
+    addTitleHeaderFooter,
+    getDocName,
+    isLoading,
+  };
+}

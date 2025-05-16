@@ -68,7 +68,7 @@ export const TitlePage = ({ editorData }: HeaderFooterHtmlProps) => {
                     )
                   : "Unknown"}
             </p>
-            <p>{editorData ? "#" + editorData.id.substring(0, 8) : "Unknown"}</p>
+            <p>{editorData ? "#" + editorData.reportDetails.reference : "Unknown"}</p>
           </div>
         </div>
       </div>   

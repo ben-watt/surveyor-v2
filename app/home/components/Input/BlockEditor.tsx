@@ -12,7 +12,7 @@ import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
 import FileHandler from "@tiptap-pro/extension-file-handler";
@@ -65,7 +65,7 @@ interface NewEditorProps {
 
 const ImageResizeWithAttributes = extendAttributesWithDefaults(ImageResize, { "style" : "width: 100%; height: auto; cursor: pointer;"});
 
-export const NewEditor = ({
+export const NewEditor = forwardRef(({
   editorId,
   onPrint,
   content,
@@ -75,7 +75,7 @@ export const NewEditor = ({
   isSaving,
   saveStatus,
   onOpenVersionHistory,
-}: NewEditorProps) => {
+}: NewEditorProps, ref) => {
   const [tocData, setTocData] = React.useState<TocContext>();
   const [editorIdentifier, setEditorIdentifier] = React.useState<string>(editorId ?? v4());
   const [tocRepo, setTocRepo] = React.useState<TocRepo>();
@@ -192,6 +192,7 @@ export const NewEditor = ({
     onUpdate: onUpdate,
   }, [tocRepo]);
   
+  useImperativeHandle(ref, () => editor, [editor]);
   return (
     <div className="print:hidden border border-grey-200 bg-gray-100">
       <BlockMenuBar
@@ -209,4 +210,6 @@ export const NewEditor = ({
       </TocContext.Provider>
     </div>
   );
-};
+});
+
+NewEditor.displayName = 'NewEditor';
