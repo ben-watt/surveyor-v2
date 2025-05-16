@@ -60,7 +60,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
         try {
           const html = await mapFormDataToHtml(editorData);
           setEditorContent(html);
-          setPreviewContent(titlePage + header + footer + html);
+          setPreviewContent(titlePage + header + html + footer);
           setIsLoading(false);
         } catch (error) {
           console.error("[useEditorState] Failed to map form data to HTML", error);
@@ -75,7 +75,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
   const addTitleHeaderFooter = React.useCallback(({editor}: {editor: Editor}) => {
     const currentEditorHtml = editor.getHTML();
     setEditorContent(currentEditorHtml);
-    setPreviewContent(titlePage + header + footer + currentEditorHtml);
+    setPreviewContent(titlePage + header + currentEditorHtml + footer);
   }, [titlePage, header, footer]);
 
   const getDocName = async () => {
@@ -109,14 +109,11 @@ async function getTemplateInitialContent(surveyId: string, templateId: TemplateI
   const footer = renderToStaticMarkup(<Footer editorData={editorData} />);
   const titlePage = renderToStaticMarkup(<TitlePage editorData={editorData} />);
   const html = await mapFormDataToHtml(editorData);
-  const previewContent = titlePage + header + footer + html;
+  const previewContent = titlePage + header + html + footer;
   const addTitleHeaderFooter = ({ editor }: { editor: Editor }) => {
     const currentEditorHtml = editor.getHTML();
-    // Compose preview with template wrappers
-    setTimeout(() => {
-      // setTimeout to avoid React state update in render
-      // (since this is not a hook, we can't use state directly)
-    }, 0);
+    // This is a helper, so state update should be handled in the hook
+    // If you need to update preview, do it in the hook's callback
   };
   const getDocName = async () => formatAddress(document.content.reportDetails.address);
   return {
@@ -159,7 +156,11 @@ export function useEditorState(id: string, templateId?: string) {
               setHeader(template.header);
               setFooter(template.footer);
               setTitlePage(template.titlePage);
-              setAddTitleHeaderFooter(() => template.addTitleHeaderFooter);
+              setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
+                const currentEditorHtml = editor.getHTML();
+                setEditorContent(currentEditorHtml);
+                setPreviewContent(template.titlePage + template.header + currentEditorHtml + template.footer);
+              });
               setGetDocName(() => template.getDocName);
             } else {
               setPreviewContent(contentResult.val);
@@ -188,7 +189,11 @@ export function useEditorState(id: string, templateId?: string) {
           setHeader(template.header);
           setFooter(template.footer);
           setTitlePage(template.titlePage);
-          setAddTitleHeaderFooter(() => template.addTitleHeaderFooter);
+          setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
+            const currentEditorHtml = editor.getHTML();
+            setEditorContent(currentEditorHtml);
+            setPreviewContent(template.titlePage + template.header + currentEditorHtml + template.footer);
+          });
           setGetDocName(() => template.getDocName);
         }
       } else {

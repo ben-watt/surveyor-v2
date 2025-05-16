@@ -120,7 +120,7 @@ export default function Page(props: PageProps) {
               onCreate={updateHandler}
               onUpdate={updateHandler}
               onPrint={() => setPreview(true)}
-              onSave={(options) => save(getComposedHtml(), options)}
+              onSave={(options) => save(previewContent, options)}
               isSaving={documentSaveIsSaving}
               saveStatus={saveStatus}
               onOpenVersionHistory={() => setSidebarOpen(true)}
