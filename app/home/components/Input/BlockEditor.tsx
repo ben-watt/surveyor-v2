@@ -204,7 +204,7 @@ export const NewEditor = forwardRef(({
         onOpenVersionHistory={onOpenVersionHistory}
       />
       <TocContext.Provider value={tocData}>
-        <div className="w-[962px] m-auto bg-white">
+        <div className="w-[962px] m-auto bg-white mt-6 mb-6">
           <EditorContent id={editorIdentifier} editor={editor} />
         </div>
       </TocContext.Provider>
