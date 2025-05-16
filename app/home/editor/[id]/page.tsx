@@ -39,7 +39,10 @@ export default function Page(props: PageProps) {
     }
   }, [id, templateId]);
 
+  // Always call useEditorState, but pass undefined for templateId if not available
   const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } = useEditorState(id, templateId);
+
+  const effectiveLoading = !templateId || isLoading;
 
   const editorRef = useRef<any>(null);
 
@@ -54,13 +57,6 @@ export default function Page(props: PageProps) {
       templateId,
     }),
   });
-
-  function getComposedHtml() {
-    if (editorRef.current) {
-      return editorRef.current.getHTML();
-    }
-    return editorContent;
-  }
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -105,7 +101,7 @@ export default function Page(props: PageProps) {
     if (addTitleHeaderFooter) addTitleHeaderFooter({ editor });
   };
 
-  if (isLoading) {
+  if (effectiveLoading) {
     return <div className="w-[962px] m-auto">Loading...</div>;
   }
 
@@ -120,7 +116,7 @@ export default function Page(props: PageProps) {
               onCreate={updateHandler}
               onUpdate={updateHandler}
               onPrint={() => setPreview(true)}
-              onSave={(options) => save(previewContent, options)}
+              onSave={(options) => save(editorContent, options)}
               isSaving={documentSaveIsSaving}
               saveStatus={saveStatus}
               onOpenVersionHistory={() => setSidebarOpen(true)}

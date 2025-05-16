@@ -93,9 +93,12 @@ export const NewEditor = forwardRef(({
     if (content === lastContentRef.current) return;
     if (!content) return;
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    // Update lastContentRef immediately to prevent repeated saves
+    lastContentRef.current = content;
+
     debounceTimer.current = setTimeout(() => {
       onSave({ auto: true });
-      lastContentRef.current = content;
     }, 3000);
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
