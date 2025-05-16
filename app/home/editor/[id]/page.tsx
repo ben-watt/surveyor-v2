@@ -9,6 +9,9 @@ import { useDocumentSave } from "@/app/home/editor/hooks/useDocumentSave";
 import { VersionHistorySidebar } from '../../components/VersionHistorySidebar';
 import toast from "react-hot-toast";
 import { documentStore } from '@/app/home/clients/DocumentStore';
+import { useTemplateId } from '@/app/home/editor/hooks/useTemplateId';
+import { useVersionHistory, Version } from '@/app/home/editor/hooks/useVersionHistory';
+import { VersionPreview } from '../components/VersionPreview';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -19,29 +22,22 @@ export default function Page(props: PageProps) {
   const params = use(props.params);
   const { id } = params;
   const searchParams = use(props.searchParams);
-  const [templateId, setTemplateId] = useState<string | undefined>(searchParams.templateId);
+  const initialTemplateId = searchParams.templateId;
+
+  // Use custom hook for templateId
+  const templateId = useTemplateId(id, initialTemplateId);
+
+  // Use custom hook for version history
+  const { versions, isLoading: isVersionsLoading, fetchVersions } = useVersionHistory(id);
+
   const [preview, setPreview] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [versions, setVersions] = useState<any[]>([]);
-  const [isVersionsLoading, setIsVersionsLoading] = useState(false);
-  const [selectedVersion, setSelectedVersion] = useState<any | null>(null);
+  const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [versionPreviewContent, setVersionPreviewContent] = useState<string>('');
   const [isPreviewingVersion, setIsPreviewingVersion] = useState(false);
 
-  // Fetch templateId from document if not provided
-  useEffect(() => {
-    if (!templateId && id) {
-      documentStore.get(id).then(result => {
-        if (result.ok && result.val?.templateId) {
-          setTemplateId(result.val.templateId);
-        }
-      });
-    }
-  }, [id, templateId]);
-
   // Always call useEditorState, but pass undefined for templateId if not available
   const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } = useEditorState(id, templateId);
-
   const effectiveLoading = !templateId || isLoading;
 
   const editorRef = useRef<any>(null);
@@ -58,25 +54,14 @@ export default function Page(props: PageProps) {
     }),
   });
 
+  // Fetch version history when sidebar opens
   useEffect(() => {
     if (sidebarOpen) {
-      setIsVersionsLoading(true);
-      import("@/app/home/clients/DocumentStore").then(({ documentStore }) => {
-        documentStore.listVersions(id)
-          .then(result => {
-            if (result.ok) {
-              setVersions(result.val);
-            } else {
-              setVersions([]);
-              toast.error('Failed to load version history');
-            }
-          })
-          .finally(() => setIsVersionsLoading(false));
-      });
+      fetchVersions();
     }
-  }, [sidebarOpen, id]);
+  }, [sidebarOpen, fetchVersions]);
 
-  const handleSelectVersion = async (version: any) => {
+  const handleSelectVersion = async (version: Version) => {
     setSelectedVersion(version);
     setIsPreviewingVersion(true);
     setVersionPreviewContent('');
@@ -123,23 +108,12 @@ export default function Page(props: PageProps) {
             />
           </>
         )}
-        {isPreviewingVersion && (
-          <div className="border rounded bg-gray-50 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold">Previewing Version {selectedVersion?.version ?? selectedVersion?.sk}</span>
-              <button
-                className="text-blue-600 underline text-sm"
-                onClick={handleReturnToLatest}
-                aria-label="Return to editing latest version"
-              >
-                Return to Editing
-              </button>
-            </div>
-            <div
-              className="prose max-w-none bg-white p-4 rounded shadow-inner min-h-[300px]"
-              dangerouslySetInnerHTML={{ __html: versionPreviewContent }}
-            />
-          </div>
+        {isPreviewingVersion && selectedVersion && (
+          <VersionPreview
+            versionLabel={selectedVersion.version?.toString() ?? selectedVersion.sk ?? ''}
+            content={versionPreviewContent}
+            onReturn={handleReturnToLatest}
+          />
         )}
         {preview && (
           <PrintPreviewer
@@ -148,10 +122,10 @@ export default function Page(props: PageProps) {
           />
         )}
         <VersionHistorySidebar
-          versions={versions}
+          versions={versions as any}
           onSelect={handleSelectVersion}
           onClose={() => setSidebarOpen(false)}
-          selectedVersion={selectedVersion}
+          selectedVersion={selectedVersion as any}
           isOpen={sidebarOpen}
           isLoading={isVersionsLoading}
         />
