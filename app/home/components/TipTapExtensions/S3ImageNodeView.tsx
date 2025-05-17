@@ -22,6 +22,7 @@ const S3ImageNodeView = (props: any) => {
   const startPos = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
   const [aspectLocked, setAspectLocked] = useState(true);
   const aspectRatio = useRef<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Compute style for alignment
   let alignmentStyle = {};
@@ -47,6 +48,7 @@ const S3ImageNodeView = (props: any) => {
     } else {
       setUrl(undefined);
     }
+    setIsLoading(true); // Reset loading state when src changes
     return () => { cancelled = true; };
   }, [s3Path, src]);
 
@@ -193,6 +195,24 @@ const S3ImageNodeView = (props: any) => {
           tabIndex={0}
         />
       ))}
+      {/* Skeleton placeholder while loading */}
+      {isLoading && url && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: width || style.width || 120,
+            height: height || style.height || 90,
+            background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'skeleton-loading 1.2s infinite linear',
+            zIndex: 10,
+          }}
+          aria-label="Loading image"
+          role="status"
+        />
+      )}
       <img
         ref={imgRef}
         src={url}
@@ -201,7 +221,15 @@ const S3ImageNodeView = (props: any) => {
         aria-label={node.attrs.alt || 'Document image'}
         style={style}
         data-s3-path={s3Path || undefined}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setIsLoading(false)}
       />
+      <style>{`
+        @keyframes skeleton-loading {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </NodeViewWrapper>
   );
 };
