@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { getImageHref } from '../../editor/utils/image';
+import Image from '@tiptap/extension-image';
 
 /**
  * S3ImageNodeView
@@ -238,23 +239,11 @@ const S3ImageNodeView = (props: any) => {
  * S3ImageExtension
  * TipTap extension for images that uses the S3ImageNodeView for rendering.
  */
-export const S3ImageExtension = Node.create({
-  name: 'image',
-  group: 'inline',
-  inline: true,
-  draggable: true,
+export const S3ImageExtension = Image.extend({
   addAttributes() {
     return {
-      src: {
-        default: null,
-      },
-      alt: {
-        default: null,
-      },
+      ...this.parent?.(),
       'data-s3-path': {
-        default: null,
-      },
-      title: {
         default: null,
       },
       width: {
@@ -287,11 +276,14 @@ export const S3ImageExtension = Node.create({
     ];
   },
   renderHTML({ HTMLAttributes }) {
-    return ['img', mergeAttributes(HTMLAttributes, {
-      width: HTMLAttributes.width,
-      height: HTMLAttributes.height,
-      align: HTMLAttributes.align,
-    })];
+    return [
+      'img',
+      mergeAttributes(HTMLAttributes, {
+        width: HTMLAttributes.width,
+        height: HTMLAttributes.height,
+        align: HTMLAttributes.align,
+      }),
+    ];
   },
   addNodeView() {
     return ReactNodeViewRenderer(S3ImageNodeView);

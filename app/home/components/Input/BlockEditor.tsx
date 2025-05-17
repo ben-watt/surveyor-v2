@@ -13,7 +13,6 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
 
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import ImageResize from "tiptap-extension-resize-image";
 import Section from "../TipTapExtensions/Section";
 import FileHandler from "@tiptap-pro/extension-file-handler";
 import Highlight from '@tiptap/extension-highlight';
@@ -63,8 +62,6 @@ interface NewEditorProps {
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
   onOpenVersionHistory?: () => void;
 }
-
-const ImageResizeWithAttributes = extendAttributesWithDefaults(ImageResize, { "style" : "width: 100%; height: auto; cursor: pointer;"});
 
 export const NewEditor = forwardRef(({
   editorId,
