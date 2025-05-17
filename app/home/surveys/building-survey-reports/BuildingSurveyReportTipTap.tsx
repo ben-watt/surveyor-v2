@@ -159,9 +159,10 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <TableBlock widths={[55, 45]}>
           <div>
-            <Image
+            <img
               style={{ margin: "0 auto" }}
-              src={form.reportDetails.moneyShot[0].uri}
+              src={undefined}
+              data-s3-path={form.reportDetails.moneyShot[0].uri}
               alt="main page image"
               width="700"
               height="480"
@@ -219,10 +220,11 @@ export default function PDF({ form }: PdfProps) {
         <p></p>
         <p>Signed:</p>
         <TableBlock widths={[50, 50]}>
-          <Image
+          <img
             style={{ height: "30mm" }}
-            src={form.owner.signaturePath[0]}
+            src={undefined}
             alt="signature"
+            data-s3-path={form.owner.signaturePath[0]}
             width={400}
             height={200}
           />

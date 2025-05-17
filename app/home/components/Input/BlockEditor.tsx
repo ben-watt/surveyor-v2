@@ -26,6 +26,7 @@ import {
 import { v4 } from "uuid";
 import { Node } from "@tiptap/core";
 import { createTocRepo, TocContext, TocNode, TocRepo } from "../TipTapExtensions/Toc";
+import S3ImageExtension from "../TipTapExtensions/S3ImageNodeView";
 
 function extendAttributesWithDefaults<T>(node: Node<T>, attrs: { [key: string]: string }, attrDefault?: string) {
   return node.extend({
@@ -156,10 +157,7 @@ export const NewEditor = forwardRef(({
     Highlight.configure({
       multicolor: true,
     }),
-    ImageResizeWithAttributes.configure({
-      allowBase64: true
-    }),
-    
+    S3ImageExtension,
     Table.configure({
       resizable: true,
     }),

@@ -15,19 +15,18 @@
   const imageToImageWithMetadata = async (images: SurveyImage[]) : Promise<ImageWithMetadata[]> => {
     return await Promise.all(images.map(async image => {
       try {
-        const preSignedUrl = await getImageHref(image.path);
         if(image.hasMetadata) {
           console.debug("[imageToImageWithMetadata] Getting metadata for image", image);
           const metadata = await imageMetadataStore.get(image.path);
           return {
-            uri: preSignedUrl,
+            uri: image.path,
             hasMetadata: !!metadata,
             metadata: metadata,
             isArchived: image.isArchived,
           };
         } else {
           return {
-            uri: preSignedUrl,
+            uri: image.path,
             hasMetadata: false,
             metadata: null,
             isArchived: image.isArchived,
@@ -94,14 +93,12 @@
       console.debug("[mapFormDataToHtml] Form data", formData);
       const frontElevationImages = await imageToImageWithMetadata(formData.reportDetails.frontElevationImagesUri.filter(image => !image.isArchived));
       const moneyShot = await imageToImageWithMetadata(formData.reportDetails.moneyShot.filter(image => !image.isArchived));
-      const signaturePath = await getImagesHref(formData.owner.signaturePath ?? []);
       
       const form = {
         id: formData.id,
         status: formData.status,
         owner: {
           ...formData.owner,
-          signaturePath
         },
         reportDetails: {
           ...formData.reportDetails,
