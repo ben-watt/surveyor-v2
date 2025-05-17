@@ -207,7 +207,7 @@ const S3ImageNodeView = (props: any) => {
             background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
             backgroundSize: '200% 100%',
             animation: 'skeleton-loading 1.2s infinite linear',
-            zIndex: 10,
+            zIndex: 1,
           }}
           aria-label="Loading image"
           role="status"
