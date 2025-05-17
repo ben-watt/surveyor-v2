@@ -46,11 +46,11 @@ export function useDocumentSave({
         if (!result.ok) throw new Error(result.val.message);
       }
       setSaveStatus(auto ? 'autosaved' : 'saved');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      setTimeout(() => setSaveStatus('idle'), 10000);
       if (!auto) toast.success('Document saved successfully');
     } catch (error) {
       setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      setTimeout(() => setSaveStatus('idle'), 10000);
       if (!auto) toast.error('Failed to save document');
     } finally {
       setIsSaving(false);

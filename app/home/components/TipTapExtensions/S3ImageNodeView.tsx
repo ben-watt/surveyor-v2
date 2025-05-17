@@ -12,6 +12,7 @@ import { getImageHref } from '../../editor/utils/image';
 const S3ImageNodeView = (props: any) => {
   const { node, selected } = props;
   const s3Path = node.attrs['data-s3-path'];
+  const src = node.attrs.src;
   const [url, setUrl] = useState<string | undefined>(undefined);
   const width = node.attrs.width;
   const height = node.attrs.height;
@@ -32,8 +33,6 @@ const S3ImageNodeView = (props: any) => {
     alignmentStyle = { display: 'block', margin: '0 auto 1em auto' };
   }
 
-  console.log("[S3ImageNodeView] s3Path", s3Path);
-
   useEffect(() => {
     let cancelled = false;
     if (s3Path) {
@@ -43,9 +42,13 @@ const S3ImageNodeView = (props: any) => {
           if (!cancelled) setUrl(url);
         })
         .catch(() => setUrl(undefined));
+    } else if (src) {
+      setUrl(src);
+    } else {
+      setUrl(undefined);
     }
     return () => { cancelled = true; };
-  }, [s3Path]);
+  }, [s3Path, src]);
 
   // Set aspect ratio on first select or when image size changes
   useEffect(() => {
@@ -197,7 +200,7 @@ const S3ImageNodeView = (props: any) => {
         role="img"
         aria-label={node.attrs.alt || 'Document image'}
         style={style}
-        data-s3-path={s3Path}
+        data-s3-path={s3Path || undefined}
       />
     </NodeViewWrapper>
   );

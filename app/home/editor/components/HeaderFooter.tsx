@@ -68,7 +68,7 @@ export const TitlePage = ({ editorData }: HeaderFooterHtmlProps) => {
                     )
                   : "Unknown"}
             </p>
-            <p>{editorData ? "#" + editorData.reportDetails.reference : "Unknown"}</p>
+            <p>{editorData ? "Ref:" + editorData.reportDetails.reference : "Unknown"}</p>
           </div>
         </div>
       </div>   

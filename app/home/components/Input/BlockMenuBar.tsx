@@ -182,7 +182,7 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus,
               .focus()
               .setImage({
                 src: URL.createObjectURL(file),
-                alt: "Image",
+                alt: file.name || "Image",
               })
               .run();
           }

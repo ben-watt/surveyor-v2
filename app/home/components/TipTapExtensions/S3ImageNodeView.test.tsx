@@ -8,6 +8,10 @@ jest.mock('../../editor/utils/image', () => ({
   getImageHref: jest.fn().mockResolvedValue('https://test-bucket.s3.amazonaws.com/test.jpg'),
 }));
 
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe('S3ImageNodeView', () => {
   it('renders image with correct src, alt, and data-s3-path', async () => {
     const node = { attrs: { 'data-s3-path': 'test.jpg', alt: 'Test Image' } };
@@ -27,5 +31,20 @@ describe('S3ImageNodeView', () => {
       const img = screen.getByRole('img');
       expect(img).toHaveAttribute('alt', '');
     });
+  });
+
+  it('renders image with src directly if no data-s3-path is present', async () => {
+    const node = { attrs: { src: 'https://example.com/image.png', alt: 'Direct Image' } };
+    render(<S3ImageNodeView node={node} selected={false} />);
+    // Wait a tick to allow any effects to run
+    await waitFor(() => {
+      const img = screen.getByRole('img');
+      expect(img).toHaveAttribute('src', 'https://example.com/image.png');
+      expect(img).toHaveAttribute('alt', 'Direct Image');
+      expect(img).not.toHaveAttribute('data-s3-path');
+    });
+    // getImageHref should not be called
+    const { getImageHref } = require('../../editor/utils/image');
+    expect(getImageHref).not.toHaveBeenCalled();
   });
 }); 
