@@ -389,7 +389,8 @@ export default function PDF({ form }: PdfProps) {
           {form.reportDetails.frontElevationImagesUri.map((image, i) => (
             <div key={`frontElevation_img_${i}`}>
               <img
-                src={image.uri}
+                src={undefined}
+                data-s3-path={image.uri}
                 style={{ maxHeight: "75mm", margin: "0 auto" }}
                 key={`frontElevation_img_${i}`}
                 alt={`frontElevation_img_${i}`}
@@ -888,7 +889,8 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
             <td key={`${elementSection.id}.cell.${i}`}>
               <img
                 key={`${elementSection.id}.img.${i}`}
-                src={allImages[i].uri}
+                data-s3-path={allImages[i].uri}
+                src={undefined}
                 alt={elementSection.name + ".image." + i}
                 style={{ maxHeight: "75mm", margin: "0 auto" }}
               />
@@ -900,7 +902,8 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
               {allImages[i + 1] && (
                 <img
                   key={`${elementSection.id}.img.${i + 1}`}
-                  src={allImages[i + 1].uri}
+                  data-s3-path={allImages[i + 1].uri}
+                  src={undefined}
                   alt={elementSection.name + ".image." + i}
                   style={{ maxHeight: "75mm", margin: "0 auto" }}
                 />
