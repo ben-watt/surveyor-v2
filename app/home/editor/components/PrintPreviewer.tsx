@@ -2,10 +2,34 @@ import React, { useEffect } from "react";
 import { Previewer } from "pagedjs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
+import { getImageHref } from '../utils/image';
 
 interface PrintPreviewerProps {
   content: string;
   onBack: () => void;
+}
+
+async function resolveAllS3ImagesInContainer(container: HTMLElement | Document) {
+  const images = Array.from(container.querySelectorAll('img[data-s3-path]'));
+  await Promise.all(
+    images.map(async img => {
+      const s3Path = img.getAttribute('data-s3-path');
+      if (s3Path) {
+        const url = await getImageHref(s3Path);
+        img.setAttribute('src', url);
+      }
+    })
+  );
+  await Promise.all(
+    images.map(
+      img =>
+        new Promise(resolve => {
+          const image = img as HTMLImageElement;
+          if (image.complete) resolve(null);
+          else image.onload = () => resolve(null);
+        })
+    )
+  );
 }
 
 export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack }) => {
@@ -42,6 +66,9 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
           ["/pagedstyles.css", "/interface.css"],
           prev
         );
+        
+        // Resolve S3 images in the preview container
+        await resolveAllS3ImagesInContainer(prev);
         
         console.log("[PrintPreviewer] Preview generation complete");
         setIsRendering(false);

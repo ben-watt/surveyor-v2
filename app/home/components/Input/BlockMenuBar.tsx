@@ -51,6 +51,7 @@ import { Level } from "@tiptap/extension-heading";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@uidotdev/usehooks";
+import { getImageHref } from '../../editor/utils/image';
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -255,7 +256,9 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus,
     {
       icon: <Printer />,
       title: "Print",
-      action: onPrint || window.print(),
+      action: async () => {
+          onPrint();
+      },
     },
   ];
 
