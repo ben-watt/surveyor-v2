@@ -81,37 +81,31 @@ const S3ImageNodeView = (props: any) => {
     if (!isResizing) return;
     const handleMouseMove = (e: MouseEvent) => {
       if (!imgRef.current) return;
-      const rect = imgRef.current.getBoundingClientRect();
+      // Use the initial mouse position and image size for calculations
+      const dx = e.clientX - startPos.current.x;
+      const dy = e.clientY - startPos.current.y;
       let newWidth = startPos.current.width;
       let newHeight = startPos.current.height;
       if (isResizing === 'se') {
-        newWidth = Math.max(20, e.clientX - rect.left + startPos.current.width - rect.width);
-        if (aspectLocked && aspectRatio.current) {
-          newHeight = Math.max(20, newWidth / aspectRatio.current);
-        } else {
-          newHeight = Math.max(20, e.clientY - rect.top + startPos.current.height - rect.height);
-        }
+        newWidth = Math.max(20, startPos.current.width + dx);
+        newHeight = aspectLocked && aspectRatio.current
+          ? Math.max(20, newWidth / aspectRatio.current)
+          : Math.max(20, startPos.current.height + dy);
       } else if (isResizing === 'sw') {
-        newWidth = Math.max(20, rect.right - e.clientX + startPos.current.width - rect.width);
-        if (aspectLocked && aspectRatio.current) {
-          newHeight = Math.max(20, newWidth / aspectRatio.current);
-        } else {
-          newHeight = Math.max(20, e.clientY - rect.top + startPos.current.height - rect.height);
-        }
+        newWidth = Math.max(20, startPos.current.width - dx);
+        newHeight = aspectLocked && aspectRatio.current
+          ? Math.max(20, newWidth / aspectRatio.current)
+          : Math.max(20, startPos.current.height + dy);
       } else if (isResizing === 'ne') {
-        newWidth = Math.max(20, e.clientX - rect.left + startPos.current.width - rect.width);
-        if (aspectLocked && aspectRatio.current) {
-          newHeight = Math.max(20, newWidth / aspectRatio.current);
-        } else {
-          newHeight = Math.max(20, rect.bottom - e.clientY + startPos.current.height - rect.height);
-        }
+        newWidth = Math.max(20, startPos.current.width + dx);
+        newHeight = aspectLocked && aspectRatio.current
+          ? Math.max(20, newWidth / aspectRatio.current)
+          : Math.max(20, startPos.current.height - dy);
       } else if (isResizing === 'nw') {
-        newWidth = Math.max(20, rect.right - e.clientX + startPos.current.width - rect.width);
-        if (aspectLocked && aspectRatio.current) {
-          newHeight = Math.max(20, newWidth / aspectRatio.current);
-        } else {
-          newHeight = Math.max(20, rect.bottom - e.clientY + startPos.current.height - rect.height);
-        }
+        newWidth = Math.max(20, startPos.current.width - dx);
+        newHeight = aspectLocked && aspectRatio.current
+          ? Math.max(20, newWidth / aspectRatio.current)
+          : Math.max(20, startPos.current.height - dy);
       }
       props.updateAttributes({ width: newWidth + 'px', height: newHeight + 'px' });
     };
