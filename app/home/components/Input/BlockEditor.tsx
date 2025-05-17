@@ -23,33 +23,9 @@ import {
   TableOfContents,
 } from "@tiptap-pro/extension-table-of-contents";
 import { v4 } from "uuid";
-import { Node } from "@tiptap/core";
 import { createTocRepo, TocContext, TocNode, TocRepo } from "../TipTapExtensions/Toc";
 import S3ImageExtension from "../TipTapExtensions/S3ImageNodeView";
-
-function extendAttributesWithDefaults<T>(node: Node<T>, attrs: { [key: string]: string }, attrDefault?: string) {
-  return node.extend({
-      addAttributes() {
-          const keys = Object.keys(attrs);
-          return keys.reduce((acc: Record<string, any>, key) => {
-              acc[key] = {
-                  default: attrs[key] ?? null,
-                  renderHTML: (attributes : Record<string, any>) => {
-                      if (attributes[key]) {
-                          return {
-                              [key]: attributes[key],
-                          };
-                      }
-  
-                      return {};
-                  },
-              }
-  
-              return acc;
-          }, this.parent?.() ?? {});
-      }
-  })
-}
+import { insertImageFromFile } from '../../editor/utils/imageUpload';
 
 interface NewEditorProps {
   editorId?: string;
@@ -106,42 +82,17 @@ export const NewEditor = forwardRef(({
   const extensions = [
     FileHandler.configure({
       allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-      onDrop: (currentEditor, files, pos) => {
-        files.forEach(file => {
-          const fileReader = new FileReader()
-
-          fileReader.readAsDataURL(file)
-          fileReader.onload = () => {
-            currentEditor.chain().insertContentAt(pos, {
-              type: 'image',
-              attrs: {
-                src: fileReader.result,
-              },
-            }).focus().run()
-          }
-        })
+      onDrop: async (currentEditor, files, pos) => {
+        for (const file of files) {
+          if (!file.type.startsWith('image/')) continue;
+          await insertImageFromFile(currentEditor, file, pos);
+        }
       },
-      onPaste: (currentEditor, files, htmlContent) => {
-        files.forEach(file => {
-          if (htmlContent) {
-            // if there is htmlContent, stop manual insertion & let other extensions handle insertion via inputRule
-            // you could extract the pasted file from this url string and upload it to a server for example
-            console.log(htmlContent) // eslint-disable-line no-console
-            return false
-          }
-
-          const fileReader = new FileReader()
-
-          fileReader.readAsDataURL(file)
-          fileReader.onload = () => {
-            currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
-              type: 'image',
-              attrs: {
-                src: fileReader.result,
-              },
-            }).focus().run()
-          }
-        })
+      onPaste: async (currentEditor, files, htmlContent) => {
+        for (const file of files) {
+          if (!file.type.startsWith('image/')) continue;
+          await insertImageFromFile(currentEditor, file, currentEditor.state.selection.anchor);
+        }
       },
     }),
     Section,

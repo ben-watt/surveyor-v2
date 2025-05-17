@@ -3,6 +3,12 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { getImageHref } from '../../editor/utils/image';
 import Image from '@tiptap/extension-image';
+import { uploadData } from 'aws-amplify/storage';
+import { getCurrentTenantId } from '../../utils/tenant-utils';
+import { sanitizeFileName } from '../../utils/file-utils';
+import { v4 as uuidv4 } from 'uuid';
+
+console.log('[S3ImageNodeView] file loaded');
 
 /**
  * S3ImageNodeView
@@ -11,6 +17,7 @@ import Image from '@tiptap/extension-image';
  * @returns {JSX.Element}
  */
 const S3ImageNodeView = (props: any) => {
+  console.log('[S3ImageNodeView] rendered', props);
   const { node, selected } = props;
   const s3Path = node.attrs['data-s3-path'];
   const src = node.attrs.src;
@@ -144,6 +151,40 @@ const S3ImageNodeView = (props: any) => {
     { corner: 'se', style: { bottom: -8, right: -8, cursor: 'nwse-resize' } },
   ];
 
+  useEffect(() => {
+    // Only upload if we have a blob src, no s3 path, and a data-uploading-id
+    if (
+      src &&
+      src.startsWith('blob:') &&
+      !s3Path &&
+      node.attrs['data-uploading-id'] &&
+      !node.attrs['data-s3-path']
+    ) {
+      (async () => {
+        setIsLoading(true);
+        const tenantId = await getCurrentTenantId();
+        const s3Key = `report-images/${tenantId}/${uuidv4()}-${sanitizeFileName(node.attrs.alt || 'image')}`;
+        // Fetch the blob from the src
+        const response = await fetch(src);
+        const blob = await response.blob();
+        await uploadData({ path: s3Key, data: blob, options: { contentType: blob.type } });
+        console.log("[S3ImageNodeView] uploaded image to", s3Key);
+        const presigned = await getImageHref(s3Key);
+        console.log("[S3ImageNodeView] presigned", presigned);
+        // Update node attributes: set S3 path, remove uploading id, update src to presigned
+        props.updateAttributes({
+          src: presigned,
+          'data-s3-path': s3Key,
+          'data-uploading-id': null,
+        });
+        setUrl(presigned); // Show the image immediately after upload
+        console.log("[S3ImageNodeView] updated attributes", props.node.attrs);
+      })();
+    }
+  }, [src, s3Path, node.attrs['data-uploading-id']]);
+
+  console.log('[S3ImageNodeView] <img> will render with url:', url, 'src:', src, 's3Path:', s3Path);
+
   return (
     <NodeViewWrapper as="span" className={selected ? 'ProseMirror-selectednode' : ''} style={{ position: 'relative', display: 'inline-block' }}>
       {selected && (
@@ -215,6 +256,7 @@ const S3ImageNodeView = (props: any) => {
         />
       )}
       <img
+        key={url}
         ref={imgRef}
         src={url}
         alt={node.attrs.alt || ''}
@@ -243,6 +285,9 @@ export const S3ImageExtension = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
+      'data-uploading-id': {
+        default: null,
+      },
       'data-s3-path': {
         default: null,
       },

@@ -51,7 +51,7 @@ import { Level } from "@tiptap/extension-heading";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@uidotdev/usehooks";
-import { getImageHref } from '../../editor/utils/image';
+import { insertImageFromFile } from '../../editor/utils/imageUpload';
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -169,25 +169,17 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus,
     {
       icon: <ImagePlus />,
       title: "Add Image",
-      action: () => {
-        // open file browser to upload image
-        const file = document.createElement("input");
-        file.type = "file";
-        file.accept = "image/*";
-        file.onchange = (e) => {
+      action: async () => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/*";
+        fileInput.onchange = async (e) => {
           const file = (e.target as HTMLInputElement).files?.[0];
-          if (file) {
-            editor
-              .chain()
-              .focus()
-              .setImage({
-                src: URL.createObjectURL(file),
-                alt: file.name || "Image",
-              })
-              .run();
+          if (file && editor) {
+            await insertImageFromFile(editor, file);
           }
         };
-        file.click();
+        fileInput.click();
       },
     },
     {
