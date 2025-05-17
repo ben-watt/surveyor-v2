@@ -32,15 +32,23 @@ const S3ImageNodeView = (props: any) => {
   const aspectRatio = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Compute style for alignment
-  let alignmentStyle = {};
+  // Compute style for alignment (block-level)
+  let wrapperAlignmentStyle: React.CSSProperties = {};
   if (align === 'left') {
-    alignmentStyle = { float: 'left', margin: '0 1em 1em 0' };
+    wrapperAlignmentStyle.textAlign = 'left';
   } else if (align === 'right') {
-    alignmentStyle = { float: 'right', margin: '0 0 1em 1em' };
+    wrapperAlignmentStyle.textAlign = 'right';
   } else if (align === 'center') {
-    alignmentStyle = { display: 'block', margin: '0 auto 1em auto' };
+    wrapperAlignmentStyle.textAlign = 'center';
+  } else if (align === 'justify') {
+    wrapperAlignmentStyle.textAlign = 'justify';
   }
+
+  // Image style (no float, just inline-block for resizing)
+  let style: React.CSSProperties = { maxWidth: '100%', cursor: isResizing ? 'nwse-resize' : 'pointer', display: 'inline-block' };
+  if (width) style.width = width;
+  if (height) style.height = height;
+  else style.height = 'auto';
 
   useEffect(() => {
     let cancelled = false;
@@ -69,12 +77,6 @@ const S3ImageNodeView = (props: any) => {
       }
     }
   }, [selected, width, height]);
-
-  // Compute style for alignment and sizing
-  let style: React.CSSProperties = { maxWidth: '100%', cursor: isResizing ? 'nwse-resize' : 'pointer', ...alignmentStyle };
-  if (width) style.width = width;
-  if (height) style.height = height;
-  else style.height = 'auto';
 
   // Handle drag-to-resize
   useEffect(() => {
@@ -179,7 +181,7 @@ const S3ImageNodeView = (props: any) => {
   console.log('[S3ImageNodeView] <img> will render with url:', url, 'src:', src, 's3Path:', s3Path);
 
   return (
-    <NodeViewWrapper as="span" className={selected ? 'ProseMirror-selectednode' : ''} style={{ position: 'relative', display: 'inline-block' }}>
+    <NodeViewWrapper as="div" className={selected ? 'ProseMirror-selectednode' : ''} style={{ position: 'relative', display: 'block', ...wrapperAlignmentStyle }}>
       {selected && (
         <button
           type="button"
@@ -207,59 +209,61 @@ const S3ImageNodeView = (props: any) => {
           {aspectLocked ? '🔒' : '🔓'}
         </button>
       )}
-      {selected && handlePositions.map(({ corner, style: posStyle }) => (
-        <div
-          key={corner}
-          style={{
-            position: 'absolute',
-            width: 16,
-            height: 16,
-            background: '#fff',
-            border: '2px solid #007bff',
-            borderRadius: '50%',
-            zIndex: 20,
-            ...posStyle,
-            boxSizing: 'border-box',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onMouseDown={handleResizeMouseDown(corner)}
-          aria-label={`Resize image ${corner}`}
-          role="slider"
-          tabIndex={0}
+      <div style={{ display: 'inline-block', position: 'relative' }}>
+        {selected && handlePositions.map(({ corner, style: posStyle }) => (
+          <div
+            key={corner}
+            style={{
+              position: 'absolute',
+              width: 16,
+              height: 16,
+              background: '#fff',
+              border: '2px solid #007bff',
+              borderRadius: '50%',
+              zIndex: 20,
+              ...posStyle,
+              boxSizing: 'border-box',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseDown={handleResizeMouseDown(corner)}
+            aria-label={`Resize image ${corner}`}
+            role="slider"
+            tabIndex={0}
+          />
+        ))}
+        {/* Skeleton placeholder while loading */}
+        {isLoading && url && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: width || style.width || 120,
+              height: height || style.height || 90,
+              background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
+              backgroundSize: '200% 100%',
+              animation: 'skeleton-loading 1.2s infinite linear',
+              zIndex: 1,
+            }}
+            aria-label="Loading image"
+            role="status"
+          />
+        )}
+        <img
+          key={url}
+          ref={imgRef}
+          src={url}
+          alt={node.attrs.alt || ''}
+          role="img"
+          aria-label={node.attrs.alt || 'Document image'}
+          style={style}
+          data-s3-path={s3Path || undefined}
+          onLoad={() => setIsLoading(false)}
+          onError={() => setIsLoading(false)}
         />
-      ))}
-      {/* Skeleton placeholder while loading */}
-      {isLoading && url && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: width || style.width || 120,
-            height: height || style.height || 90,
-            background: 'linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'skeleton-loading 1.2s infinite linear',
-            zIndex: 1,
-          }}
-          aria-label="Loading image"
-          role="status"
-        />
-      )}
-      <img
-        key={url}
-        ref={imgRef}
-        src={url}
-        alt={node.attrs.alt || ''}
-        role="img"
-        aria-label={node.attrs.alt || 'Document image'}
-        style={style}
-        data-s3-path={s3Path || undefined}
-        onLoad={() => setIsLoading(false)}
-        onError={() => setIsLoading(false)}
-      />
+      </div>
       <style>{`
         @keyframes skeleton-loading {
           0% { background-position: 200% 0; }

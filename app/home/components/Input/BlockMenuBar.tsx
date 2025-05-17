@@ -69,6 +69,17 @@ const Divider = () => (
 export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus, onOpenVersionHistory }: MenuBarProps) {
   if (!editor) return null;
 
+  const setImageAlignIfImageSelected = (align: 'left' | 'center' | 'right' | 'justify') => {
+    const { state } = editor;
+    const { selection } = state;
+    const node = state.doc.nodeAt(selection.from);
+    if (node && node.type.name === 'image') {
+      editor.chain().focus().updateAttributes('image', { align }).run();
+      return true;
+    }
+    return false;
+  };
+
   const items = [
     {
       icon: <Bold />,
@@ -110,26 +121,42 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus,
     {
       icon: <AlignLeft />,
       title: "Align Left",
-      action: () => editor.chain().focus().setTextAlign("left").run(),
-      isActive: () => editor.isActive({ textAlign: "left" }),
+      action: () => {
+        if (!setImageAlignIfImageSelected('left')) {
+          editor.chain().focus().setTextAlign("left").run();
+        }
+      },
+      isActive: () => editor.isActive({ textAlign: "left" }) || editor.isActive('image', { align: 'left' }),
     },
     {
       icon: <AlignCenter />,
       title: "Align Center",
-      action: () => editor.chain().focus().setTextAlign("center").run(),
-      isActive: () => editor.isActive({ textAlign: "center" }),
+      action: () => {
+        if (!setImageAlignIfImageSelected('center')) {
+          editor.chain().focus().setTextAlign("center").run();
+        }
+      },
+      isActive: () => editor.isActive({ textAlign: "center" }) || editor.isActive('image', { align: 'center' }),
     },
     {
       icon: <AlignRight />,
       title: "Align Right",
-      action: () => editor.chain().focus().setTextAlign("right").run(),
-      isActive: () => editor.isActive({ textAlign: "right" }),
+      action: () => {
+        if (!setImageAlignIfImageSelected('right')) {
+          editor.chain().focus().setTextAlign("right").run();
+        }
+      },
+      isActive: () => editor.isActive({ textAlign: "right" }) || editor.isActive('image', { align: 'right' }),
     },
     {
       icon: <AlignJustify />,
       title: "Align Justify",
-      action: () => editor.chain().focus().setTextAlign("justify").run(),
-      isActive: () => editor.isActive({ textAlign: "justify" }),
+      action: () => {
+        if (!setImageAlignIfImageSelected('justify')) {
+          editor.chain().focus().setTextAlign("justify").run();
+        }
+      },
+      isActive: () => editor.isActive({ textAlign: "justify" }) || editor.isActive('image', { align: 'justify' }),
     },
     {
       type: "divider",
