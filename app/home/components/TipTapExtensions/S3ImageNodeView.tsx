@@ -163,18 +163,17 @@ const S3ImageNodeView = (props: any) => {
       (async () => {
         setIsLoading(true);
         const tenantId = await getCurrentTenantId();
-        const s3Key = `report-images/${tenantId}/${uuidv4()}-${sanitizeFileName(node.attrs.alt || 'image')}`;
+        const s3Path = `report-images/${tenantId}/${uuidv4()}-${sanitizeFileName(node.attrs.alt || 'image')}`;
         // Fetch the blob from the src
         const response = await fetch(src);
         const blob = await response.blob();
-        await uploadData({ path: s3Key, data: blob, options: { contentType: blob.type } });
-        console.log("[S3ImageNodeView] uploaded image to", s3Key);
-        const presigned = await getImageHref(s3Key);
+        await uploadData({ path: s3Path, data: blob, options: { contentType: blob.type } });
+        console.log("[S3ImageNodeView] uploaded image to", s3Path);
+        const presigned = await getImageHref(s3Path);
         console.log("[S3ImageNodeView] presigned", presigned);
         // Update node attributes: set S3 path, remove uploading id, update src to presigned
         props.updateAttributes({
-          src: presigned,
-          'data-s3-path': s3Key,
+          'data-s3-path': s3Path,
           'data-uploading-id': null,
         });
         setUrl(presigned); // Show the image immediately after upload
