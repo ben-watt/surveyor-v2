@@ -19,6 +19,8 @@ const S3ImageNodeView = (props: any) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [isResizing, setIsResizing] = useState<null | string>(null); // 'nw', 'ne', 'sw', 'se'
   const startPos = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
+  const [aspectLocked, setAspectLocked] = useState(true);
+  const aspectRatio = useRef<number | null>(null);
 
   // Compute style for alignment
   let alignmentStyle = {};
@@ -45,6 +47,16 @@ const S3ImageNodeView = (props: any) => {
     return () => { cancelled = true; };
   }, [s3Path]);
 
+  // Set aspect ratio on first select or when image size changes
+  useEffect(() => {
+    if (imgRef.current && selected) {
+      const rect = imgRef.current.getBoundingClientRect();
+      if (rect.width && rect.height) {
+        aspectRatio.current = rect.width / rect.height;
+      }
+    }
+  }, [selected, width, height]);
+
   // Compute style for alignment and sizing
   let style: React.CSSProperties = { maxWidth: '100%', cursor: isResizing ? 'nwse-resize' : 'pointer', ...alignmentStyle };
   if (width) style.width = width;
@@ -61,16 +73,32 @@ const S3ImageNodeView = (props: any) => {
       let newHeight = startPos.current.height;
       if (isResizing === 'se') {
         newWidth = Math.max(20, e.clientX - rect.left + startPos.current.width - rect.width);
-        newHeight = Math.max(20, e.clientY - rect.top + startPos.current.height - rect.height);
+        if (aspectLocked && aspectRatio.current) {
+          newHeight = Math.max(20, newWidth / aspectRatio.current);
+        } else {
+          newHeight = Math.max(20, e.clientY - rect.top + startPos.current.height - rect.height);
+        }
       } else if (isResizing === 'sw') {
         newWidth = Math.max(20, rect.right - e.clientX + startPos.current.width - rect.width);
-        newHeight = Math.max(20, e.clientY - rect.top + startPos.current.height - rect.height);
+        if (aspectLocked && aspectRatio.current) {
+          newHeight = Math.max(20, newWidth / aspectRatio.current);
+        } else {
+          newHeight = Math.max(20, e.clientY - rect.top + startPos.current.height - rect.height);
+        }
       } else if (isResizing === 'ne') {
         newWidth = Math.max(20, e.clientX - rect.left + startPos.current.width - rect.width);
-        newHeight = Math.max(20, rect.bottom - e.clientY + startPos.current.height - rect.height);
+        if (aspectLocked && aspectRatio.current) {
+          newHeight = Math.max(20, newWidth / aspectRatio.current);
+        } else {
+          newHeight = Math.max(20, rect.bottom - e.clientY + startPos.current.height - rect.height);
+        }
       } else if (isResizing === 'nw') {
         newWidth = Math.max(20, rect.right - e.clientX + startPos.current.width - rect.width);
-        newHeight = Math.max(20, rect.bottom - e.clientY + startPos.current.height - rect.height);
+        if (aspectLocked && aspectRatio.current) {
+          newHeight = Math.max(20, newWidth / aspectRatio.current);
+        } else {
+          newHeight = Math.max(20, rect.bottom - e.clientY + startPos.current.height - rect.height);
+        }
       }
       props.updateAttributes({ width: newWidth + 'px', height: newHeight + 'px' });
     };
@@ -86,7 +114,7 @@ const S3ImageNodeView = (props: any) => {
       window.removeEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = '';
     };
-  }, [isResizing, props]);
+  }, [isResizing, props, aspectLocked]);
 
   const handleResizeMouseDown = (corner: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -112,6 +140,33 @@ const S3ImageNodeView = (props: any) => {
 
   return (
     <NodeViewWrapper as="span" className={selected ? 'ProseMirror-selectednode' : ''} style={{ position: 'relative', display: 'inline-block' }}>
+      {selected && (
+        <button
+          type="button"
+          onClick={() => setAspectLocked(l => !l)}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 30,
+            background: aspectLocked ? '#007bff' : '#fff',
+            color: aspectLocked ? '#fff' : '#007bff',
+            border: '1px solid #007bff',
+            borderRadius: 4,
+            padding: '2px 8px',
+            fontSize: 16,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            opacity: 0.92,
+          }}
+          aria-label={aspectLocked ? 'Unlock aspect ratio' : 'Lock aspect ratio'}
+        >
+          {aspectLocked ? '🔒' : '🔓'}
+        </button>
+      )}
       {selected && handlePositions.map(({ corner, style: posStyle }) => (
         <div
           key={corner}
