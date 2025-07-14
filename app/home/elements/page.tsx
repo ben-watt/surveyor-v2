@@ -19,7 +19,6 @@ import {
 } from "../clients/Database";
 import { Element as ElementData } from "../clients/Dexie";
 
-
 export default function Page() {
   const router = useRouter();
   const [elementsHydrated, elements] = elementStore.useList();

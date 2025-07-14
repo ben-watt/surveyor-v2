@@ -207,16 +207,17 @@ function SettingsPage() {
 
       const mappedElements = await mapElementsToElementData(seedElementData);
 
+      let createdComponents: any[] = [];
       if (entitiesToSeed.components && elements.length > 0) {
-        const components = await mapBodToComponentData(bankOfDefects, mappedElements);
-        for (const component of components) {
+        createdComponents = await mapBodToComponentData(bankOfDefects, mappedElements);
+        for (const component of createdComponents) {
           const componentWithTenant = await withTenantId(component);
           await componentStore.add(componentWithTenant);
         }
       }
 
-      if (entitiesToSeed.phrases && elements.length > 0 && components.length > 0) {
-        const phrases = await mapBodToPhraseData(bankOfDefects, mappedElements, components);
+      if (entitiesToSeed.phrases && elements.length > 0 && createdComponents.length > 0) {
+        const phrases = await mapBodToPhraseData(bankOfDefects, mappedElements, createdComponents);
         for (const phrase of phrases) {
           const phraseWithTenant = await withTenantId(phrase);
           await phraseStore.add(phraseWithTenant);
