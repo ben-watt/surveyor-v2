@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
-import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { Cloud, CloudOff, RefreshCw, RotateCcw } from 'lucide-react';
 import { surveyStore, componentStore, elementStore, phraseStore, sectionStore } from '../clients/Database';
 import { SyncStatus as SyncStatusEnum } from '../clients/Dexie';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import toast from 'react-hot-toast';
 
 export const SyncStatus = () => {
     const [surveysHydrated, surveys] = surveyStore.useRawList();
@@ -15,6 +17,7 @@ export const SyncStatus = () => {
 
     const [isSyncing, setIsSyncing] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [isForceSyncing, setIsForceSyncing] = useState(false);
 
     // Check if any items are not synced
     const hasUnsynced = [
@@ -69,6 +72,32 @@ export const SyncStatus = () => {
         return () => clearInterval(syncInterval);
     }, [statusCounts]);
 
+    const handleForceSync = async () => {
+        setIsForceSyncing(true);
+        try {
+            // Force sync all stores
+            const results = await Promise.all([
+                surveyStore.forceSync(),
+                componentStore.forceSync(),
+                elementStore.forceSync(),
+                phraseStore.forceSync(),
+                sectionStore.forceSync(),
+            ]);
+
+            const hasErrors = results.some(result => result && !result.ok);
+            if (hasErrors) {
+                toast.error("Some items failed to sync");
+            } else {
+                toast.success("Force sync completed");
+            }
+        } catch (error) {
+            console.error("Force sync error:", error);
+            toast.error("Force sync failed");
+        } finally {
+            setIsForceSyncing(false);
+        }
+    };
+
     // Don't show anything until all data is hydrated
     if (!surveysHydrated || !componentsHydrated || !elementsHydrated || 
         !phrasesHydrated || !sectionsHydrated) {
@@ -90,8 +119,8 @@ export const SyncStatus = () => {
                     </div>
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-56 p-3">
-                <div className="space-y-2">
+            <PopoverContent className="w-64 p-3">
+                <div className="space-y-3">
                     <p className="text-sm font-medium">
                         {isSyncing ? "Syncing in progress..." : 
                          hasUnsynced ? "Unsynced Changes" : 
@@ -109,6 +138,22 @@ export const SyncStatus = () => {
                                 ))
                             }
                         </div>
+                    )}
+                    {hasUnsynced && (
+                        <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={handleForceSync}
+                            disabled={isForceSyncing}
+                            className="w-full"
+                        >
+                            {isForceSyncing ? (
+                                <RefreshCw className="h-3 w-3 animate-spin mr-2" />
+                            ) : (
+                                <RotateCcw className="h-3 w-3 mr-2" />
+                            )}
+                            Force Sync
+                        </Button>
                     )}
                 </div>
             </PopoverContent>

@@ -106,7 +106,8 @@ const createSurveyStore = () => {
       return store.update(id, (dexieSurvey: Draft<DexieSurvey>) => {
         updater(dexieSurvey.content as BuildingSurveyFormData);
       });
-    }
+    },
+    forceSync: store.forceSync
   };
 };
 

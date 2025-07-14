@@ -248,35 +248,35 @@ function SettingsPage() {
       
       if (entitiesToSync.elements) {
         syncTasks.push(
-          elementStore.sync()?.finally(() => 
+          elementStore.forceSync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, elements: false }))
           )
         );
       }
       if (entitiesToSync.components) {
         syncTasks.push(
-          componentStore.sync()?.finally(() => 
+          componentStore.forceSync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, components: false }))
           )
         );
       }
       if (entitiesToSync.phrases) {
         syncTasks.push(
-          phraseStore.sync()?.finally(() => 
+          phraseStore.forceSync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, phrases: false }))
           )
         );
       }
       if (entitiesToSync.sections) {
         syncTasks.push(
-          sectionStore.sync()?.finally(() => 
+          sectionStore.forceSync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, sections: false }))
           )
         );
       }
       if (entitiesToSync.surveys) {
         syncTasks.push(
-          surveyStore.sync()?.finally(() => 
+          surveyStore.forceSync()?.finally(() => 
             setSyncingEntities(prev => ({ ...prev, surveys: false }))
           )
         );
@@ -284,7 +284,7 @@ function SettingsPage() {
 
       const results = await Promise.all(syncTasks);
 
-      if(results.some(x => x)) {
+      if(results.some(x => x && !x.ok)) {
         toast.error("Failed to sync with server");  
       } else {
         toast.success("Successfully synced with server");
@@ -296,13 +296,6 @@ function SettingsPage() {
       toast.error(getErrorMessage(error));
     } finally {
       setIsSyncing(false);
-      setSyncingEntities({
-        elements: false,
-        components: false,
-        phrases: false,
-        sections: false,
-        surveys: false,
-      });
     }
   }
 

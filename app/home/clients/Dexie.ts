@@ -73,6 +73,7 @@ export interface DexieStore<T, TCreate> {
   removeAll: (options: { options: boolean }) => Promise<void>;
   sync: DebouncedFunc<() => Promise<Result<void, Error>>>;
   startPeriodicSync: (intervalMs?: number) => () => void;
+  forceSync: () => Promise<Result<void, Error>>;
 }
 
 function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string }, TUpdate extends { id: string }>(
@@ -259,12 +260,18 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         return Err(new Error("Failed to get remote data"));
       }
 
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        return Err(new Error("No tenant ID available"));
+      }
+
+      // Process remote data - mark existing items as synced
       for (const remote of remoteData) {
         const local = await getItem(remote.id);
 
         if(!local) {
-          console.debug("[syncWithServer] Local item not found, creating...", remote);
-          await table.add({ ...remote, syncStatus: SyncStatus.Queued });
+          console.debug("[syncWithServer] Local item not found, creating as synced...", remote);
+          await table.add({ ...remote, syncStatus: SyncStatus.Synced });
           continue;
         }
         
@@ -280,7 +287,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         }
       }
 
-      const tenantId = await getCurrentTenantId();
+      // Process local queued/failed items
       const localRecords = await table.where('syncStatus')
         .equals(SyncStatus.Queued)
         .or('syncStatus')
@@ -292,6 +299,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         console.log("[syncWithServer] Processing local record", local);
         try {
             const exists = remoteData.find(r => r.id === local.id);
+            
             if(exists) {
               console.log("[syncWithServer] Updating...", local);
               const updateResult = await remoteHandlers.update(local as unknown as TUpdate);
@@ -323,7 +331,12 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
             }
           } catch(error: any) {
             console.log("[syncWithServer] Error...", error);
-            await table.put({ ...local, syncStatus: SyncStatus.Failed, syncError: error.message });
+            const errorMessage = error.message || error.toString() || "Unknown error";
+            await table.put({ 
+              ...local, 
+              syncStatus: SyncStatus.Failed, 
+              syncError: errorMessage 
+            });
           }
       }
 
@@ -421,13 +434,72 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
 
   // Add periodic sync function that can be called from layout
   const startPeriodicSync = (intervalMs: number = 300000) => {
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (navigator.onLine && !syncInProgress) {
-        syncWithServer();
+        try {
+          await syncWithServer();
+          
+          // Retry failed items after a successful sync
+          const tenantId = await getCurrentTenantId();
+          if (tenantId) {
+            const failedItems = await table.where('syncStatus')
+              .equals(SyncStatus.Failed)
+              .and(item => item.tenantId === tenantId)
+              .toArray();
+            
+            if (failedItems.length > 0) {
+              console.debug(`[startPeriodicSync] Retrying ${failedItems.length} failed items`);
+              // Reset failed items to queued for retry (but limit retries)
+              for (const item of failedItems) {
+                const retryCount = parseInt(item.syncError?.match(/retry:(\d+)/)?.[1] || '0');
+                if (retryCount < 3) {
+                  await table.put({
+                    ...item,
+                    syncStatus: SyncStatus.Queued,
+                    syncError: `retry:${retryCount + 1}`,
+                    updatedAt: new Date().toISOString(),
+                  });
+                } else {
+                  console.warn(`[startPeriodicSync] Item ${item.id} has exceeded retry limit`);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error("[startPeriodicSync] Error during periodic sync:", error);
+        }
       }
     }, intervalMs);
     
     return () => clearInterval(interval);
+  };
+
+  const forceSync = async (): Promise<Result<void, Error>> => {
+    console.debug("[forceSync] Starting forced sync");
+    
+    // Reset all queued and failed items to try again
+    const tenantId = await getCurrentTenantId();
+    if (tenantId) {
+      const stuckItems = await table.where('syncStatus')
+        .equals(SyncStatus.Queued)
+        .or('syncStatus')
+        .equals(SyncStatus.Failed)
+        .and(item => item.tenantId === tenantId)
+        .toArray();
+      
+      for (const item of stuckItems) {
+        await table.put({
+          ...item,
+          syncStatus: SyncStatus.Queued,
+          syncError: undefined,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+      
+      console.debug(`[forceSync] Reset ${stuckItems.length} stuck items`);
+    }
+    
+    return await syncWithServer();
   };
 
   return {
@@ -439,7 +511,8 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     remove,
     removeAll,
     startPeriodicSync,
-    sync: debounceSync
+    sync: debounceSync,
+    forceSync
   };
 }
 
