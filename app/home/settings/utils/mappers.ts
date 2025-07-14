@@ -36,7 +36,7 @@ export async function mapElementsToElementData(elements: SeedElement[]): Promise
     id: element.id,
     name: element.name,
     description: element.description || null,
-    sectionId: element.sectionId || "",
+    sectionId: element.sectionId ? `${element.sectionId}#${tenantId}` : "",
     order: element.order || 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -48,6 +48,7 @@ export async function mapElementsToElementData(elements: SeedElement[]): Promise
 export async function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]): Promise<ComponentData[]> {
   const componentData: ComponentData[] = [];
   const componentIds = new Map<string, string>();
+  const tenantId = await getCurrentTenantId();
   
   bod.forEach((sheet) => {
     sheet.defects.forEach(async (d) => {
@@ -68,7 +69,7 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
         const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
         componentData.push({
           id: componentId,
-          elementId: matchingElement?.id || "",
+          elementId: matchingElement?.id ? `${matchingElement.id}#${tenantId}` : "",
           name: d.type,
           materials: [{ name: d.specification }],
           createdAt: new Date().toISOString(),
@@ -82,8 +83,9 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
   return componentData;
 }
 
-export function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[], components: ComponentData[]): PhraseData[] {
+export async function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[], components: ComponentData[]): Promise<PhraseData[]> {
   const phrases: PhraseData[] = [];
+  const tenantId = await getCurrentTenantId();
   
   bod.forEach((sheet) => {
     const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
@@ -111,8 +113,8 @@ export function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[], com
           name: phraseName,
           type: "Condition",
           associatedMaterialIds: [d.specification],
-          associatedElementIds: matchingElement.id ? [matchingElement.id] : [],
-          associatedComponentIds: matchingComponent.id ? [matchingComponent.id] : [],
+          associatedElementIds: matchingElement.id ? [`${matchingElement.id}#${tenantId}`] : [],
+          associatedComponentIds: matchingComponent.id ? [`${matchingComponent.id}#${tenantId}`] : [],
           phrase: phraseText,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

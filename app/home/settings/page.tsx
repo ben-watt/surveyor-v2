@@ -216,7 +216,7 @@ function SettingsPage() {
       }
 
       if (entitiesToSeed.phrases && elements.length > 0 && components.length > 0) {
-        const phrases = mapBodToPhraseData(bankOfDefects, mappedElements, components);
+        const phrases = await mapBodToPhraseData(bankOfDefects, mappedElements, components);
         for (const phrase of phrases) {
           const phraseWithTenant = await withTenantId(phrase);
           await phraseStore.add(phraseWithTenant);

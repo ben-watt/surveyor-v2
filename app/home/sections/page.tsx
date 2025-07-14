@@ -17,6 +17,7 @@ import { sectionStore } from "../clients/Database";
 import { Section } from "../clients/Dexie";
 import { elementStore } from "../clients/Database";
 
+
 export default function Page() {
   const router = useRouter();
   const [isHydrated, sections] = sectionStore.useList();
