@@ -11,6 +11,7 @@ import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import { useRouter } from "next/navigation";
 import ImagePlaceholder from "../../components/ImagePlaceholder";
 import { SurveyDocuments } from "../../components/SurveyDocuments";
+import { ImageIcon } from "lucide-react";
 
 
 interface PhotoGridProps {
@@ -21,36 +22,119 @@ interface PhotoGridProps {
 
 const PhotoGrid = ({ previewPhotos, totalPhotos, galleryUrl }: PhotoGridProps) => {
   const router = useRouter();
-  return (
+  
+  // Empty state when no photos
+  if (previewPhotos.length === 0) {
+    return (
       <div className="relative">
-      <div 
-        className="grid grid-cols-4 grid-rows-2 gap-1 rounded-lg overflow-hidden aspect-[20/9]" 
-        onClick={() => router.push(galleryUrl)}
-      >
-        <div className="row-span-2 col-span-2 relative w-full h-full">
+        <div 
+          className="flex items-center justify-center rounded-lg bg-gray-50 border-2 border-dashed border-gray-300 aspect-[20/9]"
+          onClick={() => router.push(galleryUrl)}
+        >
+          <div className="text-center">
+            <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-500 text-lg font-medium">No photos yet</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  // Single image layout
+  if (previewPhotos.length === 1) {
+    return (
+      <div className="relative">
+        <div 
+          className="relative rounded-lg overflow-hidden aspect-[20/9]"
+          onClick={() => router.push(galleryUrl)}
+        >
+          <Image 
+            className="object-cover hover:opacity-80 transition-opacity duration-300" 
+            src={previewPhotos[0]} 
+            alt="Survey photo" 
+            fill
+            sizes="(max-width: 768px) 100vw, 66vw"
+            priority
+          />
+        </div>
+        <div className="absolute bottom-2 right-4 bg-white px-2 py-1 rounded-lg border-black border-1">  
+          <Link
+            className="flex gap-2 items-center"
+            href={galleryUrl}>
+              <LayoutGrid size={40} />
+              <span className="text-sm">Photos</span>
+          </Link>
+          <span className="absolute -top-2 -left-2 bg-black text-white rounded-full px-1 text-xs">{totalPhotos}</span>
+        </div>
+      </div>
+    );
+  }
 
-          {previewPhotos.length === 0 ? (
-            <ImagePlaceholder />
-          ) : previewPhotos[0] ? (
+  // Three images layout (1 large + 2 smaller)
+  if (previewPhotos.length === 3) {
+    return (
+      <div className="relative">
+        <div 
+          className="grid grid-cols-3 grid-rows-2 gap-1 rounded-lg overflow-hidden aspect-[20/9]"
+          onClick={() => router.push(galleryUrl)}
+        >
+          <div className="row-span-2 col-span-2 relative w-full h-full">
             <Image 
               className="object-cover hover:opacity-80 transition-opacity duration-300" 
               src={previewPhotos[0]} 
               alt="Survey photo 1" 
               fill
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 100vw, 44vw"
               priority
             />
-          ) : (
-            <ImagePlaceholder />
-          )}
+          </div>
+          
+          {[1, 2].map((index) => (
+            <div key={index} className="relative w-full h-full">
+              <Image 
+                className="object-cover hover:opacity-80 transition-opacity duration-300" 
+                src={previewPhotos[index]} 
+                alt={`Survey photo ${index + 1}`} 
+                fill
+                sizes="(max-width: 768px) 50vw, 22vw"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="absolute bottom-2 right-4 bg-white px-2 py-1 rounded-lg border-black border-1">  
+          <Link
+            className="flex gap-2 items-center"
+            href={galleryUrl}>
+              <LayoutGrid size={40} />
+              <span className="text-sm">Photos</span>
+          </Link>
+          <span className="absolute -top-2 -left-2 bg-black text-white rounded-full px-1 text-xs">{totalPhotos}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Five images layout (1 large + 4 smaller) - current layout
+  return (
+    <div className="relative">
+      <div 
+        className="grid grid-cols-4 grid-rows-2 gap-1 rounded-lg overflow-hidden aspect-[20/9]" 
+        onClick={() => router.push(galleryUrl)}
+      >
+        <div className="row-span-2 col-span-2 relative w-full h-full">
+          <Image 
+            className="object-cover hover:opacity-80 transition-opacity duration-300" 
+            src={previewPhotos[0]} 
+            alt="Survey photo 1" 
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+          />
         </div>
 
         {[1, 2, 3, 4].map((index) => (
           <div key={index} className="relative w-full h-full">
-            {previewPhotos.length === 0 ? (
-              <ImagePlaceholder />
-            ) : previewPhotos[index] ? (
+            {previewPhotos[index] ? (
               <Image 
                 className="object-cover hover:opacity-80 transition-opacity duration-300" 
                 src={previewPhotos[index]} 
@@ -71,7 +155,6 @@ const PhotoGrid = ({ previewPhotos, totalPhotos, galleryUrl }: PhotoGridProps) =
             <LayoutGrid size={40} />
             <span className="text-sm">Photos</span>
         </Link>
-
         <span className="absolute -top-2 -left-2 bg-black text-white rounded-full px-1 text-xs">{totalPhotos}</span>
       </div>
     </div>
