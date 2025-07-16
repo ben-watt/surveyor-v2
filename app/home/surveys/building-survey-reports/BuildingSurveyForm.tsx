@@ -21,6 +21,8 @@ import { Section, Element } from "@/app/home/clients/Dexie";
 import { Ok, Result } from "ts-results";
 
 import { useAsyncError } from "@/app/home/hooks/useAsyncError";
+import { useAutoSaveForm } from "@/app/home/hooks/useAutoSaveForm";
+import { LastSavedIndicator } from "@/app/home/components/LastSavedIndicator";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import { getConditionStatus } from "./Survey";
@@ -349,9 +351,42 @@ function Report({ initFormValues }: ReportProps) {
     defaultValues: initFormValues,
   });
 
-  const { handleSubmit, formState } = methods;
+  const { handleSubmit, formState, watch, getValues, trigger } = methods;
 
   const router = useRouter();
+
+  const saveData = async (data: BuildingSurveyForm, { auto = false } = {}) => {
+    console.log("[BuildingSurveyForm] saveData", { data, auto });
+    
+    try {
+      await surveyStore.update(initFormValues.id, (survey) => {
+        survey.status = "created";
+      });
+
+      if (!auto) {
+        toast.success("Saved");
+      }
+    } catch (error) {
+      console.error("[BuildingSurveyForm] Save failed", error);
+      
+      if (!auto) {
+        toast.error("Failed to save");
+      }
+      
+      throw error; // Re-throw for autosave error handling
+    }
+  };
+
+  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+    saveData,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 2000,
+      enabled: !!initFormValues.id,
+    }
+  );
 
   const saveAsDraft = async () => {
     console.log("[BuildingSurveyForm] saveAsDraft", methods.getValues());
@@ -376,12 +411,8 @@ function Report({ initFormValues }: ReportProps) {
 
   const onSubmit = async () => {
     console.log("[BuildingSurveyForm] onSubmit", methods.getValues());
-
-    surveyStore.update(initFormValues.id, (survey) => {
-      survey.status = "created";
-    });
-
-    toast.success("Saved");
+    const currentData = getValues();
+    await saveData(currentData, { auto: false });
   };
 
   const onError = (errors: any) => {
@@ -414,7 +445,7 @@ function Report({ initFormValues }: ReportProps) {
   return (
     <div>
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit, onError)}>
+        <div>
           <Card>
             <CardHeader>
               <div className="flex justify-between">
@@ -490,7 +521,15 @@ function Report({ initFormValues }: ReportProps) {
               </div>
             </CardContent>
           </Card>
-        </form>
+          
+          <div className="mt-4 flex justify-center">
+            <LastSavedIndicator
+              status={saveStatus}
+              lastSavedAt={lastSavedAt}
+              className="text-sm"
+            />
+          </div>
+        </div>
       </FormProvider>
     </div>
   );

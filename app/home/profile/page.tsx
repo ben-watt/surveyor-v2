@@ -9,9 +9,10 @@ import { useEffect, useState } from "react";
 import InputText from "../components/Input/InputText";
 import { FieldValues, FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage";
 import { debounce } from "@tiptap-pro/extension-table-of-contents";
+import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
+import { LastSavedIndicator } from "../components/LastSavedIndicator";
 
 type ProfileFormData = {
   name: string;
@@ -23,66 +24,99 @@ type ProfileFormData = {
 };
 
 function Page() {
-  const methods = useForm<ProfileFormData>();
-  const { register, handleSubmit, reset, watch } = methods;
+  const methods = useForm<ProfileFormData>({
+    mode: 'onChange' // Enable validation on change
+  });
+  const { register, watch, getValues, trigger, formState: { errors } } = methods;
   const [enableForm, setEnableForm] = useState(false);
+  const [entityData, setEntityData] = useState<ProfileFormData | null>(null);
 
   useEffect(() => {
     fetchUserAttributes().then((attributes) => {
-      reset({
-        name: attributes.name,
-        nickname: attributes.nickname,
-        profile: attributes.profile,
-        picture: attributes.picture,
-        sub: attributes.sub,
-        email: attributes.email,
-      });
+      const formData: ProfileFormData = {
+        name: attributes.name || "",
+        nickname: attributes.nickname || "",
+        profile: attributes.profile || "",
+        picture: attributes.picture || "",
+        sub: attributes.sub || "",
+        email: attributes.email || "",
+      };
+      methods.reset(formData);
+      setEntityData(formData);
       setEnableForm(true);
     });
-  }, [reset]);
+  }, [methods]);
 
-  async function handleUpdateUserAttribute(form: FieldValues) {
+  // Autosave functionality
+  const saveProfile = async (data: ProfileFormData, { auto = false }: { auto?: boolean } = {}) => {
     setEnableForm(false);
 
     const debounceToast = debounce(() => {
-      toast.success("Profile updated successfully. You may need to log out and log back in to see the changes.");
+      if (!auto) {
+        toast.success("Profile updated successfully. You may need to log out and log back in to see the changes.");
+      }
     }, 1000);
 
-    Object.keys(form)
-      .filter((k) => k !== "email" && k !== "sub")
-      .forEach(async (k) => {
-        try {
-          console.log("[handleUpdateUserAttribute] updating", k, form[k]);
-          if (k === "profile" || k === "picture") {
-            form[k] = form[k][0].path;
-          }
+    try {
+      Object.keys(data)
+        .filter((k) => k !== "email" && k !== "sub")
+        .forEach(async (k) => {
+          try {
+            console.log("[saveProfile] updating", k, data[k as keyof ProfileFormData]);
+            let value = data[k as keyof ProfileFormData];
+            
+            if (k === "profile" || k === "picture") {
+              // Handle file upload fields - they might be File objects
+              if (typeof value === 'object' && value !== null && 'path' in value) {
+                value = (value as any).path;
+              }
+            }
 
-          const output = await updateUserAttribute({
-            userAttribute: {
-              attributeKey: k,
-              value: form[k],
-            },
-          });
+            const output = await updateUserAttribute({
+              userAttribute: {
+                attributeKey: k,
+                value: value as string,
+              },
+            });
 
-          const { nextStep } = output;
-          switch (nextStep.updateAttributeStep) {
-            case "CONFIRM_ATTRIBUTE_WITH_CODE":
-              const codeDeliveryDetails = nextStep.codeDeliveryDetails;
-              toast(
-                `Confirmation code was sent to ${codeDeliveryDetails?.deliveryMedium}.`
-              );
-              // Collect the confirmation code from the user and pass to confirmUserAttribute.
-              break;
-            case "DONE":
-              debounceToast();
-              break;
+            const { nextStep } = output;
+            switch (nextStep.updateAttributeStep) {
+              case "CONFIRM_ATTRIBUTE_WITH_CODE":
+                const codeDeliveryDetails = nextStep.codeDeliveryDetails;
+                if (!auto) {
+                  toast(
+                    `Confirmation code was sent to ${codeDeliveryDetails?.deliveryMedium}.`
+                  );
+                }
+                // Collect the confirmation code from the user and pass to confirmUserAttribute.
+                break;
+              case "DONE":
+                debounceToast();
+                break;
+            }
+          } catch (error) {
+            console.log(error);
+            if (!auto) toast.error("Error updating profile");
+            throw error; // Re-throw for autosave error handling
           }
-          setEnableForm(true);
-        } catch (error) {
-          console.log(error);
-        }
-      })
-  }
+        });
+    } finally {
+      setEnableForm(true);
+    }
+  };
+
+  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+    saveProfile,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 3000, // 3 second delay for autosave
+      showToast: false, // Don't show toast for autosave
+      enabled: enableForm, // Only enable autosave when form is ready
+      validateBeforeSave: true // Enable validation before auto-save
+    }
+  );
 
   const sub = watch("sub");
 
@@ -101,56 +135,55 @@ function Page() {
         </div>
       </div>
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(handleUpdateUserAttribute, () => {})}>
-          <div className="space-y-2">
-            <InputText
-              labelTitle="Email"
-              placeholder="Email Address"
-              register={() => register("email", { required: true })}
-              disabled
-            />
-            <InputText
-              register={() => register("name", { required: true })}
-              labelTitle="Name"
-              placeholder="Enter your name"
-            />
+        <div className="space-y-2">
+          <InputText
+            labelTitle="Email"
+            placeholder="Email Address"
+            register={() => register("email", { required: "Email is required" })}
+            disabled
+            errors={errors}
+          />
+          <InputText
+            register={() => register("name", { required: "Name is required" })}
+            labelTitle="Name"
+            placeholder="Enter your name"
+            errors={errors}
+          />
 
-            <RhfDropZoneInputImage
-              path={`profile/${sub}/profilePicture/`}
-              rhfProps={{
-                name: "profile",
-                rules: { required: "Profile picture is required" },
-              }}
-              labelText="Profile Picture"
-              maxFiles={1}
-              minFiles={1}
-            />
+          <RhfDropZoneInputImage
+            path={`profile/${sub}/profilePicture/`}
+            rhfProps={{
+              name: "profile",
+              rules: { required: "Profile picture is required" },
+            }}
+            labelText="Profile Picture"
+            maxFiles={1}
+            minFiles={1}
+          />
 
-            <RhfDropZoneInputImage
-              path={`profile/${sub}/signatureImage/`}
-              rhfProps={{
-                name: "picture",
-                rules: { required: "Signature image is required" },
-              }}
-              labelText="Signature Image"
-              maxFiles={1}
-              minFiles={1}
-            />
-            <InputText
-              register={() => register("nickname", { required: true })}
-              labelTitle="Signature Text"
-              placeholder="Enter your signature text"
-            />
-            <SaveButtonWithUploadStatus
-              isSubmitting={!enableForm}
-              paths={[
-                `profile/${sub}/profilePicture/`,
-                `profile/${sub}/signatureImage/`,
-              ]}
-              buttonText="Update"
-            />
-          </div>
-        </form>
+          <RhfDropZoneInputImage
+            path={`profile/${sub}/signatureImage/`}
+            rhfProps={{
+              name: "picture",
+              rules: { required: "Signature image is required" },
+            }}
+            labelText="Signature Image"
+            maxFiles={1}
+            minFiles={1}
+          />
+          <InputText
+            register={() => register("nickname", { required: "Signature text is required" })}
+            labelTitle="Signature Text"
+            placeholder="Enter your signature text"
+            errors={errors}
+          />
+          <LastSavedIndicator
+            status={saveStatus}
+            lastSavedAt={lastSavedAt || undefined}
+            entityUpdatedAt={entityData ? new Date().toISOString() : undefined}
+            className="text-sm justify-center"
+          />
+        </div>
       </FormProvider>
     </div>
   );

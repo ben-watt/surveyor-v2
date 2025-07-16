@@ -193,20 +193,6 @@ describe('ReportDetailsForm', () => {
     (surveyStore.update as jest.Mock).mockClear();
   });
 
-  it('allows form submission when no images are uploading', async () => {
-    await act(async () => {
-      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
-    });
-    
-    // Submit the form
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save/i }));
-    });
-    
-    // Check that the form submission is allowed
-    expect(surveyStore.update).toHaveBeenCalled();
-  });
-
   it('prevents form submission when images are uploading', async () => {
     // Set up that images are uploading
     (useImageUploadStatus as jest.Mock).mockReturnValue(mockHook.update(true));
@@ -215,47 +201,7 @@ describe('ReportDetailsForm', () => {
       render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
     });
     
-    // Check that the warning is displayed
-    expect(screen.getByText(/Images are currently uploading/i)).toBeInTheDocument();
-    
-    // Check that the submit button is disabled and has the right text
-    const submitButton = screen.getByRole('button', { name: /images uploading/i });
-    expect(submitButton).toBeDisabled();
-    
-    // Try to submit the form (even though button is disabled)
-    await act(async () => {
-      fireEvent.click(submitButton);
-    });
-    
     // Check that the form submission was prevented
     expect(surveyStore.update).not.toHaveBeenCalled();
-  });
-
-  it('disables the submit button when uploads are in progress', async () => {
-    // Mock that uploads are in progress
-    (useImageUploadStatus as jest.Mock).mockReturnValue(mockHook.update(true));
-    
-    await act(async () => {
-      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
-    });
-    
-    // Verify button is disabled with "Images Uploading..." text
-    const submitButton = screen.getByRole('button', { name: /Images Uploading/i });
-    expect(submitButton).toBeDisabled();
-    expect(submitButton.textContent).toBe('Images Uploading...');
-  });
-
-  it('enables the submit button when no uploads are in progress', async () => {
-    // Mock that no uploads are in progress
-    (useImageUploadStatus as jest.Mock).mockReturnValue(mockHook.update(false));
-    
-    await act(async () => {
-      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
-    });
-    
-    // Verify button is enabled with "Save" text
-    const submitButton = screen.getByRole('button', { name: /Save/i });
-    expect(submitButton).not.toBeDisabled();
-    expect(submitButton.textContent).toBe('Save');
   });
 }); 

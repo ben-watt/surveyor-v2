@@ -41,7 +41,8 @@ import {
   RAG_OPTIONS,
 } from "./types";
 import InputMoney from "@/app/home/components/Input/InputMoney";
-import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
+import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
+import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 
 function CostingsFieldArray() {
@@ -217,8 +218,9 @@ function InspectionFormContent({
     register,
     watch,
     setValue,
-    handleSubmit,
     control,
+    getValues,
+    trigger,
     formState: { errors },
   } = methods;
 
@@ -327,43 +329,69 @@ function InspectionFormContent({
     return `report-images/${surveyId}/inspections/${initialValues.inspectionId}`;
   }, [surveyId, initialValues.inspectionId]);
 
-  const onSubmit = async (data: InspectionFormData) => {
-    console.debug("[InspectionForm] Submitting form data:", data);
-    await surveyStore.update(surveyId, (survey) => {
-      return addOrUpdateComponent(
-        survey,
-        data.surveySection.id,
-        data.element.id,
-        {
-          id: data.component.id,
-          inspectionId: data.inspectionId,
-          name: data.component.name,
-          nameOverride: data.nameOverride,
-          useNameOverride: data.useNameOverride,
-          location: data.location,
-          additionalDescription: data.additionalDescription,
-          images: data.images,
-          conditions: data.conditions.map((x) => ({
-            id: x.id,
-            name: x.name,
-            phrase: x.phrase || "",
-          })),
-          ragStatus: data.ragStatus,
-          costings: data.costings.map((x) => ({
-            cost: x.cost,
-            description: x.description,
-          })),
-        }
-      );
-    });
+  const saveData = async (data: InspectionFormData, { auto = false } = {}) => {
+    console.debug("[InspectionForm] saveData:", { data, auto });
+    
+    try {
+      await surveyStore.update(surveyId, (survey) => {
+        return addOrUpdateComponent(
+          survey,
+          data.surveySection.id,
+          data.element.id,
+          {
+            id: data.component.id,
+            inspectionId: data.inspectionId,
+            name: data.component.name,
+            nameOverride: data.nameOverride,
+            useNameOverride: data.useNameOverride,
+            location: data.location,
+            additionalDescription: data.additionalDescription,
+            images: data.images,
+            conditions: data.conditions.map((x) => ({
+              id: x.id,
+              name: x.name,
+              phrase: x.phrase || "",
+            })),
+            ragStatus: data.ragStatus,
+            costings: data.costings.map((x) => ({
+              cost: x.cost,
+              description: x.description,
+            })),
+          }
+        );
+      });
 
-    toast.success("Changes saved successfully");
-    drawer.closeDrawer();
+      if (!auto) {
+        // For manual saves, close drawer and show toast
+        toast.success("Changes saved successfully");
+        drawer.closeDrawer();
+      }
+    } catch (error) {
+      console.error("[InspectionForm] Save failed", error);
+      
+      if (!auto) {
+        toast.error("Failed to save changes");
+      }
+      
+      throw error; // Re-throw for autosave error handling
+    }
   };
+
+  const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
+    saveData,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 1500,
+      enabled: !!surveyId && !!initialValues.inspectionId,
+      imagePaths: [imageUploadPath]
+    }
+  );
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-6">
         <FormSection title="Basic Information">
           <Combobox
             labelTitle="Survey Section"
@@ -536,12 +564,13 @@ function InspectionFormContent({
             <CostingsFieldArray />
           </FormSection>
         )}
-        <SaveButtonWithUploadStatus 
-          isSubmitting={false}
-          paths={[imageUploadPath]}
-          buttonText="Save Changes"
+        <LastSavedIndicatorWithUploads
+          status={saveStatus}
+          isUploading={isUploading}
+          lastSavedAt={lastSavedAt}
+          className="text-sm justify-center"
         />
-      </form>
+      </div>
     </FormProvider>
   );
 }

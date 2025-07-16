@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { DocumentList } from '../../app/home/components/DocumentList';
-import { documentStore } from '../../app/home/clients/DocumentStore';
+import { DocumentList } from '../DocumentList';
+import { documentStore } from '../../clients/DocumentStore';
 import toast from 'react-hot-toast';
 
-jest.mock('../../app/home/clients/DocumentStore');
+jest.mock('../../clients/DocumentStore');
 jest.mock('react-hot-toast', () => ({
   __esModule: true,
   default: {

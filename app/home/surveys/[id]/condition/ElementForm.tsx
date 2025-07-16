@@ -1,5 +1,5 @@
 import React, { useEffect, memo } from "react";
-import { useForm, FormProvider, FieldErrors } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/home/components/FormSection";
 import { ElementSection, FormStatus, SurveyImage, SurveySection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
@@ -14,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import InspectionForm from "./InspectionForm";
 import { Edit, Trash2 } from "lucide-react";
 import { getElementSection, updateElementDetails, removeComponent } from "@/app/home/surveys/building-survey-reports/Survey";
-import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
+import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
+import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
 import { useImageUploadStatus } from "@/app/home/components/InputImage/useImageUploadStatus";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 // Memoized Add Component button component
@@ -83,7 +84,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
   };
 
   const methods = useForm<ElementFormData>({ defaultValues });
-  const { register, control, handleSubmit, reset } = methods;
+  const { register, control, reset, watch, getValues, trigger } = methods;
   const [elementData, setElementData] = React.useState<ElementSection | null>(null);
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
   const [elementsHydrated, elements] = elementStore.useList();
@@ -114,35 +115,58 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
     loadElementData();
   }, [elementId, reset, isHydrated, survey, sectionId]);
 
-  const onValid = async (data: ElementFormData) => {
-    console.debug("[ElementForm] onValid", data);
-    await surveyStore.update(surveyId, (survey) => {
-      updateElementDetails(survey, sectionId, elementId, {
-        description: data.description,
-        images: data.images,
-        status: {
-          status: FormStatus.Complete,
-          errors: [],
-        },
+  const saveData = async (data: ElementFormData, { auto = false } = {}) => {
+    console.debug("[ElementForm] saveData", { data, auto });
+    
+    try {
+      await surveyStore.update(surveyId, (survey) => {
+        updateElementDetails(survey, sectionId, elementId, {
+          description: data.description,
+          images: data.images,
+          status: {
+            status: FormStatus.Complete,
+            errors: [],
+          },
+        });
       });
-    });
 
-
-    drawer.closeDrawer();
-    toast.success("Element details saved");
+      if (!auto) {
+        // For manual saves, close drawer and show toast
+        drawer.closeDrawer();
+        toast.success("Element details saved");
+      }
+    } catch (error) {
+      console.error("[ElementForm] Save failed", error);
+      
+      // Update status to show error
+      await surveyStore.update(surveyId, (survey) => {
+        return updateElementDetails(survey, sectionId, elementId, {
+          status: {
+            status: FormStatus.Error,
+            errors: ["Failed to save element details"],
+          }
+        });
+      });
+      
+      if (!auto) {
+        toast.error("Failed to save element details");
+      }
+      
+      throw error; // Re-throw for autosave error handling
+    }
   };
 
-  const onInvalid = async (errors: FieldErrors<ElementFormData>) => { 
-    console.error("[ElementForm] onInvalid", errors);
-    await surveyStore.update(surveyId, (survey) => {
-      return updateElementDetails(survey, sectionId, elementId, {
-        status: {
-          status: FormStatus.Error,
-          errors: [errors.description?.message || ""],
-        }
-      });
-    });
-  };
+  const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
+    saveData,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 1500,
+      enabled: !!surveyId && !!elementData, // Only enable autosave when element data is loaded
+      imagePaths: [imageUploadPath]
+    }
+  );
 
 
   const handleRemoveComponent = async (inspectionId: string) => {
@@ -176,7 +200,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
   return (
     <FormProvider {...methods}>
       <DevTool control={control} />
-      <form onSubmit={handleSubmit(onValid, onInvalid)} className="space-y-6">
+      <div className="space-y-6">
         <FormSection title="Element Details">
           <TextAreaInput
             className="h-36"
@@ -256,12 +280,13 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
             imageUploadPath={imageUploadPath}
           />
         </FormSection>
-        <SaveButtonWithUploadStatus 
-          isSubmitting={false}
-          paths={[imageUploadPath]}
-          buttonText="Save Element Details"
+        <LastSavedIndicatorWithUploads
+          status={saveStatus}
+          isUploading={isUploading}
+          lastSavedAt={lastSavedAt}
+          className="text-sm justify-center"
         />
-      </form>
+      </div>
     </FormProvider>
   );
 }

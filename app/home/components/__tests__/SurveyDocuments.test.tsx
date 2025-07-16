@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { SurveyDocuments } from '@/app/components/SurveyDocuments';
+import { SurveyDocuments } from '@/app/home/components/SurveyDocuments';
 import { documentStore } from '@/app/home/clients/DocumentStore';
 import { Ok, Err } from 'ts-results';
 import { useRouter } from 'next/navigation';

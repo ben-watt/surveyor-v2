@@ -2,7 +2,7 @@ import { Combobox } from "@/app/home/components/Input/ComboBox";
 import InputDate from "@/app/home/components/Input/InputDate";
 import Input from "@/app/home/components/Input/InputText";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
-import { FormProvider, SubmitErrorHandler, useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { FormStatus, ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
 import { memo } from "react";
@@ -10,7 +10,8 @@ import { useRouter } from "next/navigation";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import AddressInput from "@/app/home/components/Input/AddressInput";
-import SaveButtonWithUploadStatus from "@/app/home/components/SaveButtonWithUploadStatus";
+import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
+import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
 
 interface ReportDetailsFormProps {
   surveyId: string;
@@ -53,45 +54,66 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
   });
   const {
     register,
-    handleSubmit,
     control,
-    formState: { errors, isSubmitting },
-    setError,
-    clearErrors,
+    formState: { errors },
+    watch,
+    getValues,
+    trigger,
   } = methods;
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
-  const onValidHandler = async (data: any): Promise<void> => {
+  const saveData = async (data: ReportDetails, { auto = false } = {}) => {
     if (!surveyId) return;
 
-    console.log("[ReportDetailsForm] onValidHandler", data);
+    console.log("[ReportDetailsForm] saveData", { data, auto });
 
-    await surveyStore.update(surveyId, (survey) => {
-      survey.reportDetails = {
-        ...data,
-        status: { status: "complete", errors: [] },
-      };
-    });
+    try {
+      await surveyStore.update(surveyId, (survey) => {
+        survey.reportDetails = {
+          ...data,
+          status: { status: FormStatus.Complete, errors: [] },
+        };
+      });
 
-    drawerContext.closeDrawer();
-    router.push(`/home/surveys/${surveyId}`);
+      if (!auto) {
+        // For manual saves, close drawer and navigate
+        drawerContext.closeDrawer();
+        router.push(`/home/surveys/${surveyId}`);
+      }
+    } catch (error) {
+      console.error("[ReportDetailsForm] Save failed", error);
+      
+      // Update status to show error
+      await surveyStore.update(surveyId, (survey) => {
+        survey.reportDetails.status = {
+          status: FormStatus.Error,
+          errors: ["Failed to save report details"],
+        };
+      });
+      
+      throw error; // Re-throw for autosave error handling
+    }
   };
 
-  const onInvalidHandler: SubmitErrorHandler<ReportDetails> = async (errors) => {
-    if (!surveyId) return;
-
-    await surveyStore.update(surveyId, (survey) => {
-      survey.reportDetails.status = {
-        status: FormStatus.Error,
-        errors: Object.values(errors).map((e) => e.message ?? ""),
-      };
-    });
-  };
+  const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
+    saveData,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 1500,
+      enabled: !!surveyId,
+      imagePaths: [
+        `report-images/${surveyId}/moneyShot/`,
+        `report-images/${surveyId}/frontElevationImagesUri/`
+      ]
+    }
+  );
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onValidHandler, onInvalidHandler)} className="space-y-2">
+      <div className="space-y-2">
         <LevelField control={control} />
         <AddressField control={control} errors={errors} />
         
@@ -195,14 +217,14 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             }}
           />
         </div>
-        <SaveButtonWithUploadStatus 
-          isSubmitting={isSubmitting}
-          paths={[
-            `report-images/${surveyId}/moneyShot/`,
-            `report-images/${surveyId}/frontElevationImagesUri/`
-          ]}
+        
+        <LastSavedIndicatorWithUploads
+          status={saveStatus}
+          isUploading={isUploading}
+          lastSavedAt={lastSavedAt}
+          className="text-sm justify-center"
         />
-      </form>
+      </div>
     </FormProvider>
   );
 };

@@ -11,8 +11,10 @@ import { Phrase } from "../clients/Dexie";
 import TextAreaInput from "../components/Input/TextAreaInput";
 import { componentStore, elementStore, phraseStore } from "../clients/Database";
 import toast from "react-hot-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
+import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
+import { LastSavedIndicator } from "../components/LastSavedIndicator";
 
 type UpdateForm = Omit<
   Phrase,
@@ -26,10 +28,14 @@ interface DataFormProps {
 }
 
 export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
-  const methods = useForm<UpdateForm>({ defaultValues: defaultValues });
-  const { register, handleSubmit, control, watch } = methods;
+  const methods = useForm<UpdateForm>({ 
+    defaultValues: defaultValues,
+    mode: 'onChange' // Enable validation on change
+  });
+  const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
   const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
+  const [entityData, setEntityData] = useState<Phrase | null>(null);
 
   useEffect(() => {
     const load = async () => {  
@@ -37,6 +43,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         const phrase = await phraseStore.get(id);
         if(phrase) {
           methods.reset(phrase);
+          setEntityData(phrase);
         }
       }
     }
@@ -44,50 +51,68 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     load();
   }, [id, methods]);
 
-  const onSubmit = async (data: UpdateForm) => {
+  // Autosave functionality
+  const savePhrase = async (data: UpdateForm, { auto = false }: { auto?: boolean } = {}) => {
+    try {
+      if(id) {
+        await phraseStore.update(id, (draft) => {
+          draft.name = data.name;
+          draft.type = "condition";
+          draft.phrase = data.phrase;
+          draft.associatedElementIds = data.associatedElementIds;
+          draft.associatedComponentIds = data.associatedComponentIds;
+        });
+        if (!auto) toast.success("Phrase updated");
+      } else {
+        await phraseStore.add({
+          id: uuidv4(),
+          name: data.name,
+          type: "condition",
+          phrase: data.phrase,
+          associatedElementIds: data.associatedElementIds ?? [],
+          associatedComponentIds: data.associatedComponentIds ?? [],
+          associatedMaterialIds: data.associatedMaterialIds ?? [],
+        });
+        if (!auto) toast.success("Phrase created");
+      }
 
-    
-    if(id) {
-      await phraseStore.update(id, (draft) => {
-        draft.name = data.name;
-        draft.type = "condition";
-        draft.phrase = data.phrase;
-        draft.associatedElementIds = data.associatedElementIds;
-        draft.associatedComponentIds = data.associatedComponentIds;
-      });
-      toast.success("Phrase updated");
-    } else {
-      await phraseStore.add({
-        id: uuidv4(),
-        name: data.name,
-        type: "condition",
-        phrase: data.phrase,
-        associatedElementIds: data.associatedElementIds ?? [],
-        associatedComponentIds: data.associatedComponentIds ?? [],
-        associatedMaterialIds: data.associatedMaterialIds ?? [],
-      });
-      toast.success("Phrase created");
+      if (!auto) onSave?.();
+    } catch (error) {
+      console.error("Failed to save phrase", error);
+      if (!auto) toast.error("Error saving phrase");
+      throw error; // Re-throw for autosave error handling
     }
-
-    onSave?.();
   };
+
+  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+    savePhrase,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 2000, // 2 second delay for autosave
+      showToast: false, // Don't show toast for autosave
+      enabled: !!id, // Only enable autosave for existing phrases
+      validateBeforeSave: true // Enable validation before auto-save
+    }
+  );
 
   if(!elementsHydrated || !componentsHydrated) {
     return <div>Loading...</div>;
   }
 
-  console.log("[form]", watch());
-
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
+      <div className="grid gap-4">
         <Input
           labelTitle="Name"
-          register={() => register("name", { required: true })}
+          register={() => register("name", { required: "Name is required" })}
+          errors={errors}
         />
         <TextAreaInput
           labelTitle="Phrase"
-          register={() => register("phrase", { required: true })}
+          register={() => register("phrase", { required: "Phrase is required" })}
+          errors={errors}
         />
         <Combobox
           labelTitle="Associated Elements"
@@ -103,10 +128,13 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           data={components.map((x) => ({ label: x.name, value: x.id }))}
           isMulti={true}
         />
-        <PrimaryBtn className="w-full flex justify-center" type="submit">
-          Save
-        </PrimaryBtn>
-      </form>
+        <LastSavedIndicator
+          status={saveStatus}
+          lastSavedAt={lastSavedAt || undefined}
+          entityUpdatedAt={entityData?.updatedAt}
+          className="text-sm justify-center"
+        />
+      </div>
     </FormProvider>
   );
 }

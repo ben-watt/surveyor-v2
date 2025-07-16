@@ -1,4 +1,4 @@
-import { Control, FieldValues, Path, UseFormRegister } from "react-hook-form";
+import { Control, FieldValues, Path, UseFormRegister, FieldErrors } from "react-hook-form";
 import { Input as InputT } from "./BuildingSurveyReportSchema";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { InputCheckbox } from "@/app/home/components/Input/InputCheckbox";
@@ -9,7 +9,8 @@ export function mapToInputType<T, K extends FieldValues>(
   input: InputT<T>,
   registerName: Path<K>,
   register: UseFormRegister<K>,
-  control: Control<K>
+  control: Control<K>,
+  errors?: FieldErrors<K>
 ) {
   try {
     console.log("[mapToInputType]", input, registerName, register);
@@ -27,6 +28,7 @@ export function mapToInputType<T, K extends FieldValues>(
             register={() =>
               register(registerName, { required: input.required })
             }
+            errors={errors}
           />
         );
       case "number":
@@ -38,6 +40,7 @@ export function mapToInputType<T, K extends FieldValues>(
             register={() =>
               register(registerName, { required: input.required })
             }
+            errors={errors}
           />
         );
       case "textarea":
@@ -48,6 +51,7 @@ export function mapToInputType<T, K extends FieldValues>(
             register={() =>
               register(registerName, { required: input.required })
             }
+            errors={errors}
           />
         );
       case "checkbox":

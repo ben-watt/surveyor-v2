@@ -1,6 +1,6 @@
 "use client";
 
-import { FormProvider, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import {
   PropertyDescription,
   Input,
@@ -9,9 +9,11 @@ import {
 import { surveyStore } from "@/app/home/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
-import { Button } from "@/components/ui/button";
+import { useAutoSaveSurveyForm } from "../../../hooks/useAutoSaveForm";
+import { LastSavedIndicator } from "../../../components/LastSavedIndicator";
+import toast from "react-hot-toast";
 
 function isInputT<T>(input: any): input is Input<T> {
   return input.type !== undefined;
@@ -59,6 +61,7 @@ const PropertyDescriptionPage = (props: PropertyDescriptionPageProps) => {
             <PropertyDescriptionForm
               id={id}
               initValues={survey.propertyDescription}
+              surveyData={survey}
             />
           }
         />
@@ -70,45 +73,96 @@ const PropertyDescriptionPage = (props: PropertyDescriptionPageProps) => {
 interface PropertyDescriptionFormProps {
   id: string;
   initValues: PropertyDescription;
+  surveyData: any; // The full survey data to access updatedAt
 }
 
 const PropertyDescriptionForm = ({
   id,
   initValues,
+  surveyData,
 }: PropertyDescriptionFormProps) => {
-  const methods = useForm<PropertyDescription>({ defaultValues: initValues });
-  const { register, handleSubmit, control, reset } = methods;
+  const [entityData, setEntityData] = useState<any>(null);
+  const methods = useForm<PropertyDescription>({ 
+    defaultValues: initValues,
+    mode: 'onChange' // Enable validation on change
+  });
+  const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
   const router = useRouter();
 
-  const onValidSubmit: SubmitHandler<PropertyDescription> = async (data) => {
-    await surveyStore.update(id, (currentState) => {
-      currentState.propertyDescription = {
-        ...currentState.propertyDescription,
-        ...data,
-        status: {
+  // Set entity data when component mounts
+  useEffect(() => {
+    if (surveyData) {
+      setEntityData(surveyData);
+    }
+  }, [surveyData]);
+
+  // Debug: Log form changes
+  useEffect(() => {
+    const subscription = watch((data, { name, type }) => {
+      console.log("[PropertyDescriptionForm] Form changed:", {
+        name,
+        type,
+        value: data?.[name as keyof PropertyDescription],
+        allData: data
+      });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  // Autosave functionality
+  const savePropertyDescription = async (data: PropertyDescription, { auto = false }: { auto?: boolean } = {}) => {
+    try {
+      console.log("[PropertyDescriptionForm] Saving data:", data);
+      
+      await surveyStore.update(id, (currentState) => {
+        // Update each field's value property
+        Object.keys(data).forEach((key) => {
+          const propKey = key as keyof Omit<PropertyDescription, "status">;
+          const property = data[propKey] as Input<any>;
+          if (isInputT(property) && currentState.propertyDescription[propKey]) {
+            console.log(`[PropertyDescriptionForm] Updating ${propKey} with value:`, property.value);
+            (currentState.propertyDescription[propKey] as Input<any>).value = property.value;
+          }
+        });
+        
+        currentState.propertyDescription.status = {
           status: FormStatus.Complete,
           errors: [],
-        },
+        };
+      });
 
-      };
-    });
-
-    router.push(`/home/surveys/${id}`);
+      if (!auto) {
+        toast.success("Property description saved successfully");
+        router.push(`/home/surveys/${id}`);
+      } else {
+        console.log("[PropertyDescriptionForm] Auto-saved successfully");
+      }
+    } catch (error) {
+      console.error("Failed to save property description", error);
+      if (!auto) toast.error("Error saving property description");
+      throw error; // Re-throw for autosave error handling
+    }
   };
 
-  const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = async (errors) => {
-    await surveyStore.update(id, (currentState) => {
-      currentState.propertyDescription.status = {
-        status: FormStatus.Incomplete,
-        errors: Object.values(errors).map((error) => error.message ?? ""),
-      };
-    });
+  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveSurveyForm(
+    savePropertyDescription,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 2000, // 2 second delay for autosave
+      showToast: false, // Don't show toast for autosave
+      enabled: true,
+      validateBeforeSave: true // Enable validation before auto-save
+    }
+  );
 
-  };
+  console.log("[PropertyDescriptionForm] Auto-save status:", { saveStatus, isSaving, lastSavedAt });
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onValidSubmit, onInvalidSubmit)}>
+      <div className="space-y-4">
         {Object.keys(initValues)
           .sort((a, b) => (initValues[a as keyof PropertyDescription] as Input<any>).order - (initValues[b as keyof PropertyDescription] as Input<any>).order)
           .map((key) => {
@@ -120,15 +174,20 @@ const PropertyDescriptionForm = ({
 
               return (
                 <div key={key} className="mt-1 mb-1">
-                  {mapToInputType(property, reqName, register, control)}
+                  {mapToInputType(property, reqName, register, control, errors)}
                 </div>
               );
             } else {
               return null;
             }
           })}
-        <Button variant="default" className="w-full mt-2" type="submit">Save</Button>
-      </form>
+        <LastSavedIndicator
+          status={saveStatus}
+          lastSavedAt={lastSavedAt || undefined}
+          entityUpdatedAt={entityData?.updatedAt}
+          className="text-sm justify-center"
+        />
+      </div>
     </FormProvider>
   );
 };

@@ -2,8 +2,6 @@
 
 import {
   FormProvider,
-  SubmitErrorHandler,
-  SubmitHandler,
   useForm,
 } from "react-hook-form";
 import {
@@ -13,9 +11,11 @@ import {
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
-import { PrimaryBtn } from "@/app/home/components/Buttons";
 import { useRouter } from "next/navigation";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
+import { useAutoSaveSurveyForm } from "../../../hooks/useAutoSaveForm";
+import { LastSavedIndicator } from "../../../components/LastSavedIndicator";
+import toast from "react-hot-toast";
 
 import { useEffect, useState, use } from "react";
 
@@ -61,6 +61,7 @@ const ChecklistPage = (props: ChecklistPageProps) => {
             <ChecklistForm
               id={id}
               initValues={survey.checklist}
+              surveyData={survey}
             />
           }
         />
@@ -72,55 +73,108 @@ const ChecklistPage = (props: ChecklistPageProps) => {
 interface ChecklistFormProps {
   id: string;
   initValues: Checklist;
+  surveyData: any; // The full survey data to access updatedAt
 }
 
-const ChecklistForm = ({ id, initValues }: ChecklistFormProps) => {
-  const methods = useForm<Checklist>({ defaultValues: initValues });
-  const { register, handleSubmit, control } = methods;
+const ChecklistForm = ({ id, initValues, surveyData }: ChecklistFormProps) => {
+  const [entityData, setEntityData] = useState<any>(null);
+  const methods = useForm<Checklist>({ 
+    defaultValues: initValues,
+    mode: 'onChange' // Enable validation on change
+  });
+  const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
   const router = useRouter();
 
-  // TODO: Need to ensure I don't overwrite the existing data
-  // for the property data fields.
-  const onValidSubmit: SubmitHandler<Checklist> = (data) => {
-    surveyStore.update(id, (currentState) => {
-      currentState.checklist = {
-        ...currentState.checklist,
-        ...data,
-        status: {
+  // Set entity data when component mounts
+  useEffect(() => {
+    if (surveyData) {
+      setEntityData(surveyData);
+    }
+  }, [surveyData]);
+
+  // Debug: Log form changes
+  useEffect(() => {
+    const subscription = watch((data, { name, type }) => {
+      console.log("[ChecklistForm] Form changed:", {
+        name,
+        type,
+        value: data?.[name as keyof Checklist],
+        allData: data
+      });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  // Autosave functionality
+  const saveChecklist = async (data: Checklist, { auto = false }: { auto?: boolean } = {}) => {
+    try {
+      console.log("[ChecklistForm] Saving data:", data);
+      
+      await surveyStore.update(id, (currentState) => {
+        // Update each checklist item's value property
+        if (data.items && currentState.checklist.items) {
+          data.items.forEach((item, index) => {
+            if (currentState.checklist.items[index]) {
+              console.log(`[ChecklistForm] Updating item ${index} with value:`, item.value);
+              currentState.checklist.items[index].value = item.value;
+            }
+          });
+        }
+        
+        currentState.checklist.status = {
           status: FormStatus.Complete,
           errors: [],
-        },
+        };
+      });
 
-      };
-    });
-
-    router.push(`/home/surveys/${id}`);
+      if (!auto) {
+        toast.success("Checklist saved successfully");
+        router.push(`/home/surveys/${id}`);
+      } else {
+        console.log("[ChecklistForm] Auto-saved successfully");
+      }
+    } catch (error) {
+      console.error("Failed to save checklist", error);
+      if (!auto) toast.error("Error saving checklist");
+      throw error; // Re-throw for autosave error handling
+    }
   };
 
-  const onInvalidSubmit: SubmitErrorHandler<PropertyDescription> = (errors) => {
-    surveyStore.update(id, (currentState) => {
-      currentState.checklist.status = {
-        status: FormStatus.Error,
-        errors: Object.values(errors).map((error) => error.message ?? ""),
-      };
-    });
+  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveSurveyForm(
+    saveChecklist,
+    watch,
+    getValues,
+    trigger,
+    {
+      delay: 2000, // 2 second delay for autosave
+      showToast: false, // Don't show toast for autosave
+      enabled: true,
+      validateBeforeSave: true // Enable validation before auto-save
+    }
+  );
 
-  };
+  console.log("[ChecklistForm] Auto-save status:", { saveStatus, isSaving, lastSavedAt });
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onValidSubmit, onInvalidSubmit)}>
-          {initValues.items.map((checklist, index) => {
-            return (
-              <div className="mt-4 mb-4" key={index}>
-                <div>
-                  {mapToInputType(checklist, `items.${index}.value`, register, control)}
-                </div>
+      <div className="space-y-4">
+        {initValues.items.map((checklist, index) => {
+          return (
+            <div className="mt-4 mb-4" key={index}>
+              <div>
+                {mapToInputType(checklist, `items.${index}.value`, register, control, errors)}
               </div>
-            );
-          })}
-        <PrimaryBtn type="submit">Save</PrimaryBtn>
-      </form>
+            </div>
+          );
+        })}
+        <LastSavedIndicator
+          status={saveStatus}
+          lastSavedAt={lastSavedAt || undefined}
+          entityUpdatedAt={entityData?.updatedAt}
+          className="text-sm justify-center"
+        />
+      </div>
     </FormProvider>
   );
 };

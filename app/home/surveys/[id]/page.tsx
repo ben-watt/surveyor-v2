@@ -10,7 +10,7 @@ import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import { useRouter } from "next/navigation";
 import ImagePlaceholder from "../../components/ImagePlaceholder";
-import { SurveyDocuments } from "@/app/components/SurveyDocuments";
+import { SurveyDocuments } from "../../components/SurveyDocuments";
 
 
 interface PhotoGridProps {
