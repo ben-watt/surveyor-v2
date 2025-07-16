@@ -142,6 +142,7 @@ export default function Page() {
           !elementsHydrated || !componentsHydrated || !sectionsHydrated
         }
         onCreate={() => router.push("/home/elements/create")}
+        onRowClick={(row) => router.push(`/home/elements/${row.id}`)}
       />
     </div>
   );

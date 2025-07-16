@@ -40,6 +40,7 @@ type DataTableProps<TData> = {
   asyncData?: Promise<TData[]>;
   isLoading?: boolean;
   onCreate?: () => void;
+  onRowClick?: (row: TData) => void;
 };
 
 export function DataTable<TData>({
@@ -48,6 +49,7 @@ export function DataTable<TData>({
   data,
   isLoading,
   onCreate,
+  onRowClick,
 }: DataTableProps<TData>) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>(initialState?.columnVisibility ?? {});
@@ -146,6 +148,16 @@ export function DataTable<TData>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => onRowClick?.(row.original)}
+                  className={onRowClick ? "cursor-pointer hover:bg-gray-100" : ""}
+                  role={onRowClick ? "button" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      onRowClick(row.original);
+                    }
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

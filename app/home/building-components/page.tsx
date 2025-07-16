@@ -110,7 +110,7 @@ export default function Page() {
         data={components}
         isLoading={!isHydrated || !elementsHydrated}
         onCreate={() => router.push("/home/building-components/create")}
-
+        onRowClick={(row) => router.push(`/home/building-components/${row.id}`)}
       />
     </div>
   );

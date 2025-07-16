@@ -96,6 +96,7 @@ export default function Page() {
         columns={columns}
         data={phrases}
         onCreate={() => router.push("/home/conditions/create")}
+        onRowClick={(row) => router.push(`/home/conditions/${row.id}`)}
       />
     </div>
   );

@@ -117,10 +117,10 @@ export default function Page() {
           },
         }}
         columns={columns}
-
         data={sections}
         isLoading={isLoading}
         onCreate={() => router.push("/home/sections/create")}
+        onRowClick={(row) => router.push(`/home/sections/${row.id}`)}
       />
     </div>
   );
