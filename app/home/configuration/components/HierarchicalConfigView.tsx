@@ -4,17 +4,23 @@ import { ConfigSearchBar } from './ConfigSearchBar';
 import { useHierarchicalData, TreeNode } from '../hooks/useHierarchicalData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Expand, Minimize2, Loader2 } from 'lucide-react';
+import { Expand, Minimize2, Loader2, Plus, Layers, Grid2x2, Blocks, MessageSquare } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   saveConfigurationState, 
   loadConfigurationState, 
   findPathToEntity,
   getEntityDisplayId,
-  ConfigurationState 
 } from '../utils/stateUtils';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export function HierarchicalConfigView() {
+  const router = useRouter();
   const { isLoading, treeData } = useHierarchicalData();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -101,18 +107,39 @@ export function HierarchicalConfigView() {
 
   const displayData = updateTreeWithExpandedState(searchQuery ? filteredData : treeData);
 
+  const handleCreateEntity = (entityType: 'section' | 'element' | 'component' | 'condition') => {
+    const returnUrl = new URL('/home/configuration', window.location.origin);
+    returnUrl.searchParams.set('returnFrom', 'create');
+    returnUrl.searchParams.set('createdType', entityType);
+    
+    const createUrl = `/home/configuration/${entityType === 'component' ? 'components' : `${entityType}s`}/create?returnTo=${encodeURIComponent(returnUrl.toString())}`;
+    router.push(createUrl);
+  };
+
+  const handleCreateChild = useCallback((parentType: string, parentId: string, childType: string) => {
+    const returnUrl = new URL('/home/configuration', window.location.origin);
+    returnUrl.searchParams.set('returnFrom', 'create');
+    returnUrl.searchParams.set('createdType', childType);
+    returnUrl.searchParams.set('parentType', parentType);
+    returnUrl.searchParams.set('parentId', parentId);
+    
+    const createUrl = `/home/configuration/${childType === 'component' ? 'components' : `${childType}s`}/create?returnTo=${encodeURIComponent(returnUrl.toString())}&parentType=${parentType}&parentId=${parentId}`;
+    router.push(createUrl);
+  }, [router]);
+
   // Effect to restore state on component mount and handle URL parameters
   useEffect(() => {
     if (isLoading || treeData.length === 0) return;
 
     const savedState = loadConfigurationState();
     
-    // Check for URL parameters indicating a return from editing
-    const returnFromEdit = searchParams.get('returnFrom');
+    // Check for URL parameters indicating a return from editing or creating
+    const returnFrom = searchParams.get('returnFrom');
     const editedId = searchParams.get('editedId');
     const editedType = searchParams.get('editedType') as 'section' | 'element' | 'component' | 'condition' | null;
+    const createdType = searchParams.get('createdType') as 'section' | 'element' | 'component' | 'condition' | null;
     
-    if (returnFromEdit && editedId && editedType) {
+    if (returnFrom === 'edit' && editedId && editedType) {
       // User returned from editing via the button - expand path to edited entity and highlight it
       const pathToEntity = findPathToEntity(treeData, editedId, editedType);
       const entityDisplayId = getEntityDisplayId(editedId, editedType);
@@ -140,6 +167,23 @@ export function HierarchicalConfigView() {
       newUrl.searchParams.delete('returnFrom');
       newUrl.searchParams.delete('editedId');
       newUrl.searchParams.delete('editedType');
+      window.history.replaceState({}, '', newUrl.toString());
+      
+    } else if (returnFrom === 'create' && createdType) {
+      // User returned from creating - just restore the saved state and expand all to show new entity
+      if (savedState) {
+        setExpandedNodes(new Set(savedState.expandedNodes));
+        if (savedState.searchQuery) {
+          setSearchQuery(savedState.searchQuery);
+        }
+      }
+      
+      // Clear URL parameters
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('returnFrom');
+      newUrl.searchParams.delete('createdType');
+      newUrl.searchParams.delete('parentType');
+      newUrl.searchParams.delete('parentId');
       window.history.replaceState({}, '', newUrl.toString());
       
     } else if (savedState) {
@@ -195,6 +239,34 @@ export function HierarchicalConfigView() {
             <span className="hidden sm:inline">Collapse All</span>
             <span className="sm:hidden">Collapse</span>
           </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="default" size="sm" className="flex-1 sm:flex-none">
+                <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Create New</span>
+                <span className="sm:hidden">Create</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleCreateEntity('section')}>
+                <Layers className="w-4 h-4 mr-2" />
+                New Section
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleCreateEntity('element')}>
+                <Grid2x2 className="w-4 h-4 mr-2" />
+                New Element
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleCreateEntity('component')}>
+                <Blocks className="w-4 h-4 mr-2" />
+                New Component
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleCreateEntity('condition')}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                New Condition
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {searchQuery && (
           <div className="text-sm text-muted-foreground">
@@ -219,6 +291,7 @@ export function HierarchicalConfigView() {
                 level={0}
                 lastEditedEntity={lastEditedEntity}
                 expandedNodes={expandedNodes}
+                onCreateChild={handleCreateChild}
               />
             ))}
           </div>

@@ -263,6 +263,8 @@ This feature will significantly improve the user experience by providing a compr
 - ✅ **Auto-expansion** - automatically expands path to edited entity on return
 - ✅ **Simplified navigation** - removed individual list pages, unified configuration interface
 - ✅ **Hierarchical routing** - restructured routes under `/home/configuration/` for better organization
+- ✅ **Create functionality** - added ability to create new entities from hierarchical view
+- ✅ **Context-aware creation** - contextual create options based on entity relationships
 
 ### 🔄 Remaining Work
 
@@ -293,9 +295,13 @@ This feature will significantly improve the user experience by providing a compr
 - `app/home/configuration/hooks/useHierarchicalData.ts` - Data structure hook
 - `app/home/configuration/utils/stateUtils.ts` - State persistence utilities
 - `app/home/configuration/sections/[id]/page.tsx` - Section edit page under configuration
+- `app/home/configuration/sections/create/page.tsx` - Section creation page under configuration
 - `app/home/configuration/elements/[id]/page.tsx` - Element edit page under configuration
+- `app/home/configuration/elements/create/page.tsx` - Element creation page under configuration
 - `app/home/configuration/components/[id]/page.tsx` - Component edit page under configuration
+- `app/home/configuration/components/create/page.tsx` - Component creation page under configuration
 - `app/home/configuration/conditions/[id]/page.tsx` - Condition edit page under configuration
+- `app/home/configuration/conditions/create/page.tsx` - Condition creation page under configuration
 
 ### Files Modified
 - `components/app-sidebar.tsx` - Added Configuration link, removed individual list page links
@@ -313,8 +319,9 @@ The basic hierarchical configuration view is now functional and includes:
 - **Search with filtering**: Search across all entity types with type filtering
 - **Visual indicators**: Icons matching sidebar menu (MessageSquare for conditions), badges for counts, material tags
 - **Click navigation**: Click any entity to navigate to its edit page
-- **Delete functionality**: Hover to reveal ellipsis menu with Edit/Delete options
-- **Confirmation dialogs**: Safe deletion with user confirmation and error handling
+- **Full CRUD operations**: Create, edit, and delete functionality integrated into tree view
+- **Context-aware creation**: Create buttons show only valid child entity types (sections → elements, elements → components/conditions, etc.)
+- **Multiple creation entry points**: Global "Create New" dropdown + contextual "Add X" options in entity menus
 - **Mobile-responsive**: Touch-friendly 48px+ touch targets, stacked layouts on small screens
 - **Adaptive content**: Badges stack vertically on mobile, condensed text, larger icons
 - **State persistence**: Expanded nodes, search state, and navigation context preserved

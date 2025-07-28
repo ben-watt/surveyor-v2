@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, ChevronDown, Layers, Grid2x2, Blocks, MessageSquare, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, ChevronDown, Layers, Grid2x2, Blocks, MessageSquare, MoreHorizontal, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TreeNode } from '../hooks/useHierarchicalData';
@@ -20,9 +20,10 @@ interface ConfigTreeNodeProps {
   level: number;
   lastEditedEntity?: { id: string; type: string; timestamp: number } | null;
   expandedNodes?: Set<string>;
+  onCreateChild?: (parentType: string, parentId: string, childType: string) => void;
 }
 
-export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, expandedNodes }: ConfigTreeNodeProps) {
+export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, expandedNodes, onCreateChild }: ConfigTreeNodeProps) {
   const router = useRouter();
   const hasChildren = node.children.length > 0;
 
@@ -82,6 +83,25 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
     } catch (error) {
       console.error(`Failed to delete ${node.type}:`, error);
       alert(`Failed to delete ${node.type}. Please try again.`);
+    }
+  };
+
+  const handleCreateChild = (childType: string) => {
+    if (onCreateChild) {
+      onCreateChild(node.type, node.data.id, childType);
+    }
+  };
+
+  const getAvailableChildTypes = () => {
+    switch (node.type) {
+      case 'section':
+        return ['element'];
+      case 'element':
+        return ['component', 'condition'];
+      case 'component':
+        return ['condition'];
+      default:
+        return [];
     }
   };
 
@@ -257,6 +277,18 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
             >
               Edit
             </DropdownMenuItem>
+            {getAvailableChildTypes().length > 0 && (
+              <>
+                {getAvailableChildTypes().map(childType => (
+                  <DropdownMenuItem
+                    key={childType}
+                    onClick={() => handleCreateChild(childType)}
+                  >
+                    Add {childType === 'component' ? 'Component' : childType === 'element' ? 'Element' : 'Condition'}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
             <DropdownMenuItem
               className="text-red-500"
               onClick={handleDelete}
@@ -277,6 +309,7 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
               level={level + 1}
               lastEditedEntity={lastEditedEntity}
               expandedNodes={expandedNodes}
+              onCreateChild={onCreateChild}
             />
           ))}
         </div>
