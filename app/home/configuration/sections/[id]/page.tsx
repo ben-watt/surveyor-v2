@@ -3,7 +3,6 @@
 import React, { use } from "react";
 import SectionForm from "../../../sections/form";
 import { sectionStore } from "@/app/home/clients/Database";
-import { ReturnToConfigButton } from "../../components/ReturnToConfigButton";
 
 interface EditSectionPageProps {
   params: Promise<{
@@ -25,7 +24,6 @@ export default function EditSectionPage(props: EditSectionPageProps) {
 
   return (
     <div>
-      <ReturnToConfigButton />
       <div className="mb-5">
         <h1 className="text-3xl dark:text-white">Edit Section</h1>
         <p className="text-sm text-muted-foreground">Edit an existing section used to group elements in a building survey report.</p>

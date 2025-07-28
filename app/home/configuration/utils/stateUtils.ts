@@ -67,31 +67,43 @@ export const setNavigationContext = (entityId: string, entityType: 'section' | '
 };
 
 export const findPathToEntity = (
-  treeData: TreeNode[],
-  entityId: string,
-  entityType: string
+  treeData: any[],
+  entityId: string
 ): string[] => {
   const path: string[] = [];
+  const visited = new Set<string>();
   
-  const findPath = (nodes: TreeNode[], targetId: string, targetType: string, currentPath: string[]): boolean => {
+  const findPath = (nodes: any[], targetId: string, currentPath: string[]): boolean => {
+    if (!nodes || !Array.isArray(nodes)) return false;
+    
     for (const node of nodes) {
+      if (!node || typeof node !== 'object' || !node.id) continue;
+      
+      // Prevent circular references
+      if (visited.has(node.id)) continue;
+      visited.add(node.id);
+      
       const newPath = [...currentPath, node.id];
       
-      if (node.data.id === targetId && node.type === targetType) {
-        path.push(...newPath.slice(0, -1)); // Don't include the target node itself
+      if (node.id === targetId) {
+        path.push(...newPath);
+        visited.delete(node.id);
         return true;
       }
       
-      if (node.children.length > 0) {
-        if (findPath(node.children, targetId, targetType, newPath)) {
+      if (node.children && Array.isArray(node.children) && node.children.length > 0) {
+        if (findPath(node.children, targetId, newPath)) {
+          visited.delete(node.id);
           return true;
         }
       }
+      
+      visited.delete(node.id);
     }
     return false;
   };
   
-  findPath(treeData, entityId, entityType, []);
+  findPath(treeData, entityId, []);
   return path;
 };
 
@@ -101,4 +113,16 @@ export const getEntityDisplayId = (entityId: string, entityType: string): string
     return entityId.startsWith('condition-') ? entityId : `condition-${entityId}`;
   }
   return entityId;
+};
+
+export const getConditionDisplayId = (
+  conditionId: string,
+  elementId?: string,
+  componentId?: string
+): string => {
+  if (!elementId) {
+    return conditionId;
+  }
+  
+  return `${elementId}-${conditionId}`;
 };
