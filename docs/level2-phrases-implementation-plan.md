@@ -85,6 +85,20 @@ Phrases: a.model({
 **File**: `app/home/surveys/[id]/condition/InspectionForm.tsx`
 - Modify the condition selection to use appropriate phrase based on survey level
 - Update the FormPhrase type mapping to include level-appropriate text
+- Implement filtering logic to only show phrases that have content for the survey level:
+  - For Level 2 surveys: Only show phrases where `phraseLevel2` is not null/empty
+  - For Level 3 surveys: Only show phrases where `phrase` (Level 3) is not null/empty
+
+```typescript
+// Example filtering logic
+const availablePhrases = phrases.filter(phrase => {
+  if (surveyLevel === "2") {
+    return phrase.phraseLevel2 && phrase.phraseLevel2.trim() !== "";
+  } else { // Level 3
+    return phrase.phrase && phrase.phrase.trim() !== "";
+  }
+});
+```
 
 ### Phase 4: Display Logic Updates
 
@@ -114,20 +128,20 @@ interface DraggableConditionsProps {
   - Copy existing `phrase` values to `phraseLevel2` as initial values
   - Allow manual editing afterward
 
-#### 5.2 Create Migration UI (Optional)
-- Add an admin tool to bulk edit Level 2 phrases
-- Show side-by-side comparison of Level 3 and Level 2 wording
-
 ### Phase 6: Testing
 
 #### 6.1 Unit Tests
 - Update existing tests for phrase creation/editing
 - Add tests for level-based phrase selection
+- Test phrase filtering based on survey level
 - Test backward compatibility
 
 #### 6.2 Integration Tests
 - Test survey creation with both Level 2 and Level 3
 - Verify correct phrase display in reports
+- Test that phrase search only shows relevant phrases for each level
+- Verify that phrases without Level 2 content don't appear in Level 2 surveys
+- Verify that phrases without Level 3 content don't appear in Level 3 surveys
 - Test sync functionality with new field
 
 ### Phase 7: Documentation
@@ -161,17 +175,16 @@ If issues arise:
 
 - [ ] Level 2 phrases can be created and edited
 - [ ] Correct phrases display based on survey level
+- [ ] Phrase search/selection filters based on survey level (only shows phrases with appropriate level content)
 - [ ] Existing functionality remains unaffected
 - [ ] Data syncs correctly between devices
 - [ ] All tests pass
 - [ ] Documentation is updated
 
-## Timeline Estimate
+## Important Considerations
 
-- Phase 1-2: 1 hour (Schema and types)
-- Phase 3-4: 2-3 hours (UI implementation)
-- Phase 5: 1-2 hours (Migration)
-- Phase 6: 2 hours (Testing)
-- Phase 7: 1 hour (Documentation)
-
-**Total Estimate**: 7-9 hours of development time
+### Phrase Visibility Rules
+1. **Level 2 Surveys**: Only phrases with populated `phraseLevel2` field will be available for selection
+2. **Level 3 Surveys**: Only phrases with populated `phrase` field will be available for selection
+3. **Migration Impact**: After migration, all phrases will initially be visible for both levels (until edited)
+4. **User Experience**: Clear messaging should be shown when no phrases are available for a specific level
