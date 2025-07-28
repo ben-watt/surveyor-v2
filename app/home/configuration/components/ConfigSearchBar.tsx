@@ -113,47 +113,49 @@ export function ConfigSearchBar({ onSearch, treeData }: ConfigSearchBarProps) {
   };
 
   return (
-    <div className="flex flex-col space-y-2">
-      <div className="flex gap-2">
+    <div className="flex flex-col space-y-3">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            placeholder="Search sections, elements, components, or conditions..."
+            placeholder="Search configuration..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-10"
+            className="pl-10 h-10 sm:h-9"
           />
         </div>
         
-        <Select value={entityFilter} onValueChange={(value: EntityType) => setEntityFilter(value)}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="section">Sections</SelectItem>
-            <SelectItem value="element">Elements</SelectItem>
-            <SelectItem value="component">Components</SelectItem>
-            <SelectItem value="condition">Conditions</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={entityFilter} onValueChange={(value: EntityType) => setEntityFilter(value)}>
+            <SelectTrigger className="w-full sm:w-40 h-10 sm:h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="section">Sections</SelectItem>
+              <SelectItem value="element">Elements</SelectItem>
+              <SelectItem value="component">Components</SelectItem>
+              <SelectItem value="condition">Conditions</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {query && (
-          <Button variant="outline" size="icon" onClick={handleClear}>
-            <X className="w-4 h-4" />
-          </Button>
-        )}
+          {query && (
+            <Button variant="outline" size="icon" onClick={handleClear} className="h-10 w-10 sm:h-9 sm:w-9 flex-shrink-0">
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {query && (
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary">
-            {getResultCount()} matches found
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {getResultCount()} matches
           </Badge>
           {entityFilter !== 'all' && (
-            <Badge variant="outline">
-              Filter: {entityFilter}
+            <Badge variant="outline" className="text-xs">
+              {entityFilter}
             </Badge>
           )}
         </div>

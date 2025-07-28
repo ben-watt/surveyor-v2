@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm run test:*)",
       "Bash(npm run lint)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npm run ts-lint)"
     ],
     "deny": []
   }

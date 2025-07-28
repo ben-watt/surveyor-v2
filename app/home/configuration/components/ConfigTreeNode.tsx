@@ -17,27 +17,34 @@ interface ConfigTreeNodeProps {
   node: TreeNode;
   onToggleExpand: (nodeId: string) => void;
   level: number;
+  lastEditedEntity?: { id: string; type: string; timestamp: number } | null;
 }
 
-export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodeProps) {
+export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity }: ConfigTreeNodeProps) {
   const router = useRouter();
   const hasChildren = node.children.length > 0;
 
   const handleNodeClick = () => {
     const entityId = node.data.id;
     
+    // Add return parameters to maintain state when navigating back
+    const returnUrl = new URL('/home/configuration', window.location.origin);
+    returnUrl.searchParams.set('returnFrom', 'edit');
+    returnUrl.searchParams.set('editedId', entityId);
+    returnUrl.searchParams.set('editedType', node.type);
+    
     switch (node.type) {
       case 'section':
-        router.push(`/home/sections/${entityId}`);
+        router.push(`/home/sections/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
       case 'element':
-        router.push(`/home/elements/${entityId}`);
+        router.push(`/home/elements/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
       case 'component':
-        router.push(`/home/building-components/${entityId}`);
+        router.push(`/home/building-components/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
       case 'condition':
-        router.push(`/home/conditions/${entityId}`);
+        router.push(`/home/conditions/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
     }
   };
@@ -74,13 +81,13 @@ export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodePr
   const getIcon = () => {
     switch (node.type) {
       case 'section':
-        return <Layers className="w-4 h-4 text-blue-600" />;
+        return <Layers className="w-5 h-5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />;
       case 'element':
-        return <Grid2x2 className="w-4 h-4 text-green-600" />;
+        return <Grid2x2 className="w-5 h-5 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />;
       case 'component':
-        return <Blocks className="w-4 h-4 text-purple-600" />;
+        return <Blocks className="w-5 h-5 sm:w-4 sm:h-4 text-purple-600 flex-shrink-0" />;
       case 'condition':
-        return <MessageSquare className="w-4 h-4 text-orange-600" />;
+        return <MessageSquare className="w-5 h-5 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />;
       default:
         return null;
     }
@@ -91,16 +98,18 @@ export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodePr
       case 'section':
         const elementCount = node.children.filter(child => child.type === 'element').length;
         return (
-          <div className="flex items-center gap-2">
-            <span>{node.name}</span>
-            {node.order !== undefined && (
-              <Badge variant="outline" className="text-xs">
-                Order: {node.order}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span className="font-medium">{node.name}</span>
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              {node.order !== undefined && (
+                <Badge variant="outline" className="text-xs hidden sm:inline-flex">
+                  Order: {node.order}
+                </Badge>
+              )}
+              <Badge variant="secondary" className="text-xs">
+                {elementCount} elements
               </Badge>
-            )}
-            <Badge variant="secondary" className="text-xs">
-              {elementCount} elements
-            </Badge>
+            </div>
           </div>
         );
       
@@ -108,23 +117,25 @@ export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodePr
         const componentCount = node.children.filter(child => child.type === 'component').length;
         const conditionCount = node.children.filter(child => child.type === 'condition').length;
         return (
-          <div className="flex items-center gap-2">
-            <span>{node.name}</span>
-            {node.order !== undefined && (
-              <Badge variant="outline" className="text-xs">
-                Order: {node.order}
-              </Badge>
-            )}
-            {componentCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {componentCount} components
-              </Badge>
-            )}
-            {conditionCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {conditionCount} conditions
-              </Badge>
-            )}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span className="font-medium">{node.name}</span>
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              {node.order !== undefined && (
+                <Badge variant="outline" className="text-xs hidden sm:inline-flex">
+                  Order: {node.order}
+                </Badge>
+              )}
+              {componentCount > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {componentCount} components
+                </Badge>
+              )}
+              {conditionCount > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {conditionCount} conditions
+                </Badge>
+              )}
+            </div>
           </div>
         );
       
@@ -132,38 +143,47 @@ export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodePr
         const component = node.data as Component;
         const componentConditionCount = node.children.length;
         return (
-          <div className="flex items-center gap-2">
-            <span>{node.name}</span>
-            {component.materials && component.materials.length > 0 && (
-              <div className="flex gap-1">
-                {component.materials.map((material, idx) => (
-                  <Badge key={idx} variant="outline" className="text-xs">
-                    {material.name}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            {componentConditionCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {componentConditionCount} conditions
-              </Badge>
-            )}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span className="font-medium">{node.name}</span>
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              {component.materials && component.materials.length > 0 && (
+                <div className="flex gap-1 flex-wrap">
+                  {component.materials.slice(0, 2).map((material, idx) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {material.name}
+                    </Badge>
+                  ))}
+                  {component.materials.length > 2 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{component.materials.length - 2} more
+                    </Badge>
+                  )}
+                </div>
+              )}
+              {componentConditionCount > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {componentConditionCount} conditions
+                </Badge>
+              )}
+            </div>
           </div>
         );
       
       case 'condition':
         const condition = node.data as Phrase;
         return (
-          <div className="flex items-center gap-2">
-            <span className="truncate max-w-md">{node.name}</span>
-            <Badge variant="outline" className="text-xs">
-              {condition.type}
-            </Badge>
-            {condition.phraseLevel2 && (
-              <Badge variant="secondary" className="text-xs">
-                Level 2
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span className="font-medium truncate">{node.name}</span>
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <Badge variant="outline" className="text-xs">
+                {condition.type}
               </Badge>
-            )}
+              {condition.phraseLevel2 && (
+                <Badge variant="secondary" className="text-xs">
+                  Level 2
+                </Badge>
+              )}
+            </div>
           </div>
         );
       
@@ -172,30 +192,39 @@ export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodePr
     }
   };
 
+  // Check if this node was recently edited
+  const isRecentlyEdited = lastEditedEntity && 
+    (node.id === lastEditedEntity.id || node.data.id === lastEditedEntity.id) && 
+    node.type === lastEditedEntity.type;
+
   return (
     <div className="select-none">
       <div 
-        className="group flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded cursor-pointer"
-        style={{ paddingLeft: `${level * 20 + 8}px` }}
+        className={`group flex items-center gap-2 p-3 sm:p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded cursor-pointer min-h-[48px] sm:min-h-auto transition-colors ${
+          isRecentlyEdited 
+            ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
+            : ''
+        }`}
+        style={{ paddingLeft: `${Math.max(level * 12 + 8, 8)}px` }}
       >
         {hasChildren ? (
           <Button
             variant="ghost"
             size="sm"
-            className="w-6 h-6 p-0"
+            className="w-8 h-8 sm:w-6 sm:h-6 p-0 flex-shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               onToggleExpand(node.id);
             }}
           >
             {node.isExpanded ? (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-5 h-5 sm:w-4 sm:h-4" />
             ) : (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
             )}
           </Button>
         ) : (
-          <div className="w-6 h-6" />
+          <div className="w-8 h-8 sm:w-6 sm:h-6 flex-shrink-0" />
         )}
         
         {getIcon()}
@@ -208,11 +237,11 @@ export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodePr
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-10 w-10 sm:h-8 sm:w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
               <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="h-5 w-5 sm:h-4 sm:w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -239,6 +268,7 @@ export function ConfigTreeNode({ node, onToggleExpand, level }: ConfigTreeNodePr
               node={child}
               onToggleExpand={onToggleExpand}
               level={level + 1}
+              lastEditedEntity={lastEditedEntity}
             />
           ))}
         </div>
