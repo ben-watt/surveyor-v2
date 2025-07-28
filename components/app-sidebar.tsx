@@ -1,16 +1,11 @@
 import * as React from "react"
 import {
-  Award,
-  Blocks,
-  Grid2x2,
-  Layers,
   NotebookPen,
   Settings2,
   Building2,
   ChevronDown,
   FileText,
-  TreePine,
-  MessageSquare,
+  Settings,
 } from "lucide-react"
 import { AppIcon } from "@/app/home/components/AppIcon"
 
@@ -61,29 +56,8 @@ const configurationNavData = {
     {
       title: "Configuration",
       url: "/home/configuration",
-      icon: TreePine,
+      icon: Settings,
     },
-    {
-      title: "Sections",
-      url: "/home/sections",
-      icon: Layers,
-    },
-    {
-      title: "Elements",
-      url: "/home/elements",
-      icon: Grid2x2,
-    },
-    {
-      title: "Components",
-      url: "/home/building-components",
-      icon: Blocks,
-    },
-    {
-      title: "Conditions",
-      url: "/home/conditions",
-      icon: MessageSquare,
-    },
-
     {
       title: "Settings",
       url: "/home/settings",

@@ -42,16 +42,16 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
     
     switch (node.type) {
       case 'section':
-        router.push(`/home/sections/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
+        router.push(`/home/configuration/sections/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
       case 'element':
-        router.push(`/home/elements/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
+        router.push(`/home/configuration/elements/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
       case 'component':
-        router.push(`/home/building-components/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
+        router.push(`/home/configuration/components/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
       case 'condition':
-        router.push(`/home/conditions/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
+        router.push(`/home/configuration/conditions/${entityId}?returnTo=${encodeURIComponent(returnUrl.toString())}`);
         break;
     }
   };

@@ -22,8 +22,8 @@ Sections (1:many) → Elements (1:many) → Components
 - Components belong to Elements
 - Elements belong to Sections
 
-### Current Navigation Pattern
-Users currently navigate through 4 separate table views with individual create/edit forms.
+### Previous Navigation Pattern
+Users previously navigated through 4 separate table views with individual create/edit forms. **This has been replaced with the unified hierarchical configuration view.**
 
 ## Proposed Solution
 
@@ -261,6 +261,8 @@ This feature will significantly improve the user experience by providing a compr
 - ✅ **Return navigation** - preserves hierarchy state when navigating to/from edit pages
 - ✅ **Entity highlighting** - highlights recently edited entities with visual feedback
 - ✅ **Auto-expansion** - automatically expands path to edited entity on return
+- ✅ **Simplified navigation** - removed individual list pages, unified configuration interface
+- ✅ **Hierarchical routing** - restructured routes under `/home/configuration/` for better organization
 
 ### 🔄 Remaining Work
 
@@ -290,10 +292,19 @@ This feature will significantly improve the user experience by providing a compr
 - `app/home/configuration/components/ReturnToConfigButton.tsx` - Return navigation button
 - `app/home/configuration/hooks/useHierarchicalData.ts` - Data structure hook
 - `app/home/configuration/utils/stateUtils.ts` - State persistence utilities
+- `app/home/configuration/sections/[id]/page.tsx` - Section edit page under configuration
+- `app/home/configuration/elements/[id]/page.tsx` - Element edit page under configuration
+- `app/home/configuration/components/[id]/page.tsx` - Component edit page under configuration
+- `app/home/configuration/conditions/[id]/page.tsx` - Condition edit page under configuration
 
 ### Files Modified
-- `components/app-sidebar.tsx` - Added Configuration link to navigation  
-- `app/home/sections/[id]/page.tsx` - Added return to configuration button (example)
+- `components/app-sidebar.tsx` - Added Configuration link, removed individual list page links
+
+### Files Removed
+- `app/home/sections/` - Old sections list and edit pages (replaced by hierarchical structure)
+- `app/home/elements/` - Old elements list and edit pages (replaced by hierarchical structure)
+- `app/home/building-components/` - Old components list and edit pages (replaced by hierarchical structure)  
+- `app/home/conditions/` - Old conditions list and edit pages (replaced by hierarchical structure)
 
 ### Current Functionality
 The basic hierarchical configuration view is now functional and includes:
@@ -308,6 +319,7 @@ The basic hierarchical configuration view is now functional and includes:
 - **Adaptive content**: Badges stack vertically on mobile, condensed text, larger icons
 - **State persistence**: Expanded nodes, search state, and navigation context preserved
 - **Smart navigation**: Returns to exact hierarchy state after editing with visual highlighting
+- **Hierarchical URLs**: Clean route structure under `/home/configuration/` (e.g., `/home/configuration/sections/123`)
 - **Proper data relationships**: Conditions correctly associated with elements/components
 - **TypeScript safety**: All components properly typed
 - **Event handling**: Separate click zones for expand/collapse vs navigation vs menu actions

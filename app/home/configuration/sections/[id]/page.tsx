@@ -1,11 +1,9 @@
 "use client";
 
 import React, { use } from "react";
-import SectionForm from "../form";
-import client from "@/app/home/clients/AmplifyDataClient";
-import { notFound } from "next/navigation";
+import SectionForm from "../../../sections/form";
 import { sectionStore } from "@/app/home/clients/Database";
-import { ReturnToConfigButton } from "@/app/home/configuration/components/ReturnToConfigButton";
+import { ReturnToConfigButton } from "../../components/ReturnToConfigButton";
 
 interface EditSectionPageProps {
   params: Promise<{
@@ -35,4 +33,4 @@ export default function EditSectionPage(props: EditSectionPageProps) {
       <SectionForm initialData={section} />
     </div>
   );
-} 
+}
