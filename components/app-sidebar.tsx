@@ -9,6 +9,8 @@ import {
   Building2,
   ChevronDown,
   FileText,
+  TreePine,
+  MessageSquare,
 } from "lucide-react"
 import { AppIcon } from "@/app/home/components/AppIcon"
 
@@ -57,6 +59,11 @@ const applicationNavData = {
 const configurationNavData = {
   items: [
     {
+      title: "Configuration",
+      url: "/home/configuration",
+      icon: TreePine,
+    },
+    {
       title: "Sections",
       url: "/home/sections",
       icon: Layers,
@@ -74,7 +81,7 @@ const configurationNavData = {
     {
       title: "Conditions",
       url: "/home/conditions",
-      icon: Award,
+      icon: MessageSquare,
     },
 
     {

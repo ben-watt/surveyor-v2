@@ -117,3 +117,7 @@ Forms auto-save after 2 seconds of inactivity:
 - Groups: `global-admin`, tenant-specific groups
 - Owner-based access for documents
 - Middleware handles auth redirects in `middleware.ts`
+
+## Project Organization
+
+- **Feature documents should go in the docs/ folder**
