@@ -52,6 +52,20 @@ export const setLastEditedEntity = (id: string, type: 'section' | 'element' | 'c
   saveConfigurationState(newState);
 };
 
+export const setNavigationContext = (entityId: string, entityType: 'section' | 'element' | 'component' | 'condition', expandedNodes: string[]) => {
+  const currentState = loadConfigurationState() || { expandedNodes: [] };
+  const newState: ConfigurationState = {
+    ...currentState,
+    expandedNodes,
+    lastEditedEntity: {
+      id: entityId,
+      type: entityType,
+      timestamp: Date.now(),
+    },
+  };
+  saveConfigurationState(newState);
+};
+
 export const findPathToEntity = (
   treeData: TreeNode[],
   entityId: string,

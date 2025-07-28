@@ -113,7 +113,7 @@ export function HierarchicalConfigView() {
     const editedType = searchParams.get('editedType') as 'section' | 'element' | 'component' | 'condition' | null;
     
     if (returnFromEdit && editedId && editedType) {
-      // User returned from editing - expand path to edited entity and highlight it
+      // User returned from editing via the button - expand path to edited entity and highlight it
       const pathToEntity = findPathToEntity(treeData, editedId, editedType);
       const entityDisplayId = getEntityDisplayId(editedId, editedType);
       
@@ -143,13 +143,29 @@ export function HierarchicalConfigView() {
       window.history.replaceState({}, '', newUrl.toString());
       
     } else if (savedState) {
-      // Restore saved state
+      // Restore saved state (including browser back button navigation)
       setExpandedNodes(new Set(savedState.expandedNodes));
       if (savedState.searchQuery) {
         setSearchQuery(savedState.searchQuery);
       }
       if (savedState.lastEditedEntity) {
-        setLastEditedEntity(savedState.lastEditedEntity);
+        // Check if we should highlight the last edited entity
+        const timeSinceEdit = Date.now() - savedState.lastEditedEntity.timestamp;
+        if (timeSinceEdit < 5 * 60 * 1000) { // 5 minutes
+          setLastEditedEntity(savedState.lastEditedEntity);
+          
+          // If we have a recently edited entity, make sure its path is expanded
+          const pathToEntity = findPathToEntity(treeData, savedState.lastEditedEntity.id, savedState.lastEditedEntity.type);
+          const entityDisplayId = getEntityDisplayId(savedState.lastEditedEntity.id, savedState.lastEditedEntity.type);
+          const allExpandedNodes = new Set([...savedState.expandedNodes, ...pathToEntity, entityDisplayId]);
+          setExpandedNodes(allExpandedNodes);
+          
+          // Update saved state with expanded path
+          saveConfigurationState({
+            ...savedState,
+            expandedNodes: Array.from(allExpandedNodes),
+          });
+        }
       }
     }
   }, [isLoading, treeData, searchParams]);
@@ -202,6 +218,7 @@ export function HierarchicalConfigView() {
                 onToggleExpand={handleToggleExpand}
                 level={0}
                 lastEditedEntity={lastEditedEntity}
+                expandedNodes={expandedNodes}
               />
             ))}
           </div>

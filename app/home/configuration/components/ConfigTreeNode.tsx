@@ -12,20 +12,27 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { sectionStore, elementStore, componentStore, phraseStore } from '../../clients/Database';
+import { setNavigationContext } from '../utils/stateUtils';
 
 interface ConfigTreeNodeProps {
   node: TreeNode;
   onToggleExpand: (nodeId: string) => void;
   level: number;
   lastEditedEntity?: { id: string; type: string; timestamp: number } | null;
+  expandedNodes?: Set<string>;
 }
 
-export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity }: ConfigTreeNodeProps) {
+export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, expandedNodes }: ConfigTreeNodeProps) {
   const router = useRouter();
   const hasChildren = node.children.length > 0;
 
   const handleNodeClick = () => {
     const entityId = node.data.id;
+    
+    // Save current navigation context before navigating
+    if (expandedNodes) {
+      setNavigationContext(entityId, node.type, Array.from(expandedNodes));
+    }
     
     // Add return parameters to maintain state when navigating back
     const returnUrl = new URL('/home/configuration', window.location.origin);
@@ -269,6 +276,7 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity }
               onToggleExpand={onToggleExpand}
               level={level + 1}
               lastEditedEntity={lastEditedEntity}
+              expandedNodes={expandedNodes}
             />
           ))}
         </div>
