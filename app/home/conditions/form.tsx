@@ -59,6 +59,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           draft.name = data.name;
           draft.type = "condition";
           draft.phrase = data.phrase;
+          draft.phraseLevel2 = data.phraseLevel2;
           draft.associatedElementIds = data.associatedElementIds;
           draft.associatedComponentIds = data.associatedComponentIds;
         });
@@ -69,6 +70,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           name: data.name,
           type: "condition",
           phrase: data.phrase,
+          phraseLevel2: data.phraseLevel2,
           associatedElementIds: data.associatedElementIds ?? [],
           associatedComponentIds: data.associatedComponentIds ?? [],
           associatedMaterialIds: data.associatedMaterialIds ?? [],
@@ -110,8 +112,14 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           errors={errors}
         />
         <TextAreaInput
-          labelTitle="Phrase"
+          labelTitle="Phrase (Level 3)"
           register={() => register("phrase", { required: "Phrase is required" })}
+          errors={errors}
+        />
+        <TextAreaInput
+          labelTitle="Phrase (Level 2)"
+          placeholder="Simpler wording for Level 2 surveys"
+          register={() => register("phraseLevel2")}
           errors={errors}
         />
         <Combobox

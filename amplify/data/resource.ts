@@ -111,6 +111,7 @@ const schema = a.schema({
     associatedElementIds:  a.string().required().array().required(),
     associatedComponentIds:  a.string().required().array().required(),
     phrase: a.string().required(),
+    phraseLevel2: a.string(), // NEW: Level 2 wording (optional)
     tenantId: a.string().required(),
   })
   .identifier(['tenantId', 'id'])

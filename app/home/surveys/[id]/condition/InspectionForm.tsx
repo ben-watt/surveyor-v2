@@ -274,17 +274,20 @@ function InspectionFormContent({
           (phrase) =>
             phrase.type.toLowerCase() === "condition" &&
             (phrase.associatedComponentIds.includes(component.id) ||
-              phrase.associatedElementIds.includes(element.id))
+              phrase.associatedElementIds.includes(element.id)) &&
+            // Filter based on survey level
+            ((level === "2" && phrase.phraseLevel2 && phrase.phraseLevel2.trim() !== "") ||
+             (level === "3" && phrase.phrase && phrase.phrase.trim() !== ""))
         )
         .map((phrase) => ({
           value: {
             id: phrase.id,
             name: phrase.name,
-            phrase: phrase.phrase,
+            phrase: level === "2" ? (phrase.phraseLevel2 || phrase.phrase) : phrase.phrase,
           },
           label: phrase.name,
         })),
-    [phrases, component.id, element.id]
+    [phrases, component.id, element.id, level]
   );
 
   // Reset dependent fields when parent fields change
