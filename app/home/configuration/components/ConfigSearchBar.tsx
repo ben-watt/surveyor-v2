@@ -15,13 +15,19 @@ import {
 interface ConfigSearchBarProps {
   onSearch: (query: string, results: TreeNode[]) => void;
   treeData: TreeNode[];
+  initialQuery?: string;
 }
 
 type EntityType = 'all' | 'section' | 'element' | 'component' | 'condition';
 
-export function ConfigSearchBar({ onSearch, treeData }: ConfigSearchBarProps) {
-  const [query, setQuery] = useState('');
+export function ConfigSearchBar({ onSearch, treeData, initialQuery = '' }: ConfigSearchBarProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [entityFilter, setEntityFilter] = useState<EntityType>('all');
+
+  // Update query when initialQuery changes
+  React.useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
 
   const searchResults = useMemo(() => {
     if (!query.trim()) {
@@ -75,10 +81,6 @@ export function ConfigSearchBar({ onSearch, treeData }: ConfigSearchBarProps) {
     return results;
   }, [query, entityFilter, treeData]);
 
-  const handleSearch = useCallback(() => {
-    onSearch(query, searchResults);
-  }, [query, searchResults, onSearch]);
-
   const handleClear = useCallback(() => {
     setQuery('');
     setEntityFilter('all');
@@ -87,14 +89,18 @@ export function ConfigSearchBar({ onSearch, treeData }: ConfigSearchBarProps) {
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSearch();
+      onSearch(query, searchResults);
     }
-  }, [handleSearch]);
+  }, [query, searchResults, onSearch]);
 
-  // Auto-search as user types (debounced effect handled by parent)
+  // Auto-search as user types (debounced)
   React.useEffect(() => {
-    handleSearch();
-  }, [handleSearch]);
+    const timeoutId = setTimeout(() => {
+      onSearch(query, searchResults);
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [query, entityFilter, searchResults, onSearch]);
 
   const getResultCount = () => {
     let count = 0;
@@ -141,7 +147,7 @@ export function ConfigSearchBar({ onSearch, treeData }: ConfigSearchBarProps) {
           </Select>
 
           {query && (
-            <Button variant="outline" size="icon" onClick={handleClear} className="h-10 w-10 sm:h-9 sm:w-9 flex-shrink-0">
+            <Button variant="outline" size="icon" onClick={handleClear} className="h-10 w-10 sm:h-9 sm:w-9 flex-shrink-0" aria-label="Clear search">
               <X className="w-4 h-4" />
             </Button>
           )}
@@ -151,7 +157,7 @@ export function ConfigSearchBar({ onSearch, treeData }: ConfigSearchBarProps) {
       {query && (
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary" className="text-xs">
-            {getResultCount()} matches
+            {getResultCount()} {getResultCount() === 1 ? 'result found' : 'results found'}
           </Badge>
           {entityFilter !== 'all' && (
             <Badge variant="outline" className="text-xs">

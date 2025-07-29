@@ -141,7 +141,7 @@ export function HierarchicalConfigView() {
     
     if (returnFrom === 'edit' && editedId && editedType) {
       // User returned from editing via the button - expand path to edited entity and highlight it
-      const pathToEntity = findPathToEntity(treeData, editedId, editedType);
+      const pathToEntity = findPathToEntity(treeData, editedId);
       const entityDisplayId = getEntityDisplayId(editedId, editedType);
       
       setExpandedNodes(new Set([...pathToEntity, entityDisplayId]));
@@ -199,7 +199,7 @@ export function HierarchicalConfigView() {
           setLastEditedEntity(savedState.lastEditedEntity);
           
           // If we have a recently edited entity, make sure its path is expanded
-          const pathToEntity = findPathToEntity(treeData, savedState.lastEditedEntity.id, savedState.lastEditedEntity.type);
+          const pathToEntity = findPathToEntity(treeData, savedState.lastEditedEntity.id);
           const entityDisplayId = getEntityDisplayId(savedState.lastEditedEntity.id, savedState.lastEditedEntity.type);
           const allExpandedNodes = new Set([...savedState.expandedNodes, ...pathToEntity, entityDisplayId]);
           setExpandedNodes(allExpandedNodes);
@@ -225,7 +225,7 @@ export function HierarchicalConfigView() {
 
   return (
     <div className="space-y-4">
-      <ConfigSearchBar onSearch={handleSearch} treeData={treeData} />
+      <ConfigSearchBar onSearch={handleSearch} treeData={treeData} initialQuery={searchQuery} />
       
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <div className="flex gap-2">

@@ -291,7 +291,6 @@ This feature will significantly improve the user experience by providing a compr
 - `app/home/configuration/components/HierarchicalConfigView.tsx` - Container component
 - `app/home/configuration/components/ConfigTreeNode.tsx` - Tree node component
 - `app/home/configuration/components/ConfigSearchBar.tsx` - Search component
-- `app/home/configuration/components/ReturnToConfigButton.tsx` - Return navigation button
 - `app/home/configuration/hooks/useHierarchicalData.ts` - Data structure hook
 - `app/home/configuration/utils/stateUtils.ts` - State persistence utilities
 - `app/home/configuration/sections/[id]/page.tsx` - Section edit page under configuration

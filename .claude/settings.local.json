@@ -4,7 +4,9 @@
       "Bash(npm run test:*)",
       "Bash(npm run lint)",
       "Bash(npx eslint:*)",
-      "Bash(npm run ts-lint)"
+      "Bash(npm run ts-lint)",
+      "Bash(npm test:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }

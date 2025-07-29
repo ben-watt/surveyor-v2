@@ -25,6 +25,10 @@ npm run fix              # Auto-fix linting issues
 - ESLint validation (`npm run lint`)
 - Jest tests (`npm run test`)
 
+## Coding Best Practices
+
+- When creating or editing files, always run ts-lint to ensure there are no linter errors after editing
+
 ## Architecture Overview
 
 This is an offline-first surveyor application built with Next.js 15 and AWS Amplify Gen2. The architecture prioritizes reliability in poor network conditions while supporting multi-tenant data isolation.
