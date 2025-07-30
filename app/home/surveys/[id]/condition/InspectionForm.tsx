@@ -46,7 +46,7 @@ import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIn
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 
 function CostingsFieldArray() {
-  const { control, register } = useFormContext();
+  const { control, register, formState: { errors } } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "costings",
@@ -78,10 +78,11 @@ function CostingsFieldArray() {
               placeholder="Description of the cost"
               register={() =>
                 register(`costings.${index}.description` as const, {
-                  required: true,
-                  validate: (value) => value.length > 0,
+                  required: "Description is required",
+                  validate: (value) => value.length > 0 || "Description cannot be empty",
                 })
               }
+              errors={errors}
             />
           </div>
         </div>
@@ -466,7 +467,7 @@ function InspectionFormContent({
                   ),
                 });
               }}
-              rules={{ required: true }}
+              rules={{ required: "Component is required" }}
             />
             <Button
               className="flex-none"
@@ -487,7 +488,7 @@ function InspectionFormContent({
             <Input
               type="text"
               labelTitle="Component Name Override"
-              register={() => register("nameOverride", { required: true })}
+              register={() => register("nameOverride", { required: "Component name override is required when enabled" })}
               errors={errors}
               placeholder="Enter custom component name"
             />
@@ -544,6 +545,7 @@ function InspectionFormContent({
             labelTitle="Additional Comments"
             register={() => register("additionalDescription")}
             placeholder="Enter component description"
+            errors={errors}
           />
         </FormSection>
         {level === "3" && (
