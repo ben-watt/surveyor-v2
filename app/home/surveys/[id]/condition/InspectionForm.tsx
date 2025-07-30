@@ -545,22 +545,6 @@ function InspectionFormContent({
             register={() => register("additionalDescription")}
             placeholder="Enter component description"
           />
-
-          <div className="space-y-2 image-w-50">
-            <RhfDropZoneInputImage
-              path={imageUploadPath}
-              rhfProps={{
-                name: "images",
-              }}
-              labelText="Images"
-              maxFiles={20}
-              minFiles={1}
-              features={{
-                archive: true,
-                metadata: true,
-              }}
-            />
-          </div>
         </FormSection>
         {level === "3" && (
           <FormSection title="Costings">

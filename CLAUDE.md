@@ -28,6 +28,7 @@ npm run fix              # Auto-fix linting issues
 ## Coding Best Practices
 
 - When creating or editing files, always run ts-lint to ensure there are no linter errors after editing
+- When asked to create a new feature assume that we want to create a feature document in /docs as a markdown file first. This plan should include references to key files and an outline of what will need to be done. It should be consise and clear and provide code examples where appropriate.
 
 ## Architecture Overview
 
