@@ -1,4 +1,4 @@
-import { Combobox } from "@/app/home/components/Input/ComboBox";
+import { DynamicComboBox } from "@/app/home/components/Input";
 import InputDate from "@/app/home/components/Input/InputDate";
 import Input from "@/app/home/components/Input/InputText";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
@@ -32,9 +32,9 @@ const AddressField = memo(({ control, errors }: any) => (
 ));
 AddressField.displayName = 'AddressField';
 
-const LevelField = memo(({ control }: any) => (
+const LevelField = memo(({ control, errors }: any) => (
   <div>
-    <Combobox
+    <DynamicComboBox
       labelTitle="Level"
       data={[
         { label: "Level 2", value: "2" },
@@ -43,6 +43,7 @@ const LevelField = memo(({ control }: any) => (
       name="level"
       control={control}
       rules={{ required: true }}
+      errors={errors}
     />
   </div>
 ));
@@ -114,7 +115,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
   return (
     <FormProvider {...methods}>
       <div className="space-y-2">
-        <LevelField control={control} />
+        <LevelField control={control} errors={errors} />
         <AddressField control={control} errors={errors} />
         
         <div>

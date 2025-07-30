@@ -6,7 +6,7 @@ import {
   FormProvider,
   useForm,
 } from "react-hook-form";
-import { Combobox } from "@/app/home/components/Input/ComboBox";
+import { DynamicComboBox } from "@/app/home/components/Input";
 import { Phrase } from "../clients/Dexie";
 import TextAreaInput from "../components/Input/TextAreaInput";
 import { componentStore, elementStore, phraseStore } from "../clients/Database";
@@ -122,19 +122,21 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           register={() => register("phraseLevel2")}
           errors={errors}
         />
-        <Combobox
+        <DynamicComboBox
           labelTitle="Associated Elements"
           name="associatedElementIds"
           control={control}
           data={elements.map((x) => ({ label: x.name, value: x.id }))}
           isMulti={true}
+          errors={errors}
         />
-        <Combobox
+        <DynamicComboBox
           labelTitle="Associated Components"
           name="associatedComponentIds"
           control={control}
           data={components.map((x) => ({ label: x.name, value: x.id }))}
           isMulti={true}
+          errors={errors}
         />
         <LastSavedIndicator
           status={saveStatus}

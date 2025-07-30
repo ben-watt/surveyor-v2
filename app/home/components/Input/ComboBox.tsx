@@ -23,13 +23,13 @@ import { Label } from "./Label";
 import { ErrorMessage } from "@hookform/error-message";
 import InputError from "../InputError";
 
-interface ComboboxDataItem {
+export interface ComboboxDataItem {
   value: any;
   label: string;
   children?: ComboboxDataItem[];
 }
 
-interface ComboboxProps {
+export interface ComboboxProps {
   data: ComboboxDataItem[];
   labelTitle?: string;
   onCreateNew?: () => void;
@@ -39,6 +39,8 @@ interface ComboboxProps {
   rules?: RegisterOptions;
   showParentLabels?: boolean;
   isMulti?: boolean;
+  inDrawer?: boolean;
+  onClose?: () => void;
 }
 
 export function Combobox({
@@ -51,6 +53,8 @@ export function Combobox({
   rules,
   showParentLabels = false,
   isMulti = false,
+  inDrawer = false,
+  onClose,
 }: ComboboxProps) {
   const { field } = useController({
     name,
@@ -130,13 +134,16 @@ export function Combobox({
 
       field.onChange(valueMatches ? "" : selectedItem.value);
       setOpen(false);
+      if (inDrawer && onClose) {
+        onClose();
+      }
     }
 
     if (!isMulti) {
       setNavigationStack([data]);
       setBreadcrumbs([]);
     }
-  }, [data, field, isMulti, flatData]);
+  }, [data, field, isMulti, flatData, inDrawer, onClose]);
 
   const handleBack = React.useCallback(() => {
     if (navigationStack.length > 1) {
@@ -149,20 +156,9 @@ export function Combobox({
   const selectedItems = React.useMemo(() => {
     if (!field.value) return [];
     
-    console.log("[ComboBox] field.value:", field.value);
-    console.log("[ComboBox] flatData:", flatData);
-    
     if (isMulti && Array.isArray(field.value)) {
       return field.value.map(value => 
         flatData.find(item => {
-          // For debugging
-          console.log("[ComboBox] Comparing:", {
-            value,
-            itemValue: item.value,
-            valueType: typeof value,
-            itemType: typeof item.value
-          });
-
           if (typeof value === 'object' && value !== null && typeof item.value === 'object' && item.value !== null) {
             // Compare specific properties that should match instead of full objects
             // Adjust these properties based on your object structure
@@ -205,7 +201,112 @@ export function Combobox({
     return field.value === itemValue;
   }, [field.value, isMulti]);
 
-  console.log("[ComboBox] selectedItems", selectedItems, field);
+  // When in drawer mode, we don't need the trigger button and popover wrapper
+  if (inDrawer) {
+    return (
+      <Command className="w-full">
+        {isMulti && selectedItems.length > 0 && (
+          <div className="border-b px-2 py-2">
+            <div className="flex flex-wrap gap-1">
+              {selectedItems.filter(Boolean).map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-1 bg-secondary text-secondary-foreground rounded-md px-2 py-1 text-sm"
+                >
+                  <span>{item?.label}</span>
+                  <button
+                    type="button"
+                    className="h-4 w-4 hover:bg-secondary-foreground/20 rounded-sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSelect(item?.label || "");
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <CommandInput
+          placeholder="Search..."
+          value={search}
+          onValueChange={setSearch}
+          className="h-9 border-none focus:ring-0"
+        />
+        <CommandList className="max-h-[60vh]">
+          <CommandEmpty>Nothing found.</CommandEmpty>
+          <CommandGroup>
+            {search ? (
+              filteredData.map((item, index) => (
+                <CommandItem
+                  key={`filtered-${index}-${typeof item.value === 'object' ? item.value?.id || JSON.stringify(item.value) : item.value}`}
+                  value={item.label}
+                  onSelect={() => handleSelect(item.label)}
+                  className="flex items-center py-3"
+                >
+                  {item.fullLabel}
+                  <CheckIcon
+                    className={cn(
+                      "ml-auto h-4 w-4",
+                      isItemSelected(item.value) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </CommandItem>
+              ))
+            ) : (
+              <>
+                {navigationStack.length > 1 && (
+                  <>
+                    <CommandItem
+                      value="back"
+                      onSelect={handleBack}
+                      className="font-medium text-muted-foreground py-3"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back to {breadcrumbs[breadcrumbs.length - 2] || "Start"}
+                    </CommandItem>
+                    <CommandSeparator />
+                  </>
+                )}
+                {currentLevel.map((item, index) => (
+                  <CommandItem
+                    key={`nav-${index}-${typeof item.value === 'object' ? item.value?.id || JSON.stringify(item.value) : item.value}`}
+                    value={item.label}
+                    onSelect={() => handleSelect(item.label, item)}
+                    className="flex items-center py-3"
+                  >
+                    {item.label}
+                    {item.children && item.children.length > 0 ? (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    ) : (
+                      <CheckIcon
+                        className={cn(
+                          "ml-auto h-4 w-4",
+                          isItemSelected(item.value) ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    )}
+                  </CommandItem>
+                ))}
+              </>
+            )}
+          </CommandGroup>
+        </CommandList>
+        {onCreateNew && navigationStack.length === 1 && (
+          <>
+            <hr />
+            <CommandGroup forceMount>
+              <CommandItem value="create" onSelect={onCreateNew} className="py-3">
+                Create new...
+              </CommandItem>
+            </CommandGroup>
+          </>
+        )}
+      </Command>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -272,9 +373,9 @@ export function Combobox({
               <CommandEmpty>Nothing found.</CommandEmpty>
               <CommandGroup>
                 {search ? (
-                  filteredData.map((item) => (
+                  filteredData.map((item, index) => (
                     <CommandItem
-                      key={item.value}
+                      key={`filtered-${index}-${typeof item.value === 'object' ? item.value?.id || JSON.stringify(item.value) : item.value}`}
                       value={item.label}
                       onSelect={() => handleSelect(item.label)}
                       className="flex items-center"
@@ -303,9 +404,9 @@ export function Combobox({
                         <CommandSeparator />
                       </>
                     )}
-                    {currentLevel.map((item) => (
+                    {currentLevel.map((item, index) => (
                       <CommandItem
-                        key={item.value}
+                        key={`nav-${index}-${typeof item.value === 'object' ? item.value?.id || JSON.stringify(item.value) : item.value}`}
                         value={item.label}
                         onSelect={() => handleSelect(item.label, item)}
                         className="flex items-center"

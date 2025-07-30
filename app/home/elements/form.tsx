@@ -4,7 +4,7 @@ import { PrimaryBtn } from "@/app/home/components/Buttons";
 import Input from "@/app/home/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { Combobox } from "../components/Input/ComboBox";
+import { DynamicComboBox } from "../components/Input";
 import toast from "react-hot-toast";
 import { useDynamicDrawer } from "../components/Drawer";
 import { elementStore, sectionStore, type CreateElement, type UpdateElement  } from "../clients/Database";
@@ -114,12 +114,13 @@ export function DataForm({ id }: DataFormProps) {
           register={() => register("description")}
           errors={errors}
         />
-        <Combobox
+        <DynamicComboBox
           labelTitle="Section"
           data={sections.map(s => ({ value: s.id, label: s.name }))}
           name="sectionId"
           control={control}
           rules={{ required: "Section is required" }}
+          errors={errors}
         />
         <Input
           labelTitle="Order"

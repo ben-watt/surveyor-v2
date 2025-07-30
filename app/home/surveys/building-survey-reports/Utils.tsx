@@ -2,7 +2,7 @@ import { Control, FieldValues, Path, UseFormRegister, FieldErrors } from "react-
 import { Input as InputT } from "./BuildingSurveyReportSchema";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { InputCheckbox } from "@/app/home/components/Input/InputCheckbox";
-import { Combobox } from "@/app/home/components/Input/ComboBox";
+import { DynamicComboBox } from "@/app/home/components/Input";
 import Input from "@/app/home/components/Input/InputText";
 
 export function mapToInputType<T, K extends FieldValues>(
@@ -83,7 +83,7 @@ export function mapToInputType<T, K extends FieldValues>(
             <label htmlFor={input.label} className="text-sm">
               {input.label}
             </label>
-            <Combobox
+            <DynamicComboBox
               data={[
                 { label: "Freehold", value: "Freehold" },
                 { label: "Leasehold", value: "Leasehold" },
@@ -94,6 +94,7 @@ export function mapToInputType<T, K extends FieldValues>(
               name={registerName}
               rules={{ required: input.required }}
               control={control}
+              errors={errors}
             />
           </>
         );

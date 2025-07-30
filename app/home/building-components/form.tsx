@@ -10,7 +10,7 @@ import { componentStore, elementStore } from "@/app/home/clients/Database";
 import type { Component } from "@/app/home/clients/Dexie";
 import { useEffect, useState } from "react";
 import { Schema } from "@/amplify/data/resource";
-import { Combobox } from "@/app/home/components/Input/ComboBox";
+import { DynamicComboBox } from "@/app/home/components/Input";
 import toast from "react-hot-toast";
 import { useDynamicDrawer } from "../components/Drawer";
 import { v4 as uuidv4 } from "uuid";
@@ -122,12 +122,13 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
           register={() => register("name", { required: "Name is required" })}
           errors={errors}
         />
-        <Combobox
+        <DynamicComboBox
           labelTitle="Element"
           name="elementId"
           control={control}
           rules={{ required: "Element is required" }}
           data={elements.map((x) => ({ label: x.name, value: x.id }))}
+          errors={errors}
         />
         <LastSavedIndicator
           status={saveStatus}

@@ -18,7 +18,7 @@ import {
   sectionStore,
 } from "@/app/home/clients/Database";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
-import { Combobox } from "@/app/home/components/Input/ComboBox";
+import { DynamicComboBox } from "@/app/home/components/Input";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import toast from "react-hot-toast";
 
@@ -396,7 +396,7 @@ function InspectionFormContent({
     <FormProvider {...methods}>
       <div className="space-y-6">
         <FormSection title="Basic Information">
-          <Combobox
+          <DynamicComboBox
             labelTitle="Survey Section"
             data={surveySectionOptions}
             name="surveySection"
@@ -405,7 +405,7 @@ function InspectionFormContent({
             rules={{ validate: (value) => value.id !== "" || "Survey section is required" }}
           />
           <div className="flex items-end gap-2 justify-between">
-            <Combobox
+            <DynamicComboBox
               labelTitle="Element"
               data={elementOptions}
               name="element"
@@ -448,7 +448,7 @@ function InspectionFormContent({
 
         <FormSection title="Component Details">
           <div className="flex items-end gap-2 justify-between">
-            <Combobox
+            <DynamicComboBox
               labelTitle="Component"
               data={componentOptions}
               name="component"
@@ -493,7 +493,7 @@ function InspectionFormContent({
             />
           )}
 
-          <Combobox
+          <DynamicComboBox
             labelTitle="RAG Status"
             data={RAG_OPTIONS.map((x) => ({
               value: x.value,
@@ -505,7 +505,7 @@ function InspectionFormContent({
             rules={{ required: "RAG status is required" }}
           />
 
-          <Combobox
+          <DynamicComboBox
             labelTitle="Condition"
             data={phrasesOptions}
             name="conditions"
