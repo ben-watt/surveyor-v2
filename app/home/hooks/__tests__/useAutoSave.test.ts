@@ -108,9 +108,9 @@ describe('useAutoSave', () => {
 
     expect(result.current.saveStatus).toBe('saved');
 
-    // Fast-forward past the timeout (2 seconds for status reset)
+    // Fast-forward past the timeout (10 seconds for status reset)
     act(() => {
-      jest.advanceTimersByTime(2000);
+      jest.advanceTimersByTime(10000);
     });
 
     expect(result.current.saveStatus).toBe('idle');
@@ -257,5 +257,84 @@ describe('useAutoSave', () => {
     });
 
     expect(result.current.lastSavedAt).toBeInstanceOf(Date);
+  });
+
+  it('should set pending status when triggerAutoSave is called', () => {
+    const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
+    
+    const { result } = renderHook(() => 
+      useAutoSave(mockSaveFunction, { delay: 1000 })
+    );
+
+    const testData = { name: 'Test' };
+
+    act(() => {
+      result.current.triggerAutoSave(testData);
+    });
+
+    expect(result.current.saveStatus).toBe('pending');
+    expect(result.current.hasPendingChanges).toBe(true);
+  });
+
+  it('should clear pending status when save starts', async () => {
+    const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
+    
+    const { result } = renderHook(() => 
+      useAutoSave(mockSaveFunction, { delay: 1000 })
+    );
+
+    const testData = { name: 'Test' };
+
+    act(() => {
+      result.current.triggerAutoSave(testData);
+    });
+
+    expect(result.current.saveStatus).toBe('pending');
+    expect(result.current.hasPendingChanges).toBe(true);
+
+    // Fast-forward time to trigger the timer
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    // Wait for the async save operation to start
+    await waitFor(() => {
+      expect(result.current.saveStatus).toBe('saving');
+      expect(result.current.hasPendingChanges).toBe(false);
+    });
+  });
+
+  it('should expose hasPendingChanges property', () => {
+    const mockSaveFunction = jest.fn();
+    
+    const { result } = renderHook(() => 
+      useAutoSave(mockSaveFunction)
+    );
+
+    expect(result.current.hasPendingChanges).toBe(false);
+    expect(typeof result.current.hasPendingChanges).toBe('boolean');
+  });
+
+  it('should clear pending changes when resetStatus is called', () => {
+    const mockSaveFunction = jest.fn();
+    
+    const { result } = renderHook(() => 
+      useAutoSave(mockSaveFunction)
+    );
+
+    // Set pending status first
+    act(() => {
+      result.current.triggerAutoSave({ name: 'Test' });
+    });
+
+    expect(result.current.hasPendingChanges).toBe(true);
+    expect(result.current.saveStatus).toBe('pending');
+
+    act(() => {
+      result.current.resetStatus();
+    });
+
+    expect(result.current.hasPendingChanges).toBe(false);
+    expect(result.current.saveStatus).toBe('idle');
   });
 }); 

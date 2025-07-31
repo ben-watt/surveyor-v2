@@ -387,7 +387,7 @@ function InspectionFormContent({
     getValues,
     trigger,
     {
-      delay: 1500,
+      delay: 1000,
       enabled: !!surveyId && !!initialValues.inspectionId,
       imagePaths: [imageUploadPath]
     }

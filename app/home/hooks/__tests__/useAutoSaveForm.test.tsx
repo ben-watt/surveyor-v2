@@ -297,4 +297,143 @@ describe('useAutoSaveForm', () => {
       expect(screen.getByTestId('last-saved')).not.toHaveTextContent('never');
     });
   });
+
+  it('should use updated default watchDelay of 300ms', async () => {
+    const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
+    
+    const TestFormWithDefaultTiming = () => {
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const { getValues } = form;
+
+      const { triggerAutoSave, saveStatus } = useAutoSaveForm(
+        mockSaveFunction,
+        form.watch,
+        getValues,
+        form.trigger,
+        { delay: 1000 } // Default watchDelay should be 300ms
+      );
+
+      return (
+        <FormProvider {...(form as any)}>
+          <div data-testid="status">{saveStatus}</div>
+          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+            Trigger Autosave
+          </button>
+        </FormProvider>
+      );
+    };
+
+    render(<TestFormWithDefaultTiming />);
+
+    // Trigger autosave
+    act(() => {
+      screen.getByTestId('trigger-autosave').click();
+    });
+
+    // Should show pending status immediately
+    expect(screen.getByTestId('status')).toHaveTextContent('pending');
+
+    // Fast-forward time by delay amount
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    // Should save after delay
+    await waitFor(() => {
+      expect(mockSaveFunction).toHaveBeenCalledWith(
+        { name: 'New', email: 'new@test.com' },
+        { auto: true }
+      );
+    });
+
+    expect(screen.getByTestId('status')).toHaveTextContent('autosaved');
+  });
+
+  it('should expose hasPendingChanges property', () => {
+    const mockSaveFunction = jest.fn();
+    
+    const TestFormWithPendingChanges = () => {
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const { getValues } = form;
+
+      const { triggerAutoSave, hasPendingChanges, saveStatus } = useAutoSaveForm(
+        mockSaveFunction,
+        form.watch,
+        getValues,
+        form.trigger,
+        { delay: 1000 }
+      );
+
+      return (
+        <FormProvider {...(form as any)}>
+          <div data-testid="status">{saveStatus}</div>
+          <div data-testid="pending">{hasPendingChanges ? 'true' : 'false'}</div>
+          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+            Trigger Autosave
+          </button>
+        </FormProvider>
+      );
+    };
+
+    render(<TestFormWithPendingChanges />);
+
+    expect(screen.getByTestId('pending')).toHaveTextContent('false');
+
+    // Trigger autosave
+    act(() => {
+      screen.getByTestId('trigger-autosave').click();
+    });
+
+    expect(screen.getByTestId('pending')).toHaveTextContent('true');
+    expect(screen.getByTestId('status')).toHaveTextContent('pending');
+  });
+
+  it('should clear pending status when save completes', async () => {
+    const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
+    
+    const TestFormPendingClear = () => {
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const { getValues } = form;
+
+      const { triggerAutoSave, hasPendingChanges, saveStatus } = useAutoSaveForm(
+        mockSaveFunction,
+        form.watch,
+        getValues,
+        form.trigger,
+        { delay: 1000 }
+      );
+
+      return (
+        <FormProvider {...(form as any)}>
+          <div data-testid="status">{saveStatus}</div>
+          <div data-testid="pending">{hasPendingChanges ? 'true' : 'false'}</div>
+          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+            Trigger Autosave
+          </button>
+        </FormProvider>
+      );
+    };
+
+    render(<TestFormPendingClear />);
+
+    // Trigger autosave
+    act(() => {
+      screen.getByTestId('trigger-autosave').click();
+    });
+
+    expect(screen.getByTestId('pending')).toHaveTextContent('true');
+    expect(screen.getByTestId('status')).toHaveTextContent('pending');
+
+    // Fast-forward time to trigger save
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    // Wait for save to complete
+    await waitFor(() => {
+      expect(screen.getByTestId('status')).toHaveTextContent('autosaved');
+    });
+
+    expect(screen.getByTestId('pending')).toHaveTextContent('false');
+  });
 }); 

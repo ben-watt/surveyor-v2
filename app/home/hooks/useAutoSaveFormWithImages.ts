@@ -17,7 +17,7 @@ interface AutoSaveFormWithImagesOptions extends AutoSaveOptions {
 interface AutoSaveFormWithImagesResult<T> extends AutoSaveResult<T> {
   isUploading: boolean;
   uploadProgress: Record<string, boolean>;
-  combinedStatus: 'idle' | 'saving' | 'uploading' | 'saved' | 'error' | 'autosaved';
+  combinedStatus: 'idle' | 'pending' | 'saving' | 'uploading' | 'saved' | 'error' | 'autosaved';
   save: (data?: T, options?: { auto?: boolean }) => Promise<void>;
 }
 

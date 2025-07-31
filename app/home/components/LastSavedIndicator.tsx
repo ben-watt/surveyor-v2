@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, AlertCircle, Loader2, Clock } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, Clock, Circle } from 'lucide-react';
 import { AutoSaveStatus } from '../hooks/useAutoSave';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +25,12 @@ export function LastSavedIndicator({
 }: LastSavedIndicatorProps) {
   const getStatusConfig = () => {
     switch (status) {
+      case 'pending':
+        return {
+          icon: Circle,
+          text: 'Changes pending...',
+          className: 'text-yellow-600'
+        };
       case 'saving':
         return {
           icon: Loader2,
@@ -78,24 +84,25 @@ export function LastSavedIndicator({
   
   return (
     <div className={cn(
-      'flex items-center gap-2 text-sm',
+      'flex items-center gap-2 text-sm transition-all duration-300 ease-in-out',
       config.className,
       className
     )}>
       {showIcon && config.icon && (
         <config.icon 
           className={cn(
-            'h-4 w-4',
-            status === 'saving' && 'animate-spin'
+            'h-4 w-4 transition-all duration-300',
+            status === 'saving' && 'animate-spin',
+            status === 'pending' && 'animate-pulse'
           )} 
         />
       )}
       
       <div className="flex flex-col">
-        <span>{config.text}</span>
+        <span className="transition-all duration-300">{config.text}</span>
         
-        {showTimestamp && status !== 'saving' && status !== 'error' && (
-          <span className="text-xs opacity-75">
+        {showTimestamp && status !== 'saving' && status !== 'error' && status !== 'pending' && (
+          <span className="text-xs opacity-75 transition-opacity duration-300">
             {(() => {
               // If we have a recent autosave timestamp, use that
               if (lastSavedAt) {

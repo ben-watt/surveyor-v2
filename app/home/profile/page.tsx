@@ -111,7 +111,7 @@ function Page() {
     getValues,
     trigger,
     {
-      delay: 3000, // 3 second delay for autosave
+      delay: 1000, // 1 second delay for autosave
       showToast: false, // Don't show toast for autosave
       enabled: enableForm, // Only enable autosave when form is ready
       validateBeforeSave: true // Enable validation before auto-save

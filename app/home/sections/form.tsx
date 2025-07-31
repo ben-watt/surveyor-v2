@@ -65,7 +65,7 @@ export default function SectionForm({ initialData }: SectionFormProps) {
     getValues,
     trigger,
     {
-      delay: 500, // 0.5 second delay for autosave
+      delay: 1000, // 1 second delay for autosave
       showToast: false, // Don't show toast for autosave
       enabled: !!initialData, // Only enable autosave for existing sections
       validateBeforeSave: true // Enable validation before auto-save

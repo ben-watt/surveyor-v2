@@ -103,7 +103,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     getValues,
     trigger,
     {
-      delay: 1500,
+      delay: 1000,
       enabled: !!surveyId,
       imagePaths: [
         `report-images/${surveyId}/moneyShot/`,

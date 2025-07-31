@@ -81,6 +81,23 @@ describe('LastSavedIndicator', () => {
     expect(screen.queryByText(/Last saved/)).not.toBeInTheDocument();
   });
 
+  it('should render pending status with yellow color', () => {
+    render(
+      <LastSavedIndicator
+        status="pending"
+        lastSavedAt={mockDate}
+      />
+    );
+
+    expect(screen.getByText('Changes pending...')).toBeInTheDocument();
+    expect(screen.queryByText(/Last saved/)).not.toBeInTheDocument();
+    
+    // Check that it uses yellow color class - look for the outer container
+    const container = screen.getByText('Changes pending...').closest('.text-yellow-600');
+    expect(container).toBeInTheDocument();
+    expect(container).toHaveClass('text-yellow-600');
+  });
+
   it('should format "just now" for recent saves', () => {
     const recentDate = new Date('2023-01-01T11:59:30Z'); // 30 seconds ago
     
@@ -187,6 +204,31 @@ describe('LastSavedIndicator', () => {
 
     expect(screen.getByText('Save failed')).toBeInTheDocument();
     expect(screen.queryByText(/Last saved/)).not.toBeInTheDocument();
+  });
+
+  it('should not show timestamp for pending status', () => {
+    render(
+      <LastSavedIndicator
+        status="pending"
+        lastSavedAt={mockDate}
+      />
+    );
+
+    expect(screen.getByText('Changes pending...')).toBeInTheDocument();
+    expect(screen.queryByText(/Last saved/)).not.toBeInTheDocument();
+  });
+
+  it('should include transition animation classes', () => {
+    render(
+      <LastSavedIndicator
+        status="saved"
+        lastSavedAt={mockDate}
+      />
+    );
+
+    const container = screen.getByText('All changes saved').closest('.ease-in-out');
+    expect(container).toBeInTheDocument();
+    expect(container).toHaveClass('transition-all', 'duration-300', 'ease-in-out');
   });
 
   it('should apply custom className', () => {

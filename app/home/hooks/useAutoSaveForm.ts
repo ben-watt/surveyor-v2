@@ -27,7 +27,7 @@ export function useAutoSaveForm<T extends FieldValues>(
 ): AutoSaveResult<T> {
   const {
     watchChanges = true,
-    watchDelay = 500,
+    watchDelay = 300,
     skipFocusBlur = true,
     validateBeforeSave = true,
     ...autoSaveOptions
@@ -167,7 +167,7 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
 ): AutoSaveResult<T> {
   const {
     watchChanges = true,
-    watchDelay = 1000,
+    watchDelay = 300,
     skipFocusBlur = true,
     validateBeforeSave = true,
     ...autoSaveOptions

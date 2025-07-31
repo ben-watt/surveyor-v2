@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
-export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
+export type AutoSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error' | 'autosaved';
 
 export interface AutoSaveOptions {
   /** Delay in milliseconds before triggering autosave (default: 3000) */
@@ -23,6 +23,8 @@ export interface AutoSaveResult<T> {
   saveStatus: AutoSaveStatus;
   /** Whether a save operation is currently in progress */
   isSaving: boolean;
+  /** Whether there are pending changes to be saved */
+  hasPendingChanges: boolean;
   /** Timestamp of the last successful save */
   lastSavedAt: Date | null;
   /** Function to trigger autosave with current data */
@@ -51,14 +53,17 @@ export function useAutoSave<T>(
 
   const [saveStatus, setSaveStatus] = useState<AutoSaveStatus>('idle');
   const [isSaving, setIsSaving] = useState(false);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const statusResetTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedDataRef = useRef<T | null>(null);
 
   console.log('[useAutoSave] Hook initialized with options:', { delay, showToast, enabled });
 
   const resetStatus = useCallback(() => {
     setSaveStatus('idle');
+    setHasPendingChanges(false);
   }, []);
 
   const save = useCallback(async (data: T, { auto = false }: { auto?: boolean } = {}) => {
@@ -72,6 +77,13 @@ export function useAutoSave<T>(
     try {
       setIsSaving(true);
       setSaveStatus('saving');
+      setHasPendingChanges(false);
+      
+      // Clear any existing timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
       
       await saveFunction(data, { auto });
       
@@ -86,18 +98,33 @@ export function useAutoSave<T>(
         toast.success(auto ? successMessage : 'Changes saved successfully');
       }
       
-      // Reset status after a delay
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      // Clear existing status reset timer
+      if (statusResetTimerRef.current) {
+        clearTimeout(statusResetTimerRef.current);
+      }
+      
+      // Reset status after a longer delay (10 seconds instead of 2)
+      statusResetTimerRef.current = setTimeout(() => {
+        setSaveStatus('idle');
+      }, 10000);
     } catch (error) {
       setSaveStatus('error');
+      setHasPendingChanges(false);
       console.error('[useAutoSave] Save failed:', error);
       
       if (showToast && (!auto || options.showToast)) {
         toast.error(auto ? errorMessage : 'Failed to save changes');
       }
       
-      // Reset error status after a delay
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      // Clear existing status reset timer
+      if (statusResetTimerRef.current) {
+        clearTimeout(statusResetTimerRef.current);
+      }
+      
+      // Reset error status after a longer delay
+      statusResetTimerRef.current = setTimeout(() => {
+        setSaveStatus('idle');
+      }, 10000);
     } finally {
       setIsSaving(false);
     }
@@ -110,6 +137,10 @@ export function useAutoSave<T>(
     }
     
     console.log('[useAutoSave] Triggering autosave with delay:', delay);
+    
+    // Set pending status immediately when changes are detected
+    setSaveStatus('pending');
+    setHasPendingChanges(true);
     
     // Clear existing timer
     if (debounceTimerRef.current) {
@@ -124,12 +155,16 @@ export function useAutoSave<T>(
     }, delay);
   }, [enabled, isSaving, save, delay]);
 
-  // Cleanup timer on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
         console.log('[useAutoSave] Cleaning up autosave timer');
         clearTimeout(debounceTimerRef.current);
+      }
+      if (statusResetTimerRef.current) {
+        console.log('[useAutoSave] Cleaning up status reset timer');
+        clearTimeout(statusResetTimerRef.current);
       }
     };
   }, []);
@@ -138,6 +173,7 @@ export function useAutoSave<T>(
     save,
     saveStatus,
     isSaving,
+    hasPendingChanges,
     lastSavedAt,
     triggerAutoSave,
     resetStatus

@@ -162,7 +162,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
     getValues,
     trigger,
     {
-      delay: 1500,
+      delay: 1000,
       enabled: !!surveyId && !!elementData, // Only enable autosave when element data is loaded
       imagePaths: [imageUploadPath]
     }
