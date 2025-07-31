@@ -77,7 +77,10 @@ const createSurveyStore = () => {
       },
       delete: async (id): Promise<Result<string, Error>> => {
         const tenantId = await getCurrentTenantId();
-        const response = await client.models.Surveys.delete({ id, tenantId: tenantId || "" }, { authMode: 'userPool' });
+        if (!tenantId) {
+          return Err(new Error("No tenant ID available for delete operation"));
+        }
+        const response = await client.models.Surveys.delete({ id, tenantId }, { authMode: 'userPool' });
         if (response.errors) {
           return Err(new Error(response.errors.map(e => e.message).join(", ")));
         }
@@ -159,7 +162,10 @@ export const componentStore = CreateDexieHooks<
   },
   delete: async (id): Promise<Result<string, Error>> => {
     const tenantId = await getCurrentTenantId();
-    const response = await client.models.Components.delete({ id, tenantId: tenantId || "" });
+    if (!tenantId) {
+      return Err(new Error("No tenant ID available for delete operation"));
+    }
+    const response = await client.models.Components.delete({ id, tenantId });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -214,7 +220,10 @@ export const elementStore = CreateDexieHooks<
   },
   delete: async (id): Promise<Result<string, Error>> => {
     const tenantId = await getCurrentTenantId();
-    const response = await client.models.Elements.delete({ id, tenantId: tenantId || "" });
+    if (!tenantId) {
+      return Err(new Error("No tenant ID available for delete operation"));
+    }
+    const response = await client.models.Elements.delete({ id, tenantId });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -264,7 +273,10 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
     },
     delete: async (id): Promise<Result<string, Error>> => {
       const tenantId = await getCurrentTenantId();
-      const response = await client.models.Sections.delete({ id, tenantId: tenantId || "" });
+      if (!tenantId) {
+        return Err(new Error("No tenant ID available for delete operation"));
+      }
+      const response = await client.models.Sections.delete({ id, tenantId });
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
@@ -320,7 +332,10 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
   },
   delete: async (id): Promise<Result<string, Error>> => {
     const tenantId = await getCurrentTenantId();
-    const response = await client.models.Phrases.delete({ id, tenantId: tenantId || "" });
+    if (!tenantId) {
+      return Err(new Error("No tenant ID available for delete operation"));
+    }
+    const response = await client.models.Phrases.delete({ id, tenantId });
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -384,7 +399,10 @@ export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMet
     },
     delete: async (id): Promise<Result<string, Error>> => {
       const tenantId = await getCurrentTenantId();
-      const response = await client.models.ImageMetadata.delete({ id, tenantId: tenantId || "" });
+      if (!tenantId) {
+        return Err(new Error("No tenant ID available for delete operation"));
+      }
+      const response = await client.models.ImageMetadata.delete({ id, tenantId });
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }

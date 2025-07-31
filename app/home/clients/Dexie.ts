@@ -88,21 +88,38 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   const getItem = async (id: string) => {
     const tenantId = await getCurrentTenantId();
     if (!tenantId) return null;
-    return await table.get([getId(id, tenantId), tenantId]) ?? await table.get([id, tenantId]);
+    
+    // Try composite key first, then fallback to original id only if it belongs to same tenant
+    const compositeResult = await table.get([getId(id, tenantId), tenantId]);
+    if (compositeResult) {
+      return compositeResult;
+    }
+    
+    // Fallback: get by original id but verify tenant ownership
+    const fallbackResult = await table.get([id, tenantId]);
+    if (fallbackResult && fallbackResult.tenantId === tenantId) {
+      return fallbackResult;
+    }
+    
+    return null;
   }
   
   const sync = async () => {
-    if (navigator.onLine && !syncInProgress) {
-      const syncResult = await syncWithServer();
-      if (syncResult.ok) {
-        return Ok(undefined);
-      }
-
-      console.error("[sync] Error syncing with server", syncResult.val);
-      return Err(new Error(syncResult.val.message));
+    if (!navigator.onLine) {
+      return Err(new Error("Not online"));
+    }
+    
+    if (syncInProgress) {
+      return Err(new Error("Sync already in progress"));
     }
 
-    return Err(new Error("Not online"));
+    const syncResult = await syncWithServer();
+    if (syncResult.ok) {
+      return Ok(undefined);
+    }
+
+    console.error("[sync] Error syncing with server", syncResult.val);
+    return Err(new Error(syncResult.val.message));
   }
 
   const debounceSync = debounce(sync, 1000);
@@ -113,14 +130,18 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     const [authReady, setAuthReady] = useState(false);
 
     useEffect(() => {
+      let mounted = true;
+      
       const checkAuth = async () => {
         try {
           const user = await getCurrentUser();
-          if (user) {
+          if (mounted && user) {
             setAuthReady(true);
           }
         } catch (error) {
-          setAuthReady(false);
+          if (mounted) {
+            setAuthReady(false);
+          }
         }
       };
 
@@ -128,7 +149,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         checkAuth();
       }, 200);
 
-      return () => clearTimeout(timeout);
+      return () => {
+        mounted = false;
+        clearTimeout(timeout);
+      };
     }, []);
 
     useEffect(() => {
@@ -305,28 +329,30 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
               const updateResult = await remoteHandlers.update(local as unknown as TUpdate);
               if (updateResult instanceof Ok) {
                 await table.put({ ...updateResult.val, syncStatus: SyncStatus.Synced });
-              } else if ('syncStatus' in updateResult) {
-                await table.put({ ...updateResult, syncStatus: SyncStatus.Synced });
-              } else {
+              } else if (updateResult instanceof Err) {
                 await table.put({ 
                   ...local, 
                   syncStatus: SyncStatus.Failed, 
                   syncError: updateResult.val.message ?? "Failed to update item"
                 });
+              } else {
+                // Handle direct result (not wrapped in Result)
+                await table.put({ ...updateResult, syncStatus: SyncStatus.Synced });
               }
             } else {
               console.log("[syncWithServer] Creating...", local);
               const createResult = await remoteHandlers.create(local as unknown as TCreate);
               if (createResult instanceof Ok) {
                 await table.put({ ...createResult.val, syncStatus: SyncStatus.Synced });
-              } else if ('syncStatus' in createResult) {
-                await table.put({ ...createResult, syncStatus: SyncStatus.Synced });
-              } else {
+              } else if (createResult instanceof Err) {
                 await table.put({ 
                   ...local, 
                   syncStatus: SyncStatus.Failed, 
                   syncError: createResult.val.message ?? "Failed to create item"
                 });
+              } else {
+                // Handle direct result (not wrapped in Result)
+                await table.put({ ...createResult, syncStatus: SyncStatus.Synced });
               }
             }
           } catch(error: any) {
