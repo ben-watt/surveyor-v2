@@ -69,7 +69,7 @@ const createSurveyStore = () => {
         const baseData = {
           id: data.id,
           syncStatus: SyncStatus.Synced,
-          content: JSON.stringify(data.content),
+          content: typeof data.content === 'string' ? data.content : JSON.stringify(data.content),
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
         };
@@ -87,7 +87,7 @@ const createSurveyStore = () => {
         const baseData = {
           id: data.id,
           syncStatus: SyncStatus.Synced,
-          content: JSON.stringify(data.content),
+          content: typeof data.content === 'string' ? data.content : JSON.stringify(data.content),
         };
         const serverData = await withTenantId(baseData);
 
