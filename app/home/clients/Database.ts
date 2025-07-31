@@ -16,6 +16,29 @@ import { Ok, Err, Result } from 'ts-results';
 import { withTenantId, getCurrentTenantId } from "@/app/home/utils/tenant-utils";
 import { getErrorMessage } from "../utils/handleError";
 
+// Helper function to fetch all paginated results
+async function fetchAllPages<T>(
+  listFn: (params?: { nextToken?: string | null; limit?: number }) => Promise<{ data: T[]; nextToken?: string | null; errors?: any[] }>
+): Promise<{ data: T[]; errors?: any[] }> {
+  const allItems: T[] = [];
+  let nextToken: string | null = null;
+  let errors: any[] = [];
+
+  do {
+    const response = await listFn({ nextToken, limit: 1000 }); // Use higher limit
+    
+    if (response.errors) {
+      errors.push(...response.errors);
+      break;
+    }
+    
+    allItems.push(...response.data);
+    nextToken = response.nextToken || null;
+  } while (nextToken);
+
+  return { data: allItems, errors: errors.length > 0 ? errors : undefined };
+}
+
 const mapToSurvey = (data: any): DexieSurvey => ({
   id: data.id,
   syncStatus: SyncStatus.Synced,
@@ -35,7 +58,7 @@ const createSurveyStore = () => {
     "surveys",
     {
       list: async (): Promise<Result<DexieSurvey[], Error>> => {
-        const response = await client.models.Surveys.list();
+        const response = await fetchAllPages((params) => client.models.Surveys.list(params));
         if (response.errors) {
           return Err(new Error(response.errors.map(e => e.message).join(", ")));
         }
@@ -136,7 +159,7 @@ export const componentStore = CreateDexieHooks<
   UpdateComponent
 >(db, "components", {
   list: async (): Promise<Result<Component[], Error>> => {
-    const response = await client.models.Components.list();
+    const response = await fetchAllPages((params) => client.models.Components.list(params));
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -194,7 +217,7 @@ export const elementStore = CreateDexieHooks<
   UpdateElement
 >(db, "elements", {
   list: async (): Promise<Result<BuildingSurveyElement[], Error>> => {
-    const response = await client.models.Elements.list();
+    const response = await fetchAllPages((params) => client.models.Elements.list(params));
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -249,7 +272,7 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
   "sections",
   {
     list: async (): Promise<Result<Section[], Error>> => {
-      const response = await client.models.Sections.list();
+      const response = await fetchAllPages((params) => client.models.Sections.list(params));
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
@@ -306,7 +329,7 @@ export type CreatePhrase = Schema['Phrases']['createType'];
 
 export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(db, "phrases", {
   list: async (): Promise<Result<Phrase[], Error>> => {
-    const response = await client.models.Phrases.list();
+    const response = await fetchAllPages((params) => client.models.Phrases.list(params));
     if (response.errors) {
       return Err(new Error(response.errors.map(e => e.message).join(", ")));
     }
@@ -373,7 +396,7 @@ export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMet
   "imageMetadata",
   {
     list: async (): Promise<Result<ImageMetadata[], Error>> => {
-      const response = await client.models.ImageMetadata.list();
+      const response = await fetchAllPages((params) => client.models.ImageMetadata.list(params));
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
       }
@@ -426,12 +449,12 @@ export async function getRawCounts(): Promise<Result<{ [key: string]: number }, 
       surveys,
       imageMetadata
     ] = await Promise.all([
-      client.models.Elements.list({ filter: { tenantId: { eq: tenantId } } }),
-      client.models.Components.list({ filter: { tenantId: { eq: tenantId } } }),
-      client.models.Phrases.list({ filter: { tenantId: { eq: tenantId } } }),
-      client.models.Sections.list({ filter: { tenantId: { eq: tenantId } } }),
-      client.models.Surveys.list({ filter: { tenantId: { eq: tenantId } } }),
-      client.models.ImageMetadata.list({ filter: { tenantId: { eq: tenantId } } })
+      fetchAllPages((params) => client.models.Elements.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
+      fetchAllPages((params) => client.models.Components.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
+      fetchAllPages((params) => client.models.Phrases.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
+      fetchAllPages((params) => client.models.Sections.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
+      fetchAllPages((params) => client.models.Surveys.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
+      fetchAllPages((params) => client.models.ImageMetadata.list({ ...params, filter: { tenantId: { eq: tenantId } } }))
     ]);
 
     return Ok({
