@@ -70,11 +70,10 @@ export const findPathToEntity = (
   treeData: any[],
   entityId: string
 ): string[] => {
-  const path: string[] = [];
   const visited = new Set<string>();
   
-  const findPath = (nodes: any[], targetId: string, currentPath: string[]): boolean => {
-    if (!nodes || !Array.isArray(nodes)) return false;
+  const findPath = (nodes: any[], targetId: string, currentPath: string[]): string[] | null => {
+    if (!nodes || !Array.isArray(nodes)) return null;
     
     for (const node of nodes) {
       if (!node || typeof node !== 'object' || !node.id) continue;
@@ -83,28 +82,35 @@ export const findPathToEntity = (
       if (visited.has(node.id)) continue;
       visited.add(node.id);
       
-      const newPath = [...currentPath, node.id];
+      // Add current node to path
+      currentPath.push(node.id);
       
       if (node.id === targetId) {
-        path.push(...newPath);
+        // Found target - return copy of current path
+        const result = [...currentPath];
+        currentPath.pop(); // Clean up for backtracking
         visited.delete(node.id);
-        return true;
+        return result;
       }
       
       if (node.children && Array.isArray(node.children) && node.children.length > 0) {
-        if (findPath(node.children, targetId, newPath)) {
+        const result = findPath(node.children, targetId, currentPath);
+        if (result) {
+          currentPath.pop(); // Clean up for backtracking
           visited.delete(node.id);
-          return true;
+          return result;
         }
       }
       
+      // Backtrack
+      currentPath.pop();
       visited.delete(node.id);
     }
-    return false;
+    return null;
   };
   
-  findPath(treeData, entityId, []);
-  return path;
+  const result = findPath(treeData, entityId, []);
+  return result || [];
 };
 
 export const getEntityDisplayId = (entityId: string, entityType: string): string => {
