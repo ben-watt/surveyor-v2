@@ -37,7 +37,7 @@ export function Breadcrumbs() {
     <Breadcrumb>
       <BreadcrumbList>
         {getBreadcrumbs().map((crumb, index, array) => (
-          <React.Fragment key={crumb.href}>
+          <React.Fragment key={crumb.href + crumb.label}>
             <BreadcrumbItem className="hidden md:block">
               {index === array.length - 1 ? (
                 <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
