@@ -41,6 +41,9 @@ import {
 import { Zap } from "lucide-react";
 import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
 import { useUserAttributes } from "../../utils/useUser";
+import { SurveyHeader } from "../components/SurveyHeader";
+import { SurveyProgressStepper } from "../components/SurveyProgressStepper";
+import { EnhancedFormSection } from "../components/EnhancedFormSection";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -442,86 +445,39 @@ function Report({ initFormValues }: ReportProps) {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <FormProvider {...methods}>
-        <div>
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between">
-                <div className="flex-1">
-                  <CardTitle>
-                    <div>
-                      Building Survey Report - Level{" "}
-                      {initFormValues.reportDetails.level}
-                    </div>
-                  </CardTitle>
-                  <CardDescription>
-                    {initFormValues.reportDetails.address.line1 ? (
-                      <AddressDisplay
-                        address={initFormValues.reportDetails.address}
-                        maxLength={40}
-                      />
-                    ) : (
-                      initFormValues.reportDetails.address.formatted ??
-                      "No address specified"
-                    )}
-                  </CardDescription>
-                </div>
-                <div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="default" className="gap-2">
-                        <Zap />
-                        <span className="hidden md:inline">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={(ev) => {
-                          ev.preventDefault();
-                          router.push(`/home/editor/${initFormValues.id}?templateId=building-survey`);
-                        }}
-                        disabled={!isFormValid()}
-                      >
-                        Generate Report
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(ev) => saveAsDraft()}>
-                        Save As Draft
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(ev) => {
-                          ev.preventDefault();
-                          handleSubmit(onSubmit, onError)();
-                        }}
-                        disabled={!isFormValid()}
-                      >
-                        Save
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1 cursor-pointer">
-                {formSections.map((section, index) => (
-                  <MultiFormSection
-                    key={index}
-                    title={section.title}
-                    href={section.href}
-                    status={section.status || FormStatus.Unknown}
-                  />
-                ))}
-              </div>
-              <div>
-                {Object.values(formState.errors).length > 0 && (
-                  <InputError message="Please fix the errors above before saving" />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
+        {/* Survey Header */}
+        <SurveyHeader 
+          survey={initFormValues}
+          isFormValid={isFormValid()}
+          onSaveAsDraft={saveAsDraft}
+          onSave={handleSubmit(onSubmit, onError)}
+        />
+
+        {/* Progress Stepper */}
+        <SurveyProgressStepper 
+          sections={formSections}
+        />
+
+        {/* Form Sections */}
+        <div className="space-y-4">
+          {formSections.map((section, index) => (
+            <EnhancedFormSection
+              key={index}
+              title={section.title}
+              href={section.href}
+              status={section.status || FormStatus.Unknown}
+            />
+          ))}
         </div>
+
+        {/* Error Display */}
+        {Object.values(formState.errors).length > 0 && (
+          <div className="mt-4">
+            <InputError message="Please fix the errors above before saving" />
+          </div>
+        )}
       </FormProvider>
     </div>
   );
