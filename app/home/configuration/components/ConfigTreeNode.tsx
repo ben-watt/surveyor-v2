@@ -142,11 +142,6 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-              {node.order !== undefined && (
-                <Badge variant="outline" className="text-xs hidden sm:inline-flex">
-                  Order: {node.order}
-                </Badge>
-              )}
               {componentCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {componentCount} components
@@ -170,11 +165,6 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               {component.materials && component.materials.length > 0 && (
                 <div className="flex gap-1 flex-wrap">
-                  {component.materials.slice(0, 2).map((material, idx) => (
-                    <Badge key={idx} variant="outline" className="text-xs">
-                      {material.name}
-                    </Badge>
-                  ))}
                   {component.materials.length > 2 && (
                     <Badge variant="outline" className="text-xs">
                       +{component.materials.length - 2} more
@@ -197,9 +187,6 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium truncate">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-              <Badge variant="outline" className="text-xs">
-                {condition.type}
-              </Badge>
               {condition.phraseLevel2 && (
                 <Badge variant="secondary" className="text-xs">
                   Level 2
