@@ -43,6 +43,7 @@ import {
   Tenant,
   TenantUser
 } from "../utils/tenant-utils";
+import { formatShortDate } from "../utils/dateFormatters";
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -380,7 +381,7 @@ export default function TenantsPage() {
                       <TableRow key={user.username}>
                         <TableCell>{user.name || '-'}</TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>{new Date(user.addedAt).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatShortDate(user.addedAt)}</TableCell>
                         {isGlobalAdminUser && (
                           <TableCell>
                             <Button

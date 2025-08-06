@@ -22,7 +22,6 @@ import { Ok, Result } from "ts-results";
 
 import { useAsyncError } from "@/app/home/hooks/useAsyncError";
 import { useAutoSaveForm } from "@/app/home/hooks/useAutoSaveForm";
-import { LastSavedIndicator } from "@/app/home/components/LastSavedIndicator";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import { getConditionStatus } from "./Survey";
@@ -377,7 +376,7 @@ function Report({ initFormValues }: ReportProps) {
     }
   };
 
-  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+  const { saveStatus, isSaving } = useAutoSaveForm(
     saveData,
     watch,
     getValues,
@@ -522,13 +521,6 @@ function Report({ initFormValues }: ReportProps) {
             </CardContent>
           </Card>
           
-          <div className="mt-4 flex justify-center">
-            <LastSavedIndicator
-              status={saveStatus}
-              lastSavedAt={lastSavedAt}
-              className="text-sm"
-            />
-          </div>
         </div>
       </FormProvider>
     </div>

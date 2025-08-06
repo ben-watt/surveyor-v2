@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle, AlertCircle, Loader2, Clock, Circle } from 'lucide-react';
 import { AutoSaveStatus } from '../hooks/useAutoSave';
 import { cn } from '@/lib/utils';
+import { formatRelativeTime } from '../utils/dateFormatters';
 
 interface LastSavedIndicatorProps {
   status: AutoSaveStatus;
@@ -65,19 +66,7 @@ export function LastSavedIndicator({
   };
 
   const formatTimestamp = (date: Date) => {
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 1) {
-      return 'Just now';
-    } else if (diffInMinutes < 60) {
-      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-    } else if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
+    return formatRelativeTime(date);
   };
 
   const config = getStatusConfig();
@@ -102,7 +91,7 @@ export function LastSavedIndicator({
         <span className="transition-all duration-300">{config.text}</span>
         
         {showTimestamp && status !== 'saving' && status !== 'error' && status !== 'pending' && (
-          <span className="text-xs opacity-75 transition-opacity duration-300">
+          <span className="text-sm opacity-90 transition-opacity duration-300 font-normal">
             {(() => {
               // If we have a recent autosave timestamp, use that
               if (lastSavedAt) {

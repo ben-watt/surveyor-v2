@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DocumentRecord, documentStore } from '../clients/DocumentStore';
+import { formatShortDate } from '../utils/dateFormatters';
 
 interface DocumentListProps {
   currentDocumentId?: string;
@@ -142,7 +143,7 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">
-                    {doc.lastModified ? new Date(doc.lastModified).toLocaleDateString() : ''}
+                    {doc.lastModified ? formatShortDate(doc.lastModified) : ''}
                   </span>
                   <Button
                     variant="ghost"

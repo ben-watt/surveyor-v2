@@ -16,6 +16,7 @@ import {
 import { surveyStore } from "../clients/Database";
 import { toast } from "react-hot-toast";
 import { useUserAttributes } from "../utils/useUser";
+import { formatShortDate } from "../utils/dateFormatters";
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData;
@@ -115,9 +116,7 @@ export function BuildingSurveyListCard({
                 </Badge>
                 <Badge variant="secondary">
                   {survey.reportDetails?.reportDate
-                    ? new Date(
-                        survey.reportDetails.reportDate
-                      ).toLocaleDateString()
+                    ? formatShortDate(survey.reportDetails.reportDate)
                     : "No date set"}
                 </Badge>
                 <Badge variant="secondary">

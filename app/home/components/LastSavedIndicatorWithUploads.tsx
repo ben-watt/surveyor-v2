@@ -2,6 +2,7 @@ import React from 'react';
 import { Upload, CheckCircle, AlertCircle, Loader2, Clock, Circle } from 'lucide-react';
 import { AutoSaveStatus } from '../hooks/useAutoSave';
 import { cn } from '@/lib/utils';
+import { formatRelativeTime } from '../utils/dateFormatters';
 
 interface LastSavedIndicatorWithUploadsProps {
   status: AutoSaveStatus;
@@ -29,19 +30,7 @@ export function LastSavedIndicatorWithUploads({
   showTimestamp = true
 }: LastSavedIndicatorWithUploadsProps) {
   const formatTimestamp = (date: Date) => {
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 1) {
-      return 'Just now';
-    } else if (diffInMinutes < 60) {
-      return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-    } else if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
+    return formatRelativeTime(date);
   };
 
   const getStatusConfig = () => {
