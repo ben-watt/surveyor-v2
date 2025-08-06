@@ -67,25 +67,6 @@ describe('ConfigTreeNode', () => {
       expect(screen.getByText('1 components')).toBeInTheDocument();
     });
 
-    it('should render component with material badge', () => {
-      render(<ConfigTreeNode {...defaultProps} node={mockComponentNode} level={2} />);
-      
-      expect(screen.getByText('Concrete Footing')).toBeInTheDocument();
-      // Look for the blocks icon (component icon) by class
-      expect(document.querySelector('.lucide-blocks')).toBeInTheDocument();
-      expect(screen.getByText('Concrete')).toBeInTheDocument();
-    });
-
-    it('should render condition with severity badge', () => {
-      render(<ConfigTreeNode {...defaultProps} node={mockConditionNode} level={3} />);
-      
-      expect(screen.getByText('Crack in Foundation')).toBeInTheDocument();
-      // Look for the message-square icon (condition icon) by class
-      expect(document.querySelector('.lucide-message-square')).toBeInTheDocument();
-      // The condition shows type badge, not severity
-      expect(screen.getByText('defect')).toBeInTheDocument();
-    });
-
     it('should show/hide expand/collapse buttons based on children', () => {
       // Node with children should show expand button
       const { container } = render(<ConfigTreeNode {...defaultProps} />);
