@@ -5,7 +5,6 @@ import {
   useForm,
 } from "react-hook-form";
 import {
-  PropertyDescription,
   Checklist,
   FormStatus,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
@@ -92,19 +91,6 @@ const ChecklistForm = ({ id, initValues, surveyData }: ChecklistFormProps) => {
     }
   }, [surveyData]);
 
-  // Debug: Log form changes
-  useEffect(() => {
-    const subscription = watch((data, { name, type }) => {
-      console.log("[ChecklistForm] Form changed:", {
-        name,
-        type,
-        value: data?.[name as keyof Checklist],
-        allData: data
-      });
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch]);
 
   // Autosave functionality
   const saveChecklist = async (data: Checklist, { auto = false }: { auto?: boolean } = {}) => {
@@ -122,8 +108,13 @@ const ChecklistForm = ({ id, initValues, surveyData }: ChecklistFormProps) => {
           });
         }
         
+        // Check if all required items are complete
+        const allComplete = currentState.checklist.items.every(item => 
+          !item.required || item.value === true
+        );
+        
         currentState.checklist.status = {
-          status: FormStatus.Complete,
+          status: allComplete ? FormStatus.Complete : FormStatus.Incomplete,
           errors: [],
         };
       });
@@ -150,11 +141,10 @@ const ChecklistForm = ({ id, initValues, surveyData }: ChecklistFormProps) => {
       delay: 2000, // 2 second delay for autosave
       showToast: false, // Don't show toast for autosave
       enabled: true,
-      validateBeforeSave: true // Enable validation before auto-save
+      validateBeforeSave: false // Disable validation for autosave - we'll handle completion logic in save function
     }
   );
 
-  console.log("[ChecklistForm] Auto-save status:", { saveStatus, isSaving, lastSavedAt });
 
   return (
     <FormProvider {...methods}>
