@@ -85,17 +85,6 @@ export default function SectionForm({ initialData }: SectionFormProps) {
           {errors.name && <InputError message={errors.name.message} />}
         </div>
 
-        <div>
-          <Label htmlFor="order">Order</Label>
-          <Input
-            id="order"
-            type="number"
-            {...register("order", { valueAsNumber: true, required: "Order is required" })}
-            placeholder="Enter display order"
-          />
-          {errors.order && <InputError message={errors.order.message} />}
-        </div>
-
         <LastSavedIndicator
           status={saveStatus}
           lastSavedAt={lastSavedAt || undefined}

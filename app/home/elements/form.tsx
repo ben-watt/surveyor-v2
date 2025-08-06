@@ -10,7 +10,6 @@ import { useDynamicDrawer } from "../components/Drawer";
 import { elementStore, sectionStore, type CreateElement, type UpdateElement  } from "../clients/Database";
 import { Element } from "../clients/Dexie";
 import { v4 as uuidv4 } from "uuid";
-import { useRouter } from "next/navigation";
 import { withTenantId } from "../utils/tenant-utils";
 import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../components/LastSavedIndicator";
@@ -26,7 +25,6 @@ export function DataForm({ id }: DataFormProps) {
   });
   const drawer = useDynamicDrawer();
   const [sectionsHydrated, sections] = sectionStore.useList();
-  const router = useRouter();
   const { register, handleSubmit, control, watch, getValues, trigger, formState: { errors } } = form;
 
   const [entityData, setEntityData] = useState<Element | null>(null);
@@ -77,7 +75,7 @@ export function DataForm({ id }: DataFormProps) {
     } catch (error) {
       if (!auto) toast.error("Error saving element");
       console.error("Failed to save", error);
-      throw error; // Re-throw for autosave error handling
+      throw error;
     }
   };
 
@@ -120,14 +118,6 @@ export function DataForm({ id }: DataFormProps) {
           name="sectionId"
           control={control}
           rules={{ required: "Section is required" }}
-          errors={errors}
-        />
-        <Input
-          labelTitle="Order"
-          type="number"
-          placeholder="order"
-          defaultValue={1000}
-          register={() => register("order", { required: "Order is required" })}
           errors={errors}
         />
         <LastSavedIndicator

@@ -87,7 +87,6 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
   const { register, control, reset, watch, getValues, trigger } = methods;
   const [elementData, setElementData] = React.useState<ElementSection | null>(null);
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
-  const [elementsHydrated, elements] = elementStore.useList();
   const [sectionsHydrated, surveySections] = sectionStore.useList();
   const imageUploadPath = `report-images/${surveyId}/elements/${elementId}`;
 

@@ -332,7 +332,7 @@ export function HierarchicalConfigView() {
       <ConfigSearchBar onSearch={handleSearch} treeData={treeData} initialQuery={searchQuery} />
       
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap w-full">
           <Button variant="outline" size="sm" onClick={expandAll} className="flex-1 sm:flex-none">
             <Expand className="w-4 h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Expand All</span>
@@ -373,7 +373,7 @@ export function HierarchicalConfigView() {
           </DropdownMenu>
           
           {/* Drag mode toggle */}
-          <div className="flex items-center space-x-2 ml-auto">
+          <div className="flex space-x-2 items-center ml-auto">
             <Switch
               id="drag-mode"
               checked={isDragEnabled}
