@@ -128,11 +128,6 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-              {node.order !== undefined && (
-                <Badge variant="outline" className="text-xs hidden sm:inline-flex">
-                  Order: {node.order}
-                </Badge>
-              )}
               <Badge variant="secondary" className="text-xs">
                 {elementCount} elements
               </Badge>

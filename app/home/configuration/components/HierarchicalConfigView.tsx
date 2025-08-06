@@ -1,10 +1,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ConfigTreeNode } from './ConfigTreeNode';
+import DraggableTreeNode from './DraggableTreeNode';
+import DropZone from './DropZone';
 import { ConfigSearchBar } from './ConfigSearchBar';
 import { useHierarchicalData, TreeNode } from '../hooks/useHierarchicalData';
+import { useDragDrop } from '../hooks/useDragDrop';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Expand, Minimize2, Loader2, Plus, Layers, Grid2x2, Blocks, MessageSquare } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Expand, Minimize2, Loader2, Plus, Layers, Grid2x2, Blocks, MessageSquare, Move } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +23,22 @@ import {
   getEntityDisplayId,
 } from '../utils/stateUtils';
 import { useSearchParams, useRouter } from 'next/navigation';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import toast from 'react-hot-toast';
+import { updateSectionOrder, updateElementOrder, updateComponentOrder, batchUpdateOrders } from '../utils/storeOperations';
 
 export function HierarchicalConfigView() {
   const router = useRouter();
@@ -26,7 +47,90 @@ export function HierarchicalConfigView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState<TreeNode[]>([]);
   const [lastEditedEntity, setLastEditedEntity] = useState<{ id: string; type: string; timestamp: number } | null>(null);
+  const [isDragEnabled, setIsDragEnabled] = useState(false);
   const searchParams = useSearchParams();
+
+  // Drag and drop handlers
+  const handleReorder = useCallback(async (updates: Array<{ id: string; order: number }>) => {
+    try {
+      // Find node types for all updates
+      const findNodeType = (nodeId: string, nodes: TreeNode[]): 'section' | 'element' | 'component' | null => {
+        for (const node of nodes) {
+          if (node.id === nodeId) return node.type as 'section' | 'element' | 'component';
+          const found = findNodeType(nodeId, node.children);
+          if (found) return found;
+        }
+        return null;
+      };
+
+      const typedUpdates = updates.map(update => {
+        const type = findNodeType(update.id, treeData);
+        if (!type) throw new Error(`Node type not found for ${update.id}`);
+        return { ...update, type };
+      });
+
+      const result = await batchUpdateOrders(typedUpdates);
+      if (result.err) {
+        throw result.val;
+      }
+    } catch (error) {
+      console.error('Failed to reorder items:', error);
+      throw error;
+    }
+  }, [treeData]);
+
+  const handleMove = useCallback(async (nodeId: string, newParentId: string | undefined, order: number) => {
+    try {
+      // Find the node type
+      const findNode = (nodes: TreeNode[]): TreeNode | null => {
+        for (const node of nodes) {
+          if (node.id === nodeId) return node;
+          const found = findNode(node.children);
+          if (found) return found;
+        }
+        return null;
+      };
+      
+      const node = findNode(treeData);
+      if (!node) throw new Error('Node not found');
+      
+      if (node.type === 'element' && newParentId) {
+        // Moving element to different section
+        const result = await updateElementOrder(nodeId, order, newParentId);
+        if (result.err) throw result.val;
+      } else if (node.type === 'component' && newParentId) {
+        // Moving component to different element  
+        const result = await updateComponentOrder(nodeId, order, newParentId);
+        if (result.err) throw result.val;
+      }
+    } catch (error) {
+      console.error('Failed to move item:', error);
+      throw error;
+    }
+  }, [treeData]);
+
+  const {
+    dragState,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useDragDrop({
+    nodes: searchQuery ? filteredData : treeData,
+    onReorder: handleReorder,
+    onMove: handleMove,
+  });
+
+  // DnD Kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px drag before activating
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleToggleExpand = useCallback((nodeId: string) => {
     setExpandedNodes(prev => {
@@ -228,7 +332,7 @@ export function HierarchicalConfigView() {
       <ConfigSearchBar onSearch={handleSearch} treeData={treeData} initialQuery={searchQuery} />
       
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={expandAll} className="flex-1 sm:flex-none">
             <Expand className="w-4 h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Expand All</span>
@@ -267,6 +371,21 @@ export function HierarchicalConfigView() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          {/* Drag mode toggle */}
+          <div className="flex items-center space-x-2 ml-auto">
+            <Switch
+              id="drag-mode"
+              checked={isDragEnabled}
+              onCheckedChange={setIsDragEnabled}
+              disabled={searchQuery !== ''}
+            />
+            <Label htmlFor="drag-mode" className="cursor-pointer flex items-center">
+              <Move className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Drag Mode</span>
+              <span className="sm:hidden">Drag</span>
+            </Label>
+          </div>
         </div>
         {searchQuery && (
           <div className="text-sm text-muted-foreground">
@@ -281,6 +400,71 @@ export function HierarchicalConfigView() {
           <div className="text-center py-8 text-muted-foreground">
             {searchQuery ? 'No results found' : 'No configuration data available'}
           </div>
+        ) : isDragEnabled ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={[
+                'root-drop-top',
+                ...displayData.map(n => n.id),
+                'root-drop-bottom'
+              ]}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-1">
+                {/* Top drop zone for root level */}
+                <DropZone
+                  id="root-drop-top"
+                  position="top"
+                  parentType="root"
+                  isActive={dragState.isDragging && dragState.activeNode?.type === 'section'}
+                />
+                
+                {displayData.map(node => (
+                  <DraggableTreeNode
+                    key={node.id}
+                    node={node}
+                    depth={0}
+                    isExpanded={expandedNodes.has(node.id)}
+                    onToggle={handleToggleExpand}
+                    searchQuery={searchQuery}
+                    isDragEnabled={true}
+                    isValidDropTarget={dragState.validDropTargets.has(node.id)}
+                    isDropping={dragState.overId === node.id}
+                    dropPosition={dragState.overId === node.id ? dragState.dropPosition : null}
+                    dragState={dragState}
+                  />
+                ))}
+                
+                {/* Bottom drop zone for root level */}
+                <DropZone
+                  id="root-drop-bottom"
+                  position="bottom"
+                  parentType="root"
+                  isActive={dragState.isDragging && dragState.activeNode?.type === 'section'}
+                />
+              </div>
+            </SortableContext>
+            
+            {/* Drag overlay for visual feedback */}
+            <DragOverlay>
+              {dragState.activeNode ? (
+                <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-2 opacity-90">
+                  <ConfigTreeNode
+                    node={dragState.activeNode}
+                    onToggleExpand={() => {}}
+                    level={0}
+                    expandedNodes={new Set()}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         ) : (
           <div className="space-y-1">
             {displayData.map(node => (
