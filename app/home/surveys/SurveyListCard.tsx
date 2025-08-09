@@ -60,16 +60,23 @@ export function BuildingSurveyListCard({
     }
   };
 
+  const imageAlt = survey.reportDetails?.address.formatted
+    ? `Survey at ${survey.reportDetails.address.formatted}`
+    : "Building survey image";
+  const fullTitle = survey.reportDetails?.address.formatted || "Untitled Survey";
+
   return (
-    <Card className="overflow-hidden relative">
-      <div className="flex h-full">
-        <div className="relative w-1/3 min-w-[120px]">
+    <Card role="article" aria-labelledby={`survey-title-${survey.id}`} className="overflow-hidden relative">
+      <div className="flex flex-col sm:flex-row h-full">
+        <div className="relative w-full sm:w-1/3 min-w-0 sm:min-w-[120px] aspect-[16/9] sm:aspect-auto">
           {image ? (
             <Image
               src={image}
-              alt={"Building survey image"}
-              layout="fill"
-              objectFit="cover"
+              alt={imageAlt}
+              fill
+              sizes="(max-width: 640px) 100vw, 33vw"
+              className="object-cover"
+              onError={() => setImage(undefined)}
             />
           ) : (
             <ImagePlaceholder />
@@ -85,12 +92,13 @@ export function BuildingSurveyListCard({
           <div className="flex flex-col h-full justify-between">
             <div>
               <div className="flex items-start gap-2">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-1 flex-1">
-                  {survey.reportDetails?.address.formatted || "Untitled Survey"}
+                <h3 id={`survey-title-${survey.id}`} title={fullTitle} className="font-semibold text-lg mb-2 line-clamp-1 flex-1">
+                  {fullTitle}
                 </h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
+                      aria-label="Open survey actions menu"
                       variant="ghost"
                       size="icon"
                       className="-mt-1 h-8 w-8"
@@ -120,7 +128,7 @@ export function BuildingSurveyListCard({
                     : "No date set"}
                 </Badge>
                 <Badge variant="secondary">
-                  Level {survey.reportDetails.level}
+                  Level {survey.reportDetails?.level ?? "—"}
                 </Badge>
               </div>
             </div>
