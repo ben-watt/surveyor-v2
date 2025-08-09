@@ -1,6 +1,9 @@
 "use client";
 
 import React, { Suspense, useEffect, useState, use } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import BuildingSurveyForm from "../building-survey-reports/BuildingSurveyForm";
 import { surveyStore } from "@/app/home/clients/Database";
 import { imageUploadStore } from "../../clients/ImageUploadStore";
@@ -9,6 +12,16 @@ import { SurveyDocuments } from "../../components/SurveyDocuments";
 import { CompactPhotoGrid } from "../components/CompactPhotoGrid";
 
 
+
+function FormSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-1/3" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-24 w-full" />
+    </div>
+  );
+}
 
 function Home(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -40,40 +53,55 @@ function Home(props: { params: Promise<{ id: string }> }) {
 
   if (!isHydrated) {
     return (
-      <div className="max-w-7xl mx-auto p-4">
-        <div>Loading...</div>
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <FormSkeleton />
+          </div>
+          <div className="lg:sticky lg:top-24 space-y-4">
+            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!survey) {
     return (
-      <div className="max-w-7xl mx-auto p-4">
-        <div>Survey not found</div>
+      <div className="max-w-7xl mx-auto p-6">
+        <Alert>
+          <AlertTitle>Survey not found</AlertTitle>
+        </Alert>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4">
-      {/* New Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content - Form Sections */}
-        <div className="lg:col-span-2 order-2 lg:order-1">
-          <Suspense fallback={<div>Loading survey form...</div>}>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 order-1 lg:order-1">
+          <Suspense fallback={<FormSkeleton />}>
             <BuildingSurveyForm id={params.id} />
           </Suspense>
         </div>
-        
-        {/* Sidebar - Photos & Documents */}
-        <div className="order-1 lg:order-2">
+
+        <div className="order-2 lg:order-2 lg:sticky lg:top-24 space-y-4">
           <CompactPhotoGrid
             previewPhotos={photos}
             totalPhotos={photoCount}
             galleryUrl={`/home/surveys/${survey.id}/photos`}
             surveyId={survey.id}
           />
-          <SurveyDocuments surveyId={params.id} />
+
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle className="text-base">Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SurveyDocuments surveyId={params.id} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -91,21 +91,6 @@ export function CompactPhotoGrid({
             </div>
           ))}
         </div>
-
-        {totalPhotos > 0 && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full mt-3 gap-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(galleryUrl);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Add More Photos
-          </Button>
-        )}
       </CardContent>
     </Card>
   );
