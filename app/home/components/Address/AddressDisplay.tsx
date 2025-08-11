@@ -20,11 +20,32 @@ const shortAddress = (address: Address, maxLength: number) => {
   return address.formatted;
 }
 
+/**
+ * Build a Google Maps URL for an address.
+ *
+ * @param {Address} address - The address object, optionally including location coordinates.
+ * @param {string} formattedAddress - The human-readable formatted address string.
+ * @returns {string} A Google Maps search URL that opens the location in a new tab.
+ */
+const getGoogleMapsUrl = (address: Address, formattedAddress: string): string => {
+  const hasLocation =
+    typeof address.location?.lat === 'number' &&
+    typeof address.location?.lng === 'number';
+  if (hasLocation) {
+    const { lat, lng } = address.location!;
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    formattedAddress
+  )}`;
+};
+
 export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps) {
   const [open, setOpen] = useState(false);
   const formattedAddress = formatAddress(address);
   const shorterAddress = shortAddress(address, maxLength);
   const hasLocation = typeof address.location?.lat === 'number' && typeof address.location?.lng === 'number';
+  const googleMapsUrl = getGoogleMapsUrl(address, formattedAddress);
   const mapContainerStyle = {
     width: '260px',
     height: '160px',
@@ -40,6 +61,11 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
           className="p-0 hover:bg-transparent"
           onMouseEnter={() => setOpen(true)}
           onMouseLeave={() => setOpen(false)}
+          aria-label={`Open Google Maps for ${formattedAddress}`}
+          title={`Open in Google Maps: ${formattedAddress}`}
+          onClick={() => {
+            window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
+          }}
         >
           <span className="cursor-pointer">
             {shorterAddress}
@@ -54,7 +80,7 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
         <p className="text-sm">{formattedAddress}</p>
         {hasLocation && (
           <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}>
-            <div style={mapContainerStyle}>
+            <div style={mapContainerStyle} className="relative">
               <Map
                 zoom={15}
                 center={{ lat: address.location!.lat, lng: address.location!.lng }}
@@ -63,9 +89,29 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
               >
                 <Marker position={{ lat: address.location!.lat, lng: address.location!.lng }} />
               </Map>
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open Google Maps for ${formattedAddress}`}
+                title={`Open in Google Maps: ${formattedAddress}`}
+                className="absolute inset-0 z-10"
+                role="link"
+              />
             </div>
           </APIProvider>
         )}
+        <div className="mt-2">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open Google Maps for ${formattedAddress}`}
+            className="text-xs underline"
+          >
+            Open in Google Maps
+          </a>
+        </div>
       </PopoverContent>
     </Popover>
   );
