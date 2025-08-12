@@ -39,8 +39,9 @@ function Input({
 
   return (
     <div className={cn(hidden && "hidden")}>
-      {labelTitle && <Label text={labelTitle} />}
+      {labelTitle && <Label text={labelTitle} htmlFor={reg?.name} />}
       <ShadInput
+        id={reg?.name}
         className={cn("focus:ring-0 focus:border-none", className)}
         type={type}
         defaultValue={defaultValue}

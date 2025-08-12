@@ -36,6 +36,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
   const [entityData, setEntityData] = useState<Phrase | null>(null);
+  const [isCreated, setIsCreated] = useState<boolean>(!!id);
 
   useEffect(() => {
     const load = async () => {  
@@ -54,19 +55,10 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   // Autosave functionality
   const savePhrase = async (data: UpdateForm, { auto = false }: { auto?: boolean } = {}) => {
     try {
-      if(id) {
-        await phraseStore.update(id, (draft) => {
-          draft.name = data.name;
-          draft.type = "condition";
-          draft.phrase = data.phrase;
-          draft.phraseLevel2 = data.phraseLevel2;
-          draft.associatedElementIds = data.associatedElementIds;
-          draft.associatedComponentIds = data.associatedComponentIds;
-        });
-        if (!auto) toast.success("Phrase updated");
-      } else {
+      if (!isCreated || !(data as any)?.id) {
+        const newId = uuidv4();
         await phraseStore.add({
-          id: uuidv4(),
+          id: newId,
           name: data.name,
           type: "condition",
           phrase: data.phrase,
@@ -75,7 +67,20 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           associatedComponentIds: data.associatedComponentIds ?? [],
           associatedMaterialIds: data.associatedMaterialIds ?? [],
         });
+        methods.reset({ ...(data as any), id: newId });
+        setIsCreated(true);
         if (!auto) toast.success("Phrase created");
+      } else {
+        const currentId = (data as any).id as string;
+        await phraseStore.update(currentId, (draft) => {
+          draft.name = data.name;
+          draft.type = "condition";
+          draft.phrase = data.phrase;
+          draft.phraseLevel2 = data.phraseLevel2;
+          draft.associatedElementIds = data.associatedElementIds;
+          draft.associatedComponentIds = data.associatedComponentIds;
+        });
+        if (!auto) toast.success("Phrase updated");
       }
 
       if (!auto) onSave?.();
@@ -94,7 +99,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     {
       delay: 2000, // 2 second delay for autosave
       showToast: false, // Don't show toast for autosave
-      enabled: !!id, // Only enable autosave for existing phrases
+      enabled: true, // Enable autosave for both new and existing phrases
       validateBeforeSave: true // Enable validation before auto-save
     }
   );

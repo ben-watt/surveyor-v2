@@ -28,9 +28,10 @@ export default function TextAreaInput({
   const reg = register();
   return (
     <div>
-      {labelTitle && <Label text={labelTitle} />}
+      {labelTitle && <Label text={labelTitle} htmlFor={reg.name} />}
       <Textarea
         {...reg}
+        id={reg.name}
         className={className}
         placeholder={placeholder}
         defaultValue={defaultValue}

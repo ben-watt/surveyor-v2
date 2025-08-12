@@ -31,6 +31,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   const { register, handleSubmit, control, watch, getValues, trigger, formState: { errors } } = methods;
   const [isLoading, setIsLoading] = useState(true);
   const [entityData, setEntityData] = useState<Component | null>(null);
+  const [isCreated, setIsCreated] = useState<boolean>(!!id);
   const drawer = useDynamicDrawer();
   const router = useRouter();
 
@@ -64,13 +65,16 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   // Autosave functionality
   const saveComponent = async (data: Component, { auto = false }: { auto?: boolean } = {}) => {
     try {
-      if (!data.id) {
+      if (!isCreated || !data.id) {
+        const newId = uuidv4();
         await componentStore.add({
-          id: uuidv4(),
+          id: newId,
           name: data.name,
           elementId: data.elementId,
           materials: data.materials,
         });
+        methods.reset({ ...data, id: newId });
+        setIsCreated(true);
       } else {
         await componentStore.update(data.id, (draft) => {
           draft.name = data.name;
@@ -102,7 +106,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
     {
       delay: 2000, // 2 second delay for autosave
       showToast: false, // Don't show toast for autosave
-      enabled: !!id, // Only enable autosave for existing components
+      enabled: true, // Enable autosave for both new and existing components
       validateBeforeSave: true // Enable validation before auto-save
     }
   );

@@ -28,6 +28,7 @@ export function DataForm({ id }: DataFormProps) {
   const { register, handleSubmit, control, watch, getValues, trigger, formState: { errors } } = form;
 
   const [entityData, setEntityData] = useState<Element | null>(null);
+  const [isCreated, setIsCreated] = useState<boolean>(!!id);
 
   useEffect(() => {
     if (id) {
@@ -54,14 +55,18 @@ export function DataForm({ id }: DataFormProps) {
     console.debug("[DataForm] saveElement", { data, auto });
     
     try {
-      if (!data.id) {
+      if (!isCreated || !data.id) {
+        const newId = uuidv4();
         await elementStore.add({
-          id: uuidv4(),
+          id: newId,
           name: data.name,
           sectionId: data.sectionId,
           order: data.order,
           description: data.description,
         });
+        // Ensure subsequent autosaves perform updates
+        form.reset({ ...data, id: newId });
+        setIsCreated(true);
         if (!auto) toast.success("Created Element");
       } else {
         await elementStore.update(data.id, (draft) => {
@@ -87,7 +92,7 @@ export function DataForm({ id }: DataFormProps) {
     {
       delay: 2000, // 2 second delay for autosave
       showToast: false, // Don't show toast for autosave
-      enabled: !!id, // Only enable autosave for existing elements
+      enabled: true, // Enable autosave for both new and existing elements
       validateBeforeSave: true // Enable validation before auto-save
     }
   );

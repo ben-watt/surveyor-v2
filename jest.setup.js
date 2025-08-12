@@ -38,16 +38,21 @@ beforeEach(() => {
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
+  value: jest.fn().mockImplementation(query => {
+    const q = String(query || '');
+    // Treat desktop queries as matching to avoid mobile drawer (vaul) in tests
+    const isDesktop = /min-width:\s*768px/.test(q);
+    return {
+      matches: isDesktop,
+      media: q,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    };
+  }),
 });
 
 // Mock IntersectionObserver
@@ -99,3 +104,33 @@ global.PointerEvent = class PointerEvent extends Event {
     this.pointerType = props?.pointerType || 'mouse';
   }
 }; 
+
+// Polyfill pointer capture APIs required by components using pointer events (e.g., vaul)
+if (!Element.prototype.setPointerCapture) {
+  Object.defineProperty(Element.prototype, 'setPointerCapture', {
+    value: jest.fn(),
+    writable: true,
+  });
+}
+
+if (!Element.prototype.releasePointerCapture) {
+  Object.defineProperty(Element.prototype, 'releasePointerCapture', {
+    value: jest.fn(),
+    writable: true,
+  });
+}
+
+if (!Element.prototype.hasPointerCapture) {
+  Object.defineProperty(Element.prototype, 'hasPointerCapture', {
+    value: jest.fn().mockReturnValue(false),
+    writable: true,
+  });
+}
+
+// Ensure requestAnimationFrame exists for components relying on it during tests
+if (!global.requestAnimationFrame) {
+  global.requestAnimationFrame = cb => setTimeout(cb, 0);
+}
+if (!global.cancelAnimationFrame) {
+  global.cancelAnimationFrame = id => clearTimeout(id);
+}

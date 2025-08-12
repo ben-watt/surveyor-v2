@@ -1,9 +1,9 @@
-export const Label = ({ text }: { text?: string }) => {
+export const Label = ({ text, htmlFor }: { text?: string; htmlFor?: string }) => {
   if (!text) return null;
 
   return (
     <div>
-      <label>
+      <label htmlFor={htmlFor}>
         <span className="text-sm">{text}</span>
       </label>
     </div>

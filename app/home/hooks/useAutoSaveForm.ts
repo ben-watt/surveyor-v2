@@ -7,6 +7,8 @@ export interface AutoSaveFormOptions extends AutoSaveOptions {
   watchDelay?: number;
   skipFocusBlur?: boolean;
   validateBeforeSave?: boolean; // New option to validate before saving
+  // Removed validateOnlyChangedField to ensure full-form validity before saving
+  saveImmediatelyOnBecomeValid?: boolean; // If true, save immediately when form transitions invalid -> valid
 }
 
 /**
@@ -30,12 +32,14 @@ export function useAutoSaveForm<T extends FieldValues>(
     watchDelay = 300,
     skipFocusBlur = true,
     validateBeforeSave = true,
+    saveImmediatelyOnBecomeValid = true,
     ...autoSaveOptions
   } = options;
 
   const autoSave = useAutoSave(saveFunction, autoSaveOptions);
   const previousValuesRef = useRef<T | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastValidationWasValidRef = useRef<boolean>(false);
 
   // Watch form changes and trigger autosave
   useEffect(() => {
@@ -81,6 +85,25 @@ export function useAutoSaveForm<T extends FieldValues>(
       
       // Update previous values
       previousValuesRef.current = currentValues;
+
+      // If this change caused the form to become valid (and it wasn't before), save immediately
+      if (validateBeforeSave && trigger) {
+        const nowValid = await trigger();
+        console.log('[useAutoSaveForm] Immediate validation result:', nowValid, 'prev:', lastValidationWasValidRef.current);
+        if (nowValid && !lastValidationWasValidRef.current) {
+          if (saveImmediatelyOnBecomeValid) {
+            // Clear any pending timer and flush save now
+            if (debounceTimerRef.current) {
+              clearTimeout(debounceTimerRef.current);
+              debounceTimerRef.current = null;
+            }
+            lastValidationWasValidRef.current = true;
+            await autoSave.save(currentValues, { auto: true });
+            return;
+          }
+        }
+        lastValidationWasValidRef.current = nowValid;
+      }
       
       // Clear existing timer
       if (debounceTimerRef.current) {
@@ -100,7 +123,16 @@ export function useAutoSaveForm<T extends FieldValues>(
           console.log('[useAutoSaveForm] Form validation result:', isValid);
           
           if (!isValid) {
-            console.log('[useAutoSaveForm] Form is invalid, skipping autosave');
+            console.log('[useAutoSaveForm] Form is invalid, scheduling single retry after short delay');
+            // Edge case: some controlled components update validation state slightly after change
+            // Retry once shortly after to catch transitions from invalid -> valid (e.g., final dropdown selection)
+            setTimeout(async () => {
+              const recheck = await trigger();
+              console.log('[useAutoSaveForm] Re-validation result:', recheck);
+              if (recheck) {
+                autoSave.triggerAutoSave(currentValues);
+              }
+            }, 150);
             return;
           }
         }

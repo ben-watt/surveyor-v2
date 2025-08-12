@@ -5,6 +5,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 import { Section as SectionData } from "@/app/home/clients/Dexie";
 import { sectionStore } from "../clients/Database";
 import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
@@ -19,10 +20,11 @@ interface SectionFormProps {
 export default function SectionForm({ initialData }: SectionFormProps) {
   const router = useRouter();
   const [entityData, setEntityData] = useState<SectionData | null>(null);
+  const [isCreated, setIsCreated] = useState<boolean>(!!initialData);
   
   const form = useForm<SectionData>({
     defaultValues: initialData || {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       name: "",
       order: 0,
     },
@@ -40,13 +42,16 @@ export default function SectionForm({ initialData }: SectionFormProps) {
   // Autosave functionality
   const saveSection = async (data: SectionData, { auto = false }: { auto?: boolean } = {}) => {
     try {
-      if (initialData) {
+      if (isCreated) {
         await sectionStore.update(data.id, (currentState) => {
           return { ...currentState, ...data };
         });
         if (!auto) toast.success("Section updated successfully");
       } else {
         await sectionStore.add(data);
+        // Ensure subsequent autosaves perform updates
+        setEntityData(data);
+        setIsCreated(true);
         if (!auto) {
           toast.success("Section created successfully");
           router.push("/home/sections");
@@ -67,7 +72,7 @@ export default function SectionForm({ initialData }: SectionFormProps) {
     {
       delay: 1000, // 1 second delay for autosave
       showToast: false, // Don't show toast for autosave
-      enabled: !!initialData, // Only enable autosave for existing sections
+      enabled: true, // Enable autosave for both new and existing sections
       validateBeforeSave: true // Enable validation before auto-save
     }
   );
