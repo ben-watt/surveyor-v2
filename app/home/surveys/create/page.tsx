@@ -3,12 +3,40 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
-import { surveyStore } from "@/app/home/clients/Database";
-import { BuildingSurveyFormData, FormStatus } from "../building-survey-reports/BuildingSurveyReportSchema";
+import {
+  surveyStore,
+  sectionStore,
+  elementStore,
+} from "@/app/home/clients/Database";
+import {
+  BuildingSurveyFormData,
+  FormStatus,
+  Input as InputT,
+} from "../building-survey-reports/BuildingSurveyReportSchema";
+import { Section, Element } from "@/app/home/clients/Dexie";
+import { buildSections } from "../utils/initialiseSurvey";
 import { Loader2 } from "lucide-react";
 import { getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth';
 
-function createDefaultSurvey(id: string, userId: string, userName: string, userEmail: string): BuildingSurveyFormData {
+const makeCheckbox = (label: string): InputT<boolean> => ({
+  type: "checkbox",
+  placeholder: "",
+  value: false,
+  label,
+  required: true,
+  order: 0,
+});
+
+// buildSections imported from utils
+
+function createDefaultSurvey(
+  id: string,
+  userId: string,
+  userName: string,
+  userEmail: string,
+  dbSections: Section[],
+  dbElements: Element[],
+): BuildingSurveyFormData {
   return {
     id,
     owner: {
@@ -24,12 +52,12 @@ function createDefaultSurvey(id: string, userId: string, userName: string, userE
       address: {
         formatted: "",
         line1: "",
+        line2: "",
+        line3: "",
         city: "",
+        county: "",
         postcode: "",
-        location: {
-          lat: 0,
-          lng: 0,
-        },
+        location: { lat: 0, lng: 0 },
       },
       clientName: "",
       reportDate: new Date(),
@@ -39,108 +67,130 @@ function createDefaultSurvey(id: string, userId: string, userName: string, userE
       situation: "",
       moneyShot: [],
       frontElevationImagesUri: [],
-      status: {
-        status: FormStatus.Incomplete,
-        errors: [],
-      },
+      status: { status: FormStatus.Incomplete, errors: [] },
     },
     propertyDescription: {
       propertyType: {
         type: "text",
+        value: "",
         label: "Property Type",
-        placeholder: "e.g., Detached House",
+        placeholder: "Detached, Semi-detached, Terraced, Flat, Bungalow, Other",
         required: true,
-        order: 1,
+        order: 0,
       },
       constructionDetails: {
         type: "textarea",
+        value: "",
         label: "Construction Details",
-        placeholder: "Describe the construction materials and methods",
+        placeholder:
+          "Brick, Stone, Timber, Concrete, Steel, Glass, Other",
         required: true,
-        order: 2,
+        order: 1,
       },
       yearOfConstruction: {
         type: "text",
         label: "Year of Construction",
-        placeholder: "e.g., 1950",
-        required: false,
-        order: 3,
+        placeholder: "presumed 1990s - side extension",
+        required: true,
+        order: 2,
       },
       yearOfExtensions: {
         type: "text",
         label: "Year of Extensions",
-        placeholder: "e.g., 1980",
+        placeholder: "2012",
         required: false,
-        order: 4,
+        order: 3,
       },
       yearOfConversions: {
         type: "text",
         label: "Year of Conversions",
-        placeholder: "e.g., 2000",
+        placeholder: "2004",
         required: false,
-        order: 5,
+        order: 4,
       },
       grounds: {
         type: "textarea",
+        value: "",
         label: "Grounds",
-        placeholder: "Describe the grounds and surroundings",
-        required: false,
-        order: 6,
+        placeholder: "Garden, Yard, Paved, Lawn, Other",
+        required: true,
+        order: 5,
       },
       services: {
         type: "text",
+        value: "",
         label: "Services",
-        placeholder: "Available services",
-        required: false,
-        order: 7,
+        placeholder:
+          "Electricity, Gas, Water, Drainage, Telephone, Broadband, Other",
+        required: true,
+        order: 6,
       },
       otherServices: {
         type: "text",
+        value: "",
         label: "Other Services",
-        placeholder: "Additional services",
+        placeholder: "Cable TV, Satellite TV, Solar Panels, Other",
         required: false,
-        order: 8,
+        order: 7,
       },
       energyRating: {
         type: "text",
+        value: "",
         label: "Energy Rating",
-        placeholder: "e.g., C",
-        required: false,
-        order: 9,
+        placeholder: "A, B, C, D, E, F, G, Other",
+        required: true,
+        order: 8,
       },
       numberOfBedrooms: {
         type: "number",
+        value: 0,
         label: "Number of Bedrooms",
-        placeholder: "0",
-        required: false,
-        order: 10,
+        placeholder: "Number of Bedrooms",
+        required: true,
+        order: 9,
       },
       numberOfBathrooms: {
         type: "number",
+        value: 0,
         label: "Number of Bathrooms",
-        placeholder: "0",
-        required: false,
-        order: 11,
+        placeholder: "Number of Bathrooms",
+        required: true,
+        order: 10,
       },
       tenure: {
         type: "select",
+        value: "Unknown",
         label: "Tenure",
-        placeholder: "Select tenure type",
-        required: false,
-        order: 12,
+        placeholder: "Freehold, Leasehold, Commonhold, Other",
+        required: true,
+        order: 11,
       },
-      status: {
-        status: FormStatus.Incomplete,
-        errors: [],
-      },
+      status: { status: FormStatus.Incomplete, errors: [] },
     },
-    sections: [],
+    sections: buildSections(dbSections, dbElements),
     checklist: {
-      items: [],
-      status: {
-        status: FormStatus.Incomplete,
-        errors: [],
-      },
+      items: [
+        makeCheckbox("Have you checked for asbestos?"),
+        makeCheckbox("Have you lifted manhole covers to drains?"),
+        makeCheckbox("Have you checked for Japanese Knotweed?"),
+        makeCheckbox(
+          "Have you checked external ground levels in relation to DPCs / Air Vents?",
+        ),
+        makeCheckbox(
+          "Have you located services, elecs, gas, water, etc...?",
+        ),
+        makeCheckbox(
+          "Have you checked if chimney breasts been removed internally?",
+        ),
+        makeCheckbox(
+          "Have you checked the locations and severity of all cracks been logged?",
+        ),
+        makeCheckbox(
+          "Have you checked if there are any mature trees in close proximity to the building?",
+        ),
+        makeCheckbox("I confirm that the information provided is accurate"),
+      ],
+      status: { status: FormStatus.Incomplete, errors: [] },
     },
   };
 }
@@ -148,10 +198,15 @@ function createDefaultSurvey(id: string, userId: string, userName: string, userE
 export default function CreateSurveyPage() {
   const router = useRouter();
   const [isCreating, setIsCreating] = useState(true);
+  const [sectionsHydrated, dbSections] = sectionStore.useList();
+  const [elementsHydrated, dbElements] = elementStore.useList();
 
   useEffect(() => {
     async function createSurvey() {
       try {
+        if (!sectionsHydrated || !elementsHydrated) {
+          return;
+        }
         // Get current user information
         const user = await getCurrentUser();
         const userAttributes = await fetchUserAttributes();
@@ -161,7 +216,14 @@ export default function CreateSurveyPage() {
         const userEmail = userAttributes.email || 'unknown@example.com';
 
         const id = v4();
-        const newSurvey = createDefaultSurvey(id, userId, userName, userEmail);
+        const newSurvey = createDefaultSurvey(
+          id,
+          userId,
+          userName,
+          userEmail,
+          dbSections,
+          dbElements,
+        );
         
         await surveyStore.add({
           id,
@@ -181,7 +243,7 @@ export default function CreateSurveyPage() {
     }
 
     createSurvey();
-  }, [router]);
+  }, [router, sectionsHydrated, elementsHydrated, dbSections, dbElements]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh]">

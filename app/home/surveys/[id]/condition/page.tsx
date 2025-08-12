@@ -22,7 +22,6 @@ import { DynamicDrawer, useDynamicDrawer } from "@/app/home/components/Drawer";
 import InspectionForm from "./InspectionForm";
 import ElementForm from "./ElementForm";
 import { toggleElementSection } from "../../building-survey-reports/Survey";
-import { DataForm as ElementFormData } from "@/app/home/elements/form";
 
 interface ConditionPageProps {
   params: Promise<{

@@ -90,7 +90,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
-                  <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-900 via-blue-800 to-purple-800 text-white shadow-sm">
+                  <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-900 to-purple-800 text-white shadow-sm">
                     <AppIcon color="white" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
