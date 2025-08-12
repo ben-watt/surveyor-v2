@@ -37,14 +37,6 @@ export function CompactPhotoGrid({
           <div className="text-center p-6 border-2 border-dashed border-muted rounded-lg">
             <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-3">No photos yet</p>
-            <Button 
-              size="sm" 
-              onClick={() => router.push(galleryUrl)}
-              className="gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add Photos
-            </Button>
           </div>
         </CardContent>
       </Card>
