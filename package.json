@@ -10,7 +10,7 @@
     "fix": "next lint --fix",
     "knip": "knip",
     "ts-lint": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --silent",
     "test:watch": "jest --watch",
     "prepare": "husky",
     "sandbox": "npx dotenvx run --env-file=.env.local -- ampx sandbox"
