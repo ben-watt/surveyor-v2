@@ -208,8 +208,8 @@ function HomePage() {
             hasFilters={filters.status.length > 0 || filters.owner.length > 0} 
           />
         )}
+        </div>
       </div>
-    </div>
   );
 }
 

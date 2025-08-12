@@ -125,17 +125,20 @@ function Page() {
   }
 
   return (
-    <div className="max-w-96 m-auto md:m-0">
-      <div className="flex justify-between mb-5 mt-5 items-baseline">
-        <div>
-          <h1 className="text-3xl font-bold dark:text-white">Profile</h1>
-          <p className="text-sm text-muted-foreground">
-            Update your profile information.
-          </p>
-        </div>
-      </div>
-      <FormProvider {...methods}>
-        <div className="space-y-2">
+    <div className="min-h-screen bg-white">
+      <div className="relative z-10 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-between mb-8 items-baseline">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">Profile</h1>
+              <p className="text-lg text-gray-600">
+                Update your profile information.
+              </p>
+            </div>
+          </div>
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-md border-0 p-8">
+            <FormProvider {...methods}>
+              <div className="space-y-6">
           <InputText
             labelTitle="Email"
             placeholder="Email Address"
@@ -177,14 +180,17 @@ function Page() {
             placeholder="Enter your signature text"
             errors={errors}
           />
-          <LastSavedIndicator
-            status={saveStatus}
-            lastSavedAt={lastSavedAt || undefined}
-            entityUpdatedAt={entityData ? new Date().toISOString() : undefined}
-            className="text-sm justify-center"
-          />
+                <LastSavedIndicator
+                  status={saveStatus}
+                  lastSavedAt={lastSavedAt || undefined}
+                  entityUpdatedAt={entityData ? new Date().toISOString() : undefined}
+                  className="text-sm justify-center"
+                />
+              </div>
+            </FormProvider>
+          </div>
         </div>
-      </FormProvider>
+      </div>
     </div>
   );
 }

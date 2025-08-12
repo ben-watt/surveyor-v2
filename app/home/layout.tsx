@@ -21,17 +21,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    // Start periodic sync for all tables (every 30 seconds)
-    const cleanupFns = [
-      surveyStore.startPeriodicSync(),
-      componentStore.startPeriodicSync(),
-      elementStore.startPeriodicSync(),
-      phraseStore.startPeriodicSync(),
-      sectionStore.startPeriodicSync(),
-      imageUploadStore.startPeriodicSync(),
-      imageMetadataStore.startPeriodicSync(),
-    ];
-
     // Setup online/offline handlers
     const handleOnline = () => {
       // Trigger immediate sync when coming online
@@ -47,7 +36,6 @@ export default function RootLayout({
     window.addEventListener('online', handleOnline);
 
     return () => {
-      cleanupFns.forEach(cleanup => cleanup());
       window.removeEventListener('online', handleOnline);
     };
   }, []);
@@ -59,7 +47,7 @@ export default function RootLayout({
           <SidebarProvider>
             <AppSidebar className="print:!hidden" />
             <SidebarInset className="print:!w-0 print:!m-0 print:!p-0">
-              <header className="print:!hidden flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+              <header className="print:!hidden flex h-16 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
                 <div className="flex items-center gap-2 px-4 w-full">
                   <SidebarTrigger className="-ml-1" />
                   <Breadcrumbs />
