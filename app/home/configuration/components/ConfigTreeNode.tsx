@@ -246,7 +246,7 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="h-10 w-10 sm:h-8 sm:w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              className="h-10 w-10 sm:h-8 sm:w-8 p-0 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
               <span className="sr-only">Open menu</span>

@@ -16,9 +16,10 @@ import { LastSavedIndicator } from "../components/LastSavedIndicator";
 
 interface DataFormProps {
   id?: string;
+  defaultValues?: Partial<Element>;
 }
 
-export function DataForm({ id }: DataFormProps) {
+export function DataForm({ id, defaultValues }: DataFormProps) {
   const idRef = useRef(id ?? uuidv4());
   const form = useForm<Element>({
     defaultValues: {
@@ -27,6 +28,7 @@ export function DataForm({ id }: DataFormProps) {
       sectionId: "",
       order: 0,
       description: "",
+      ...defaultValues,
     },
     mode: 'onChange'
   });
