@@ -5,7 +5,7 @@ import { runWithAmplifyServerContext } from "@/app/home/utils/amplify-utils";
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  console.log("[Middleware] Checking if user is authenticated");
+  const { pathname } = request.nextUrl;
 
   const authenticated = await runWithAmplifyServerContext({
     nextServerContext: { request, response },
@@ -14,18 +14,25 @@ export async function middleware(request: NextRequest) {
         const session = await fetchAuthSession(contextSpec, {});
         return session.tokens !== undefined;
       } catch (error) {
-        console.log(error);
         return false;
       }
     },
   });
 
-  console.log("[Middleware] Authenticated:", authenticated, request.nextUrl);
+  const authPages = new Set(["/", "/login", "/signup", "/reset-password"]);
+  const isAuthPage = authPages.has(pathname);
+  const isProtected = pathname.startsWith("/home");
 
-  if (authenticated && request.nextUrl.pathname.includes("/login")) {
-    return NextResponse.redirect(new URL("/home/surveys", request.url));
-  } else if (authenticated && request.nextUrl.pathname.includes("/home")) {
+  if (authenticated) {
+    if (isAuthPage) {
+      return NextResponse.redirect(new URL("/home/surveys", request.url));
+    }
     return response;
+  }
+
+  if (isProtected) {
+    const url = new URL("/login", request.url);
+    return NextResponse.redirect(url);
   }
 
   return response;
@@ -39,7 +46,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - any path with a file extension (e.g. .png, .jpg, .svg)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
   ],
 };
