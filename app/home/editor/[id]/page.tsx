@@ -93,6 +93,7 @@ export default function Page() {
           <>
             <NewEditor
               ref={editorRef}
+               editorId={id}
               content={editorContent}
               onCreate={updateHandler}
               onUpdate={updateHandler}

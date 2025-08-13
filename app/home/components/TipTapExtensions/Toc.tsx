@@ -175,11 +175,71 @@ export interface TocRepo {
   getParsed: () => TableOfContentsDataItemWithHierarchy[];
   get: () => TocContext;
   set: (data: TocDataItem[], isCreate: boolean) => void;
+  clear: () => void;
 }
 
 export const createTocRepo = (key: string): TocRepo => {
+  const TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+
+  interface TocStorageValue {
+    data: TocDataItem[];
+    isCreate: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+  }
+
+  const safeParse = (value: string | null): TocStorageValue | null => {
+    if (!value) return null;
+    try {
+      return JSON.parse(value) as TocStorageValue;
+    } catch {
+      return null;
+    }
+  };
+
+  const cleanStaleTocEntries = (prefix: string, ttlMs: number, maxEntries = 100) => {
+    try {
+      const now = Date.now();
+      const keys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) keys.push(k);
+      }
+
+      // Remove invalid or expired
+      const valid: { key: string; value: TocStorageValue; updatedAt: number }[] = [];
+      for (const k of keys) {
+        const parsed = safeParse(localStorage.getItem(k));
+        const updatedAt = parsed?.updatedAt ?? parsed?.createdAt ?? 0;
+        if (!parsed) {
+          localStorage.removeItem(k);
+          continue;
+        }
+        if (updatedAt && now - updatedAt > ttlMs) {
+          localStorage.removeItem(k);
+          continue;
+        }
+        valid.push({ key: k, value: parsed, updatedAt });
+      }
+
+      // Enforce max entries by most recent
+      if (valid.length > maxEntries) {
+        valid
+          .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+          .slice(maxEntries)
+          .forEach(entry => localStorage.removeItem(entry.key));
+      }
+    } catch {
+      // no-op: best effort cleanup
+    }
+  };
+
+  // Opportunistic cleanup on repo creation
+  cleanStaleTocEntries('toc:', TTL_MS);
+
   if (localStorage.getItem(key) == null) {
-    localStorage.setItem(key, JSON.stringify({ data: [], isCreate: true }));
+    const now = Date.now();
+    localStorage.setItem(key, JSON.stringify({ data: [], isCreate: true, createdAt: now, updatedAt: now }));
   }
 
   const getParsed = (): TableOfContentsDataItemWithHierarchy[] => {
@@ -188,15 +248,25 @@ export const createTocRepo = (key: string): TocRepo => {
   }
 
   const get = (): TocContext => {
-    const data = localStorage.getItem(key);
-    if (data != undefined) {
-      return JSON.parse(data);
+    const raw = localStorage.getItem(key);
+    if (raw != undefined) {
+      const parsed = safeParse(raw);
+      if (parsed) {
+        return { data: parsed.data ?? [], isCreate: parsed.isCreate };
+      }
     }
     return { data: [], isCreate: false };
   }
 
   const set = (data: TocDataItem[], isCreate: boolean) => {
-    localStorage.setItem(key, JSON.stringify({ data, isCreate }));
+    const now = Date.now();
+    const existing = safeParse(localStorage.getItem(key));
+    const createdAt = existing?.createdAt ?? now;
+    localStorage.setItem(key, JSON.stringify({ data, isCreate, createdAt, updatedAt: now }));
+  }
+
+  const clear = () => {
+    localStorage.removeItem(key);
   }
 
   return {
@@ -204,6 +274,42 @@ export const createTocRepo = (key: string): TocRepo => {
     getParsed,
     get,
     set,
+    clear,
+  }
+}
+
+export const cleanupTocStorage = (options?: { ttlMs?: number; maxEntries?: number }) => {
+  const TTL_MS = options?.ttlMs ?? 1000 * 60 * 60 * 24 * 7;
+  const MAX = options?.maxEntries ?? 100;
+  try {
+    const now = Date.now();
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('toc:')) keys.push(k);
+    }
+    const valid: { key: string; updatedAt: number }[] = [];
+    for (const k of keys) {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(k) || '{}');
+        const updatedAt = parsed.updatedAt ?? parsed.createdAt ?? 0;
+        if (!updatedAt || now - updatedAt > TTL_MS) {
+          localStorage.removeItem(k);
+        } else {
+          valid.push({ key: k, updatedAt });
+        }
+      } catch {
+        localStorage.removeItem(k);
+      }
+    }
+    if (valid.length > MAX) {
+      valid
+        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+        .slice(MAX)
+        .forEach(entry => localStorage.removeItem(entry.key));
+    }
+  } catch {
+    // ignore
   }
 }
 

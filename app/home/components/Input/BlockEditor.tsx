@@ -57,7 +57,7 @@ export const NewEditor = forwardRef(({
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setTocRepo(createTocRepo(editorIdentifier));
+    setTocRepo(createTocRepo(`toc:${editorIdentifier}`));
   }, [editorIdentifier]);
 
   // Auto-save with 30s debounce
