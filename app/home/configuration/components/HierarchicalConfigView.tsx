@@ -227,7 +227,7 @@ export function HierarchicalConfigView() {
     returnUrl.searchParams.set('parentType', parentType);
     returnUrl.searchParams.set('parentId', parentId);
     
-    const createUrl = `/home/configuration/${childType === 'component' ? 'components' : `${childType}s`}/create?returnTo=${encodeURIComponent(returnUrl.toString())}&parentType=${parentType}&parentId=${parentId}`;
+    const createUrl = `/home/configuration/${childType === 'component' ? 'components' : `${childType}s`}/create?returnTo=${encodeURIComponent(returnUrl.toString())}&parentType=${encodeURIComponent(parentType)}&parentId=${encodeURIComponent(parentId)}`;
     router.push(createUrl);
   }, [router]);
 

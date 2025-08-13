@@ -40,8 +40,15 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
 
   useEffect(() => {
     if (phraseHydrated && phrase) {
-      const originalId = phrase.id.includes('#') ? phrase.id.split('#')[0] : phrase.id;
-      methods.reset({ ...(phrase as any), id: originalId });
+      // Reset only form-relevant fields to avoid autosave loops from meta fields
+      methods.reset({
+        id: phrase.id,
+        name: phrase.name ?? '',
+        phrase: phrase.phrase ?? '',
+        phraseLevel2: phrase.phraseLevel2 ?? '',
+        associatedElementIds: phrase.associatedElementIds ?? [],
+        associatedComponentIds: phrase.associatedComponentIds ?? []
+      } as any, { keepIsValid: true });
     }
   }, [phraseHydrated, phrase, methods]);
 

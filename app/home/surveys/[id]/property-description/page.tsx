@@ -8,8 +8,8 @@ import {
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
 import { mapToInputType } from "../../building-survey-reports/Utils";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, use, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
 import { useAutoSaveSurveyForm } from "../../../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../../../components/LastSavedIndicator";
@@ -19,18 +19,9 @@ function isInputT<T>(input: any): input is Input<T> {
   return input.type !== undefined;
 }
 
-interface PropertyDescriptionPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-const PropertyDescriptionPage = (props: PropertyDescriptionPageProps) => {
-  const params = use(props.params);
-
-  const {
-    id
-  } = params;
+const PropertyDescriptionPage = () => {
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [isOpen, setIsOpen] = useState(false);

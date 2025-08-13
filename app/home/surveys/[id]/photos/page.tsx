@@ -1,27 +1,22 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useState } from "react";
 import { surveyStore } from "@/app/home/clients/Database";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { SurveyImage } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
-
-interface PhotoGalleryProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
 
 interface PhotoSection {
   name: string;
   photos: { url: string; isArchived: boolean }[];
 }
 
-function PhotoGallery(props: PhotoGalleryProps) {
-  const params = use(props.params);
-  const [isHydrated, survey] = surveyStore.useGet(params.id);
+function PhotoGallery() {
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const [isHydrated, survey] = surveyStore.useGet(id);
   const [photoSections, setPhotoSections] = useState<PhotoSection[]>([]);
   const [showArchived, setShowArchived] = useState(false);
   const router = useRouter();

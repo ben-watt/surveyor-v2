@@ -8,7 +8,6 @@ import {
 import { useCallback, useEffect, useRef } from "react";
 import { componentStore, elementStore } from "@/app/home/clients/Database";
 import type { Component } from "@/app/home/clients/Dexie";
-import { Schema } from "@/amplify/data/resource";
 import { DynamicComboBox } from "@/app/home/components/Input";
 import toast from "react-hot-toast";
 import { useDynamicDrawer } from "../components/Drawer";
@@ -33,21 +32,20 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   const drawer = useDynamicDrawer();
   const router = useRouter();
 
-  const [ready, elements] = elementStore.useList();
+  const [elementsHydrateds, elements] = elementStore.useList();
   const [componentHydrated, component] = componentStore.useGet(idRef.current);
 
   useEffect(() => {
     if (componentHydrated && component) {
-      const originalId = component.id.includes('#') ? component.id.split('#')[0] : component.id;
-      methods.reset({ ...(component as any), id: originalId });
+      methods.reset({
+        id: component.id,
+        name: component.name ?? '',
+        elementId: component.elementId ?? '',
+        materials: component.materials ?? []
+      } as any);
     }
   }, [methods, componentHydrated, component]);
 
-  useEffect(() => {
-    // noop but preserves prior effect structure if needed later
-  }, [id, ready]);
-
-  // Autosave functionality
   const saveComponent = useCallback(
     async (data: Component, { auto = false }: { auto?: boolean } = {}) => {
       try {
@@ -98,8 +96,10 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
     }
   );
 
-  // Remove onSubmit since we're using autosave only
-  // The form will automatically save as the user types
+
+  if (!componentHydrated || !elementsHydrateds) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <FormProvider {...methods}>

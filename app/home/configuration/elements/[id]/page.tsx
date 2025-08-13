@@ -1,23 +1,20 @@
 "use client";
 
-import React, { use } from "react";
+import React from "react";
+import { useParams } from "next/navigation";
 import { DataForm } from "../../../elements/form";
 
-interface EditElementPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-export default function EditElementPage(props: EditElementPageProps) {
-  const params = use(props.params);
+export default function EditElementPage() {
+  const params = useParams<{ id: string }>();
+  const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const id = decodeURIComponent(rawId);
 
   return (
     <div className="container mx-auto px-5">
       <div className="flex mt-4 mb-4">
         <h1 className="text-4xl dark:text-white">Edit Element</h1>
       </div>
-      <DataForm id={params.id} />
+      <DataForm id={id} />
     </div>
   );
 }

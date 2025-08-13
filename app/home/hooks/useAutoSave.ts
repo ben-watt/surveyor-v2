@@ -75,6 +75,11 @@ export function useAutoSave<T>(
     console.log('[useAutoSave] Starting save operation:', { auto, data });
 
     try {
+      // Skip save if data hasn't changed since the last successful save
+      if (lastSavedDataRef.current && JSON.stringify(lastSavedDataRef.current) === JSON.stringify(data)) {
+        console.log('[useAutoSave] Data unchanged from last save, skipping save');
+        return;
+      }
       setIsSaving(true);
       setSaveStatus('saving');
       setHasPendingChanges(false);
@@ -133,6 +138,12 @@ export function useAutoSave<T>(
   const triggerAutoSave = useCallback((data: T) => {
     if (!enabled || isSaving) {
       console.log('[useAutoSave] Skipping autosave:', { enabled, isSaving });
+      return;
+    }
+    
+    // Do not schedule autosave if data equals the last successfully saved snapshot
+    if (lastSavedDataRef.current && JSON.stringify(lastSavedDataRef.current) === JSON.stringify(data)) {
+      console.log('[useAutoSave] Data unchanged from last save, skipping autosave trigger');
       return;
     }
     

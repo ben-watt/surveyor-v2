@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState, use } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import { imageUploadStore } from "../../clients/ImageUploadStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import { SurveyDocuments } from "../../components/SurveyDocuments";
 import { CompactPhotoGrid } from "../components/CompactPhotoGrid";
+import { useParams } from "next/navigation";
 
 
 
@@ -23,9 +24,10 @@ function FormSkeleton() {
   );
 }
 
-function Home(props: { params: Promise<{ id: string }> }) {
-  const params = use(props.params);
-  const [isHydrated, survey] = surveyStore.useGet(params.id);
+function Home() {
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const [isHydrated, survey] = surveyStore.useGet(id);
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoCount, setPhotoCount] = useState<number>(0);
 
@@ -82,7 +84,7 @@ function Home(props: { params: Promise<{ id: string }> }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 order-1 lg:order-1">
           <Suspense fallback={<FormSkeleton />}>
-            <BuildingSurveyForm id={params.id} />
+            <BuildingSurveyForm id={id} />
           </Suspense>
         </div>
 
@@ -99,7 +101,7 @@ function Home(props: { params: Promise<{ id: string }> }) {
               <CardTitle className="text-base">Documents</CardTitle>
             </CardHeader>
             <CardContent>
-              <SurveyDocuments surveyId={params.id} />
+              <SurveyDocuments surveyId={id} />
             </CardContent>
           </Card>
         </div>

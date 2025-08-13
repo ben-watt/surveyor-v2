@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState, useCallback, use } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { surveyStore } from "@/app/home/clients/Database";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
 // Dynamically import the form component
@@ -11,18 +11,9 @@ const ReportDetailsForm = dynamic(() => import("./ReportDetailsForm"), {
   loading: () => <div>Loading form...</div>,
 });
 
-interface ReportDetailsFormPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
-
-const ReportDetailFormPage = (props: ReportDetailsFormPageProps) => {
-  const params = use(props.params);
-
-  const {
-    id
-  } = params;
+const ReportDetailFormPage = () => {
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [isOpen, setIsOpen] = useState(false);

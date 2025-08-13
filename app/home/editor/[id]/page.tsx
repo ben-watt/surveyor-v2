@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import React, { use, useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NewEditor } from "@/app/home/components/Input/BlockEditor";
 import { PrintPreviewer } from "../components/PrintPreviewer";
 import { useEditorState } from "@/app/home/editor/hooks/useEditorState";
@@ -12,17 +12,13 @@ import { documentStore } from '@/app/home/clients/DocumentStore';
 import { useTemplateId } from '@/app/home/editor/hooks/useTemplateId';
 import { useVersionHistory, Version } from '@/app/home/editor/hooks/useVersionHistory';
 import { VersionPreview } from '../components/VersionPreview';
+import { useParams, useSearchParams } from "next/navigation";
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ templateId: string }>;
-}
-
-export default function Page(props: PageProps) {
-  const params = use(props.params);
-  const { id } = params;
-  const searchParams = use(props.searchParams);
-  const initialTemplateId = searchParams.templateId;
+export default function Page() {
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const searchParams = useSearchParams();
+  const initialTemplateId = searchParams.get('templateId') || undefined;
 
   // Use custom hook for templateId
   const templateId = useTemplateId(id, initialTemplateId);

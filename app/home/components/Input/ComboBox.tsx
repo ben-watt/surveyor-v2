@@ -98,6 +98,35 @@ export function Combobox({
     );
   }, [flatData, search]);
 
+  const stripTenantSuffix = React.useCallback((val: any) => {
+    if (typeof val !== 'string') return val;
+    const idx = val.indexOf('#');
+    return idx >= 0 ? val.substring(0, idx) : val;
+  }, []);
+
+  const valuesEqual = React.useCallback((a: any, b: any) => {
+    // Direct equality for primitives
+    if (
+      (typeof a !== 'object' || a === null) &&
+      (typeof b !== 'object' || b === null)
+    ) {
+      if (a === b) return true;
+      if (typeof a === 'string' && typeof b === 'string') {
+        return stripTenantSuffix(a) === stripTenantSuffix(b);
+      }
+      return false;
+    }
+
+    // Object comparison by id when available
+    const aId = a && typeof a === 'object' ? (a.id ?? JSON.stringify(a)) : a;
+    const bId = b && typeof b === 'object' ? (b.id ?? JSON.stringify(b)) : b;
+    if (aId === bId) return true;
+    if (typeof aId === 'string' && typeof bId === 'string') {
+      return stripTenantSuffix(aId) === stripTenantSuffix(bId);
+    }
+    return false;
+  }, [stripTenantSuffix]);
+
   const handleSelect = React.useCallback((label: string, item?: ComboboxDataItem) => {
     if (item?.children && item.children.length > 0) {
       setNavigationStack(prev => [...prev, item.children!]);
@@ -110,27 +139,14 @@ export function Combobox({
 
     if (isMulti) {
       const currentValues = Array.isArray(field.value) ? field.value : [];
-      const valueExists = currentValues.some(v => {
-        if (typeof v === 'object' && v !== null && typeof selectedItem.value === 'object' && selectedItem.value !== null) {
-          return v.id === selectedItem.value.id;
-        }
-        return v === selectedItem.value;
-      });
+      const valueExists = currentValues.some(v => valuesEqual(v, selectedItem.value));
 
       field.onChange(valueExists 
-        ? currentValues.filter(v => {
-            if (typeof v === 'object' && v !== null && typeof selectedItem.value === 'object' && selectedItem.value !== null) {
-              return v.id !== selectedItem.value.id;
-            }
-            return v !== selectedItem.value;
-          })
+        ? currentValues.filter(v => !valuesEqual(v, selectedItem.value))
         : [...currentValues, selectedItem.value]
       );
     } else {
-      const valueMatches = typeof field.value === 'object' && field.value !== null 
-        && typeof selectedItem.value === 'object' && selectedItem.value !== null
-        ? JSON.stringify(field.value) === JSON.stringify(selectedItem.value)
-        : field.value === selectedItem.value;
+      const valueMatches = valuesEqual(field.value, selectedItem.value);
 
       field.onChange(valueMatches ? "" : selectedItem.value);
       setOpen(false);
@@ -143,7 +159,7 @@ export function Combobox({
       setNavigationStack([data]);
       setBreadcrumbs([]);
     }
-  }, [data, field, isMulti, flatData, inDrawer, onClose]);
+  }, [data, field, isMulti, flatData, inDrawer, onClose, valuesEqual]);
 
   const handleBack = React.useCallback(() => {
     if (navigationStack.length > 1) {
@@ -157,28 +173,13 @@ export function Combobox({
     if (!field.value) return [];
     
     if (isMulti && Array.isArray(field.value)) {
-      return field.value.map(value => 
-        flatData.find(item => {
-          if (typeof value === 'object' && value !== null && typeof item.value === 'object' && item.value !== null) {
-            // Compare specific properties that should match instead of full objects
-            // Adjust these properties based on your object structure
-            return value.id === item.value.id; // Example: comparing by ID
-          }
-          return value === item.value;
-        })
-      );
+      return field.value.map(value => flatData.find(item => valuesEqual(value, item.value)));
     }
     
-    const item = flatData.find(item => {
-      if (typeof field.value === 'object' && field.value !== null && typeof item.value === 'object' && item.value !== null) {
-        // Same here - compare specific properties
-        return field.value.id === item.value.id; // Example: comparing by ID
-      }
-      return field.value === item.value;
-    });
+    const item = flatData.find(item => valuesEqual(field.value, item.value));
     
     return item ? [item] : [];
-  }, [field.value, flatData, isMulti]);
+  }, [field.value, flatData, isMulti, valuesEqual]);
 
   const selectedLabels = React.useMemo(() => 
     selectedItems.filter(Boolean).map(item => item?.fullLabel).join(", "),
@@ -187,19 +188,10 @@ export function Combobox({
 
   const isItemSelected = React.useCallback((itemValue: any) => {
     if (isMulti && Array.isArray(field.value)) {
-      return field.value.some(v => {
-        if (typeof v === 'object' && v !== null && typeof itemValue === 'object' && itemValue !== null) {
-          return JSON.stringify(v) === JSON.stringify(itemValue);
-        }
-        return v === itemValue;
-      });
+      return field.value.some(v => valuesEqual(v, itemValue));
     }
-    
-    if (typeof field.value === 'object' && field.value !== null && typeof itemValue === 'object' && itemValue !== null) {
-      return JSON.stringify(field.value) === JSON.stringify(itemValue);
-    }
-    return field.value === itemValue;
-  }, [field.value, isMulti]);
+    return valuesEqual(field.value, itemValue);
+  }, [field.value, isMulti, valuesEqual]);
 
   // When in drawer mode, we don't need the trigger button and popover wrapper
   if (inDrawer) {

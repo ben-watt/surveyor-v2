@@ -32,20 +32,23 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
     },
     mode: 'onChange'
   });
-  const drawer = useDynamicDrawer();
-  const [sectionsHydrated, sections] = sectionStore.useList();
-  const { register, control, watch, getValues, trigger, formState: { errors } } = form;
 
+  const [sectionsHydrated, sections] = sectionStore.useList();
   const [elementHydrated, element] = elementStore.useGet(idRef.current);
+  const { register, control, watch, getValues, trigger, formState: { errors } } = form;
 
   useEffect(() => {
     if (elementHydrated && element) {
-      const originalId = element.id.includes('#') ? element.id.split('#')[0] : element.id;
-      form.reset({ ...(element as any), id: originalId });
+      form.reset({
+        id: element.id,
+        name: element.name ?? '',
+        sectionId: element.sectionId ?? '',
+        order: element.order ?? 0,
+        description: element.description ?? '',
+      } as any);
     }
-  }, [elementHydrated, element, form]);
+  }, [form, elementHydrated, element]);
 
-  // Autosave functionality
   const saveElement = useCallback(
     async (data: Element, { auto = false }: { auto?: boolean } = {}) => {
       console.debug("[DataForm] saveElement", { data, auto });

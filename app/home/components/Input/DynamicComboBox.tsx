@@ -30,6 +30,29 @@ export function DynamicComboBox(props: DynamicComboBoxProps) {
     rules: props.rules,
     defaultValue: props.isMulti ? [] : ""
   });
+
+  const stripTenantSuffix = React.useCallback((val: any) => {
+    if (typeof val !== 'string') return val;
+    const idx = val.indexOf('#');
+    return idx >= 0 ? val.substring(0, idx) : val;
+  }, []);
+
+  const valuesEqual = React.useCallback((a: any, b: any) => {
+    if ((typeof a !== 'object' || a === null) && (typeof b !== 'object' || b === null)) {
+      if (a === b) return true;
+      if (typeof a === 'string' && typeof b === 'string') {
+        return stripTenantSuffix(a) === stripTenantSuffix(b);
+      }
+      return false;
+    }
+    const aId = a && typeof a === 'object' ? (a.id ?? JSON.stringify(a)) : a;
+    const bId = b && typeof b === 'object' ? (b.id ?? JSON.stringify(b)) : b;
+    if (aId === bId) return true;
+    if (typeof aId === 'string' && typeof bId === 'string') {
+      return stripTenantSuffix(aId) === stripTenantSuffix(bId);
+    }
+    return false;
+  }, [stripTenantSuffix]);
   
   // Use the standard ComboBox on desktop
   if (isDesktop) {
@@ -57,12 +80,7 @@ export function DynamicComboBox(props: DynamicComboBoxProps) {
     };
     
     const flatData = flattenData(props.data);
-    const item = flatData.find(item => {
-      if (typeof value === 'object' && value !== null && typeof item.value === 'object' && item.value !== null) {
-        return value.id === item.value.id;
-      }
-      return value === item.value;
-    });
+    const item = flatData.find(item => valuesEqual(value, item.value));
     
     return item?.label || "Select...";
   };

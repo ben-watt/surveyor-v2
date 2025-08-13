@@ -33,7 +33,7 @@ interface SeedLocation {
 export async function mapElementsToElementData(elements: SeedElement[]): Promise<ElementData[]> {
   const tenantId = await getCurrentTenantId();
   return elements.map(element => ({
-    id: element.id,
+    id: `${element.id}#${tenantId}`,
     name: element.name,
     description: element.description || null,
     sectionId: element.sectionId ? `${element.sectionId}#${tenantId}` : "",
@@ -69,7 +69,7 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
         const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
         componentData.push({
           id: componentId,
-          elementId: matchingElement?.id ? `${matchingElement.id}#${tenantId}` : "",
+          elementId: matchingElement?.id ? matchingElement.id : "",
           name: d.type,
           materials: [{ name: d.specification }],
           createdAt: new Date().toISOString(),
@@ -113,8 +113,8 @@ export async function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[
           name: phraseName,
           type: "Condition",
           associatedMaterialIds: [d.specification],
-          associatedElementIds: matchingElement.id ? [`${matchingElement.id}#${tenantId}`] : [],
-          associatedComponentIds: matchingComponent.id ? [`${matchingComponent.id}#${tenantId}`] : [],
+          associatedElementIds: matchingElement.id ? [matchingElement.id] : [],
+          associatedComponentIds: matchingComponent.id ? [matchingComponent.id] : [],
           phrase: phraseText,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

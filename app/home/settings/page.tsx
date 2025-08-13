@@ -18,6 +18,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData } from "./utils/mappers";
 import { getRawCounts } from "../clients/Database";
 import { withTenantId } from "../utils/tenant-utils";
+import { getCurrentTenantId } from "../utils/tenant-utils";
 
 function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -156,23 +157,23 @@ function SettingsPage() {
     });
   };
 
-  useEffect(() => {
-    async function fetchServerCounts() {
-      try {
-        const result = await getRawCounts();
-        if (result.ok) {
-          setServerCounts(result.val);
-        } else {
-          console.error("Failed to fetch server counts:", result.val);
-          toast.error("Failed to fetch server counts");
-        }
-      } catch (error) {
-        console.error("Failed to fetch server counts:", error);
+  async function refreshServerCounts() {
+    try {
+      const result = await getRawCounts();
+      if (result.ok) {
+        setServerCounts(result.val);
+      } else {
+        console.error("Failed to fetch server counts:", result.val);
         toast.error("Failed to fetch server counts");
       }
+    } catch (error) {
+      console.error("Failed to fetch server counts:", error);
+      toast.error("Failed to fetch server counts");
     }
+  }
 
-    fetchServerCounts();
+  useEffect(() => {
+    refreshServerCounts();
   }, []);
 
   async function seedAllData() {
@@ -188,13 +189,14 @@ function SettingsPage() {
       ].filter(Boolean));
 
       if (entitiesToSeed.sections) {
+        const tenantId = await getCurrentTenantId();
+        if (!tenantId) throw new Error("No tenant selected");
         for (const section of seedSectionData) {
-          const sectionWithTenant = await withTenantId({
-            id: section.id,
+          await sectionStore.add({
+            id: `${section.id}#${tenantId}`,
             name: section.name,
             order: section.order
-          });
-          await sectionStore.add(sectionWithTenant);
+          } as any);
         }
       }
 
@@ -226,6 +228,9 @@ function SettingsPage() {
 
       setSeedDialog(false);
       toast.success("Successfully seeded data");
+      // Note: seeding only updates local data. Server counts will update after sync.
+      // Still, refresh to reflect any pre-existing server changes.
+      await refreshServerCounts();
     } catch (error) {
       console.error("Error seeding data:", error);
       toast.error(getErrorMessage(error));
@@ -291,6 +296,7 @@ function SettingsPage() {
         toast.success("Successfully synced with server");
       }
 
+      await refreshServerCounts();
       setSyncDialog(false);
     } catch (error) {
       console.error("Failed to sync with server", error);
@@ -314,6 +320,9 @@ function SettingsPage() {
 
       setRemoveDialog(false);
       toast.success("Successfully removed selected data");
+      if (!localOnly) {
+        await refreshServerCounts();
+      }
     } catch (error) {
       console.error("Failed to remove data", error);
       toast.error(getErrorMessage(error));
