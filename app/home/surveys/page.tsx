@@ -109,11 +109,11 @@ function HomePage() {
   }, []);
 
   return (
-    <div>
-      <div className="flex justify-between mb-5 mt-5 items-end">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between mb-5 items-end">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold dark:text-white">Surveys</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="text-4xl font-bold tracking-tight dark:text-white mb-2  bg-gradient-to-r from-gray-900 via-blue-800  bg-clip-text ">Surveys</h1>
             <Badge variant="outline" className="text-sm">
               {data.length} total
             </Badge>

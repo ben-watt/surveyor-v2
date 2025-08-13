@@ -24,7 +24,7 @@ function EditorPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight dark:text-white mb-2">Document Editor</h1>
+          <h1 className="text-4xl font-bold tracking-tight dark:text-white mb-2  bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">Document Editor</h1>
           <p className="text-muted-foreground">Create and manage your documents with ease</p>
         </div>
         
