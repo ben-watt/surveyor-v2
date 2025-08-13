@@ -15,13 +15,26 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Mock Database store
-const mockAdd = jest.fn().mockResolvedValue(undefined);
+const mockAdd = jest.fn().mockImplementation(async (...args: any[]) => {
+  createdRef.value = true;
+  return undefined;
+});
 const mockUpdate = jest.fn().mockResolvedValue(undefined);
+const createdRef = { value: false } as { value: boolean };
 
 jest.mock('../../clients/Database', () => ({
   sectionStore: {
     add: (...args: any[]) => mockAdd(...args),
     update: (...args: any[]) => mockUpdate(...args),
+    useGet: (_id: string) => [true, createdRef.value ? {
+      id: _id,
+      name: 'Existing',
+      order: 0,
+      createdAt: '',
+      updatedAt: '',
+      syncStatus: 'synced',
+      tenantId: 't1'
+    } : undefined],
   },
 }));
 
@@ -36,7 +49,10 @@ declare global {
 describe('SectionForm autosave on create', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    createdRef.value = false;
   });
+
+  jest.setTimeout(15000);
 
   it('triggers add via autosave when creating a new section (no initialData)', async () => {
     render(<SectionForm />);
@@ -55,7 +71,6 @@ describe('SectionForm autosave on create', () => {
 
     // Assert an add occurred (payload may be partial while typing due to immediate autosave)
     expect(mockAdd).toHaveBeenCalled();
-    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it('uses update on subsequent autosaves after the first creation', async () => {

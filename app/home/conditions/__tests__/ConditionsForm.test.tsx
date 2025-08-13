@@ -5,7 +5,11 @@ import { DataForm } from '../form';
 
 jest.mock('react-hot-toast', () => ({ success: jest.fn(), error: jest.fn() }));
 
-const mockAdd = jest.fn().mockResolvedValue(undefined);
+const createdRef = { value: false } as { value: boolean };
+const mockAdd = jest.fn().mockImplementation(async (...args: any[]) => {
+  createdRef.value = true;
+  return undefined;
+});
 const mockUpdate = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('../../clients/Database', () => ({
@@ -13,6 +17,21 @@ jest.mock('../../clients/Database', () => ({
     add: (...args: any[]) => mockAdd(...args),
     update: (...args: any[]) => mockUpdate(...args),
     get: jest.fn(),
+    useGet: (id: string) => [true, createdRef.value ? {
+      id,
+      name: 'Existing',
+      type: 'condition',
+      phrase: '',
+      phraseLevel2: '',
+      associatedElementIds: [],
+      associatedComponentIds: [],
+      associatedMaterialIds: [],
+      owner: '',
+      createdAt: '',
+      updatedAt: '',
+      syncStatus: 'synced',
+      tenantId: 't1'
+    } : undefined],
   },
   elementStore: {
     useList: () => [true, [
@@ -29,6 +48,7 @@ jest.mock('../../clients/Database', () => ({
 describe('Condition DataForm autosave on create', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    createdRef.value = false;
   });
   jest.setTimeout(15000);
 
@@ -53,21 +73,15 @@ describe('Condition DataForm autosave on create', () => {
     await userEvent.clear(phraseTextarea);
     await userEvent.type(phraseTextarea, 'Initial Phrase');
 
-    // Wait for autosave (300ms + 2000ms)
-    await act(async () => {
-      await new Promise(res => setTimeout(res, 2400));
-    });
-
+    // Wait for autosave
     await waitFor(() => expect(mockAdd).toHaveBeenCalled());
 
-    // Update phrase text to trigger update
+    // Wait 2 seconds for debounce
+    await new Promise(resolve => setTimeout(resolve, 2000));
     await userEvent.clear(phraseTextarea);
     await userEvent.type(phraseTextarea, 'Updated Phrase');
 
-    await act(async () => {
-      await new Promise(res => setTimeout(res, 2400));
-    });
-
+    // Wait for autosave
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
   });
 });

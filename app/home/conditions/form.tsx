@@ -1,20 +1,20 @@
 "use client";
 
-import { PrimaryBtn } from "@/app/home/components/Buttons";
 import Input from "@/app/home/components/Input/InputText";
 import {
   FormProvider,
   useForm,
 } from "react-hook-form";
+import { useCallback, useEffect, useRef } from "react";
 import { DynamicComboBox } from "@/app/home/components/Input";
 import { Phrase } from "../clients/Dexie";
 import TextAreaInput from "../components/Input/TextAreaInput";
 import { componentStore, elementStore, phraseStore } from "../clients/Database";
 import toast from "react-hot-toast";
-import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../components/LastSavedIndicator";
+import { getAutoSaveTimings } from "../utils/autosaveTimings";
 
 type UpdateForm = Omit<
   Phrase,
@@ -28,78 +28,72 @@ interface DataFormProps {
 }
 
 export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
+  const idRef = useRef(id ?? uuidv4());
   const methods = useForm<UpdateForm>({ 
-    defaultValues: defaultValues,
-    mode: 'onChange' // Enable validation on change
+    defaultValues: { id: idRef.current, ...defaultValues },
+    mode: 'onChange'
   });
   const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
   const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
-  const [entityData, setEntityData] = useState<Phrase | null>(null);
-  const [isCreated, setIsCreated] = useState<boolean>(!!id);
+  const [phraseHydrated, phrase] = phraseStore.useGet(idRef.current);
 
   useEffect(() => {
-    const load = async () => {  
-      if(id) {
-        const phrase = await phraseStore.get(id);
-        if(phrase) {
-          methods.reset(phrase);
-          setEntityData(phrase);
-        }
-      }
+    if (phraseHydrated && phrase) {
+      const originalId = phrase.id.includes('#') ? phrase.id.split('#')[0] : phrase.id;
+      methods.reset({ ...(phrase as any), id: originalId });
     }
-
-    load();
-  }, [id, methods]);
+  }, [phraseHydrated, phrase, methods]);
 
   // Autosave functionality
-  const savePhrase = async (data: UpdateForm, { auto = false }: { auto?: boolean } = {}) => {
-    try {
-      if (!isCreated || !(data as any)?.id) {
-        const newId = uuidv4();
-        await phraseStore.add({
-          id: newId,
-          name: data.name,
-          type: "condition",
-          phrase: data.phrase,
-          phraseLevel2: data.phraseLevel2,
-          associatedElementIds: data.associatedElementIds ?? [],
-          associatedComponentIds: data.associatedComponentIds ?? [],
-          associatedMaterialIds: data.associatedMaterialIds ?? [],
-        });
-        methods.reset({ ...(data as any), id: newId });
-        setIsCreated(true);
-        if (!auto) toast.success("Phrase created");
-      } else {
-        const currentId = (data as any).id as string;
-        await phraseStore.update(currentId, (draft) => {
-          draft.name = data.name;
-          draft.type = "condition";
-          draft.phrase = data.phrase;
-          draft.phraseLevel2 = data.phraseLevel2;
-          draft.associatedElementIds = data.associatedElementIds;
-          draft.associatedComponentIds = data.associatedComponentIds;
-        });
-        if (!auto) toast.success("Phrase updated");
+  const savePhrase = useCallback(
+    async (data: UpdateForm, { auto = false }: { auto?: boolean } = {}) => {
+      try {
+        if (phraseHydrated && phrase) {
+          await phraseStore.update(idRef.current, draft => {
+            draft.name = data.name;
+            draft.type = "condition";
+            draft.phrase = data.phrase;
+            draft.phraseLevel2 = data.phraseLevel2;
+            draft.associatedElementIds = data.associatedElementIds ?? [];
+            draft.associatedComponentIds = data.associatedComponentIds ?? [];
+            draft.associatedMaterialIds = data.associatedMaterialIds ?? [];
+          });
+          if (!auto) toast.success("Phrase updated");
+        } else {
+          await phraseStore.add({
+            id: idRef.current,
+            name: data.name,
+            type: "condition",
+            phrase: data.phrase,
+            phraseLevel2: data.phraseLevel2,
+            associatedElementIds: data.associatedElementIds ?? [],
+            associatedComponentIds: data.associatedComponentIds ?? [],
+            associatedMaterialIds: data.associatedMaterialIds ?? [],
+          });
+          if (!auto) toast.success("Phrase created");
+        }
+        if (!auto) onSave?.();
+      } catch (error) {
+        console.error("Failed to save phrase", error);
+        if (!auto) toast.error("Error saving phrase");
+        throw error; // Re-throw for autosave error handling
       }
+    },
+    [phraseHydrated, phrase, onSave]
+  );
 
-      if (!auto) onSave?.();
-    } catch (error) {
-      console.error("Failed to save phrase", error);
-      if (!auto) toast.error("Error saving phrase");
-      throw error; // Re-throw for autosave error handling
-    }
-  };
-
+  const timings = getAutoSaveTimings(2000);
   const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
     savePhrase,
     watch,
     getValues,
     trigger,
     {
-      delay: 2000, // 2 second delay for autosave
+      delay: timings.delay,
+      watchDelay: timings.watchDelay,
       showToast: false, // Don't show toast for autosave
-      enabled: true, // Enable autosave for both new and existing phrases
+      enabled: phraseHydrated,
       validateBeforeSave: true // Enable validation before auto-save
     }
   );
@@ -146,7 +140,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         <LastSavedIndicator
           status={saveStatus}
           lastSavedAt={lastSavedAt || undefined}
-          entityUpdatedAt={entityData?.updatedAt}
+          entityUpdatedAt={phrase?.updatedAt}
           className="text-sm justify-center"
         />
       </div>

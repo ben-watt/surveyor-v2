@@ -446,6 +446,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       
       // Trigger sync asynchronously if online
       sync();
+      console.debug("[remove] Item removed", id);
     } else {
       console.error("[remove] Item not found", id);
     }

@@ -37,7 +37,15 @@ export function useAutoSaveForm<T extends FieldValues>(
   } = options;
 
   const autoSave = useAutoSave(saveFunction, autoSaveOptions);
-  const previousValuesRef = useRef<T | null>(null);
+  // Keep stable references to autosave functions to avoid re-subscribing the watcher on each render
+  const triggerAutoSaveRef = useRef(autoSave.triggerAutoSave);
+  const autoSaveSaveRef = useRef(autoSave.save);
+  useEffect(() => {
+    triggerAutoSaveRef.current = autoSave.triggerAutoSave;
+    autoSaveSaveRef.current = autoSave.save;
+  }, [autoSave.triggerAutoSave, autoSave.save]);
+  // Store a JSON snapshot to avoid reference equality issues when RHF mutates the same object
+  const previousValuesRef = useRef<string | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastValidationWasValidRef = useRef<boolean>(false);
 
@@ -68,29 +76,30 @@ export function useAutoSaveForm<T extends FieldValues>(
         return;
       }
       
-      // Check if values have actually changed
+      // Check if values have actually changed (compare JSON snapshots)
       const currentValues = data as T;
-      const previousValues = previousValuesRef.current;
-      
+      const currentValuesString = JSON.stringify(currentValues);
+      const previousValuesString = previousValuesRef.current;
+
       console.log('[useAutoSaveForm] Comparing values:', {
         currentValues,
-        previousValues,
-        hasChanged: !previousValues || JSON.stringify(currentValues) !== JSON.stringify(previousValues)
+        previousValuesString,
+        hasChanged: !previousValuesString || currentValuesString !== previousValuesString
       });
-      
-      if (previousValues && JSON.stringify(currentValues) === JSON.stringify(previousValues)) {
+
+      if (previousValuesString && currentValuesString === previousValuesString) {
         console.log('[useAutoSaveForm] No actual change, skipping autosave');
         return; // No actual change, skip autosave
       }
-      
-      // Update previous values
-      previousValuesRef.current = currentValues;
+
+      // Update previous values snapshot
+      previousValuesRef.current = currentValuesString;
 
       // If this change caused the form to become valid (and it wasn't before), save immediately
       if (validateBeforeSave && trigger) {
         const nowValid = await trigger();
         console.log('[useAutoSaveForm] Immediate validation result:', nowValid, 'prev:', lastValidationWasValidRef.current);
-        if (nowValid && !lastValidationWasValidRef.current) {
+          if (nowValid && !lastValidationWasValidRef.current) {
           if (saveImmediatelyOnBecomeValid) {
             // Clear any pending timer and flush save now
             if (debounceTimerRef.current) {
@@ -98,7 +107,7 @@ export function useAutoSaveForm<T extends FieldValues>(
               debounceTimerRef.current = null;
             }
             lastValidationWasValidRef.current = true;
-            await autoSave.save(currentValues, { auto: true });
+            await autoSaveSaveRef.current(currentValues, { auto: true });
             return;
           }
         }
@@ -129,15 +138,15 @@ export function useAutoSaveForm<T extends FieldValues>(
             setTimeout(async () => {
               const recheck = await trigger();
               console.log('[useAutoSaveForm] Re-validation result:', recheck);
-              if (recheck) {
-                autoSave.triggerAutoSave(currentValues);
-              }
+                if (recheck) {
+                  triggerAutoSaveRef.current(currentValues);
+                }
             }, 150);
             return;
           }
         }
         
-        autoSave.triggerAutoSave(currentValues);
+        triggerAutoSaveRef.current(currentValues);
       }, watchDelay);
     });
 
@@ -148,7 +157,7 @@ export function useAutoSaveForm<T extends FieldValues>(
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [watch, watchChanges, watchDelay, autoSave, skipFocusBlur, validateBeforeSave, trigger]);
+  }, [watch, watchChanges, watchDelay, skipFocusBlur, validateBeforeSave, saveImmediatelyOnBecomeValid, trigger]);
 
   // Initialize previous values when form is first loaded
   useEffect(() => {
@@ -156,7 +165,7 @@ export function useAutoSaveForm<T extends FieldValues>(
       const initialValues = getValues();
       console.log('[useAutoSaveForm] Initializing with values:', initialValues);
       if (initialValues && Object.keys(initialValues).length > 0) {
-        previousValuesRef.current = initialValues;
+        previousValuesRef.current = JSON.stringify(initialValues);
       }
     }
   }, [watchChanges, getValues]);

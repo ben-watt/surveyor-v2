@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Section as SectionData } from "@/app/home/clients/Dexie";
 import { sectionStore } from "../clients/Database";
 import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
+import { getAutoSaveTimings } from "../utils/autosaveTimings";
 import { LastSavedIndicator } from "../components/LastSavedIndicator";
 import InputError from "../components/InputError";
 import toast from "react-hot-toast";
@@ -19,39 +20,33 @@ interface SectionFormProps {
 
 export default function SectionForm({ initialData }: SectionFormProps) {
   const router = useRouter();
-  const [entityData, setEntityData] = useState<SectionData | null>(null);
-  const [isCreated, setIsCreated] = useState<boolean>(!!initialData);
+  const idRef = React.useRef(initialData?.id ?? uuidv4())
+  const [isHydrated, section] = sectionStore.useGet(idRef.current);
   
   const form = useForm<SectionData>({
     defaultValues: initialData || {
-      id: uuidv4(),
+      id: idRef.current,
       name: "",
       order: 0,
     },
-    mode: 'onChange' // Enable validation on change
+    mode: 'onChange'
   });
 
   const { register, watch, getValues, trigger, formState: { errors } } = form;
 
-  useEffect(() => {
-    if (initialData) {
-      setEntityData(initialData);
-    }
-  }, [initialData]);
-
   // Autosave functionality
   const saveSection = async (data: SectionData, { auto = false }: { auto?: boolean } = {}) => {
     try {
-      if (isCreated) {
-        await sectionStore.update(data.id, (currentState) => {
-          return { ...currentState, ...data };
+      if (isHydrated && section) {
+        await sectionStore.update(data.id, (draft) => {
+          draft.name = data.name;
+          draft.order = data.order;
         });
+        console.debug("[saveSection] Section updated", data);
         if (!auto) toast.success("Section updated successfully");
       } else {
         await sectionStore.add(data);
-        // Ensure subsequent autosaves perform updates
-        setEntityData(data);
-        setIsCreated(true);
+        console.debug("[saveSection] Section created", data);
         if (!auto) {
           toast.success("Section created successfully");
           router.push("/home/sections");
@@ -64,21 +59,24 @@ export default function SectionForm({ initialData }: SectionFormProps) {
     }
   };
 
+  const timings = getAutoSaveTimings(1000);
   const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
     saveSection,
     watch,
     getValues,
     trigger,
     {
-      delay: 1000, // 1 second delay for autosave
+      delay: timings.delay,
+      watchDelay: timings.watchDelay,
       showToast: false, // Don't show toast for autosave
-      enabled: true, // Enable autosave for both new and existing sections
+      enabled: isHydrated, // Enable autosave for both new and existing sections
       validateBeforeSave: true // Enable validation before auto-save
     }
   );
 
   return (
     <FormProvider {...form}>
+      {isHydrated && (
       <div className="space-y-4">
         <div>
           <Label htmlFor="name">Name</Label>
@@ -93,10 +91,11 @@ export default function SectionForm({ initialData }: SectionFormProps) {
         <LastSavedIndicator
           status={saveStatus}
           lastSavedAt={lastSavedAt || undefined}
-          entityUpdatedAt={entityData?.updatedAt}
+          entityUpdatedAt={section?.updatedAt}
           className="text-sm justify-center"
-        />
-      </div>
+          />
+        </div>
+      )}
     </FormProvider>
   );
 } 

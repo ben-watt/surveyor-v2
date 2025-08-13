@@ -9,7 +9,11 @@ jest.mock('../../components/Drawer', () => ({
   useDynamicDrawer: () => ({ isOpen: false, openDrawer: jest.fn(), closeDrawer: jest.fn() }),
 }));
 
-const mockAdd = jest.fn().mockResolvedValue(undefined);
+const createdRef = { value: false } as { value: boolean };
+const mockAdd = jest.fn().mockImplementation(async (...args: any[]) => {
+  createdRef.value = true;
+  return undefined;
+});
 const mockUpdate = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('../../clients/Database', () => ({
@@ -17,6 +21,17 @@ jest.mock('../../clients/Database', () => ({
     add: (...args: any[]) => mockAdd(...args),
     update: (...args: any[]) => mockUpdate(...args),
     get: jest.fn(),
+    useGet: (id: string) => [true, createdRef.value ? {
+      id,
+      name: 'Existing',
+      order: 0,
+      sectionId: 's1',
+      description: '',
+      createdAt: '',
+      updatedAt: '',
+      syncStatus: 'synced',
+      tenantId: 't1'
+    } : undefined],
   },
   sectionStore: {
     useList: () => [true, [
@@ -29,6 +44,7 @@ describe('Element DataForm autosave on create', () => {
   jest.setTimeout(15000);
   beforeEach(() => {
     jest.clearAllMocks();
+    createdRef.value = false;
   });
 
   it('adds on first autosave then updates subsequently', async () => {
@@ -46,21 +62,14 @@ describe('Element DataForm autosave on create', () => {
     await userEvent.clear(inputs[0]);
     await userEvent.type(inputs[0], 'Element Name');
 
-    // Wait for autosave: 300ms debounce + 2000ms delay
-    await act(async () => {
-      await new Promise(res => setTimeout(res, 2400));
-    });
-
+    // Wait for autosave
     await waitFor(() => expect(mockAdd).toHaveBeenCalled());
 
     // Change name to trigger update
     await userEvent.clear(inputs[0]);
     await userEvent.type(inputs[0], 'Element Updated');
 
-    await act(async () => {
-      await new Promise(res => setTimeout(res, 2400));
-    });
-
+    // Wait for autosave
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
   });
 });
