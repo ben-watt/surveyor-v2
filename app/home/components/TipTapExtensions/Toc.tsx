@@ -7,6 +7,7 @@ import {
 } from "@tiptap/react";
 import { createContext, useCallback, useEffect, useState, useRef } from "react";
 import { renderReactToDomSpec } from "./Helper";
+import { parseDataHierarchy, TableOfContentsDataItemWithHierarchy } from './tocUtils';
 
 interface TocDataItem {
   originalLevel: number;
@@ -88,10 +89,7 @@ export const TocNode = Node.create({
   },
 });
 
-export interface TableOfContentsDataItemWithHierarchy {
-  item: TocDataItem;
-  hierarchyText: string;
-}
+// TableOfContentsDataItemWithHierarchy moved to tocUtils.ts
 
 interface TocProps {
   maxDepth?: number;
@@ -127,48 +125,7 @@ const Toc = ({ maxDepth = 1, data }: TocProps) => {
 };
 
 
-function appendZeroToHierarchyText(text: string): string {
-  if(text.includes(".")) {
-    return text;
-  }
-  return text + ".0";
-}
-
-function parseDataHierarchy(
-  data: TocDataItem[]
-): TableOfContentsDataItemWithHierarchy[] {
-  let stack: number[] = [];
-  return data.map((item, i, array) => {
-    const previousItem = array[i - 1];
-    // Down the hierarchy
-    if (previousItem && previousItem.originalLevel < item.originalLevel) {
-      const levelsToPush = item.originalLevel - previousItem.originalLevel;
-      for (let i = 0; i < levelsToPush; i++) {
-        if (i > 0) {
-          stack.push(1);
-        } else {
-          stack.push(previousItem.itemIndex);
-        }
-      }
-    }
-
-    // Up the hierarchy
-    if (previousItem && previousItem.originalLevel > item.originalLevel) {
-      const levelsToPop = previousItem.originalLevel - item.originalLevel;
-      for (let i = 0; i < levelsToPop; i++) {
-        stack.pop();
-      }
-    }
-
-    stack.push(item.itemIndex);
-    const text = stack.join(".");
-    stack.pop();
-    return {
-      item,
-      hierarchyText: appendZeroToHierarchyText(text),
-    };
-  });
-}
+// parseDataHierarchy moved to tocUtils.ts
 
 export interface TocRepo {
   key: string;
