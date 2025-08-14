@@ -23,20 +23,32 @@ export default function RootLayout({
   useEffect(() => {
     // Setup online/offline handlers
     const handleOnline = () => {
-      // Trigger immediate sync when coming online
-      surveyStore.sync();
-      componentStore.sync();
-      elementStore.sync();
-      phraseStore.sync();
-      sectionStore.sync();
-      imageUploadStore.sync();
-      imageMetadataStore.sync();
+      // Trigger immediate sync when coming online - use forceSync to bypass debouncing
+      surveyStore.forceSync();
+      componentStore.forceSync();
+      elementStore.forceSync();
+      phraseStore.forceSync();
+      sectionStore.forceSync();
+      imageUploadStore.sync(); // Keep regular sync for image uploads
+      imageMetadataStore.forceSync();
     };
+
+    // Start periodic sync for main stores (5 minutes interval)
+    const cleanupFunctions = [
+      surveyStore.startPeriodicSync(300000),
+      componentStore.startPeriodicSync(300000),
+      elementStore.startPeriodicSync(300000),
+      phraseStore.startPeriodicSync(300000),
+      sectionStore.startPeriodicSync(300000),
+      imageMetadataStore.startPeriodicSync(300000),
+    ];
 
     window.addEventListener('online', handleOnline);
 
     return () => {
       window.removeEventListener('online', handleOnline);
+      // Clean up periodic sync intervals
+      cleanupFunctions.forEach(cleanup => cleanup());
     };
   }, []);
 

@@ -181,11 +181,11 @@ function SettingsPage() {
       setIsLoading(true);
 
       await Promise.all([
-        entitiesToSeed.elements && elementStore.removeAll({ options: false }),
-        entitiesToSeed.components && componentStore.removeAll({ options: false }),
-        entitiesToSeed.phrases && phraseStore.removeAll({ options: false }),
-        entitiesToSeed.sections && sectionStore.removeAll({ options: false }),
-        entitiesToSeed.surveys && surveyStore.removeAll({ options: false })
+        entitiesToSeed.elements && elementStore.removeAll(false),
+        entitiesToSeed.components && componentStore.removeAll(false),
+        entitiesToSeed.phrases && phraseStore.removeAll(false),
+        entitiesToSeed.sections && sectionStore.removeAll(false),
+        entitiesToSeed.surveys && surveyStore.removeAll(false)
       ].filter(Boolean));
 
       if (entitiesToSeed.sections) {
@@ -311,11 +311,11 @@ function SettingsPage() {
       setIsLoading(true);
       
       await Promise.all([
-        entitiesToRemove.elements && elementStore.removeAll({ options: !localOnly }),
-        entitiesToRemove.components && componentStore.removeAll({ options: !localOnly }),
-        entitiesToRemove.phrases && phraseStore.removeAll({ options: !localOnly }),
-        entitiesToRemove.sections && sectionStore.removeAll({ options: !localOnly }),
-        entitiesToRemove.surveys && surveyStore.removeAll({ options: !localOnly })
+        entitiesToRemove.elements && elementStore.removeAll(!localOnly),
+        entitiesToRemove.components && componentStore.removeAll(!localOnly),
+        entitiesToRemove.phrases && phraseStore.removeAll(!localOnly),
+        entitiesToRemove.sections && sectionStore.removeAll(!localOnly),
+        entitiesToRemove.surveys && surveyStore.removeAll(!localOnly)
       ].filter(Boolean));
 
       setRemoveDialog(false);

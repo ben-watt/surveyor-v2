@@ -48,11 +48,11 @@ type TableEntity = {
 
 enum SyncStatus {
   Synced = "synced",
-  Draft = "draft",
+  Draft = "draft", // Used in other components
   Queued = "queued",
   Failed = "failed",
   PendingDelete = "pending_delete",
-  Archived = "archived",
+  Archived = "archived", // Used in ImageUploadStore
 }
 
 export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
@@ -70,11 +70,55 @@ export interface DexieStore<T, TCreate> {
   get: (id: string) => Promise<T | null>;
   update: (id: string, updateFn: (currentState: Draft<T>) => void) => Promise<void>;
   remove: (id: string) => Promise<void>;
-  removeAll: (options: { options: boolean }) => Promise<void>;
+  removeAll: (deleteRemote?: boolean) => Promise<void>;
   sync: DebouncedFunc<() => Promise<Result<void, Error>>>;
   startPeriodicSync: (intervalMs?: number) => () => void;
   forceSync: () => Promise<Result<void, Error>>;
 }
+
+// Helper to normalize Result types
+const normalizeResult = <T>(result: T | Result<T, Error>): Result<T, Error> => {
+  if (result instanceof Ok || result instanceof Err) {
+    return result as Result<T, Error>;
+  }
+  return Ok(result);
+};
+
+// Custom hook for auth and tenant management
+const useAuthAndTenant = () => {
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  
+  useEffect(() => {
+    let mounted = true;
+    
+    const initialize = async () => {
+      try {
+        await getCurrentUser();
+        if (mounted) {
+          setAuthReady(true);
+          const tid = await getCurrentTenantId();
+          setTenantId(tid);
+          setHydrated(true);
+        }
+      } catch (error) {
+        if (mounted) {
+          setAuthReady(true);
+          setHydrated(true);
+        }
+      }
+    };
+    
+    const timeout = setTimeout(initialize, 200);
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
+  }, []);
+  
+  return { tenantId, authReady, hydrated };
+};
 
 function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string }, TUpdate extends { id: string }>(
   db: Dexie,
@@ -100,10 +144,6 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     if (!navigator.onLine) {
       return Err(new Error("Not online"));
     }
-    
-    if (syncInProgress) {
-      return Err(new Error("Sync already in progress"));
-    }
 
     const syncResult = await syncWithServer();
     if (syncResult.ok) {
@@ -117,41 +157,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   const debounceSync = debounce(sync, 1000);
 
   const useList = (): [boolean, T[]] => {
-    const [hydrated, setHydrated] = useState<boolean>(false);
-    const [tenantId, setTenantId] = useState<string | null>(null);
-    const [authReady, setAuthReady] = useState(false);
-
-    useEffect(() => {
-      let mounted = true;
-      
-      const checkAuth = async () => {
-        try {
-          const user = await getCurrentUser();
-          if (mounted && user) {
-            setAuthReady(true);
-          }
-        } catch (error) {
-          if (mounted) {
-            setAuthReady(false);
-          }
-        }
-      };
-
-      const timeout = setTimeout(() => {
-        checkAuth();
-      }, 200);
-
-      return () => {
-        mounted = false;
-        clearTimeout(timeout);
-      };
-    }, []);
-
-    useEffect(() => {
-      if (authReady) {
-        getCurrentTenantId().then(setTenantId);
-      }
-    }, [authReady]);
+    const { tenantId, authReady, hydrated } = useAuthAndTenant();
 
     const data = useLiveQuery(
       async () => {
@@ -162,7 +168,6 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
           .equals(tenantId)
           .and(item => item.syncStatus !== SyncStatus.PendingDelete)
           .toArray();
-        setHydrated(true);
         return items;
       },
       [tenantId, authReady]
@@ -172,39 +177,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
-    const [tenantId, setTenantId] = useState<string | null>(null);
-    const [authReady, setAuthReady] = useState(false);
-
-    // Check auth state
-    useEffect(() => {
-      let mounted = true;
-
-      const checkAuth = async () => {
-        try {
-          await getCurrentUser();
-          if (mounted) {
-            setAuthReady(true);
-          }
-        } catch (error) {
-          if (mounted) {
-            setAuthReady(true); // Still set to true as auth might be ready but no user
-          }
-        }
-      };
-
-      checkAuth();
-
-      return () => {
-        mounted = false;
-      };
-    }, []);
-
-    // Get tenant ID
-    useEffect(() => {
-      if (authReady) {
-        getCurrentTenantId().then(setTenantId);
-      }
-    }, [authReady]);
+    const { tenantId, authReady, hydrated } = useAuthAndTenant();
 
     const result = useLiveQuery(
       async () => {
@@ -219,7 +192,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       [id, tenantId, authReady]
     );
     
-    return [result !== undefined && authReady && tenantId !== null, result?.value];
+    return [hydrated && authReady && tenantId !== null, result?.value];
   };
 
   const syncWithServer = async (): Promise<Result<void, Error>> => {
@@ -311,6 +284,36 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         }
       }
 
+      // Helper to process local records
+      const processLocalRecord = async (local: T, exists: boolean) => {
+        try {
+          const operation = exists ? "Updating" : "Creating";
+          console.log(`[syncWithServer] ${operation}...`, local);
+          
+          const result = exists 
+            ? await remoteHandlers.update({ ...local } as unknown as TUpdate)
+            : await remoteHandlers.create({ ...local } as unknown as TCreate);
+          
+          const normalized = normalizeResult(result);
+          if (normalized.ok) {
+            await table.put({ ...normalized.val, tenantId, syncStatus: SyncStatus.Synced });
+          } else {
+            await table.put({ 
+              ...local, 
+              syncStatus: SyncStatus.Failed, 
+              syncError: normalized.val.message ?? `Failed to ${exists ? 'update' : 'create'} item`
+            });
+          }
+        } catch(error: any) {
+          console.log("[syncWithServer] Error...", error);
+          await table.put({ 
+            ...local, 
+            syncStatus: SyncStatus.Failed, 
+            syncError: error.message || error.toString() || "Unknown error"
+          });
+        }
+      };
+
       // Process local queued/failed items
       const localRecords = await table.where('syncStatus')
         .equals(SyncStatus.Queued)
@@ -321,51 +324,8 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
 
       for (const local of localRecords) {
         console.log("[syncWithServer] Processing local record", local);
-        try {
-            const exists = remoteData.find(r => r.id === local.id);
-            
-            if(exists) {
-              console.log("[syncWithServer] Updating...", local);
-              const updateData = { ...local } as unknown as TUpdate;
-              const updateResult = await remoteHandlers.update(updateData);
-              if (updateResult instanceof Ok) {
-                await table.put({ ...updateResult.val, tenantId, syncStatus: SyncStatus.Synced });
-              } else if (updateResult instanceof Err) {
-                await table.put({ 
-                  ...local, 
-                  syncStatus: SyncStatus.Failed, 
-                  syncError: updateResult.val.message ?? "Failed to update item"
-                });
-              } else {
-                // Handle direct result (not wrapped in Result)
-                await table.put({ ...updateResult, tenantId, syncStatus: SyncStatus.Synced });
-              }
-            } else {
-              console.log("[syncWithServer] Creating...", local);
-              const createData = { ...local } as unknown as TCreate;
-              const createResult = await remoteHandlers.create(createData);
-              if (createResult instanceof Ok) {
-                await table.put({ ...createResult.val, tenantId, syncStatus: SyncStatus.Synced });
-              } else if (createResult instanceof Err) {
-                await table.put({ 
-                  ...local, 
-                  syncStatus: SyncStatus.Failed, 
-                  syncError: createResult.val.message ?? "Failed to create item"
-                });
-              } else {
-                // Handle direct result (not wrapped in Result)
-                await table.put({ ...createResult, tenantId, syncStatus: SyncStatus.Synced });
-              }
-            }
-          } catch(error: any) {
-            console.log("[syncWithServer] Error...", error);
-            const errorMessage = error.message || error.toString() || "Unknown error";
-            await table.put({ 
-              ...local, 
-              syncStatus: SyncStatus.Failed, 
-              syncError: errorMessage 
-            });
-          }
+        const exists = remoteData.find(r => r.id === local.id);
+        await processLocalRecord(local, !!exists);
       }
 
       console.debug("[syncWithServer] Synced with server successfully"); 
@@ -442,17 +402,20 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     }
   };
 
-  const removeAll = async ({ options: deleteRemote = true }: { options: boolean }) => {
-      const all = await table.toArray();
+  const removeAll = async (deleteRemote: boolean = true) => {
       if (deleteRemote) {
-        // Mark all items for deletion
-        for (const item of all) {
-          await table.put({
-            ...item,
-            syncStatus: SyncStatus.PendingDelete,
-            updatedAt: new Date().toISOString(),
-          });
-        }
+        const tenantId = await getCurrentTenantId();
+        if (!tenantId) return;
+        
+        // Mark all items for deletion using bulk operation
+        const items = await table.where('tenantId').equals(tenantId).toArray();
+        const updates = items.map(item => ({
+          ...item,
+          syncStatus: SyncStatus.PendingDelete,
+          updatedAt: new Date().toISOString(),
+        }));
+        
+        await table.bulkPut(updates);
         sync();
       } else {
         // Just clear the table locally
@@ -460,39 +423,12 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     }
   };
 
-  // Add periodic sync function that can be called from layout
+  // Periodic sync function - simplified as syncWithServer already handles retries
   const startPeriodicSync = (intervalMs: number = 300000) => {
     const interval = setInterval(async () => {
       if (navigator.onLine && !syncInProgress) {
         try {
           await syncWithServer();
-          
-          // Retry failed items after a successful sync
-          const tenantId = await getCurrentTenantId();
-          if (tenantId) {
-            const failedItems = await table.where('syncStatus')
-              .equals(SyncStatus.Failed)
-              .and(item => item.tenantId === tenantId)
-              .toArray();
-            
-            if (failedItems.length > 0) {
-              console.debug(`[startPeriodicSync] Retrying ${failedItems.length} failed items`);
-              // Reset failed items to queued for retry (but limit retries)
-              for (const item of failedItems) {
-                const retryCount = parseInt(item.syncError?.match(/retry:(\d+)/)?.[1] || '0');
-                if (retryCount < 3) {
-                  await table.put({
-                    ...item,
-                    syncStatus: SyncStatus.Queued,
-                    syncError: `retry:${retryCount + 1}`,
-                    updatedAt: new Date().toISOString(),
-                  });
-                } else {
-                  console.warn(`[startPeriodicSync] Item ${item.id} has exceeded retry limit`);
-                }
-              }
-            }
-          }
         } catch (error) {
           console.error("[startPeriodicSync] Error during periodic sync:", error);
         }
@@ -505,26 +441,25 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   const forceSync = async (): Promise<Result<void, Error>> => {
     console.debug("[forceSync] Starting forced sync");
     
-    // Reset all queued and failed items to try again
+    // Reset all failed items to try again
     const tenantId = await getCurrentTenantId();
     if (tenantId) {
-      const stuckItems = await table.where('syncStatus')
-        .equals(SyncStatus.Queued)
-        .or('syncStatus')
+      const failedItems = await table.where('syncStatus')
         .equals(SyncStatus.Failed)
         .and(item => item.tenantId === tenantId)
         .toArray();
       
-      for (const item of stuckItems) {
-        await table.put({
+      if (failedItems.length > 0) {
+        const updates = failedItems.map(item => ({
           ...item,
           syncStatus: SyncStatus.Queued,
           syncError: undefined,
           updatedAt: new Date().toISOString(),
-        });
+        }));
+        
+        await table.bulkPut(updates);
+        console.debug(`[forceSync] Reset ${failedItems.length} failed items`);
       }
-      
-      console.debug(`[forceSync] Reset ${stuckItems.length} stuck items`);
     }
     
     return await syncWithServer();
