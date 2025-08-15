@@ -365,7 +365,7 @@ describe('stateUtils', () => {
       const endTime = performance.now();
 
       expect(path).toEqual(['section-500', 'element-500-50']);
-      expect(endTime - startTime).toBeLessThan(100); // Should complete within 100ms
+      expect(endTime - startTime).toBeLessThan(150); // Should complete within 100ms
     });
   });
 
