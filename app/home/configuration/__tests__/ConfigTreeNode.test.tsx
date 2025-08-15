@@ -157,7 +157,12 @@ describe('ConfigTreeNode', () => {
 
   describe('Context Menu Tests', () => {
     it('should show context menu button for all entities', () => {
-      render(<ConfigTreeNode {...defaultProps} />);
+      // Use collapsed node to avoid multiple context menu buttons
+      const collapsedProps = {
+        ...defaultProps,
+        expandedNodes: new Set<string>() // No expanded nodes
+      };
+      render(<ConfigTreeNode {...collapsedProps} />);
       
       const contextButton = screen.getByRole('button', { name: /open menu/i });
       expect(contextButton).toBeInTheDocument();
@@ -175,7 +180,12 @@ describe('ConfigTreeNode', () => {
 
   describe('CRUD Operations Tests', () => {
     it('should have delete functionality available', () => {
-      render(<ConfigTreeNode {...defaultProps} />);
+      // Use collapsed node to avoid multiple context menu buttons
+      const collapsedProps = {
+        ...defaultProps,
+        expandedNodes: new Set<string>() // No expanded nodes
+      };
+      render(<ConfigTreeNode {...collapsedProps} />);
       
       // Test that the component has the necessary props and setup for CRUD operations
       const contextButton = screen.getByRole('button', { name: /open menu/i });
@@ -184,8 +194,13 @@ describe('ConfigTreeNode', () => {
 
     it('should accept onCreateChild callback', () => {
       const mockOnCreateChild = jest.fn();
+      // Use collapsed node to avoid multiple context menu buttons
+      const collapsedProps = {
+        ...defaultProps,
+        expandedNodes: new Set<string>() // No expanded nodes
+      };
       
-      render(<ConfigTreeNode {...defaultProps} onCreateChild={mockOnCreateChild} />);
+      render(<ConfigTreeNode {...collapsedProps} onCreateChild={mockOnCreateChild} />);
       
       // Test that component accepts the callback prop
       const contextButton = screen.getByRole('button', { name: /open menu/i });
@@ -203,7 +218,12 @@ describe('ConfigTreeNode', () => {
 
   describe('Accessibility Tests', () => {
     it('should have proper ARIA labels', () => {
-      const { container } = render(<ConfigTreeNode {...defaultProps} />);
+      // Use collapsed node to avoid multiple context menu buttons
+      const collapsedProps = {
+        ...defaultProps,
+        expandedNodes: new Set<string>() // No expanded nodes
+      };
+      const { container } = render(<ConfigTreeNode {...collapsedProps} />);
       
       // Check that the menu button has proper accessibility
       const menuButton = screen.getByRole('button', { name: /open menu/i });
@@ -215,7 +235,12 @@ describe('ConfigTreeNode', () => {
     });
 
     it('should support keyboard navigation', () => {
-      const { container } = render(<ConfigTreeNode {...defaultProps} />);
+      // Use collapsed node to avoid multiple context menu buttons
+      const collapsedProps = {
+        ...defaultProps,
+        expandedNodes: new Set<string>() // No expanded nodes
+      };
+      const { container } = render(<ConfigTreeNode {...collapsedProps} />);
       
       // Find the menu button which is focusable
       const menuButton = screen.getByRole('button', { name: /open menu/i });
@@ -233,7 +258,12 @@ describe('ConfigTreeNode', () => {
     });
 
     it('should have sufficient touch targets for mobile', () => {
-      const { container } = render(<ConfigTreeNode {...defaultProps} />);
+      // Use collapsed node to avoid multiple context menu buttons
+      const collapsedProps = {
+        ...defaultProps,
+        expandedNodes: new Set<string>() // No expanded nodes
+      };
+      const { container } = render(<ConfigTreeNode {...collapsedProps} />);
       
       // Check that the main container has minimum height for touch by checking HTML content
       const nodeContainerHtml = container.innerHTML;

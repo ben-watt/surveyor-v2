@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, ChevronDown, Layers, Grid2x2, Blocks, MessageSquare, MoreHorizontal, Plus } from 'lucide-react';
+import { ChevronRight, ChevronDown, Layers, Grid2x2, Blocks, MessageSquare, MoreHorizontal, Plus, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TreeNode } from '../hooks/useHierarchicalData';
@@ -21,9 +21,12 @@ interface ConfigTreeNodeProps {
   lastEditedEntity?: { id: string; type: string; timestamp: number } | null;
   expandedNodes?: Set<string>;
   onCreateChild?: (parentType: string, parentId: string, childType: string) => void;
+  dragAttributes?: any;
+  dragListeners?: any;
+  headerOnly?: boolean; // When true, only render the header without children
 }
 
-export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, expandedNodes, onCreateChild }: ConfigTreeNodeProps) {
+export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, expandedNodes, onCreateChild, dragAttributes, dragListeners, headerOnly = false }: ConfigTreeNodeProps) {
   const router = useRouter();
   const hasChildren = node.children.length > 0;
 
@@ -216,6 +219,18 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
         }`}
         style={{ paddingLeft: `${Math.max(level * 12 + 8, 8)}px` }}
       >
+        {/* Drag handle - only show for draggable entities (not conditions) */}
+        {node.type !== 'condition' && dragAttributes && dragListeners && (
+          <div
+            {...dragAttributes}
+            {...dragListeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 flex-shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+        )}
+        
         {hasChildren ? (
           <Button
             variant="ghost"
@@ -226,7 +241,7 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
               onToggleExpand(node.id);
             }}
           >
-            {node.isExpanded ? (
+            {(expandedNodes?.has(node.id) || node.isExpanded) ? (
               <ChevronDown className="w-5 h-5 sm:w-4 sm:h-4" />
             ) : (
               <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
@@ -281,7 +296,7 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
         </DropdownMenu>
       </div>
       
-      {hasChildren && node.isExpanded && (
+      {!headerOnly && hasChildren && (expandedNodes?.has(node.id) || node.isExpanded) && (
         <div>
           {node.children.map(child => (
             <ConfigTreeNode

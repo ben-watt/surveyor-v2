@@ -3,7 +3,6 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TreeNode } from '../hooks/useHierarchicalData';
 import { ConfigTreeNode } from './ConfigTreeNode';
@@ -23,6 +22,9 @@ interface DraggableTreeNodeProps {
     isDragging: boolean;
     activeNode: TreeNode | null;
   };
+  lastEditedEntity?: { id: string; type: string; timestamp: number } | null;
+  expandedNodes?: Set<string>;
+  onCreateChild?: (parentType: string, parentId: string, childType: string) => void;
 }
 
 const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
@@ -36,6 +38,9 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
   isDropping = false,
   dropPosition = null,
   dragState,
+  lastEditedEntity,
+  expandedNodes,
+  onCreateChild,
 }) => {
   const {
     attributes,
@@ -72,26 +77,8 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
       )}
       
       <div className="relative">
-        {/* Node header with drag handle - only the header row, not children */}
+        {/* Node header - only the header row, not children */}
         <div className="relative group">
-          {/* Drag handle - only show for draggable entities (not conditions) */}
-          {isDragEnabled && node.type !== 'condition' && (
-            <div
-              {...attributes}
-              {...listeners}
-              className={cn(
-                'absolute -left-6 top-1/2 -translate-y-1/2 cursor-grab z-20',
-                'opacity-0 group-hover:opacity-100 transition-opacity',
-                'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
-                'p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700',
-                'touch-none', // Prevent touch scrolling when dragging
-                isDragging && 'cursor-grabbing opacity-100'
-              )}
-            >
-              <GripVertical className="h-4 w-4" />
-            </div>
-          )}
-          
           {/* Node header content - render just the header without expanded children */}
           <div className={cn(
             'relative',
@@ -99,10 +86,15 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
             'ring-2 ring-blue-500 ring-offset-2 rounded-lg'
           )}>
             <ConfigTreeNode
-              node={{...node, isExpanded: false}} // Force header-only rendering
+              node={node}
               onToggleExpand={onToggle}
               level={depth}
-              expandedNodes={new Set()}
+              expandedNodes={isExpanded ? new Set([node.id]) : new Set()}
+              dragAttributes={attributes}
+              dragListeners={listeners}
+              lastEditedEntity={lastEditedEntity}
+              onCreateChild={onCreateChild}
+              headerOnly={true}
             />
           </div>
         </div>
@@ -144,6 +136,9 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                         isValidDropTarget={false}
                         isDropping={false}
                         dragState={dragState}
+                        lastEditedEntity={lastEditedEntity}
+                        expandedNodes={expandedNodes}
+                        onCreateChild={onCreateChild}
                       />
                     );
                   } else {
@@ -155,6 +150,8 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                         onToggleExpand={onToggle}
                         level={depth + 1}
                         expandedNodes={new Set(child.isExpanded ? [child.id] : [])}
+                        lastEditedEntity={lastEditedEntity}
+                        onCreateChild={onCreateChild}
                       />
                     );
                   }
@@ -187,6 +184,8 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                   onToggleExpand={onToggle}
                   level={depth + 1}
                   expandedNodes={new Set(child.isExpanded ? [child.id] : [])}
+                  lastEditedEntity={lastEditedEntity}
+                  onCreateChild={onCreateChild}
                 />
               ))
             )}

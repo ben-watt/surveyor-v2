@@ -7,9 +7,7 @@ import { useHierarchicalData, TreeNode } from '../hooks/useHierarchicalData';
 import { useDragDrop } from '../hooks/useDragDrop';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Expand, Minimize2, Loader2, Plus, Layers, Grid2x2, Blocks, MessageSquare, Move } from 'lucide-react';
+import { Expand, Minimize2, Loader2, Plus, Layers, Grid2x2, Blocks, MessageSquare } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +45,6 @@ export function HierarchicalConfigView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredData, setFilteredData] = useState<TreeNode[]>([]);
   const [lastEditedEntity, setLastEditedEntity] = useState<{ id: string; type: string; timestamp: number } | null>(null);
-  const [isDragEnabled, setIsDragEnabled] = useState(false);
   const searchParams = useSearchParams();
 
   // Drag and drop handlers
@@ -371,21 +368,6 @@ export function HierarchicalConfigView() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
-          {/* Drag mode toggle */}
-          <div className="flex space-x-2 items-center ml-auto">
-            <Switch
-              id="drag-mode"
-              checked={isDragEnabled}
-              onCheckedChange={setIsDragEnabled}
-              disabled={searchQuery !== ''}
-            />
-            <Label htmlFor="drag-mode" className="cursor-pointer flex items-center">
-              <Move className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Drag Mode</span>
-              <span className="sm:hidden">Drag</span>
-            </Label>
-          </div>
         </div>
         {searchQuery && (
           <div className="text-sm text-muted-foreground">
@@ -400,7 +382,7 @@ export function HierarchicalConfigView() {
           <div className="text-center py-8 text-muted-foreground">
             {searchQuery ? 'No results found' : 'No configuration data available'}
           </div>
-        ) : isDragEnabled ? (
+        ) : (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -438,6 +420,9 @@ export function HierarchicalConfigView() {
                     isDropping={dragState.overId === node.id}
                     dropPosition={dragState.overId === node.id ? dragState.dropPosition : null}
                     dragState={dragState}
+                    lastEditedEntity={lastEditedEntity}
+                    expandedNodes={expandedNodes}
+                    onCreateChild={handleCreateChild}
                   />
                 ))}
                 
@@ -465,20 +450,6 @@ export function HierarchicalConfigView() {
               ) : null}
             </DragOverlay>
           </DndContext>
-        ) : (
-          <div className="space-y-1">
-            {displayData.map(node => (
-              <ConfigTreeNode
-                key={node.id}
-                node={node}
-                onToggleExpand={handleToggleExpand}
-                level={0}
-                lastEditedEntity={lastEditedEntity}
-                expandedNodes={expandedNodes}
-                onCreateChild={handleCreateChild}
-              />
-            ))}
-          </div>
         )}
       </Card>
     </div>
