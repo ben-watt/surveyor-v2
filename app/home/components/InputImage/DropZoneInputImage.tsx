@@ -1,8 +1,9 @@
-import { X, Archive, Pencil } from "lucide-react";
+import { X, Archive, Pencil, Camera } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
 import { ImageMetadataDialog } from "./ImageMetadataDialog";
+import { CameraModal } from "./CameraModal";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import Resizer from "react-image-file-resizer";
 import { join } from "path";
@@ -167,9 +168,11 @@ const Thumbnail = ({ file, onDelete, onArchive, path, features, onMetadataChange
 };
 
 export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
+  const { path, maxFiles, onChange, features: propFeatures } = props;
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const features = props.features ?? { archive: false, metadata: false };
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const features = propFeatures ?? { archive: false, metadata: false };
 
   const resizeImage = useCallback((file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -201,7 +204,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   useEffect(() => {
     const loadExistingFiles = async () => {
       try {
-        const result = await imageUploadStore.list(props.path);
+        const result = await imageUploadStore.list(path);
         console.debug("[DropZoneInputImage] loadExistingFiles", result);
         if (result.ok) {
           const existingFiles = await Promise.all(
@@ -232,7 +235,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           );
 
           setFiles(validFiles);
-          props.onChange?.(validFiles);
+          onChange?.(validFiles);
         }
       } catch (error) {
         console.error("Error loading existing files:", error);
@@ -242,10 +245,11 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     };
 
     loadExistingFiles();
-  }, [props.path]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]); // Intentionally exclude onChange to prevent loops
 
   const { getRootProps, getInputProps } = useDropzone({
-    maxFiles: props.maxFiles,
+    maxFiles: maxFiles,
     onDrop: async (acceptedFiles: FileWithPath[]) => {
 
       const processedFiles = await Promise.all(
@@ -253,7 +257,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           const resizedFile = await resizeImage(file);
           return Object.assign(resizedFile, {
             preview: URL.createObjectURL(resizedFile),
-            path: join(props.path, file.name),
+            path: join(path, file.name),
             isArchived: false,
             hasMetadata: false
           }) as DropZoneInputFile;
@@ -266,7 +270,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       
       // Upload each file
       for (const file of processedFiles) {
-        const filePath = join(props.path, file.name);
+        const filePath = join(path, file.name);
 
         await imageUploadStore.create({
           id: filePath,
@@ -280,7 +284,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           },
         });
 
-        props.onChange?.([
+        onChange?.([
           ...files,
           ...deDupedFiles,
         ]);
@@ -289,23 +293,23 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   });
 
   const handleDelete = async (file: FileWithPath) => {
-    const filePath = join(props.path, file.name);
+    const filePath = join(path, file.name);
     try {
       await imageUploadStore.remove(filePath);
       setFiles(files.filter((f) => f !== file));
-      props.onChange?.(files.filter((f) => f !== file));
+      onChange?.(files.filter((f) => f !== file));
     } catch (error) {
       console.error("Error removing file:", error);
     }
   };
 
   const handleArchive = async (file: FileWithPath) => {
-    const filePath = join(props.path, file.name);
+    const filePath = join(path, file.name);
     try {
       await imageUploadStore.archive(filePath);
       // Mark file as archived
       setFiles(files.map((f) => f === file ? { ...f, isArchived: true } : f));
-      props.onChange?.(files.filter((f) => f !== file));
+      onChange?.(files.filter((f) => f !== file));
     } catch (error) {
       console.error("Error archiving file:", error);
     }
@@ -315,8 +319,49 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     setFiles(prevFiles => 
       prevFiles.map(f => f.name === updatedFile.name ? updatedFile : f)
     );
-    props.onChange?.(files);
+    onChange?.(files);
   };
+
+  const handleCameraCapture = useCallback(async (filePath: string) => {
+    // Reload files to include newly captured photos
+    try {
+      const result = await imageUploadStore.list(path);
+      if (result.ok) {
+        const existingFiles = await Promise.all(
+          result.val.map(async (item) => {
+            const fileResult = await imageUploadStore.get(item.fullPath);
+            if (fileResult.ok) {
+              const fileData = fileResult.val;
+              const file = new File(
+                [fileData.file],
+                fileData.path.split("/").pop() || "",
+                {
+                  type: fileData.file.type,
+                }
+              );
+              return Object.assign(file, {
+                preview: fileData.href,
+                path: fileData.path,
+                isArchived: fileData.path.includes("archived"),
+                hasMetadata: false
+              }) as DropZoneInputFile;
+            }
+            return null;
+          })
+        );
+        
+        const validFiles = existingFiles.filter(
+          (file): file is DropZoneInputFile => file !== null
+        );
+
+        setFiles(validFiles);
+        onChange?.(validFiles);
+      }
+    } catch (error) {
+      console.error("Error reloading files after camera capture:", error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]); // Intentionally exclude onChange to prevent loops
 
   if (isLoading) {
     return (
@@ -330,22 +375,34 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const archivedFiles = files.filter((f) => f.isArchived);
 
   return (
-    <section className="container border border-gray-300 rounded-md p-4 bg-gray-100">
-      <div {...getRootProps({ className: "dropzone" })}>
-        {props.maxFiles !== activeFiles.length && (
-          <div className="flex flex-col items-center justify-center">
-            <input {...getInputProps()} />
-            <p className="text-sm text-gray-500 m-2">
-              Drag & drop files, or{" "}
-              <u className="cursor-pointer">fetch from device</u>
-            </p>
-          </div>
-        )}
-      </div>
+    <>
+      <section className="container border border-gray-300 rounded-md p-4 bg-gray-100">
+        <div {...getRootProps({ className: "dropzone" })}>
+          {maxFiles !== activeFiles.length && (
+            <div className="flex flex-col items-center justify-center">
+              <input {...getInputProps()} />
+              <p className="text-sm text-gray-500 m-2">
+                Drag & drop files, {" "}
+                <u className="cursor-pointer">fetch from device</u>
+                {", or "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsCameraOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 underline transition-colors"
+                >
+                  take photos
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
       <aside>
         <ul
           className={`${
-            props.maxFiles && props.maxFiles > 1
+            maxFiles && maxFiles > 1
               ? "grid grid-cols-2 gap-2"
               : "flex flex-wrap gap-2 justify-center"
           }`}
@@ -356,7 +413,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
               file={file}
               onDelete={handleDelete}
               onArchive={handleArchive}
-              path={props.path}
+              path={path}
               features={features}
               onMetadataChange={handleMetadataChange}
             />
@@ -369,6 +426,16 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           <span className="text-sm">{archivedFiles.length} archived</span>
         </div>
       )}
-    </section>
+      </section>
+
+      {/* Camera Modal */}
+      <CameraModal
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        path={path}
+        onPhotoCaptured={handleCameraCapture}
+        maxPhotos={maxFiles}
+      />
+    </>
   );
 };
