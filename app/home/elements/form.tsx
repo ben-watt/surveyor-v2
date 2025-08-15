@@ -5,7 +5,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useCallback, useEffect, useRef } from "react";
 import { DynamicComboBox } from "../components/Input";
 import toast from "react-hot-toast";
-import { useDynamicDrawer } from "../components/Drawer";
 import { elementStore, sectionStore } from "../clients/Database";
 import { Element } from "../clients/Dexie";
 import { v4 as uuidv4 } from "uuid";
@@ -45,7 +44,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
         sectionId: element.sectionId ?? '',
         order: element.order ?? 0,
         description: element.description ?? '',
-      } as any);
+      });
     }
   }, [form, elementHydrated, element]);
 
@@ -98,7 +97,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   // Remove onSubmit since we're using autosave only
   // The form will automatically save as the user types
 
-  if(!sectionsHydrated) {
+  if(!sectionsHydrated || !elementHydrated) {
     return <div>Loading...</div>
   }
 

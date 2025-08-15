@@ -46,7 +46,7 @@ type TableEntity = {
   tenantId: string;
 }
 
-enum SyncStatus {
+export enum SyncStatus {
   Synced = "synced",
   Draft = "draft", // Used in other components
   Queued = "queued",
@@ -88,7 +88,7 @@ const normalizeResult = <T>(result: T | Result<T, Error>): Result<T, Error> => {
 const useAuthAndTenant = () => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(false);
   
   useEffect(() => {
     let mounted = true;
@@ -98,14 +98,14 @@ const useAuthAndTenant = () => {
         await getCurrentUser();
         if (mounted) {
           setAuthReady(true);
+          setAuthSuccess(true);
           const tid = await getCurrentTenantId();
           setTenantId(tid);
-          setHydrated(true);
         }
       } catch (error) {
         if (mounted) {
           setAuthReady(true);
-          setHydrated(true);
+          setAuthSuccess(false);
         }
       }
     };
@@ -117,7 +117,7 @@ const useAuthAndTenant = () => {
     };
   }, []);
   
-  return { tenantId, authReady, hydrated };
+  return { tenantId, authReady, authSuccess };
 };
 
 function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string }, TUpdate extends { id: string }>(
@@ -160,18 +160,24 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   const debounceSync = debounce(sync, 1000);
 
   const useList = (): [boolean, T[]] => {
-    const { tenantId, authReady, hydrated } = useAuthAndTenant();
+    const { tenantId, authReady, authSuccess } = useAuthAndTenant();
     const [initialSyncTriggered, setInitialSyncTriggered] = useState(false);
+    const [dataLoaded, setDataLoaded] = useState(false);
 
     const data = useLiveQuery(
       async () => {
-        if (!authReady || !tenantId) return [];
+        if (!authReady || !authSuccess || !tenantId) {
+          return [];
+        }
         console.debug("[useList] Getting data", tenantId, authReady);
         const items = await table
           .where('tenantId')
           .equals(tenantId)
           .and(item => item.syncStatus !== SyncStatus.PendingDelete)
           .toArray();
+        
+        // Mark data as loaded once we've queried the database
+        setDataLoaded(true);
         
         // Trigger initial sync if no data and online
         if (!initialSyncTriggered && items.length === 0 && navigator.onLine) {
@@ -184,29 +190,36 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         
         return items;
       },
-      [tenantId, authReady]
+      [tenantId, authReady, authSuccess]
     );
 
-    return [hydrated && authReady && tenantId !== null, data ?? []];
+    // Only return hydrated=true when auth is successful AND data has been queried
+    return [authReady && authSuccess && tenantId !== null && dataLoaded, data ?? []];
   };
 
   const useGet = (id: string): [boolean, T | undefined] => {
-    const { tenantId, authReady, hydrated } = useAuthAndTenant();
+    const { tenantId, authReady, authSuccess } = useAuthAndTenant();
+    const [dataQueried, setDataQueried] = useState(false);
 
     const result = useLiveQuery(
       async () => {
-        if (!authReady || !tenantId) return { value: undefined };
+        if (!authReady || !authSuccess || !tenantId) return { value: undefined };
         const item = await getItem(id);
+        
+        // Mark as queried once we've attempted to get the item
+        setDataQueried(true);
+        
         return item && 
                item.syncStatus !== SyncStatus.PendingDelete && 
                item.tenantId === tenantId 
           ? { value: item } 
           : { value: undefined };
       },
-      [id, tenantId, authReady]
+      [id, tenantId, authReady, authSuccess]
     );
     
-    return [hydrated && authReady && tenantId !== null, result?.value];
+    // Only return hydrated=true when auth is successful AND data has been queried
+    return [authReady && authSuccess && tenantId !== null && dataQueried, result?.value];
   };
 
   const syncWithServer = async (): Promise<Result<void, Error>> => {
@@ -514,4 +527,4 @@ db.version(2).stores({
   imageMetadata: 'id, tenantId, imagePath, updatedAt, syncStatus, [tenantId+updatedAt]'
 });
 
-export { db, CreateDexieHooks, SyncStatus };
+export { db, CreateDexieHooks };
