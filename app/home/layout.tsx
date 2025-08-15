@@ -33,6 +33,24 @@ export default function RootLayout({
       imageMetadataStore.forceSync();
     };
 
+    // Trigger initial sync on app load if online
+    const triggerInitialSync = async () => {
+      if (navigator.onLine) {
+        console.log("[Layout] Triggering initial sync on app load");
+        await Promise.all([
+          surveyStore.forceSync(),
+          componentStore.forceSync(),
+          elementStore.forceSync(),
+          phraseStore.forceSync(),
+          sectionStore.forceSync(),
+          imageMetadataStore.forceSync(),
+        ]);
+      }
+    };
+
+    // Start initial sync after a short delay to ensure auth is ready
+    const initialSyncTimeout = setTimeout(triggerInitialSync, 1000);
+
     // Start periodic sync for main stores (5 minutes interval)
     const cleanupFunctions = [
       surveyStore.startPeriodicSync(300000),
@@ -46,6 +64,7 @@ export default function RootLayout({
     window.addEventListener('online', handleOnline);
 
     return () => {
+      clearTimeout(initialSyncTimeout);
       window.removeEventListener('online', handleOnline);
       // Clean up periodic sync intervals
       cleanupFunctions.forEach(cleanup => cleanup());

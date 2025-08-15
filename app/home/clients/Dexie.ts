@@ -142,15 +142,18 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   
   const sync = async () => {
     if (!navigator.onLine) {
+      console.debug("[sync] Skipping sync - not online");
       return Err(new Error("Not online"));
     }
 
+    console.debug(`[sync] Starting sync for ${tableName}`);
     const syncResult = await syncWithServer();
     if (syncResult.ok) {
+      console.debug(`[sync] Sync completed successfully for ${tableName}`);
       return Ok(undefined);
     }
 
-    console.error("[sync] Error syncing with server", syncResult.val);
+    console.error(`[sync] Error syncing ${tableName} with server:`, syncResult.val);
     return Err(new Error(syncResult.val.message));
   }
 
@@ -158,6 +161,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
 
   const useList = (): [boolean, T[]] => {
     const { tenantId, authReady, hydrated } = useAuthAndTenant();
+    const [initialSyncTriggered, setInitialSyncTriggered] = useState(false);
 
     const data = useLiveQuery(
       async () => {
@@ -168,6 +172,16 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
           .equals(tenantId)
           .and(item => item.syncStatus !== SyncStatus.PendingDelete)
           .toArray();
+        
+        // Trigger initial sync if no data and online
+        if (!initialSyncTriggered && items.length === 0 && navigator.onLine) {
+          setInitialSyncTriggered(true);
+          console.debug("[useList] No local data found, triggering initial sync");
+          syncWithServer().catch(err => 
+            console.error("[useList] Initial sync failed:", err)
+          );
+        }
+        
         return items;
       },
       [tenantId, authReady]
@@ -199,7 +213,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     if (syncInProgress) return Ok(undefined);
     
     syncInProgress = true;
-    console.debug("[syncWithServer] Syncing with server");
+    console.debug(`[syncWithServer] Starting sync for ${tableName}`);
 
     try {
       // Resolve tenant early; needed for all phases (deletes, merges, pushes)
@@ -225,6 +239,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
           const deleteResult = await remoteHandlers.delete(item.id);
           if (deleteResult instanceof Ok || deleteResult === undefined) {
             await table.delete(item.id);
+            console.debug(`[syncWithServer] Deleted item ${item.id} from ${tableName}`);
           } else {
             await table.put({
               ...item,
@@ -267,7 +282,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         const local = await getItem(remote.id);
 
         if(!local) {
-          console.debug("[syncWithServer] Local item not found, creating as synced...", remote);
+          console.debug(`[syncWithServer] New item from server ${remote.id} in ${tableName}`);
           await table.put({ ...remote, tenantId, syncStatus: SyncStatus.Synced });
           continue;
         }
@@ -278,7 +293,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         }
 
         if(new Date(remote.updatedAt) > new Date(local.updatedAt)) {
-          console.debug("[syncWithServer] Found newer version on server, updating local version...", remote);
+          console.debug(`[syncWithServer] Updating ${remote.id} in ${tableName} with newer server version`);
           await table.put({ ...remote, tenantId, syncStatus: SyncStatus.Synced });
           continue;
         }
@@ -328,10 +343,10 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         await processLocalRecord(local, !!exists);
       }
 
-      console.debug("[syncWithServer] Synced with server successfully"); 
+      console.debug(`[syncWithServer] Successfully synced ${tableName} - Processed ${localRecords.length} local items and ${remoteData.length} remote items`); 
       return Ok(undefined);
     } catch (error: any) {
-      console.error("[syncWithServer] Error syncing with server", error);
+      console.error(`[syncWithServer] Error syncing ${tableName}:`, error);
       return Err(new Error(getErrorMessage(error)));
     } finally {
       syncInProgress = false;
@@ -360,7 +375,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       } as unknown as T);
       
       // Trigger sync asynchronously if online
-      sync();
+      debounceSync();
   };
 
   const update = async (id: string, updateFn: (currentState: Draft<T>) => void) => {
@@ -381,7 +396,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       });
 
       // Trigger sync asynchronously if online
-      sync();
+      debounceSync();
   };
 
   const remove = async (id: string) => {
@@ -395,7 +410,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       });
       
       // Trigger sync asynchronously if online
-      sync();
+      debounceSync();
       console.debug("[remove] Item removed", id);
     } else {
       console.error("[remove] Item not found", id);
@@ -416,7 +431,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         }));
         
         await table.bulkPut(updates);
-        sync();
+        debounceSync();
       } else {
         // Just clear the table locally
         await table.clear();
@@ -439,7 +454,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   };
 
   const forceSync = async (): Promise<Result<void, Error>> => {
-    console.debug("[forceSync] Starting forced sync");
+    console.debug(`[forceSync] Starting forced sync for ${tableName}`);
     
     // Reset all failed items to try again
     const tenantId = await getCurrentTenantId();
@@ -458,7 +473,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         }));
         
         await table.bulkPut(updates);
-        console.debug(`[forceSync] Reset ${failedItems.length} failed items`);
+        console.debug(`[forceSync] Reset ${failedItems.length} failed items in ${tableName}`);
       }
     }
     
