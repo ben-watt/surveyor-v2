@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "./components/EmptyState";
+import { useUserAttributes } from "../utils/useUser";
 
 interface FilterState {
   status: string[];
@@ -31,6 +32,7 @@ interface FilterState {
 function HomePage() {
   const router = useRouter();
   const [isHydrated, data] = surveyStore.useList();
+  const [isUserHydrated, currentUser] = useUserAttributes();
   const [createId, setCreateId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
@@ -63,10 +65,15 @@ function HomePage() {
     // Apply owner filters
     if (filters.owner.length > 0) {
       filtered = filtered.filter(survey => {
-        if (filters.owner.includes('My Surveys')) {
-          return survey.owner?.name === 'Current User'; // Replace with actual current user check
-        }
-        return filters.owner.includes(survey.owner?.name || '');
+        const isMySurveysSelected = filters.owner.includes('My Surveys');
+        const isMyOwnedSurvey = isUserHydrated && currentUser && survey.owner?.id === currentUser.sub;
+        const isOwnerNameSelected = filters.owner.includes(survey.owner?.name || '');
+        
+        // Show survey if it matches any of the selected owner criteria
+        if (isMySurveysSelected && isMyOwnedSurvey) return true;
+        if (isOwnerNameSelected) return true;
+        
+        return false;
       });
     }
 
@@ -84,7 +91,7 @@ function HomePage() {
     }
 
     return filtered;
-  }, [data, searchQuery, filters]);
+  }, [data, searchQuery, filters, isUserHydrated, currentUser]);
 
   const toggleStatusFilter = (status: string) => {
     setFilters(prev => ({
