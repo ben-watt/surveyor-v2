@@ -234,8 +234,8 @@ describe('CameraModal', () => {
     // Delete the photo - it's a small red button on the thumbnail
     const deleteButtons = screen.getAllByRole('button');
     const deleteButton = deleteButtons.find(button => 
-      button.className.includes('w-6 h-6') && 
-      button.className.includes('bg-red-500')
+      button.className.includes('w-7 h-7') && 
+      button.className.includes('from-red-500')
     );
     fireEvent.click(deleteButton!);
     

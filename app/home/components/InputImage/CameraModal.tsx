@@ -46,6 +46,7 @@ export const CameraModal = ({
   const [isCapturing, setIsCapturing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
   const cameraStartedRef = useRef(false);
 
   // Resize image using existing pipeline
@@ -122,6 +123,11 @@ export const CameraModal = ({
     if (isCapturing || capturedPhotos.length >= maxPhotos) return;
 
     setIsCapturing(true);
+    
+    // Trigger flash animation
+    setShowFlash(true);
+    setTimeout(() => setShowFlash(false), 200);
+    
     try {
       const photoBlob = await capturePhoto();
       if (photoBlob) {
@@ -238,8 +244,27 @@ export const CameraModal = ({
   });
 
   const modalContent = (
-    <div 
-      className="fixed inset-0 bg-black overflow-hidden"
+    <>
+      <style jsx>{`
+        @keyframes flash {
+          0% { opacity: 0; }
+          50% { opacity: 0.8; }
+          100% { opacity: 0; }
+        }
+        
+        @keyframes slideIn {
+          0% { 
+            opacity: 0; 
+            transform: translateY(20px) scale(0.8);
+          }
+          100% { 
+            opacity: 1; 
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
+      <div 
+        className="fixed inset-0 bg-black overflow-hidden"
       style={{ 
         zIndex: 9999999,
         position: 'fixed',
@@ -317,50 +342,107 @@ export const CameraModal = ({
         )}
 
         {stream && (
-          <video
-            ref={setVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover"
-            style={{ 
-              width: '100vw', 
-              height: '100vh',
-              objectFit: 'cover'
-            }}
-            onLoadedMetadata={(e) => {
-              const video = e.target as HTMLVideoElement;
-              if (video.paused) {
-                video.play().catch(console.error);
-              }
-            }}
-            onCanPlay={(e) => {
-              const video = e.target as HTMLVideoElement;
-              if (video.paused) {
-                video.play().catch(console.error);
-              }
-            }}
-          />
+          <>
+            <video
+              ref={setVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+              style={{ 
+                width: '100vw', 
+                height: '100vh',
+                objectFit: 'cover'
+              }}
+              onLoadedMetadata={(e) => {
+                const video = e.target as HTMLVideoElement;
+                if (video.paused) {
+                  video.play().catch(console.error);
+                }
+              }}
+              onCanPlay={(e) => {
+                const video = e.target as HTMLVideoElement;
+                if (video.paused) {
+                  video.play().catch(console.error);
+                }
+              }}
+            />
+            
+            {/* Viewfinder Overlay */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Rule of thirds grid */}
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
+                {[...Array(9)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="border border-white/20" 
+                    style={{
+                      borderWidth: i % 3 === 2 ? '0 0 1px 0' : i > 5 ? '0 1px 0 0' : '0 1px 1px 0'
+                    }}
+                  />
+                ))}
+              </div>
+              
+              {/* Center focus indicator */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-8 h-8 border-2 border-white/60 rounded-full">
+                  <div className="w-full h-full border-2 border-white/30 rounded-full animate-ping" />
+                </div>
+              </div>
+              
+              {/* Corner frame indicators */}
+              <div className="absolute top-4 left-4 w-6 h-6 border-l-2 border-t-2 border-white/70" />
+              <div className="absolute top-4 right-4 w-6 h-6 border-r-2 border-t-2 border-white/70" />
+              <div className="absolute bottom-4 left-4 w-6 h-6 border-l-2 border-b-2 border-white/70" />
+              <div className="absolute bottom-4 right-4 w-6 h-6 border-r-2 border-b-2 border-white/70" />
+            </div>
+            
+            {/* Camera Flash Effect */}
+            {showFlash && (
+              <div className="absolute inset-0 bg-white animate-pulse pointer-events-none" 
+                style={{
+                  animation: 'flash 0.2s ease-out'
+                }}
+              />
+            )}
+          </>
         )}
       </div>
 
       {/* Photo Thumbnails */}
       {capturedPhotos.length > 0 && (
-        <div className="absolute bottom-20 left-0 right-0 z-10">
-          <div className="flex gap-2 px-4 overflow-x-auto scrollbar-hide">
-            {capturedPhotos.map((photo) => (
-              <div key={photo.id} className="relative flex-shrink-0">
-                <img
-                  src={photo.preview}
-                  alt={`Captured ${photo.id}`}
-                  className="w-16 h-16 object-cover rounded-lg border-2 border-white/50"
-                />
+        <div className="absolute bottom-32 left-0 right-0 z-10">
+          <div className="flex gap-3 px-4 py-3 overflow-x-auto scrollbar-hide">
+            {capturedPhotos.map((photo, index) => (
+              <div 
+                key={photo.id} 
+                className="relative flex-shrink-0 group"
+                style={{
+                  animation: `slideIn 0.3s ease-out ${index * 0.1}s both`
+                }}
+              >
+                <div className="relative overflow-hidden rounded-xl border-2 border-white/30 shadow-lg backdrop-blur-sm bg-white/10 p-1 hover:border-white/60 transition-all duration-300 group-hover:scale-105">
+                  <img
+                    src={photo.preview}
+                    alt={`Captured ${photo.id}`}
+                    className="w-16 h-16 object-cover rounded-lg"
+                  />
+                  
+                  {/* Gradient overlay on hover */}
+                  <div className="absolute inset-1 bg-gradient-to-t from-black/30 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </div>
+                
                 <button
                   onClick={() => removePhoto(photo.id)}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                  className="absolute -top-1 -right-1 w-7 h-7 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full flex items-center justify-center text-xs hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-110 active:scale-95 shadow-lg z-20"
                 >
-                  <X size={12} />
+                  <X size={14} className="drop-shadow-sm" />
                 </button>
+                
+                {/* Photo number indicator */}
+                <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                  {index + 1}
+                </div>
               </div>
             ))}
           </div>
@@ -379,7 +461,7 @@ export const CameraModal = ({
               handleCapture();
             }}
             disabled={isCapturing || !stream || capturedPhotos.length >= maxPhotos || isUploading}
-            className="w-16 h-16 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-16 h-16 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
           >
             {isCapturing ? (
               <Loader2 className="animate-spin" size={32} />
@@ -390,29 +472,42 @@ export const CameraModal = ({
 
           {/* Upload Button or Success Message */}
           {uploadSuccess ? (
-            <div className="flex items-center gap-2 px-6 py-3 bg-green-100 text-green-800 rounded-lg font-medium">
-              <CheckCircle size={20} />
+            <div className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium shadow-lg transform scale-105 transition-all duration-300">
+              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                <CheckCircle size={16} className="text-white" />
+              </div>
               Photos uploaded successfully!
             </div>
           ) : capturedPhotos.length > 0 ? (
             <button
               onClick={uploadPhotos}
               disabled={isUploading}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg transform hover:scale-105 active:scale-95 min-w-[160px]"
             >
-              {isUploading ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="animate-spin" size={16} />
-                  Uploading...
-                </div>
-              ) : (
-                `Upload ${capturedPhotos.length} Photo${capturedPhotos.length > 1 ? 's' : ''}`
-              )}
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              
+              <div className="relative flex items-center justify-center gap-3">
+                {isUploading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full" />
+                    </div>
+                    <span>Upload {capturedPhotos.length} Photo{capturedPhotos.length > 1 ? 's' : ''}</span>
+                  </>
+                )}
+              </div>
             </button>
           ) : null}
         </div>
       </div>
     </div>
+    </>
   );
 
   // Use portal to render at document root for true full-screen
