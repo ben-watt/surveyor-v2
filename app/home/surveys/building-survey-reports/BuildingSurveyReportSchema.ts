@@ -16,8 +16,7 @@ export type BuildingSurveyFormData = {
 }
 
 export type Checklist = {
-    items: Array<Input<boolean>>,
-    status: FormSectionStatus
+    items: Array<Input<boolean>>
 }
 
 export type Address = {
@@ -87,8 +86,7 @@ export type ReportDetails = {
     orientation: string,
     situation: string,
     moneyShot: SurveyImage[],
-    frontElevationImagesUri: SurveyImage[],
-    status: FormSectionStatus
+    frontElevationImagesUri: SurveyImage[]
 }
 
 export type FormSectionStatus = {
@@ -99,6 +97,7 @@ export type FormSectionStatus = {
 export enum FormStatus {
     Complete = "complete",
     Incomplete = "incomplete",
+    InProgress = "in-progress", // New status for partially completed forms
     Error = "error",
     Warning = "warning",
     Unknown = "unknown",
@@ -133,7 +132,6 @@ export type PropertyDescription = {
     numberOfBedrooms: Input<roomCount>,
     numberOfBathrooms: Input<roomCount>,
     tenure: Input<Tenure>,
-    status: FormSectionStatus,
 }
 
 export type SurveySection = {
@@ -148,8 +146,7 @@ export type ElementSection = {
     isPartOfSurvey: boolean,
     description: string,
     components: Inspection[],
-    images: SurveyImage[],
-    status: FormSectionStatus
+    images: SurveyImage[]
 }
 
 export type Inspection = {

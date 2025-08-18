@@ -1,4 +1,4 @@
-import React, { useEffect, memo } from "react";
+import React, { useEffect, memo, useMemo, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/home/components/FormSection";
@@ -18,6 +18,8 @@ import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithI
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
 import { useImageUploadStatus } from "@/app/home/components/InputImage/useImageUploadStatus";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
+import { useElementFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
+import { createFormOptions, createAutosaveConfigWithImages } from "@/app/home/hooks/useFormConfig";
 // Memoized Add Component button component
 const AddComponentButton = memo(({ 
   surveyId, 
@@ -83,49 +85,50 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
     images: [],
   };
 
-  const methods = useForm<ElementFormData>({ defaultValues });
+  const methods = useForm<ElementFormData>(createFormOptions(defaultValues));
   const { register, control, reset, watch, getValues, trigger } = methods;
+  
+  // Reactive status computation
+  const watchedData = watch();
+  const formStatus = useElementFormStatus(watchedData || { description: '', images: [] }, trigger);
   const [elementData, setElementData] = React.useState<ElementSection | null>(null);
   const [isHydrated, survey] = surveyStore.useGet(surveyId);
   const [sectionsHydrated, surveySections] = sectionStore.useList();
-  const imageUploadPath = `report-images/${surveyId}/elements/${elementId}`;
+  const imageUploadPath = useMemo(() => 
+    `report-images/${surveyId}/elements/${elementId}`, 
+    [surveyId, elementId]
+  );
+
+  const loadElementData = useCallback(async () => {
+    if(!isHydrated || !survey) return;
+
+    try {
+      const elementSection = getElementSection(survey, sectionId, elementId);
+      
+      if (elementSection) {
+        setElementData(elementSection);
+        reset({
+          description: elementSection.description || "",
+          images: elementSection.images || [],
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to load element details");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isHydrated, survey, sectionId, elementId, reset]);
 
   useEffect(() => {
-    const loadElementData = async () => {
-      if(!isHydrated || !survey) return;
-
-      try {
-        const elementSection = getElementSection(survey, sectionId, elementId);
-        
-        if (elementSection) {
-          setElementData(elementSection);
-          reset({
-            description: elementSection.description || "",
-            images: elementSection.images || [],
-          });
-        }
-      } catch (error) {
-        toast.error("Failed to load element details");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadElementData();
-  }, [elementId, reset, isHydrated, survey, sectionId]);
+  }, [loadElementData]);
 
   const saveData = async (data: ElementFormData, { auto = false } = {}) => {
-    console.debug("[ElementForm] saveData", { data, auto });
-    
     try {
       await surveyStore.update(surveyId, (survey) => {
         updateElementDetails(survey, sectionId, elementId, {
           description: data.description,
           images: data.images,
-          status: {
-            status: FormStatus.Complete,
-            errors: [],
-          },
         });
       });
 
@@ -136,16 +139,6 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
       }
     } catch (error) {
       console.error("[ElementForm] Save failed", error);
-      
-      // Update status to show error
-      await surveyStore.update(surveyId, (survey) => {
-        return updateElementDetails(survey, sectionId, elementId, {
-          status: {
-            status: FormStatus.Error,
-            errors: ["Failed to save element details"],
-          }
-        });
-      });
       
       if (!auto) {
         toast.error("Failed to save element details");
@@ -160,15 +153,14 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
     watch,
     getValues,
     trigger,
-    {
-      delay: 1000,
-      enabled: !!surveyId && !!elementData, // Only enable autosave when element data is loaded
-      imagePaths: [imageUploadPath]
-    }
+    createAutosaveConfigWithImages(
+      [imageUploadPath],
+      { enabled: !!surveyId && !!elementData } // Only enable autosave when element data is loaded
+    )
   );
 
 
-  const handleRemoveComponent = async (inspectionId: string) => {
+  const handleRemoveComponent = useCallback(async (inspectionId: string) => {
     const section = surveySections.find(s => s.id === sectionId);
 
     if (!section) {
@@ -180,7 +172,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
       return removeComponent(survey, section.name, elementId, inspectionId);
     });
     toast.success("Component removed");
-  };
+  }, [surveySections, sectionId, surveyId, elementId]);
 
   if (isLoading) {
     return (
@@ -225,7 +217,7 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
         <FormSection title="Components">
           <div className="space-y-2">
             {elementData?.components.map((component) => (
-              <div key={component.id} className="flex items-center justify-between p-1 pl-4 border rounded-lg">
+              <div key={component.inspectionId} className="flex items-center justify-between p-1 pl-4 border rounded-lg">
                 <div className="flex items-center space-x-4 min-w-20">
                   <div className={`flex-shrink-0 w-4 h-4 rounded-sm ${
                     component.ragStatus === "Red" ? "bg-red-500" :

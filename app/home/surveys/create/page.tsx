@@ -67,7 +67,6 @@ function createDefaultSurvey(
       situation: "",
       moneyShot: [],
       frontElevationImagesUri: [],
-      status: { status: FormStatus.Incomplete, errors: [] },
     },
     propertyDescription: {
       propertyType: {
@@ -165,7 +164,6 @@ function createDefaultSurvey(
         required: true,
         order: 11,
       },
-      status: { status: FormStatus.Incomplete, errors: [] },
     },
     sections: buildSections(dbSections, dbElements),
     checklist: {
@@ -190,7 +188,6 @@ function createDefaultSurvey(
         ),
         makeCheckbox("I confirm that the information provided is accurate"),
       ],
-      status: { status: FormStatus.Incomplete, errors: [] },
     },
   };
 }

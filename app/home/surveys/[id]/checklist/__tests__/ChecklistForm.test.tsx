@@ -1,0 +1,495 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { useParams, useRouter } from 'next/navigation';
+import { surveyStore } from '@/app/home/clients/Database';
+import ChecklistPage from '../page';
+import { FormStatus } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+
+// Mock dependencies
+jest.mock('next/navigation', () => ({
+  useParams: jest.fn(),
+  useRouter: jest.fn(),
+}));
+
+jest.mock('@/app/home/clients/Database', () => ({
+  surveyStore: {
+    useGet: jest.fn(),
+    update: jest.fn(),
+  },
+}));
+
+jest.mock('@/app/home/components/Drawer', () => ({
+  DynamicDrawer: ({ content, isOpen }: any) => 
+    isOpen ? <div data-testid="drawer">{content}</div> : null,
+}));
+
+jest.mock('react-hot-toast', () => ({
+  default: {
+    success: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+
+// Mock the autosave hook
+jest.mock('../../../../hooks/useAutoSaveForm', () => ({
+  useAutoSaveForm: jest.fn(() => ({
+    saveStatus: 'idle',
+    isSaving: false,
+    lastSavedAt: null,
+  })),
+}));
+
+// Mock @hookform/error-message
+jest.mock('@hookform/error-message', () => ({
+  ErrorMessage: ({ name, errors, render }: any) => {
+    const error = errors && errors[name];
+    return error ? render({ message: error.message || 'Error' }) : null;
+  },
+}));
+
+// Mock react-hook-form
+jest.mock('react-hook-form', () => {
+  const originalModule = jest.requireActual('react-hook-form');
+  return {
+    ...originalModule,
+    useForm: jest.fn(() => ({
+      register: jest.fn(() => ({
+        name: 'test-field',
+        onChange: jest.fn(),
+        onBlur: jest.fn(),
+        ref: jest.fn()
+      })),
+      control: {
+        _formState: { errors: {} },
+        _fields: {},
+        _defaultValues: {},
+        _formValues: {},
+        _stateFlags: { isSubmitted: false, isDirty: false },
+        register: jest.fn(() => ({
+        name: 'test-field',
+        onChange: jest.fn(),
+        onBlur: jest.fn(),
+        ref: jest.fn()
+      })),
+        unregister: jest.fn(),
+        getFieldState: jest.fn(),
+        handleSubmit: jest.fn(),
+        _subjects: {
+          values: { next: jest.fn() },
+          array: { next: jest.fn() },
+          state: { next: jest.fn() }
+        },
+        _getWatch: jest.fn(),
+        _updateValid: jest.fn(),
+        _removeUnmounted: jest.fn(),
+        _updateFieldArray: jest.fn(),
+        _executeSchema: jest.fn(),
+        _getFieldArray: jest.fn(),
+        _reset: jest.fn(),
+        _resetDefaultValues: jest.fn(),
+        _updateFormState: jest.fn(),
+        _disableForm: jest.fn(),
+        _options: {
+          mode: 'onChange',
+          reValidateMode: 'onChange',
+          shouldFocusError: true,
+          shouldUseNativeValidation: false,
+          shouldUnregister: false,
+          criteriaMode: 'firstError',
+          delayError: 0
+        }
+      },
+      formState: { errors: {} },
+      watch: jest.fn(() => ({ unsubscribe: jest.fn() })),
+      getValues: jest.fn(),
+      trigger: jest.fn().mockResolvedValue(true),
+    })),
+    FormProvider: ({ children }: any) => children,
+    useController: jest.fn(() => ({
+      field: { value: false, onChange: jest.fn(), onBlur: jest.fn(), name: 'test' },
+      formState: { errors: {} }
+    })),
+  };
+});
+
+const mockUseParams = useParams as jest.Mock;
+const mockUseRouter = useRouter as jest.Mock;
+const mockSurveyStore = surveyStore as jest.Mocked<typeof surveyStore>;
+
+// Get reference to the mocked hook
+const { useAutoSaveForm: mockUseAutoSaveForm } = jest.requireMock('../../../../hooks/useAutoSaveForm');
+
+describe('ChecklistForm', () => {
+  const mockSurveyId = 'test-survey-id';
+  const mockRouter = {
+    back: jest.fn(),
+    push: jest.fn(),
+  };
+
+  const mockSurveyData: any = {
+    id: mockSurveyId,
+    checklist: {
+      items: [
+        {
+          id: '1',
+          text: 'Required item 1',
+          required: true,
+          value: false,
+          type: 'checkbox',
+          order: 1,
+        },
+        {
+          id: '2',
+          text: 'Required item 2',
+          required: true,
+          value: false,
+          type: 'checkbox',
+          order: 2,
+        },
+        {
+          id: '3',
+          text: 'Optional item',
+          required: false,
+          value: false,
+          type: 'checkbox',
+          order: 3,
+        },
+      ],
+      status: {
+        status: FormStatus.Incomplete,
+        errors: [],
+      },
+    },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseParams.mockReturnValue({ id: mockSurveyId });
+    mockUseRouter.mockReturnValue(mockRouter);
+    mockSurveyStore.useGet.mockReturnValue([true, mockSurveyData]);
+    mockSurveyStore.update.mockResolvedValue(undefined);
+  });
+
+  describe('Autosave Behavior', () => {
+    it('should save when checkboxes are unchecked', async () => {
+      let capturedSaveFunction: any;
+      mockUseAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('drawer')).toBeInTheDocument();
+      });
+
+      // Simulate unchecking items (clearing checkboxes)
+      const clearedData = {
+        items: [
+          { ...mockSurveyData.checklist.items[0], value: false },
+          { ...mockSurveyData.checklist.items[1], value: false },
+          { ...mockSurveyData.checklist.items[2], value: false },
+        ],
+      };
+
+      await capturedSaveFunction(clearedData, { auto: true });
+
+      expect(mockSurveyStore.update).toHaveBeenCalledWith(
+        mockSurveyId,
+        expect.any(Function)
+      );
+    });
+
+    it('should save partial checklist data', async () => {
+      let capturedSaveFunction: any;
+      mockUseAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      // Simulate partial completion (some items checked)
+      const partialData = {
+        items: [
+          { ...mockSurveyData.checklist.items[0], value: true }, // Required item checked
+          { ...mockSurveyData.checklist.items[1], value: false }, // Required item not checked
+          { ...mockSurveyData.checklist.items[2], value: true }, // Optional item checked
+        ],
+      };
+
+      await capturedSaveFunction(partialData, { auto: true });
+
+      expect(mockSurveyStore.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('Status Updates', () => {
+    it('should show Not Started status when no items are checked', async () => {
+      // Mock survey with no checked items
+      const emptySurveyData = {
+        ...mockSurveyData,
+        checklist: {
+          ...mockSurveyData.checklist,
+          items: mockSurveyData.checklist.items.map((item: any) => ({ ...item, value: false })),
+        },
+      };
+      
+      mockSurveyStore.useGet.mockReturnValue([true, emptySurveyData]);
+
+      let capturedSaveFunction: any;
+      const { useAutoSaveForm } = require('../../../../hooks/useAutoSaveForm');
+      
+      // Mock trigger to return false (invalid)
+      const mockTrigger = jest.fn().mockResolvedValue(false);
+      useAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      const emptyData = {
+        items: emptySurveyData.checklist.items.map((item: any) => ({ ...item, value: false })),
+      };
+
+      // Mock the trigger function
+      jest.spyOn(require('react-hook-form'), 'useForm').mockReturnValue({
+        register: jest.fn(() => ({
+        name: 'test-field',
+        onChange: jest.fn(),
+        onBlur: jest.fn(),
+        ref: jest.fn()
+      })),
+        control: {},
+        watch: jest.fn(),
+        getValues: jest.fn(),
+        trigger: mockTrigger,
+        formState: { errors: {} },
+      });
+
+      await capturedSaveFunction(emptyData, { auto: true });
+
+      expect(mockSurveyStore.update).toHaveBeenCalled();
+    });
+
+    it('should show Incomplete status when some items checked but not all required', async () => {
+      // Mock survey with some checked items
+      const partialSurveyData = {
+        ...mockSurveyData,
+        checklist: {
+          ...mockSurveyData.checklist,
+          items: [
+            { ...mockSurveyData.checklist.items[0], value: true }, // Required checked
+            { ...mockSurveyData.checklist.items[1], value: false }, // Required not checked
+            { ...mockSurveyData.checklist.items[2], value: true }, // Optional checked
+          ],
+        },
+      };
+      
+      mockSurveyStore.useGet.mockReturnValue([true, partialSurveyData]);
+
+      let capturedSaveFunction: any;
+      const { useAutoSaveForm } = require('../../../../hooks/useAutoSaveForm');
+      
+      // Mock trigger to return false (invalid - not all required items checked)
+      const mockTrigger = jest.fn().mockResolvedValue(false);
+      useAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      const partialData = {
+        items: partialSurveyData.checklist.items,
+      };
+
+      // Mock the trigger function
+      jest.spyOn(require('react-hook-form'), 'useForm').mockReturnValue({
+        register: jest.fn(() => ({
+        name: 'test-field',
+        onChange: jest.fn(),
+        onBlur: jest.fn(),
+        ref: jest.fn()
+      })),
+        control: {},
+        watch: jest.fn(),
+        getValues: jest.fn(),
+        trigger: mockTrigger,
+        formState: { errors: {} },
+      });
+
+      await capturedSaveFunction(partialData, { auto: true });
+
+      expect(mockSurveyStore.update).toHaveBeenCalled();
+    });
+
+    it('should show Complete status when all required items are checked', async () => {
+      let capturedSaveFunction: any;
+      const { useAutoSaveForm } = require('../../../../hooks/useAutoSaveForm');
+      
+      // Mock trigger to return true (valid - all required items checked)
+      const mockTrigger = jest.fn().mockResolvedValue(true);
+      useAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      const completeData = {
+        items: [
+          { ...mockSurveyData.checklist.items[0], value: true }, // Required checked
+          { ...mockSurveyData.checklist.items[1], value: true }, // Required checked
+          { ...mockSurveyData.checklist.items[2], value: false }, // Optional not required
+        ],
+      };
+
+      // Mock the trigger function
+      jest.spyOn(require('react-hook-form'), 'useForm').mockReturnValue({
+        register: jest.fn(() => ({
+        name: 'test-field',
+        onChange: jest.fn(),
+        onBlur: jest.fn(),
+        ref: jest.fn()
+      })),
+        control: {},
+        watch: jest.fn(),
+        getValues: jest.fn(),
+        trigger: mockTrigger,
+        formState: { errors: {} },
+      });
+
+      await capturedSaveFunction(completeData, { auto: true });
+
+      expect(mockSurveyStore.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('Checklist-Specific Logic', () => {
+    it('should correctly identify existing data when any item is checked', async () => {
+      let capturedSaveFunction: any;
+      const { useAutoSaveForm } = require('../../../../hooks/useAutoSaveForm');
+      
+      const mockTrigger = jest.fn().mockResolvedValue(false);
+      useAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      // Data with only one optional item checked
+      const dataWithOneChecked = {
+        items: [
+          { ...mockSurveyData.checklist.items[0], value: false }, // Required not checked
+          { ...mockSurveyData.checklist.items[1], value: false }, // Required not checked
+          { ...mockSurveyData.checklist.items[2], value: true }, // Optional checked
+        ],
+      };
+
+      // Mock the trigger function
+      jest.spyOn(require('react-hook-form'), 'useForm').mockReturnValue({
+        register: jest.fn(() => ({
+        name: 'test-field',
+        onChange: jest.fn(),
+        onBlur: jest.fn(),
+        ref: jest.fn()
+      })),
+        control: {},
+        watch: jest.fn(),
+        getValues: jest.fn(),
+        trigger: mockTrigger,
+        formState: { errors: {} },
+      });
+
+      await capturedSaveFunction(dataWithOneChecked, { auto: true });
+
+      expect(mockSurveyStore.update).toHaveBeenCalled();
+    });
+
+    it('should handle empty checklist gracefully', async () => {
+      const emptySurveyData = {
+        ...mockSurveyData,
+        checklist: {
+          items: [],
+          status: { status: FormStatus.Incomplete, errors: [] },
+        },
+      };
+      
+      mockSurveyStore.useGet.mockReturnValue([true, emptySurveyData]);
+
+      let capturedSaveFunction: any;
+      mockUseAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      const emptyData = { items: [] };
+
+      await capturedSaveFunction(emptyData, { auto: true });
+
+      expect(mockSurveyStore.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle save errors gracefully', async () => {
+      mockSurveyStore.update.mockRejectedValue(new Error('Save failed'));
+
+      let capturedSaveFunction: any;
+      mockUseAutoSaveForm.mockImplementation((saveFunction: any) => {
+        capturedSaveFunction = saveFunction;
+        return {
+          saveStatus: 'idle',
+          isSaving: false,
+          lastSavedAt: null,
+        };
+      });
+
+      render(<ChecklistPage />);
+
+      const data = {
+        items: [
+          { ...mockSurveyData.checklist.items[0], value: true },
+          { ...mockSurveyData.checklist.items[1], value: true },
+          { ...mockSurveyData.checklist.items[2], value: false },
+        ],
+      };
+
+      await expect(capturedSaveFunction(data, { auto: true })).rejects.toThrow('Save failed');
+    });
+  });
+});

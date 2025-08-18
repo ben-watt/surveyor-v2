@@ -28,7 +28,6 @@ export function buildSections(
         description: element.description || "",
         components: [],
         images: [],
-        status: { status: FormStatus.Incomplete, errors: [] },
       })),
   }));
 }

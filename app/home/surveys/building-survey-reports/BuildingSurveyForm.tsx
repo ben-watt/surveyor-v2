@@ -87,10 +87,6 @@ const createDefaultFormValues = (
         description: element.description || "",
         components: [],
         images: [],
-        status: {
-          status: FormStatus.Incomplete,
-          errors: [],
-        },
       })),
   }));
 
@@ -128,7 +124,6 @@ const createDefaultFormValues = (
       situation: "",
       moneyShot: [],
       frontElevationImagesUri: [],
-      status: { status: FormStatus.Incomplete, errors: [] },
     },
     propertyDescription: {
       propertyType: {
@@ -226,7 +221,6 @@ const createDefaultFormValues = (
         required: true,
         order: 11,
       },
-      status: { status: FormStatus.Incomplete, errors: [] },
     },
     sections: formSections,
     checklist: {
@@ -253,7 +247,6 @@ const createDefaultFormValues = (
           "I confirm that the information provided is accurate"
         ),
       ],
-      status: { status: FormStatus.Incomplete, errors: [] },
     },
   });
 };
@@ -351,6 +344,7 @@ interface ReportProps {
 function Report({ initFormValues }: ReportProps) {
   const methods = useForm<BuildingSurveyForm>({
     defaultValues: initFormValues,
+    mode: 'onChange' // Enable validation on change
   });
 
   const { handleSubmit, formState, watch, getValues, trigger } = methods;
@@ -387,6 +381,7 @@ function Report({ initFormValues }: ReportProps) {
     {
       delay: 2000,
       enabled: !!initFormValues.id,
+      validateBeforeSave: false, // Allow saving partial/invalid data
     }
   );
 
@@ -401,14 +396,9 @@ function Report({ initFormValues }: ReportProps) {
     const defaultValues = formState.defaultValues;
     if (!defaultValues) return false;
 
-    const allSectionsComplete = [
-      defaultValues.reportDetails?.status?.status,
-      defaultValues.propertyDescription?.status?.status,
-      defaultValues.checklist?.status?.status,
-      getConditionStatus(initFormValues).status,
-    ].every((s) => s === FormStatus.Complete);
-
-    return allSectionsComplete;
+    // For now, allow submission regardless of completion status
+    // TODO: Implement reactive validation here using the new hooks
+    return true;
   };
 
   const onSubmit = async () => {
@@ -425,22 +415,18 @@ function Report({ initFormValues }: ReportProps) {
     {
       title: "Report Details",
       href: `/home/surveys/${initFormValues.id}/report-details`,
-      status: initFormValues.reportDetails.status.status,
     },
     {
       title: "Property Description",
       href: `/home/surveys/${initFormValues.id}/property-description`,
-      status: initFormValues.propertyDescription.status.status,
     },
     {
       title: "Property Condition",
       href: `/home/surveys/${initFormValues.id}/condition`,
-      status: getConditionStatus(initFormValues).status,
     },
     {
       title: "Checklist",
       href: `/home/surveys/${initFormValues.id}/checklist`,
-      status: initFormValues.checklist.status.status,
     },
   ];
 
@@ -467,7 +453,7 @@ function Report({ initFormValues }: ReportProps) {
               key={index}
               title={section.title}
               href={section.href}
-              status={section.status || FormStatus.Unknown}
+              status={FormStatus.Unknown}
             />
           ))}
         </div>

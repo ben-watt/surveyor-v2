@@ -31,11 +31,6 @@ function findOrCreateElementSection(
       description: "",
       components: [],
       images: [],
-      status: {
-        status: FormStatus.Incomplete,
-        errors: [],
-      },
-
     };
     section.elementSections.push(elementSection);
   }
@@ -131,10 +126,6 @@ export function updateElementDetails(
   }
   if (updates.images !== undefined) {
     elementSection.images = updates.images;
-  }
-
-  if (updates.status !== undefined) {
-    elementSection.status = updates.status;
   }
 
   return survey;
@@ -244,10 +235,9 @@ export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionS
   const elementSections = survey.sections.flatMap(s => s.elementSections);
   const activeElementSections = elementSections.filter(e => e.isPartOfSurvey);
 
-  const allElementsComplete = activeElementSections.every(e => e.status?.status === FormStatus.Complete)
   const allElementsHaveAtLeastOneComponent = activeElementSections.every(e => e.components.length > 0)
 
-  if (allElementsComplete && allElementsHaveAtLeastOneComponent) {
+  if (allElementsHaveAtLeastOneComponent) {
     return {
       status: FormStatus.Complete,
       errors: [],
@@ -255,7 +245,7 @@ export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionS
   } else {
     return {
       status: FormStatus.Incomplete,
-      errors: survey.sections.flatMap(s => s.elementSections.filter(e => e.isPartOfSurvey).flatMap(e => e.status?.errors || [])),
+      errors: [],
     };
   }
 }

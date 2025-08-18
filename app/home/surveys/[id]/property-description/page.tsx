@@ -11,8 +11,9 @@ import { mapToInputType } from "../../building-survey-reports/Utils";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
-import { useAutoSaveSurveyForm } from "../../../hooks/useAutoSaveForm";
+import { useAutoSaveForm } from "../../../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../../../components/LastSavedIndicator";
+import { usePropertyDescriptionFormStatus } from "../../../hooks/useReactiveFormStatus";
 import toast from "react-hot-toast";
 
 function isInputT<T>(input: any): input is Input<T> {
@@ -79,6 +80,13 @@ const PropertyDescriptionForm = ({
   });
   const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
   const router = useRouter();
+  
+  // Reactive status computation
+  const watchedData = watch();
+  const formStatus = usePropertyDescriptionFormStatus(
+    watchedData || {},
+    trigger
+  );
 
   // Set entity data when component mounts
   useEffect(() => {
@@ -90,44 +98,28 @@ const PropertyDescriptionForm = ({
   // Debug: Log form changes
   useEffect(() => {
     const subscription = watch((data, { name, type }) => {
-      console.log("[PropertyDescriptionForm] Form changed:", {
-        name,
-        type,
-        value: data?.[name as keyof PropertyDescription],
-        allData: data
-      });
     });
 
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, [watch]);
 
   // Autosave functionality
   const savePropertyDescription = async (data: PropertyDescription, { auto = false }: { auto?: boolean } = {}) => {
     try {
-      console.log("[PropertyDescriptionForm] Saving data:", data);
-      
       await surveyStore.update(id, (currentState) => {
         // Update each field's value property
         Object.keys(data).forEach((key) => {
-          const propKey = key as keyof Omit<PropertyDescription, "status">;
+          const propKey = key as keyof PropertyDescription;
           const property = data[propKey] as Input<any>;
           if (isInputT(property) && currentState.propertyDescription[propKey]) {
-            console.log(`[PropertyDescriptionForm] Updating ${propKey} with value:`, property.value);
             (currentState.propertyDescription[propKey] as Input<any>).value = property.value;
           }
         });
-        
-        currentState.propertyDescription.status = {
-          status: FormStatus.Complete,
-          errors: [],
-        };
       });
 
       if (!auto) {
         toast.success("Property description saved successfully");
         router.push(`/home/surveys/${id}`);
-      } else {
-        console.log("[PropertyDescriptionForm] Auto-saved successfully");
       }
     } catch (error) {
       console.error("Failed to save property description", error);
@@ -136,20 +128,19 @@ const PropertyDescriptionForm = ({
     }
   };
 
-  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveSurveyForm(
+  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
     savePropertyDescription,
     watch,
     getValues,
     trigger,
     {
-      delay: 2000, // 2 second delay for autosave
+      delay: 1000, // Match ReportDetailsForm delay
       showToast: false, // Don't show toast for autosave
       enabled: true,
-      validateBeforeSave: true // Enable validation before auto-save
+      validateBeforeSave: false // Allow saving partial/invalid data
     }
   );
 
-  console.log("[PropertyDescriptionForm] Auto-save status:", { saveStatus, isSaving, lastSavedAt });
 
   return (
     <FormProvider {...methods}>
