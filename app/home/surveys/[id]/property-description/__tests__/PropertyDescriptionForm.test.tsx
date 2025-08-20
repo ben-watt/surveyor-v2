@@ -21,6 +21,12 @@ jest.mock('@/app/home/clients/Database', () => ({
 jest.mock('@/app/home/components/Drawer', () => ({
   DynamicDrawer: ({ content, isOpen }: any) => 
     isOpen ? <div data-testid="drawer">{content}</div> : null,
+  useDynamicDrawer: jest.fn(() => ({
+    isOpen: false,
+    toggleDrawer: jest.fn(),
+    setContent: jest.fn(),
+    content: null,
+  })),
 }));
 
 jest.mock('react-hot-toast', () => ({
