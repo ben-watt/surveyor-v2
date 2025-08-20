@@ -21,7 +21,7 @@ describe("buildSections", () => {
     expect(first.id).toBe("s1");
     expect(first.elementSections.map(e => e.id)).toEqual(["e1", "e2"]);
     expect(first.elementSections.every(e => e.isPartOfSurvey)).toBe(true);
-    expect(first.elementSections.every(e => e.status.status === "incomplete")).toBe(true);
+    // Status is now computed reactively, not stored in the data structure
 
     const second = result[1];
     expect(second.id).toBe("s2");

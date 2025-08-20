@@ -7,7 +7,7 @@ import { FormStatus } from "../building-survey-reports/BuildingSurveyReportSchem
 interface FormSection {
   title: string;
   href: string;
-  status: FormStatus;
+  status?: FormStatus; // Made optional to support reactive status computation
 }
 
 interface SurveyProgressStepperProps {

@@ -16,8 +16,7 @@ export type BuildingSurveyFormData = {
 }
 
 export type Checklist = {
-    items: Array<Input<boolean>>,
-    status: FormSectionStatus
+    items: Array<Input<boolean>>
 }
 
 export type Address = {
@@ -87,8 +86,7 @@ export type ReportDetails = {
     orientation: string,
     situation: string,
     moneyShot: SurveyImage[],
-    frontElevationImagesUri: SurveyImage[],
-    status: FormSectionStatus
+    frontElevationImagesUri: SurveyImage[]
 }
 
 export type FormSectionStatus = {
@@ -99,6 +97,7 @@ export type FormSectionStatus = {
 export enum FormStatus {
     Complete = "complete",
     Incomplete = "incomplete",
+    InProgress = "in-progress",
     Error = "error",
     Warning = "warning",
     Unknown = "unknown",
@@ -116,24 +115,21 @@ export type Input<T> = {
     order: number,
 }
 
-type description = string;
-type roomCount = number;
 export type Tenure = "Freehold" | "Leasehold" | "Commonhold" | "Other" | "Unknown";
 
 export type PropertyDescription = {
-    propertyType: Input<string>,
-    constructionDetails: Input<description>,
-    yearOfConstruction: Input<string>,
-    yearOfExtensions: Input<string>,
-    yearOfConversions: Input<string>,
-    grounds: Input<description>,
-    services: Input<string>,
-    otherServices: Input<string>,
-    energyRating: Input<string>,
-    numberOfBedrooms: Input<roomCount>,
-    numberOfBathrooms: Input<roomCount>,
-    tenure: Input<Tenure>,
-    status: FormSectionStatus,
+    propertyType: string,
+    constructionDetails: string,
+    yearOfConstruction: string,
+    yearOfExtensions?: string,
+    yearOfConversions?: string,
+    grounds: string,
+    services: string,
+    otherServices?: string,
+    energyRating: string,
+    numberOfBedrooms: number,
+    numberOfBathrooms: number,
+    tenure: string,
 }
 
 export type SurveySection = {
@@ -148,8 +144,7 @@ export type ElementSection = {
     isPartOfSurvey: boolean,
     description: string,
     components: Inspection[],
-    images: SurveyImage[],
-    status: FormSectionStatus
+    images: SurveyImage[]
 }
 
 export type Inspection = {

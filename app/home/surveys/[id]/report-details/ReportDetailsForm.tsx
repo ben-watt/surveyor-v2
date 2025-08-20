@@ -12,6 +12,7 @@ import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import AddressInput from "@/app/home/components/Input/AddressInput";
 import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
+import { useReportDetailsFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
 
 interface ReportDetailsFormProps {
   surveyId: string;
@@ -52,6 +53,7 @@ LevelField.displayName = 'LevelField';
 const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) => {
   const methods = useForm<ReportDetails>({
     defaultValues: reportDetails,
+    mode: 'onChange' // Enable validation on change
   });
   const {
     register,
@@ -61,19 +63,21 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     getValues,
     trigger,
   } = methods;
+  
+  // Reactive status computation
+  const watchedData = watch();
+  const formStatus = useReportDetailsFormStatus(watchedData || {}, trigger);
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
   const saveData = async (data: ReportDetails, { auto = false } = {}) => {
     if (!surveyId) return;
 
-    console.log("[ReportDetailsForm] saveData", { data, auto });
 
     try {
       await surveyStore.update(surveyId, (survey) => {
         survey.reportDetails = {
           ...data,
-          status: { status: FormStatus.Complete, errors: [] },
         };
       });
 
@@ -84,15 +88,6 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
       }
     } catch (error) {
       console.error("[ReportDetailsForm] Save failed", error);
-      
-      // Update status to show error
-      await surveyStore.update(surveyId, (survey) => {
-        survey.reportDetails.status = {
-          status: FormStatus.Error,
-          errors: ["Failed to save report details"],
-        };
-      });
-      
       throw error; // Re-throw for autosave error handling
     }
   };
@@ -105,6 +100,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     {
       delay: 1000,
       enabled: !!surveyId,
+      validateBeforeSave: false, // Allow saving partial/invalid data
       imagePaths: [
         `report-images/${surveyId}/moneyShot/`,
         `report-images/${surveyId}/frontElevationImagesUri/`

@@ -56,6 +56,13 @@ export function EnhancedFormSection({
           icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
           text: 'Needs Review'
         };
+      case FormStatus.InProgress:
+        return {
+          badge: 'bg-blue-100 text-blue-800 border-blue-200',
+          border: 'border-l-blue-500',
+          icon: <Clock className="w-5 h-5 text-blue-500" />,
+          text: 'Incomplete'
+        };
       case FormStatus.Incomplete:
       default:
         return {

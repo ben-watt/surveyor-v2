@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useCallback } from "react";
 import {
   useForm,
   FormProvider,
@@ -40,10 +40,14 @@ import {
   InspectionFormProps,
   RAG_OPTIONS,
 } from "./types";
+import { FormStatus } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import InputMoney from "@/app/home/components/Input/InputMoney";
 import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
+import { useInspectionFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
+import { FormErrorBoundary } from "@/app/home/components/FormErrorBoundary";
+import { FORM_DEBOUNCE_DELAYS } from "@/app/home/config/formConstants";
 
 function CostingsFieldArray() {
   const { control, register, formState: { errors } } = useFormContext();
@@ -214,7 +218,10 @@ function InspectionFormContent({
   surveySections: any[];
 }) {
   const drawer = useDynamicDrawer();
-  const methods = useForm<InspectionFormData>({ defaultValues: initialValues });
+  const methods = useForm<InspectionFormData>({ 
+    defaultValues: initialValues,
+    mode: 'onChange' // Enable validation on change
+  });
   const {
     register,
     watch,
@@ -224,6 +231,10 @@ function InspectionFormContent({
     trigger,
     formState: { errors },
   } = methods;
+  
+  // Reactive status computation
+  const watchedData = watch();
+  const formStatus = useInspectionFormStatus(watchedData || {}, trigger);
 
   // Only watch specific fields we need
   const surveySection = watch("surveySection");
@@ -233,7 +244,6 @@ function InspectionFormContent({
   const conditions = watch("conditions");
 
   
-  console.log("[InspectionForm] Component:", component);
 
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
@@ -326,12 +336,12 @@ function InspectionFormContent({
   }, [element.id, elements, surveySections, setValue]);
 
   // Memoize the image upload path
-  const imageUploadPath = useMemo(() => {
-    return `report-images/${surveyId}/inspections/${initialValues.inspectionId}`;
-  }, [surveyId, initialValues.inspectionId]);
+  const imageUploadPath = useMemo(() => 
+    `report-images/${surveyId}/inspections/${initialValues.inspectionId}`,
+    [surveyId, initialValues.inspectionId]
+  );
 
-  const saveData = async (data: InspectionFormData, { auto = false } = {}) => {
-    console.debug("[InspectionForm] saveData:", { data, auto });
+  const saveData = useCallback(async (data: InspectionFormData, { auto = false } = {}) => {
     
     try {
       await surveyStore.update(surveyId, (survey) => {
@@ -376,7 +386,7 @@ function InspectionFormContent({
       
       throw error; // Re-throw for autosave error handling
     }
-  };
+  }, [surveyId, drawer]);
 
   const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
     saveData,
@@ -384,16 +394,18 @@ function InspectionFormContent({
     getValues,
     trigger,
     {
-      delay: 1000,
+      delay: FORM_DEBOUNCE_DELAYS.AUTO_SAVE / 2,
       enabled: !!surveyId && !!initialValues.inspectionId,
+      validateBeforeSave: false, // Allow saving partial/invalid data
       imagePaths: [imageUploadPath]
     }
   );
 
   return (
     <FormProvider {...methods}>
-      <div className="space-y-6">
-        <FormSection title="Basic Information">
+      <FormErrorBoundary formName="Inspection Form">
+        <div className="space-y-6">
+          <FormSection title="Basic Information">
           <DynamicComboBox
             labelTitle="Survey Section"
             data={surveySectionOptions}
@@ -556,7 +568,8 @@ function InspectionFormContent({
           lastSavedAt={lastSavedAt}
           className="text-sm justify-center"
         />
-      </div>
+        </div>
+      </FormErrorBoundary>
     </FormProvider>
   );
 }

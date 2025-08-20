@@ -333,37 +333,37 @@ export default function PDF({ form }: PdfProps) {
         <h1 style={{ fontSize: "14pt", fontWeight: "bold" }}>Description Of the Property</h1>
         <TableBlock widths={[30, 70]}>
           <h2><strong>Property Type</strong></h2>
-          <p>{form.propertyDescription.propertyType.value}</p>
+          <p>{form.propertyDescription.propertyType}</p>
           <h2><strong>Construction Details</strong></h2>
-          <p>{form.propertyDescription.constructionDetails.value}</p>
+          <p>{form.propertyDescription.constructionDetails}</p>
           <h2><strong>Year of Construction</strong></h2>
-          <p>{form.propertyDescription.yearOfConstruction.value}</p>
+          <p>{form.propertyDescription.yearOfConstruction}</p>
           <h2><strong>Year of Extensions</strong></h2>
           <p>
 
-            {fallback(form.propertyDescription.yearOfExtensions.value, "N/A")}
+            {fallback(form.propertyDescription.yearOfExtensions, "N/A")}
           </p>
           <h2><strong>Year of Conversions</strong></h2>
           <p>
-            {fallback(form.propertyDescription.yearOfConversions.value, "N/A")}
+            {fallback(form.propertyDescription.yearOfConversions, "N/A")}
 
           </p>
           <h2><strong>Grounds</strong></h2>
-          <p>{form.propertyDescription.grounds.value}</p>
+          <p>{form.propertyDescription.grounds}</p>
           <h2><strong>Services</strong></h2>
-          <p>{form.propertyDescription.services.value}</p>
+          <p>{form.propertyDescription.services}</p>
           <h2><strong>Other Services</strong></h2>
-          <p>{form.propertyDescription.otherServices.value}</p>
+          <p>{fallback(form.propertyDescription.otherServices, "N/A")}</p>
 
           <h2><strong>Energy Rating</strong></h2>
-          <p>{form.propertyDescription.energyRating.value}</p>
+          <p>{form.propertyDescription.energyRating}</p>
           <h2><strong>Number of Bedrooms</strong></h2>
-          <p>{form.propertyDescription.numberOfBedrooms.value}</p>
+          <p>{form.propertyDescription.numberOfBedrooms}</p>
           <h2><strong>Number of Bathrooms</strong></h2>
-          <p>{form.propertyDescription.numberOfBathrooms.value}</p>
+          <p>{form.propertyDescription.numberOfBathrooms}</p>
 
           <h2><strong>Tenure</strong></h2>
-          <p>{form.propertyDescription.tenure.value}</p>
+          <p>{form.propertyDescription.tenure}</p>
         </TableBlock>
 
       </Page> 

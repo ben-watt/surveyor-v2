@@ -4,6 +4,8 @@ import { useAutoSaveForm } from './useAutoSaveForm';
 import { AutoSaveOptions, AutoSaveResult } from './useAutoSave';
 import { useImageUploadStatus } from '../components/InputImage/useImageUploadStatus';
 import { imageUploadStatusStore } from '../components/InputImage/imageUploadStatusStore';
+import { FORM_DEBOUNCE_DELAYS, PERFORMANCE_MARKS } from '@/app/home/config/formConstants';
+import { PerformanceMonitor } from '@/app/home/utils/performanceMonitor';
 
 interface AutoSaveFormWithImagesOptions extends AutoSaveOptions {
   imagePaths: string[];
@@ -88,16 +90,31 @@ export function useAutoSaveFormWithImages<T extends FieldValues>(
 
   // Enhanced save function that considers upload status
   const save = useCallback(async (data?: T, options?: { auto?: boolean }) => {
+    const perfLabel = options?.auto ? 'auto-save' : 'manual-save';
+    PerformanceMonitor.startMeasure(PERFORMANCE_MARKS.FORM_SAVE, perfLabel);
+    
     console.log('[useAutoSaveFormWithImages] Save called:', {
       auto: options?.auto,
       isUploading,
       hasData: !!data
     });
 
-    // For manual saves, we can proceed even if uploads are in progress
-    // The form data will contain the image paths that are already available
-    const currentData = data || getValues();
-    return autoSave.save(currentData, options);
+    try {
+      // For manual saves, we can proceed even if uploads are in progress
+      // The form data will contain the image paths that are already available
+      const currentData = data || getValues();
+      const result = await autoSave.save(currentData, options);
+      
+      const duration = PerformanceMonitor.endMeasure(PERFORMANCE_MARKS.FORM_SAVE, perfLabel);
+      if (duration > 1000) {
+        console.warn(`[Performance] Slow save detected: ${duration.toFixed(0)}ms`);
+      }
+      
+      return result;
+    } catch (error) {
+      PerformanceMonitor.endMeasure(PERFORMANCE_MARKS.FORM_SAVE, perfLabel);
+      throw error;
+    }
   }, [autoSave, getValues, isUploading]);
 
   return {
