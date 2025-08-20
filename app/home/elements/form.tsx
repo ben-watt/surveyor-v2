@@ -2,7 +2,8 @@
 
 import Input from "@/app/home/components/Input/InputText";
 import { FormProvider, useForm } from "react-hook-form";
-import { useCallback, useEffect, useRef } from "react";
+import { z } from "zod";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DynamicComboBox } from "../components/Input";
 import toast from "react-hot-toast";
 import { elementStore, sectionStore } from "../clients/Database";
@@ -12,6 +13,16 @@ import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
 import { getAutoSaveTimings } from "../utils/autosaveTimings";
 import { LastSavedIndicator } from "../components/LastSavedIndicator";
 
+// Zod schema for element validation
+const elementSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Name is required"),
+  sectionId: z.string().min(1, "Section is required"),
+  order: z.number().min(0, "Order must be 0 or greater").nullable().optional(),
+  description: z.string().nullable().optional()
+});
+
+type ElementFormData = z.infer<typeof elementSchema>;
 
 interface DataFormProps {
   id?: string;
@@ -20,7 +31,7 @@ interface DataFormProps {
 
 export function DataForm({ id, defaultValues }: DataFormProps) {
   const idRef = useRef(id ?? uuidv4());
-  const form = useForm<Element>({
+  const form = useForm<ElementFormData>({
     defaultValues: {
       id: idRef.current,
       name: "",
@@ -36,20 +47,25 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   const [elementHydrated, element] = elementStore.useGet(idRef.current);
   const { register, control, watch, getValues, trigger, formState: { errors } } = form;
 
+  // Track if we've done the initial reset to prevent wiping user input on autosave
+  const [hasInitialReset, setHasInitialReset] = useState(false);
+
   useEffect(() => {
-    if (elementHydrated && element) {
+    if (elementHydrated && element && !hasInitialReset) {
+      // Only reset on initial load, not on subsequent updates from autosave
       form.reset({
         id: element.id,
         name: element.name ?? '',
         sectionId: element.sectionId ?? '',
-        order: element.order ?? 0,
-        description: element.description ?? '',
+        order: element.order ?? undefined,
+        description: element.description ?? undefined,
       });
+      setHasInitialReset(true);
     }
-  }, [form, elementHydrated, element]);
+  }, [form, elementHydrated, element, hasInitialReset]);
 
   const saveElement = useCallback(
-    async (data: Element, { auto = false }: { auto?: boolean } = {}) => {
+    async (data: ElementFormData, { auto = false }: { auto?: boolean } = {}) => {
       console.debug("[DataForm] saveElement", { data, auto });
       try {
         if (elementHydrated && element) {
@@ -106,7 +122,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
       <div className="grid gap-4">
         <Input
           labelTitle="Name"
-          register={() => register("name", { required: "Name is required" })}
+          register={() => register("name")}
           errors={errors}
         />
         <Input
@@ -119,7 +135,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
           data={sections.map(s => ({ value: s.id, label: s.name }))}
           name="sectionId"
           control={control}
-          rules={{ required: "Section is required" }}
+          rules={{}}
           errors={errors}
         />
         <LastSavedIndicator

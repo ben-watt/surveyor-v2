@@ -5,7 +5,8 @@ import {
   FormProvider,
   useForm,
 } from "react-hook-form";
-import { useCallback, useEffect, useRef } from "react";
+import { z } from "zod";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DynamicComboBox } from "@/app/home/components/Input";
 import { Phrase } from "../clients/Dexie";
 import TextAreaInput from "../components/Input/TextAreaInput";
@@ -15,6 +16,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../components/LastSavedIndicator";
 import { getAutoSaveTimings } from "../utils/autosaveTimings";
+
+// Zod schema for condition/phrase validation
+const conditionSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Name is required"),
+  phrase: z.string().min(1, "Phrase is required"),
+  phraseLevel2: z.string().nullable().optional(),
+  associatedElementIds: z.array(z.string()).transform(val => val || []),
+  associatedComponentIds: z.array(z.string()).transform(val => val || []),
+  associatedMaterialIds: z.array(z.string()).transform(val => val || [])
+});
+
+type ConditionFormData = z.infer<typeof conditionSchema>;
 
 type UpdateForm = Omit<
   Phrase,
@@ -29,8 +43,17 @@ interface DataFormProps {
 
 export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const idRef = useRef(id ?? uuidv4());
-  const methods = useForm<UpdateForm>({ 
-    defaultValues: { id: idRef.current, ...defaultValues },
+  const methods = useForm<ConditionFormData>({ 
+    defaultValues: { 
+      id: idRef.current, 
+      name: "",
+      phrase: "",
+      phraseLevel2: undefined,
+      associatedElementIds: [],
+      associatedComponentIds: [],
+      associatedMaterialIds: [],
+      ...defaultValues 
+    },
     mode: 'onChange'
   });
   const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
@@ -38,23 +61,27 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const [componentsHydrated, components] = componentStore.useList();
   const [phraseHydrated, phrase] = phraseStore.useGet(idRef.current);
 
+  // Track if we've done the initial reset to prevent wiping user input on autosave
+  const [hasInitialReset, setHasInitialReset] = useState(false);
+
   useEffect(() => {
-    if (phraseHydrated && phrase) {
-      // Reset only form-relevant fields to avoid autosave loops from meta fields
+    if (phraseHydrated && phrase && !hasInitialReset) {
+      // Only reset on initial load, not on subsequent updates from autosave
       methods.reset({
         id: phrase.id,
         name: phrase.name ?? '',
         phrase: phrase.phrase ?? '',
-        phraseLevel2: phrase.phraseLevel2 ?? '',
+        phraseLevel2: phrase.phraseLevel2 ?? undefined,
         associatedElementIds: phrase.associatedElementIds ?? [],
         associatedComponentIds: phrase.associatedComponentIds ?? []
       } as any, { keepIsValid: true });
+      setHasInitialReset(true);
     }
-  }, [phraseHydrated, phrase, methods]);
+  }, [phraseHydrated, phrase, methods, hasInitialReset]);
 
   // Autosave functionality
   const savePhrase = useCallback(
-    async (data: UpdateForm, { auto = false }: { auto?: boolean } = {}) => {
+    async (data: ConditionFormData, { auto = false }: { auto?: boolean } = {}) => {
       try {
         if (phraseHydrated && phrase) {
           await phraseStore.update(idRef.current, draft => {
@@ -114,12 +141,12 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
       <div className="grid gap-4">
         <Input
           labelTitle="Name"
-          register={() => register("name", { required: "Name is required" })}
+          register={() => register("name")}
           errors={errors}
         />
         <TextAreaInput
           labelTitle="Phrase (Level 3)"
-          register={() => register("phrase", { required: "Phrase is required" })}
+          register={() => register("phrase")}
           errors={errors}
         />
         <TextAreaInput

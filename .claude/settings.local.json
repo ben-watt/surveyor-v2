@@ -12,7 +12,8 @@
       "Bash(ls:*)",
       "Bash(npm run dev:*)",
       "WebSearch",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(rg:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

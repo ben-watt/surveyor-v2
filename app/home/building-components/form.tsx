@@ -5,7 +5,8 @@ import {
   FormProvider,
   useForm,
 } from "react-hook-form";
-import { useCallback, useEffect, useRef } from "react";
+import { z } from "zod";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { componentStore, elementStore } from "@/app/home/clients/Database";
 import type { Component } from "@/app/home/clients/Dexie";
 import { DynamicComboBox } from "@/app/home/components/Input";
@@ -17,6 +18,18 @@ import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
 import { getAutoSaveTimings } from "../utils/autosaveTimings";
 import { LastSavedIndicator } from "../components/LastSavedIndicator";
 
+// Zod schema for component validation
+const componentSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Name is required"),
+  elementId: z.string().min(1, "Element is required"),
+  materials: z.array(z.object({
+    name: z.string().min(1, "Material name is required")
+  })).transform(val => val || [])
+});
+
+type ComponentFormData = z.infer<typeof componentSchema>;
+
 interface DataFormProps {
   id?: string;
   defaultValues?: Partial<Component>;
@@ -24,8 +37,8 @@ interface DataFormProps {
 
 export function DataForm({ id, defaultValues }: DataFormProps) {
   const idRef = useRef(id ?? uuidv4());
-  const methods = useForm<Component>({ 
-    defaultValues: { id: idRef.current, ...defaultValues },
+  const methods = useForm<ComponentFormData>({ 
+    defaultValues: { id: idRef.current, name: "", elementId: "", materials: [], ...defaultValues },
     mode: 'onChange'
   });
   const { register, handleSubmit, control, watch, getValues, trigger, formState: { errors } } = methods;
@@ -35,19 +48,24 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   const [elementsHydrateds, elements] = elementStore.useList();
   const [componentHydrated, component] = componentStore.useGet(idRef.current);
 
+  // Track if we've done the initial reset to prevent wiping user input on autosave
+  const [hasInitialReset, setHasInitialReset] = useState(false);
+
   useEffect(() => {
-    if (componentHydrated && component) {
+    if (componentHydrated && component && !hasInitialReset) {
+      // Only reset on initial load, not on subsequent updates from autosave
       methods.reset({
         id: component.id,
         name: component.name ?? '',
         elementId: component.elementId ?? '',
         materials: component.materials ?? []
       } as any);
+      setHasInitialReset(true);
     }
-  }, [methods, componentHydrated, component]);
+  }, [methods, componentHydrated, component, hasInitialReset]);
 
   const saveComponent = useCallback(
-    async (data: Component, { auto = false }: { auto?: boolean } = {}) => {
+    async (data: ComponentFormData, { auto = false }: { auto?: boolean } = {}) => {
       try {
         if (componentHydrated && component) {
           await componentStore.update(idRef.current, draft => {
@@ -106,14 +124,14 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
       <div className="grid gap-4">
         <Input
           labelTitle="Name"
-          register={() => register("name", { required: "Name is required" })}
+          register={() => register("name")}
           errors={errors}
         />
         <DynamicComboBox
           labelTitle="Element"
           name="elementId"
           control={control}
-          rules={{ required: "Element is required" }}
+          rules={{}}
           data={elements.map((x) => ({ label: x.name, value: x.id }))}
           errors={errors}
         />

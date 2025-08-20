@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
+import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
@@ -14,6 +15,15 @@ import { LastSavedIndicator } from "../components/LastSavedIndicator";
 import InputError from "../components/InputError";
 import toast from "react-hot-toast";
 
+// Zod schema for section validation
+const sectionSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Name is required"),
+  order: z.number().min(0, "Order must be 0 or greater").nullable().optional()
+});
+
+type SectionFormData = z.infer<typeof sectionSchema>;
+
 interface SectionFormProps {
   initialData?: SectionData;
 }
@@ -23,11 +33,11 @@ export default function SectionForm({ initialData }: SectionFormProps) {
   const idRef = React.useRef(initialData?.id ?? uuidv4())
   const [isHydrated, section] = sectionStore.useGet(idRef.current);
   
-  const form = useForm<SectionData>({
-    defaultValues: initialData || {
-      id: idRef.current,
-      name: "",
-      order: 0,
+  const form = useForm<SectionFormData>({
+    defaultValues: {
+      id: initialData?.id ?? idRef.current,
+      name: initialData?.name ?? "",
+      order: initialData?.order ?? 0,
     },
     mode: 'onChange'
   });
@@ -35,7 +45,7 @@ export default function SectionForm({ initialData }: SectionFormProps) {
   const { register, watch, getValues, trigger, formState: { errors } } = form;
 
   // Autosave functionality
-  const saveSection = async (data: SectionData, { auto = false }: { auto?: boolean } = {}) => {
+  const saveSection = async (data: SectionFormData, { auto = false }: { auto?: boolean } = {}) => {
     try {
       if (isHydrated && section) {
         await sectionStore.update(data.id, (draft) => {
@@ -82,7 +92,10 @@ export default function SectionForm({ initialData }: SectionFormProps) {
           <Label htmlFor="name">Name</Label>
           <Input
             id="name"
-            {...register("name", { required: "Name is required" })}
+            {...register("name", { 
+              required: "Name is required",
+              validate: (value) => sectionSchema.shape.name.safeParse(value).success || "Name is required"
+            })}
             placeholder="Enter section name"
           />
           {errors.name && <InputError message={errors.name.message} />}

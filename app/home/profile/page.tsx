@@ -8,20 +8,24 @@ import {
 import { useEffect, useState } from "react";
 import InputText from "../components/Input/InputText";
 import { FieldValues, FormProvider, useForm } from "react-hook-form";
+import { z } from "zod";
 import toast from "react-hot-toast";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage";
 import { debounce } from "@tiptap-pro/extension-table-of-contents";
 import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../components/LastSavedIndicator";
 
-type ProfileFormData = {
-  name: string;
-  nickname: string;
-  profile: string;
-  picture: string;
-  sub: string;
-  email: string;
-};
+// Zod schema for profile validation
+const profileSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  nickname: z.string().min(1, "Signature text is required"), 
+  profile: z.string().min(1, "Profile picture is required"),
+  picture: z.string().min(1, "Signature image is required"),
+  sub: z.string(),
+  email: z.string().email("Invalid email address")
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 function Page() {
   const methods = useForm<ProfileFormData>({
@@ -142,12 +146,12 @@ function Page() {
           <InputText
             labelTitle="Email"
             placeholder="Email Address"
-            register={() => register("email", { required: "Email is required" })}
+            register={() => register("email")}
             disabled
             errors={errors}
           />
           <InputText
-            register={() => register("name", { required: "Name is required" })}
+            register={() => register("name")}
             labelTitle="Name"
             placeholder="Enter your name"
             errors={errors}
@@ -157,7 +161,7 @@ function Page() {
             path={`profile/${sub}/profilePicture/`}
             rhfProps={{
               name: "profile",
-              rules: { required: "Profile picture is required" },
+              rules: {},
             }}
             labelText="Profile Picture"
             maxFiles={1}
@@ -168,14 +172,14 @@ function Page() {
             path={`profile/${sub}/signatureImage/`}
             rhfProps={{
               name: "picture",
-              rules: { required: "Signature image is required" },
+              rules: {},
             }}
             labelText="Signature Image"
             maxFiles={1}
             minFiles={1}
           />
           <InputText
-            register={() => register("nickname", { required: "Signature text is required" })}
+            register={() => register("nickname")}
             labelTitle="Signature Text"
             placeholder="Enter your signature text"
             errors={errors}

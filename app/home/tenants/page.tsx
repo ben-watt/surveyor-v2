@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { PlusCircle, Users, UserPlus, UserMinus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { toast } from "react-hot-toast";
 import { 
   createTenant, 
@@ -55,7 +56,15 @@ export default function TenantsPage() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [isGlobalAdminUser, setIsGlobalAdminUser] = useState(false);
   
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  // Zod schema for tenant validation
+  const tenantSchema = z.object({
+    name: z.string().min(1, "Team name is required"),
+    description: z.string().optional()
+  });
+
+  type TenantFormData = z.infer<typeof tenantSchema>;
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<TenantFormData>({
     defaultValues: {
       name: "",
       description: "",
@@ -121,10 +130,10 @@ export default function TenantsPage() {
   };
 
   // Handle creating a new tenant
-  const handleCreateTenant = async (data: { name: string; description: string }) => {
+  const handleCreateTenant = async (data: TenantFormData) => {
     try {
       setLoading(true);
-      await createTenant(data.name, data.description);
+      await createTenant(data.name, data.description || "");
       toast.success(`Tenant "${data.name}" created successfully`);
       reset();
       setIsCreateTenantDialogOpen(false);
@@ -228,7 +237,10 @@ export default function TenantsPage() {
                     <Label htmlFor="name">Team Name</Label>
                     <Input
                       id="name"
-                      {...register("name", { required: "Team name is required" })}
+                      {...register("name", {
+                        required: "Team name is required",
+                        validate: (value) => tenantSchema.shape.name.safeParse(value).success || "Team name is required"
+                      })}
                     />
                     {errors.name && (
                       <p className="text-sm text-red-500">{errors.name.message}</p>
