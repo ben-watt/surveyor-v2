@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
 import {
   Input as InputT,
@@ -44,6 +44,7 @@ import { useUserAttributes } from "../../utils/useUser";
 import { SurveyHeader } from "../components/SurveyHeader";
 import { SurveyProgressStepper } from "../components/SurveyProgressStepper";
 import { EnhancedFormSection } from "../components/EnhancedFormSection";
+import { zodSectionStatusMap } from "../schemas";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -126,101 +127,18 @@ const createDefaultFormValues = (
       frontElevationImagesUri: [],
     },
     propertyDescription: {
-      propertyType: {
-        type: "text",
-        value: "",
-        label: "Property Type",
-        placeholder:
-          "Detached, Semi-detached, Terraced, Flat, Bungalow, Maisonette, Other",
-        required: true,
-        order: 0,
-      },
-      constructionDetails: {
-        type: "textarea",
-        value: "",
-        label: "Construction Details",
-        placeholder: "Brick, Stone, Timber, Concrete, Steel, Glass, Other",
-        required: true,
-        order: 1,
-      },
-      yearOfConstruction: {
-        type: "text",
-        label: "Year of Construction",
-        placeholder: "presumed 1990s - side extension",
-        required: true,
-        order: 2,
-      },
-      yearOfExtensions: {
-        type: "text",
-        label: "Year of Extensions",
-        placeholder: "2012",
-        required: false,
-        order: 3,
-      },
-      yearOfConversions: {
-        type: "text",
-        label: "Year of Conversions",
-        placeholder: "2004",
-        required: false,
-        order: 4,
-      },
-      grounds: {
-        type: "textarea",
-        value: "",
-        label: "Grounds",
-        placeholder: "Garden, Yard, Paved, Lawn, Other",
-        required: true,
-        order: 5,
-      },
-      services: {
-        type: "text",
-        value: "",
-        label: "Services",
-        placeholder:
-          "Electricity, Gas, Water, Drainage, Telephone, Broadband, Other",
-        required: true,
-        order: 6,
-      },
-      otherServices: {
-        type: "text",
-        value: "",
-        label: "Other Services",
-        placeholder: "Cable TV, Satellite TV, Solar Panels, Other",
-        required: false,
-        order: 7,
-      },
-      energyRating: {
-        type: "text",
-        value: "",
-        label: "Energy Rating",
-        placeholder: "A, B, C, D, E, F, G, Other",
-        required: true,
-        order: 8,
-      },
-      numberOfBedrooms: {
-        type: "number",
-        value: 0,
-        label: "Number of Bedrooms",
-        placeholder: "Number of Bedrooms",
-        required: true,
-        order: 9,
-      },
-      numberOfBathrooms: {
-        type: "number",
-        value: 0,
-        label: "Number of Bathrooms",
-        placeholder: "Number of Bathrooms",
-        required: true,
-        order: 10,
-      },
-      tenure: {
-        type: "select",
-        value: "Unknown",
-        label: "Tenure",
-        placeholder: "Freehold, Leasehold, Commonhold, Other",
-        required: true,
-        order: 11,
-      },
+      propertyType: "",
+      constructionDetails: "",
+      yearOfConstruction: "",
+      yearOfExtensions: "",
+      yearOfConversions: "",
+      grounds: "",
+      services: "",
+      otherServices: "",
+      energyRating: "",
+      numberOfBedrooms: 0,
+      numberOfBathrooms: 0,
+      tenure: "Unknown",
     },
     sections: formSections,
     checklist: {
@@ -411,22 +329,41 @@ function Report({ initFormValues }: ReportProps) {
     console.error(errors);
   };
 
+  // Compute section statuses using Zod schemas (presence inferred from data existence!)
+  const sectionStatuses = useMemo(() => {
+    return {
+      'Report Details': zodSectionStatusMap['Report Details'](initFormValues.reportDetails),
+      'Property Description': zodSectionStatusMap['Property Description'](initFormValues.propertyDescription),
+      'Property Condition': zodSectionStatusMap['Property Condition'](initFormValues.sections),
+      'Checklist': zodSectionStatusMap['Checklist'](initFormValues.checklist)
+    };
+  }, [initFormValues.reportDetails, initFormValues.propertyDescription, initFormValues.sections, initFormValues.checklist]);
+
+  const getSectionStatus = (sectionTitle: string): FormStatus => {
+    const statusResult = sectionStatuses[sectionTitle as keyof typeof sectionStatuses];
+    return statusResult?.status || FormStatus.Unknown;
+  };
+
   const formSections = [
     {
       title: "Report Details",
       href: `/home/surveys/${initFormValues.id}/report-details`,
+      status: getSectionStatus("Report Details"),
     },
     {
       title: "Property Description",
       href: `/home/surveys/${initFormValues.id}/property-description`,
+      status: getSectionStatus("Property Description"),
     },
     {
       title: "Property Condition",
       href: `/home/surveys/${initFormValues.id}/condition`,
+      status: getSectionStatus("Property Condition"),
     },
     {
       title: "Checklist",
       href: `/home/surveys/${initFormValues.id}/checklist`,
+      status: getSectionStatus("Checklist"),
     },
   ];
 
@@ -453,7 +390,7 @@ function Report({ initFormValues }: ReportProps) {
               key={index}
               title={section.title}
               href={section.href}
-              status={FormStatus.Unknown}
+              status={getSectionStatus(section.title)}
             />
           ))}
         </div>

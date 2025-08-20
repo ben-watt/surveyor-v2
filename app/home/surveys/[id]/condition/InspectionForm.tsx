@@ -46,6 +46,8 @@ import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithI
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
 import { useInspectionFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
+import { FormErrorBoundary } from "@/app/home/components/FormErrorBoundary";
+import { FORM_DEBOUNCE_DELAYS } from "@/app/home/config/formConstants";
 
 function CostingsFieldArray() {
   const { control, register, formState: { errors } } = useFormContext();
@@ -387,7 +389,7 @@ function InspectionFormContent({
       
       throw error; // Re-throw for autosave error handling
     }
-  }, [surveyId]);
+  }, [surveyId, drawer]);
 
   const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
     saveData,
@@ -395,7 +397,7 @@ function InspectionFormContent({
     getValues,
     trigger,
     {
-      delay: 1000,
+      delay: FORM_DEBOUNCE_DELAYS.AUTO_SAVE / 2,
       enabled: !!surveyId && !!initialValues.inspectionId,
       validateBeforeSave: false, // Allow saving partial/invalid data
       imagePaths: [imageUploadPath]
@@ -404,8 +406,9 @@ function InspectionFormContent({
 
   return (
     <FormProvider {...methods}>
-      <div className="space-y-6">
-        <FormSection title="Basic Information">
+      <FormErrorBoundary formName="Inspection Form">
+        <div className="space-y-6">
+          <FormSection title="Basic Information">
           <DynamicComboBox
             labelTitle="Survey Section"
             data={surveySectionOptions}
@@ -568,7 +571,8 @@ function InspectionFormContent({
           lastSavedAt={lastSavedAt}
           className="text-sm justify-center"
         />
-      </div>
+        </div>
+      </FormErrorBoundary>
     </FormProvider>
   );
 }
