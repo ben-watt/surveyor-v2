@@ -2,7 +2,6 @@ import React, { useEffect, memo, useMemo, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/home/components/FormSection";
-import { ElementSection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
 import { surveyStore, sectionStore } from "@/app/home/clients/Database";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
@@ -145,10 +144,13 @@ const ElementForm: React.FC<ElementFormProps> = ({ surveyId, sectionId, elementI
     watch,
     getValues,
     trigger,
-    createAutosaveConfigWithImages(
-      [imageUploadPath],
-      { enabled: !isLoading }
-    )
+    {
+      ...createAutosaveConfigWithImages(
+        [imageUploadPath],
+        { enabled: !isLoading }
+      ),
+      watchChanges: !isLoading
+    }
   );
 
   const handleRemoveComponent = useCallback(async (inspectionId: string) => {
