@@ -2,38 +2,56 @@ import React, { useEffect, memo, useMemo, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/home/components/FormSection";
-import { ElementSection, FormStatus, SurveyImage, SurveySection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { ElementSection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-
-import { surveyStore, elementStore, sectionStore } from "@/app/home/clients/Database";
+import { surveyStore, sectionStore } from "@/app/home/clients/Database";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import toast from "react-hot-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import InspectionForm from "./InspectionForm";
-import { Edit, Trash2 } from "lucide-react";
 import { getElementSection, updateElementDetails, removeComponent } from "@/app/home/surveys/building-survey-reports/Survey";
 import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
 import { useImageUploadStatus } from "@/app/home/components/InputImage/useImageUploadStatus";
 import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
-import { useElementFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
-import { createFormOptions, createAutosaveConfigWithImages } from "@/app/home/hooks/useFormConfig";
-// Memoized Add Component button component
+import { createAutosaveConfigWithImages } from "@/app/home/hooks/useFormConfig";
+import { ComponentsList } from "./ComponentsList";
+import { ElementFormSchema, type ElementFormData } from "./ElementFormSchema";
+import { Label } from "@/components/ui/label";
+
+interface AddComponentButtonProps {
+  surveyId: string;
+  elementId: string;
+  elementName: string;
+  imageUploadPath: string;
+}
+
 const AddComponentButton = memo(({ 
   surveyId, 
   elementId, 
   elementName,
   imageUploadPath 
-}: { 
-  surveyId: string;
-  elementId: string;
-  elementName: string;
-  imageUploadPath: string;
-}) => {
+}: AddComponentButtonProps) => {
   const drawer = useDynamicDrawer();
   const { isUploading } = useImageUploadStatus([imageUploadPath]);
+
+  const handleClick = useCallback(() => {
+    drawer.openDrawer({
+      id: `${surveyId}-condition-add-component`,
+      title: `Add Component`,
+      description: `Add a component to the element`,
+      content: <InspectionForm
+        surveyId={surveyId}
+        defaultValues={{
+          element: {
+            id: elementId,
+            name: elementName,
+          }
+        }}
+      />
+    });
+  }, [drawer, surveyId, elementId, elementName]);
 
   return (
     <Button 
@@ -41,22 +59,7 @@ const AddComponentButton = memo(({
       type="button" 
       className="w-full" 
       disabled={isUploading}
-      onClick={() => {
-        drawer.openDrawer({
-          id: `${surveyId}-condition-add-component`,
-          title: `Add Component`,
-          description: `Add a component to the element`,
-          content: <InspectionForm
-            surveyId={surveyId}
-            defaultValues={{
-              element: {
-                id: elementId,
-                name: elementName,
-              }
-            }}
-          />
-        });
-      }}
+      onClick={handleClick}
     >
       {isUploading ? 'Please wait for images to finish uploading...' : 'Add Component'}
     </Button>
@@ -65,65 +68,54 @@ const AddComponentButton = memo(({
 
 AddComponentButton.displayName = 'AddComponentButton';
 
-type ElementFormData = {
-  description: string;
-  images: SurveyImage[];
-}
-
 interface ElementFormProps {
   surveyId: string;
   sectionId: string;
   elementId: string;
 }
 
-export default function ElementForm({ surveyId, sectionId, elementId }: ElementFormProps) {
-
+const ElementForm: React.FC<ElementFormProps> = ({ surveyId, sectionId, elementId }) => {
   const drawer = useDynamicDrawer();
   const [isLoading, setIsLoading] = React.useState(true);
-  const defaultValues: ElementFormData = {
-    description: "",
-    images: [],
-  };
 
-  const methods = useForm<ElementFormData>(createFormOptions(defaultValues));
-  const { register, control, reset, watch, getValues, trigger } = methods;
+  const [isSurveyHydrated, survey] = surveyStore.useGet(surveyId);
+  const [isSectionsHydrated, surveySections] = sectionStore.useList();
   
-  // Reactive status computation
-  const watchedData = watch();
-  const formStatus = useElementFormStatus(watchedData || { description: '', images: [] }, trigger);
-  const [elementData, setElementData] = React.useState<ElementSection | null>(null);
-  const [isHydrated, survey] = surveyStore.useGet(surveyId);
-  const [sectionsHydrated, surveySections] = sectionStore.useList();
   const imageUploadPath = useMemo(() => 
     `report-images/${surveyId}/elements/${elementId}`, 
     [surveyId, elementId]
   );
 
-  const loadElementData = useCallback(async () => {
-    if(!isHydrated || !survey) return;
+  const defaultValues: ElementFormData = useMemo(() => ({
+    description: "",
+    images: [],
+  }), []);
 
-    try {
-      const elementSection = getElementSection(survey, sectionId, elementId);
-      
-      if (elementSection) {
-        setElementData(elementSection);
-        reset({
-          description: elementSection.description || "",
-          images: elementSection.images || [],
-        });
-      }
-    } catch (error) {
-      toast.error("Failed to load element details");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isHydrated, survey, sectionId, elementId, reset]);
+  const methods = useForm<ElementFormData>({
+    defaultValues,
+    mode: 'onChange',
+  });
+  
+  const { register, control, reset, watch, getValues, trigger } = methods;
+
+  const getElement = useCallback(() => {
+    if(!survey) return null;
+    return getElementSection(survey, sectionId, elementId);
+  }, [survey, sectionId, elementId]);
 
   useEffect(() => {
-    loadElementData();
-  }, [loadElementData]);
+    if(!isSurveyHydrated || !isSectionsHydrated) return; 
+    const elementSection = getElement();
+    if(!elementSection) return;
+    
+    reset({
+      description: elementSection.description || "",
+      images: elementSection.images || [],
+    });
+    setIsLoading(false);
+  }, [isSurveyHydrated, isSectionsHydrated, reset, getElement]);
 
-  const saveData = async (data: ElementFormData, { auto = false } = {}) => {
+  const saveData = useCallback(async (data: ElementFormData, { auto = false } = {}) => {
     try {
       await surveyStore.update(surveyId, (survey) => {
         updateElementDetails(survey, sectionId, elementId, {
@@ -133,45 +125,50 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
       });
 
       if (!auto) {
-        // For manual saves, close drawer and show toast
         drawer.closeDrawer();
         toast.success("Element details saved");
       }
     } catch (error) {
-      console.error("[ElementForm] Save failed", error);
+      console.error("[ElementForm] Save failed:", error);
       
       if (!auto) {
-        toast.error("Failed to save element details");
+        const message = error instanceof Error ? error.message : "Failed to save element details";
+        toast.error(message);
       }
       
-      throw error; // Re-throw for autosave error handling
+      throw error;
     }
-  };
+  }, [surveyId, sectionId, elementId, drawer]);
 
-  const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
+  const { saveStatus, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
     saveData,
     watch,
     getValues,
     trigger,
     createAutosaveConfigWithImages(
       [imageUploadPath],
-      { enabled: !!surveyId && !!elementData } // Only enable autosave when element data is loaded
+      { enabled: !isLoading }
     )
   );
 
-
   const handleRemoveComponent = useCallback(async (inspectionId: string) => {
-    const section = surveySections.find(s => s.id === sectionId);
+    try {
+      const section = surveySections.find(s => s.id === sectionId);
 
-    if (!section) {
-      toast.error("Section not found");
-      return;
+      if (!section) {
+        toast.error("Section not found");
+        return;
+      }
+      
+      await surveyStore.update(surveyId, (survey) => {
+        return removeComponent(survey, section.name, elementId, inspectionId);
+      });
+      
+      toast.success("Component removed");
+    } catch (error) {
+      console.error("[ElementForm] Failed to remove component:", error);
+      toast.error("Failed to remove component");
     }
-    
-    await surveyStore.update(surveyId, (survey) => {
-      return removeComponent(survey, section.name, elementId, inspectionId);
-    });
-    toast.success("Component removed");
   }, [surveySections, sectionId, surveyId, elementId]);
 
   if (isLoading) {
@@ -215,59 +212,15 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
         </FormSection>
 
         <FormSection title="Components">
-          <div className="space-y-2">
-            {elementData?.components.map((component) => (
-              <div key={component.inspectionId} className="flex items-center justify-between p-1 pl-4 border rounded-lg">
-                <div className="flex items-center space-x-4 min-w-20">
-                  <div className={`flex-shrink-0 w-4 h-4 rounded-sm ${
-                    component.ragStatus === "Red" ? "bg-red-500" :
-                    component.ragStatus === "Amber" ? "bg-amber-500" :
-                    component.ragStatus === "Green" ? "bg-green-500" :
-                    "bg-gray-500"
-                  }`} />
-                  <span className="text-sm truncate min-w-0 flex-1">{component.useNameOverride ? component.nameOverride : component.name}</span>
-                </div>
-                <div className="flex items-center space-x-2 flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      drawer.openDrawer({
-                        id: `${surveyId}-condition-inspect-${component.id}`,
-                        title: `Inspect Component - ${component.name}`,
-                        description: `Inspect the ${component.name} component`,
-                        content: <InspectionForm
-                          surveyId={surveyId}
-                          componentId={component.id}
-                        />
-                      });
-                    }}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRemoveComponent(component.inspectionId);
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {(!elementData?.components || elementData.components.length === 0) && (
-              <div className="text-center text-gray-500 py-4">
-                No components added yet.
-              </div>
-            )}
-          </div>
+          <ComponentsList
+            components={getElement()?.components || []}
+            surveyId={surveyId}
+            onRemoveComponent={handleRemoveComponent}
+          />
           <AddComponentButton 
             surveyId={surveyId}
             elementId={elementId}
-            elementName={elementData?.name || ""}
+            elementName={getElement()?.name || ""}
             imageUploadPath={imageUploadPath}
           />
         </FormSection>
@@ -280,4 +233,6 @@ export default function ElementForm({ surveyId, sectionId, elementId }: ElementF
       </div>
     </FormProvider>
   );
-}
+};
+
+export default ElementForm;
