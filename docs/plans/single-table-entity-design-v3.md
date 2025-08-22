@@ -1,13 +1,20 @@
 # Single Table Entity Design V3 - Strongly-Typed Approach
 
 ## Core Concept
-A clean, **strongly-typed approach** for all entity data. This prioritizes type safety, developer experience, and maintainability over dynamic flexibility.
+A hybrid approach that maintains **strongly-typed separate tables locally** for optimal performance and developer experience, while using a **single generic table remotely** for cloud efficiency. The mapping layer transparently handles the transformation between these two representations.
+
+## Key Architectural Decision
+- **Local (IndexedDB)**: Separate typed tables with optimized indexes (components, elements, phrases, sections)
+- **Remote (DynamoDB)**: Single generic Entities table with composite keys
+- **Mapping Layer**: Handles bidirectional transformation during sync operations
+- **Store Names**: Remain unchanged (componentStore, elementStore, etc.) for zero UI impact
 
 ## Design Principles
-1. **All fields are strongly typed** - Clear TypeScript interfaces for all entities
-2. **Local-first with clean sync** - IndexedDB schema optimized for local use, separate from DynamoDB  
-3. **Leverage existing infrastructure** - Use proven CreateDexieHooks pattern
-4. **Simple and maintainable** - Focus on core functionality without premature complexity
+1. **Type safety preserved** - Local data remains strongly typed throughout the app
+2. **Performance optimized** - Local queries use native indexes, no filtering needed
+3. **Zero UI changes** - Store names and APIs remain identical
+4. **Incremental migration** - Can migrate one entity type at a time
+5. **Leverage existing infrastructure** - Reuses proven CreateDexieHooks pattern
 
 ## Entity Types & Their Purpose
 
@@ -283,20 +290,24 @@ interface ReportDetails extends BaseEntity {
 
 ## IndexedDB Schema (Local-First)
 
-### Consistent Schema with Separate Tables
+### Phase 1: Typed Local Tables, Generic Remote Storage
+
+The key architectural insight is to maintain **strongly-typed separate tables locally** for optimal performance and developer experience, while using a **single generic table remotely** for cloud efficiency. The mapping layer handles the transformation between these two representations.
+
+#### Local Schema (IndexedDB) - Optimized for App Performance
 Following the existing pattern, we'll use separate tables for each entity type with optimized indexes:
 
 ```typescript
 import { db, CreateDexieHooks, SyncStatus } from '@/app/home/clients/Dexie';
 import { EntityTable } from 'dexie';
 
-// Consistent schema - separate tables for configuration vs survey instances
+// LOCAL: Separate typed tables with optimized indexes
 db.version(3).stores({
   // Configuration/Template tables (existing - keep current schema)
-  components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]', // ComponentTemplate
-  elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]', // ElementTemplate  
+  components: 'id, tenantId, elementId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  elements: 'id, tenantId, sectionId, updatedAt, syncStatus, [tenantId+updatedAt]',  
   phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
-  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]', // SectionTemplate
+  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   
   // Survey instance tables (new)
   surveys: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
@@ -312,7 +323,7 @@ db.version(3).stores({
   imageMetadata: 'id, tenantId, imagePath, updatedAt, syncStatus, [tenantId+updatedAt]'
 });
 
-// Improved TypeScript typing with discriminated unions
+// LOCAL: Strongly typed interfaces for each entity
 interface BaseEntity {
   id: string;
   tenantId: string;
@@ -325,33 +336,45 @@ interface BaseEntity {
   owner: string;
 }
 
-// Discriminated union for type safety
-type ConfigurationEntity = 
-  | (ComponentTemplate & { entityType: 'ComponentTemplate' })
-  | (ElementTemplate & { entityType: 'ElementTemplate' })
-  | (Phrase & { entityType: 'Phrase' })
-  | (SectionTemplate & { entityType: 'SectionTemplate' });
+// Keep configuration entities with same names (not Template suffix)
+interface Component extends BaseEntity {
+  name: string;
+  elementId: string;
+  materials: Material[];
+}
 
-type SurveyInstanceEntity = 
-  | (Survey & { entityType: 'Survey' })
-  | (PropertyDetails & { entityType: 'PropertyDetails' })
-  | (SurveyElement & { entityType: 'SurveyElement' })
-  | (SurveyComponent & { entityType: 'SurveyComponent' })
-  | (Checklist & { entityType: 'Checklist' })
-  | (Conditions & { entityType: 'Conditions' })
-  | (ReportDetails & { entityType: 'ReportDetails' });
+interface Element extends BaseEntity {
+  name: string;
+  sectionId: string;
+  description?: string;
+  order: number;
+}
 
-type Entity = ConfigurationEntity | SurveyInstanceEntity;
+interface Section extends BaseEntity {
+  name: string;
+  description?: string;
+  order: number;
+}
 
-// Update db type definition
+interface Phrase extends BaseEntity {
+  name: string;
+  type: 'condition' | 'recommendation' | 'defect' | 'general';
+  phrase: string;
+  phraseLevel2?: string;
+  associatedMaterialIds: string[];
+  associatedElementIds: string[];
+  associatedComponentIds: string[];
+}
+
+// Local DB maintains typed tables
 const db = new Dexie('Surveys') as Dexie & {
-  // Configuration/Template tables (existing)
-  components: EntityTable<ComponentTemplate, "id", "tenantId">;
-  elements: EntityTable<ElementTemplate, "id", "tenantId">;
+  // Configuration tables (keep existing local structure)
+  components: EntityTable<Component, "id", "tenantId">;
+  elements: EntityTable<Element, "id", "tenantId">;
   phrases: EntityTable<Phrase, "id", "tenantId">;
-  sections: EntityTable<SectionTemplate, "id", "tenantId">;
+  sections: EntityTable<Section, "id", "tenantId">;
   
-  // Survey instance tables (new)
+  // Survey instance tables (Phase 2)
   surveys: EntityTable<Survey, "id", "tenantId">;
   propertyDetails: EntityTable<PropertyDetails, "id", "tenantId">;
   surveyElements: EntityTable<SurveyElement, "id", "tenantId">;
@@ -368,11 +391,75 @@ const db = new Dexie('Surveys') as Dexie & {
 
 ## DynamoDB Schema (Remote)
 
-### Single Table Design with Composite Keys
-AWS Amplify will use a single DynamoDB table with composite keys for all entity types:
+### Phase 1: Single Table Design for Configuration Entities
+AWS Amplify will use a single DynamoDB table with composite keys. In Phase 1, we migrate configuration entities (Components, Elements, Phrases, Sections) to this design:
 
 ```typescript
-// Survey Entity Record
+// Component Entity Record (Configuration)
+{
+  PK: "TENANT#abc123",
+  SK: "COMPONENT#componentId",
+  
+  // Entity identification
+  entityType: "Component",
+  id: "componentId",
+  tenantId: "abc123",
+  
+  // Common fields (stored directly)
+  name: "Roof Shingles",
+  syncStatus: "synced",
+  createdAt: "2024-01-16T10:00:00Z",
+  updatedAt: "2024-01-16T14:00:00Z",
+  version: 1,
+  createdBy: "user123",
+  owner: "user123",
+  
+  // Relationship fields
+  elementId: "elementId123",
+  
+  // Entity-specific fields (stored as JSON)
+  data: JSON.stringify({
+    materials: [
+      { name: "Asphalt" },
+      { name: "Composite" },
+      { name: "Wood" }
+    ]
+  }),
+  
+  // GSI keys for queries
+  GSI1PK: "TENANT#abc123#TYPE#Component",
+  GSI1SK: "UPDATED#2024-01-16T14:00:00Z"
+}
+
+// Element Entity Record (Configuration)
+{
+  PK: "TENANT#abc123",
+  SK: "ELEMENT#elementId",
+  
+  entityType: "Element",
+  id: "elementId",
+  tenantId: "abc123",
+  
+  name: "Roof Structure",
+  description: "Main roof structural components",
+  order: 1,
+  sectionId: "sectionId123",
+  
+  syncStatus: "synced",
+  createdAt: "2024-01-16T10:00:00Z",
+  updatedAt: "2024-01-16T14:00:00Z",
+  version: 1,
+  createdBy: "user123",
+  owner: "user123",
+  
+  // No additional JSON data needed for Element
+  data: "{}",
+  
+  GSI1PK: "TENANT#abc123#TYPE#Element",
+  GSI1SK: "UPDATED#2024-01-16T14:00:00Z"
+}
+
+// Phase 2: Survey Entity Record
 {
   PK: "TENANT#abc123",
   SK: "SURVEY#surveyId",
@@ -602,8 +689,8 @@ AWS Amplify will use a single DynamoDB table with composite keys for all entity 
 
 ## Service Layer Implementation
 
-### Generic Mapping System with Store Factory
-Dramatically reduce boilerplate with a generic mapping system and store factory:
+### Phase 1: Mapping Layer for Configuration Entities
+The mapping layer handles transformation between typed local objects and generic remote records:
 
 ```typescript
 import { CreateDexieHooks, SyncStatus } from '@/app/home/clients/Dexie';
@@ -612,132 +699,107 @@ import { withTenantId, getCurrentTenantId } from '@/app/home/utils/tenant-utils'
 import { Ok, Err, Result } from 'ts-results';
 import client from '@/app/home/clients/AmplifyDataClient';
 
-// Entity field configuration for automatic mapping
-const entityConfigs = {
-  // Configuration/Template entities (existing)
-  ComponentTemplate: {
-    jsonFields: ['materials', 'commonDefects'],
-    relationships: { elementId: 'string?' },
-    tableName: 'components'
-  },
-  ElementTemplate: {
-    jsonFields: ['requiredPhotos', 'commonConditions'],
-    relationships: { sectionId: 'string?' },
-    tableName: 'elements'
-  },
-  Phrase: {
-    jsonFields: ['associatedMaterialIds', 'associatedElementIds', 'associatedComponentIds'],
-    relationships: {},
-    tableName: 'phrases'
-  },
-  SectionTemplate: {
-    jsonFields: ['inspectionOrder', 'requiredElements', 'optionalElements'],
-    relationships: {},
-    tableName: 'sections'
-  },
-  
-  // Survey instance entities (new)
-  Survey: {
-    jsonFields: ['usedSectionTemplateIds'],
-    relationships: {},
-    tableName: 'surveys'
-  },
-  PropertyDetails: {
-    jsonFields: [], // No JSON fields for PropertyDetails
-    relationships: { surveyId: 'string' },
-    tableName: 'propertyDetails'
-  },
-  SurveyElement: {
-    jsonFields: ['defects', 'photos'],
-    relationships: { 
-      surveyId: 'string', 
-      elementTemplateId: 'string',
-      sectionTemplateId: 'string'
-    },
-    tableName: 'surveyElements'
-  },
-  SurveyComponent: {
-    jsonFields: ['defects', 'photos'],
-    relationships: { 
-      surveyId: 'string', 
-      surveyElementId: 'string',
-      componentTemplateId: 'string'
-    },
-    tableName: 'surveyComponents'
-  },
-  Checklist: {
-    jsonFields: ['items'],
-    relationships: { surveyId: 'string' },
-    tableName: 'checklists'
-  },
-  Conditions: {
-    jsonFields: ['majorIssues', 'minorIssues', 'safetyHazards', 'immediateActions', 'shortTermActions', 'longTermActions'],
-    relationships: { surveyId: 'string' },
-    tableName: 'conditions'
-  },
-  ReportDetails: {
-    jsonFields: [], // companyInfo could be JSON but keep simple for now
-    relationships: { surveyId: 'string' },
-    tableName: 'reportDetails'
-  }
-} as const;
+// Direct store creation - no config needed since we're explicit about each entity
 
-// Generic mapper factory
-const createMapper = <T extends BaseEntity>(entityType: keyof typeof entityConfigs) => {
-  const config = entityConfigs[entityType];
-  
-  return {
-    fromServer: (data: any): T => {
-      const result = { 
-        ...data, 
-        syncStatus: SyncStatus.Synced,
-        syncError: undefined 
-      };
-      
-      // Parse JSON fields
-      config.jsonFields.forEach(field => {
-        if (data[field] && typeof data[field] === 'string') {
-          try {
-            result[field] = JSON.parse(data[field]);
-          } catch {
-            result[field] = []; // Default to empty array if parse fails
-          }
-        }
-      });
-      
-      return result as T;
-    },
+// Functional mapper: Creates transformation functions for each entity type
+const createMapper = <T extends BaseEntity>(
+  entityType: string,
+  jsonFields: string[] = []
+) => {
+  // Transform from generic remote to typed local
+  const fromServer = (remote: any): T => {
+    const result: any = {
+      id: remote.id,
+      tenantId: remote.tenantId,
+      name: remote.name,
+      syncStatus: SyncStatus.Synced,
+      syncError: undefined,
+      createdAt: remote.createdAt,
+      updatedAt: remote.updatedAt,
+      version: remote.version || 1,
+      createdBy: remote.createdBy,
+      owner: remote.owner
+    };
     
-    toServer: (data: T): any => {
-      const result = { 
-        ...data, 
-        entityType 
-      };
-      
-      // Stringify JSON fields
-      config.jsonFields.forEach(field => {
-        if (data[field]) {
-          result[field] = JSON.stringify(data[field]);
-        }
-      });
-      
-      // Remove local-only fields
-      delete result.syncStatus;
-      delete result.syncError;
-      
-      return result;
+    // Extract entity-specific fields from JSON data
+    if (remote.data) {
+      try {
+        const customData = JSON.parse(remote.data);
+        Object.assign(result, customData);
+      } catch (e) {
+        console.warn(`Failed to parse data for ${entityType}:`, e);
+      }
     }
+    
+    // Copy relationship fields directly
+    if (remote.elementId) result.elementId = remote.elementId;
+    if (remote.sectionId) result.sectionId = remote.sectionId;
+    if (remote.description) result.description = remote.description;
+    if (remote.order !== undefined) result.order = remote.order;
+    if (remote.type) result.type = remote.type;
+    if (remote.phrase) result.phrase = remote.phrase;
+    if (remote.phraseLevel2) result.phraseLevel2 = remote.phraseLevel2;
+    
+    return result as T;
   };
+  
+  // Transform from typed local to generic remote
+  const toServer = (local: T): any => {
+    const customFields: any = {};
+    
+    // Extract JSON fields into data property
+    jsonFields.forEach(field => {
+      if (local[field as keyof T]) {
+        customFields[field] = local[field as keyof T];
+      }
+    });
+    
+    return {
+      pk: local.tenantId,
+      sk: `${entityType.toUpperCase()}#${local.id}`,
+      entityType,
+      id: local.id,
+      tenantId: local.tenantId,
+      name: local.name,
+      
+      // Flatten relationship fields
+      ...(local.elementId && { elementId: local.elementId }),
+      ...(local.sectionId && { sectionId: local.sectionId }),
+      ...(local.description && { description: local.description }),
+      ...(local.order !== undefined && { order: local.order }),
+      ...(local.type && { type: local.type }),
+      ...(local.phrase && { phrase: local.phrase }),
+      ...(local.phraseLevel2 && { phraseLevel2: local.phraseLevel2 }),
+      
+      // Store custom fields as JSON
+      data: JSON.stringify(customFields),
+      
+      // Metadata
+      createdAt: local.createdAt,
+      updatedAt: local.updatedAt,
+      version: local.version || 1,
+      createdBy: local.createdBy,
+      owner: local.owner,
+      
+      // GSI keys
+      gsi1pk: `TENANT#${local.tenantId}#TYPE#${entityType}`,
+      gsi1sk: `UPDATED#${local.updatedAt}`
+    };
+  };
+
+  return { fromServer, toServer };
 };
 
-// Store factory - dramatically reduces boilerplate
+// Store factory - Uses local typed tables, maps to remote generic table
 const createEntityStore = <T extends BaseEntity>(
-  entityType: keyof typeof entityConfigs
+  entityType: string,
+  tableName: string,
+  jsonFields: string[] = []
 ) => {
-  const config = entityConfigs[entityType];
-  const mapper = createMapper<T>(entityType);
+  const mapper = createMapper<T>(entityType, jsonFields);
   
-  return CreateDexieHooks<T, any, any>(db, config.tableName, {
+  // Creates store with local typed table, remote generic operations
+  return CreateDexieHooks<T, any, any>(db, tableName, {
     list: async (): Promise<Result<T[], Error>> => {
       const response = await fetchAllPages((params) => 
         client.models.Entities.list({
@@ -783,27 +845,80 @@ const createEntityStore = <T extends BaseEntity>(
   });
 };
 
-// Configuration/Template stores (existing entities)
-export const componentTemplateStore = createEntityStore<ComponentTemplate>('ComponentTemplate');
-export const elementTemplateStore = createEntityStore<ElementTemplate>('ElementTemplate');
-export const phraseStore = createEntityStore<Phrase>('Phrase');
-export const sectionTemplateStore = createEntityStore<SectionTemplate>('SectionTemplate');
+// Phase 1: Configuration stores (keep same names for minimal disruption)
+export const componentStore = createEntityStore<Component>(
+  'Component', 
+  'components', 
+  ['materials'] // JSON fields
+);
 
-// Survey instance stores (new entities)
-export const surveyStore = createEntityStore<Survey>('Survey');
-export const propertyDetailsStore = createEntityStore<PropertyDetails>('PropertyDetails');
-export const surveyElementStore = createEntityStore<SurveyElement>('SurveyElement');
-export const surveyComponentStore = createEntityStore<SurveyComponent>('SurveyComponent');
-export const checklistStore = createEntityStore<Checklist>('Checklist');
-export const conditionsStore = createEntityStore<Conditions>('Conditions');
-export const reportDetailsStore = createEntityStore<ReportDetails>('ReportDetails');
+export const elementStore = createEntityStore<Element>(
+  'Element',
+  'elements',
+  [] // No JSON fields
+);
+
+export const phraseStore = createEntityStore<Phrase>(
+  'Phrase',
+  'phrases',
+  ['associatedMaterialIds', 'associatedElementIds', 'associatedComponentIds']
+);
+
+export const sectionStore = createEntityStore<Section>(
+  'Section',
+  'sections',
+  [] // No JSON fields
+);
+
+// Phase 2: Survey instance stores (new entities)
+export const surveyStore = createEntityStore<Survey>(
+  'Survey',
+  'surveys',
+  ['usedSectionTemplateIds']
+);
+export const propertyDetailsStore = createEntityStore<PropertyDetails>(
+  'PropertyDetails',
+  'propertyDetails',
+  []
+);
+
+export const surveyElementStore = createEntityStore<SurveyElement>(
+  'SurveyElement',
+  'surveyElements',
+  ['defects', 'photos']
+);
+
+export const surveyComponentStore = createEntityStore<SurveyComponent>(
+  'SurveyComponent',
+  'surveyComponents',
+  ['defects', 'photos']
+);
+
+export const checklistStore = createEntityStore<Checklist>(
+  'Checklist',
+  'checklists',
+  ['items']
+);
+
+export const conditionsStore = createEntityStore<Conditions>(
+  'Conditions',
+  'conditions',
+  ['majorIssues', 'minorIssues', 'safetyHazards', 'immediateActions', 'shortTermActions', 'longTermActions']
+);
+
+export const reportDetailsStore = createEntityStore<ReportDetails>(
+  'ReportDetails',
+  'reportDetails',
+  []
+);
 
 // Enhanced stores with additional methods for survey-related entities
 const createEnhancedEntityStore = <T extends BaseEntity & { surveyId?: string }>(
-  entityType: keyof typeof entityConfigs
+  entityType: string,
+  tableName: string,
+  jsonFields: string[] = []
 ) => {
-  const baseStore = createEntityStore<T>(entityType);
-  const config = entityConfigs[entityType];
+  const baseStore = createEntityStore<T>(entityType, tableName, jsonFields);
   
   return {
     ...baseStore,
@@ -813,7 +928,7 @@ const createEnhancedEntityStore = <T extends BaseEntity & { surveyId?: string }>
       const tenantId = await getCurrentTenantId();
       if (!tenantId) return [];
       
-      return db.table<T>(config.tableName)
+      return db.table<T>(tableName)
         .where('[tenantId+surveyId]')
         .equals([tenantId, surveyId])
         .and(item => item.syncStatus !== SyncStatus.PendingDelete)
@@ -828,7 +943,7 @@ const createEnhancedEntityStore = <T extends BaseEntity & { surveyId?: string }>
         async () => {
           if (!authReady || !authSuccess || !tenantId || !surveyId) return [];
           
-          return db.table<T>(config.tableName)
+          return db.table<T>(tableName)
             .where('[tenantId+surveyId]')
             .equals([tenantId, surveyId])
             .and(item => item.syncStatus !== SyncStatus.PendingDelete)
@@ -842,13 +957,25 @@ const createEnhancedEntityStore = <T extends BaseEntity & { surveyId?: string }>
   };
 };
 
-// Enhanced stores for survey-related entities
-export const enhancedPropertyDetailsStore = createEnhancedEntityStore<PropertyDetails>('PropertyDetails');
-export const enhancedSurveyElementStore = createEnhancedEntityStore<SurveyElement>('SurveyElement');
-export const enhancedSurveyComponentStore = createEnhancedEntityStore<SurveyComponent>('SurveyComponent');
-export const enhancedChecklistStore = createEnhancedEntityStore<Checklist>('Checklist');
-export const enhancedConditionsStore = createEnhancedEntityStore<Conditions>('Conditions');
-export const enhancedReportDetailsStore = createEnhancedEntityStore<ReportDetails>('ReportDetails');
+// Enhanced stores for survey-related entities (Phase 2)
+export const enhancedPropertyDetailsStore = createEnhancedEntityStore<PropertyDetails>(
+  'PropertyDetails', 'propertyDetails', []
+);
+export const enhancedSurveyElementStore = createEnhancedEntityStore<SurveyElement>(
+  'SurveyElement', 'surveyElements', ['defects', 'photos']
+);
+export const enhancedSurveyComponentStore = createEnhancedEntityStore<SurveyComponent>(
+  'SurveyComponent', 'surveyComponents', ['defects', 'photos']
+);
+export const enhancedChecklistStore = createEnhancedEntityStore<Checklist>(
+  'Checklist', 'checklists', ['items']
+);
+export const enhancedConditionsStore = createEnhancedEntityStore<Conditions>(
+  'Conditions', 'conditions', ['majorIssues', 'minorIssues', 'safetyHazards', 'immediateActions', 'shortTermActions', 'longTermActions']
+);
+export const enhancedReportDetailsStore = createEnhancedEntityStore<ReportDetails>(
+  'ReportDetails', 'reportDetails', []
+);
 ```
 
 ## Sync Implementation
@@ -1513,23 +1640,44 @@ function SurveyElementInspection({ surveyElementId }: { surveyElementId: string 
 
 ## Migration Strategy
 
-### Phase 1: Core Implementation (Week 1)
-- Set up new Dexie tables for survey instances
-- Implement template stores (reuse existing infrastructure for components, elements, phrases, sections)
-- Add survey instance stores (surveys, propertyDetails, surveyElements, surveyComponents, etc.)
-- Basic template → instance workflow
+### Phase 1: Configuration Entities Migration (Week 1)
+**Goal:** Migrate Components, Elements, Phrases, Sections to single-table design while maintaining typed local storage
 
-### Phase 2: Advanced Features (Week 2)
-- Implement helper operations (surveyOperations, templateOperations, surveyElementOperations)
-- Enhanced stores with survey-specific queries (getBySurvey, useBySurvey)
-- Template management UI components
-- Survey creation from templates workflow
+#### Backend Changes
+1. Add new `Entities` model to Amplify schema
+2. Deploy single DynamoDB table with GSI indexes
+3. Keep old tables running temporarily for rollback
 
-### Phase 3: Testing & Polish (Week 3)
-- End-to-end testing of template → survey → inspection workflow
-- Performance optimization and indexing validation
-- Comprehensive error handling and offline scenarios
-- Documentation and developer examples
+#### Client Changes
+1. Update mapping layer in Database.ts
+2. Modify remote handlers to use Entities table
+3. Local IndexedDB tables remain unchanged (typed)
+4. Store names remain unchanged (componentStore, elementStore, etc.)
+
+#### Data Migration
+1. Run migration script to copy data from old tables to Entities table
+2. Verify data integrity with comparison tests
+3. Switch feature flag to use new remote handlers
+
+#### Testing
+1. All CRUD operations for each entity type
+2. Sync functionality (online/offline)
+3. Settings page seed/sync operations
+4. Form validation and saving
+
+### Phase 2: Survey Instance Entities (Week 2)
+**Goal:** Add new survey-specific entities using same pattern
+
+1. Add survey instance tables to local IndexedDB
+2. Create stores for Survey, PropertyDetails, SurveyElement, etc.
+3. Implement template → instance workflow
+4. Add helper operations (surveyOperations, templateOperations)
+
+### Phase 3: Cleanup & Optimization (Week 3)
+1. Remove old DynamoDB tables
+2. Performance optimization
+3. Documentation updates
+4. Production deployment
 
 ## Benefits of This Approach
 
