@@ -110,7 +110,7 @@ const ElementForm: React.FC<ElementFormProps> = ({ surveyId, sectionId, elementI
     reset({
       description: elementSection.description || "",
       images: elementSection.images || [],
-    });
+    }, { keepDirtyValues: true });
     setIsLoading(false);
   }, [isSurveyHydrated, isSectionsHydrated, reset, getElement]);
 
