@@ -74,7 +74,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         phraseLevel2: phrase.phraseLevel2 ?? undefined,
         associatedElementIds: phrase.associatedElementIds ?? [],
         associatedComponentIds: phrase.associatedComponentIds ?? []
-      } as any, { keepIsValid: true });
+      } as any, { keepDirtyValues: true });
       setHasInitialReset(true);
     }
   }, [phraseHydrated, phrase, methods, hasInitialReset]);

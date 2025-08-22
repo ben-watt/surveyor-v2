@@ -45,7 +45,7 @@ function Page() {
         sub: attributes.sub || "",
         email: attributes.email || "",
       };
-      methods.reset(formData);
+      methods.reset(formData, { keepDirtyValues: true });
       setEntityData(formData);
       setEnableForm(true);
     });

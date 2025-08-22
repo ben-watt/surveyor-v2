@@ -59,7 +59,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
         sectionId: element.sectionId ?? '',
         order: element.order ?? undefined,
         description: element.description ?? undefined,
-      });
+      }, { keepDirtyValues: true });
       setHasInitialReset(true);
     }
   }, [form, elementHydrated, element, hasInitialReset]);

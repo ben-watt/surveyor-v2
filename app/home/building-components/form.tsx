@@ -59,7 +59,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
         name: component.name ?? '',
         elementId: component.elementId ?? '',
         materials: component.materials ?? []
-      } as any);
+      } as any, { keepDirtyValues: true });
       setHasInitialReset(true);
     }
   }, [methods, componentHydrated, component, hasInitialReset]);
