@@ -305,23 +305,54 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
 
   // Determine drop position based on cursor position
   const determineDropPosition = (event: DragOverEvent | DragEndEvent, overNode: TreeNode): DropPosition => {
-    // For containers (sections, elements), default to 'inside'
-    if (overNode.type === 'section' || overNode.type === 'element') {
-      // Check if we're near the edges for before/after
+    const activeNode = dragState.activeNode;
+    if (!activeNode) return 'after';
+    
+    // Check if dragging over a sibling (same parent and type)
+    const activeParent = getParentNode(activeNode.id);
+    const overParent = getParentNode(overNode.id);
+    const areSiblings = activeParent?.id === overParent?.id && 
+                        activeNode.type === overNode.type;
+    
+    // For root-level sections, they are siblings if both are sections
+    const areRootSiblings = !activeParent && !overParent && 
+                            activeNode.type === 'section' && overNode.type === 'section';
+    
+    if (areSiblings || areRootSiblings) {
+      // For siblings, determine before/after based on cursor position
       const rect = event.over?.rect;
       const y = event.activatorEvent instanceof MouseEvent 
         ? (event.activatorEvent as any).clientY 
         : 0;
       
       if (rect && y) {
-        const threshold = rect.height * 0.25;
-        if (y < rect.top + threshold) return 'before';
-        if (y > rect.bottom - threshold) return 'after';
+        const midpoint = rect.top + rect.height / 2;
+        return y < midpoint ? 'before' : 'after';
       }
-      return 'inside';
+      return 'after';
     }
     
-    // For leaf nodes, determine before/after based on position
+    // For non-siblings, check if can drop inside
+    if (overNode.type === 'section' || overNode.type === 'element') {
+      // Only return 'inside' if it's a valid container for the dragged type
+      const validation = canDrop(activeNode, overNode, 'inside');
+      if (validation.isValid) {
+        // Check if we're near the edges for before/after even for containers
+        const rect = event.over?.rect;
+        const y = event.activatorEvent instanceof MouseEvent 
+          ? (event.activatorEvent as any).clientY 
+          : 0;
+        
+        if (rect && y) {
+          const threshold = rect.height * 0.25;
+          if (y < rect.top + threshold) return 'before';
+          if (y > rect.bottom - threshold) return 'after';
+        }
+        return 'inside';
+      }
+    }
+    
+    // For leaf nodes or invalid drops, determine before/after based on position
     const rect = event.over?.rect;
     const y = event.activatorEvent instanceof MouseEvent 
       ? (event.activatorEvent as any).clientY 
