@@ -26,7 +26,7 @@ export function useAutoSaveForm<T extends FieldValues>(
   getValues: UseFormGetValues<T>,
   trigger?: UseFormTrigger<T>,
   options: AutoSaveFormOptions = {}
-): AutoSaveResult<T> {
+): AutoSaveResult<T> & { skipNextChange: () => void } {
   const {
     watchChanges = true,
     watchDelay = 300,
@@ -48,6 +48,8 @@ export function useAutoSaveForm<T extends FieldValues>(
   const previousValuesRef = useRef<string | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastValidationWasValidRef = useRef<boolean>(false);
+  const isInitializedRef = useRef<boolean>(false);
+  const skipUntilRef = useRef<number>(0);
 
   // Watch form changes and trigger autosave
   useEffect(() => {
@@ -80,6 +82,26 @@ export function useAutoSaveForm<T extends FieldValues>(
       const currentValues = data as T;
       const currentValuesString = JSON.stringify(currentValues);
       const previousValuesString = previousValuesRef.current;
+
+      // Check if we should skip this change (e.g., after a reset)
+      const now = Date.now();
+      if (skipUntilRef.current > now) {
+        console.log('[useAutoSaveForm] Skipping change after reset (skip until:', skipUntilRef.current, 'now:', now, ')');
+        previousValuesRef.current = currentValuesString;
+        // Still mark as initialized if we haven't already
+        if (!isInitializedRef.current && currentValuesString) {
+          isInitializedRef.current = true;
+        }
+        return;
+      }
+
+      // Initialize on first real data if not already initialized
+      if (!isInitializedRef.current && currentValuesString) {
+        console.log('[useAutoSaveForm] Initializing baseline values');
+        previousValuesRef.current = currentValuesString;
+        isInitializedRef.current = true;
+        return; // Skip autosave on initialization
+      }
 
       console.log('[useAutoSaveForm] Comparing values:', {
         currentValues,
@@ -159,16 +181,13 @@ export function useAutoSaveForm<T extends FieldValues>(
     };
   }, [watch, watchChanges, watchDelay, skipFocusBlur, validateBeforeSave, saveImmediatelyOnBecomeValid, trigger]);
 
-  // Initialize previous values when form is first loaded
+  // Reset initialization flag when watchChanges changes
   useEffect(() => {
-    if (watchChanges) {
-      const initialValues = getValues();
-      console.log('[useAutoSaveForm] Initializing with values:', initialValues);
-      if (initialValues && Object.keys(initialValues).length > 0) {
-        previousValuesRef.current = JSON.stringify(initialValues);
-      }
+    if (!watchChanges) {
+      isInitializedRef.current = false;
+      previousValuesRef.current = null;
     }
-  }, [watchChanges, getValues]);
+  }, [watchChanges]);
 
   // Enhanced save function that gets current form values and optionally validates
   const save = useCallback(async (data?: T, options?: { auto?: boolean }) => {
@@ -189,9 +208,15 @@ export function useAutoSaveForm<T extends FieldValues>(
     return autoSave.save(currentData, options);
   }, [autoSave, getValues, validateBeforeSave, trigger]);
 
+  // Function to skip changes for the next 500ms (useful before reset)
+  const skipNextChange = useCallback(() => {
+    skipUntilRef.current = Date.now() + 500;
+  }, []);
+
   return {
     ...autoSave,
-    save
+    save,
+    skipNextChange
   };
 }
 
@@ -205,7 +230,7 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
   getValues: UseFormGetValues<T>,
   trigger?: UseFormTrigger<T>,
   options: AutoSaveFormOptions = {}
-): AutoSaveResult<T> {
+): AutoSaveResult<T> & { skipNextChange: () => void } {
   const {
     watchChanges = true,
     watchDelay = 300,
@@ -217,6 +242,8 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
   const autoSave = useAutoSave(saveFunction, autoSaveOptions);
   const previousValuesRef = useRef<string | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitializedRef = useRef<boolean>(false);
+  const skipUntilRef = useRef<number>(0);
 
   // Helper function to extract values from nested Input<T> structure
   const extractValues = useCallback((data: T): any => {
@@ -269,6 +296,26 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
       const currentValues = extractValues(data as T);
       const currentValuesString = JSON.stringify(currentValues);
       
+      // Check if we should skip this change (e.g., after a reset)
+      const now = Date.now();
+      if (skipUntilRef.current > now) {
+        console.log('[useAutoSaveSurveyForm] Skipping change after reset (skip until:', skipUntilRef.current, 'now:', now, ')');
+        previousValuesRef.current = currentValuesString;
+        // Still mark as initialized if we haven't already
+        if (!isInitializedRef.current && currentValuesString) {
+          isInitializedRef.current = true;
+        }
+        return;
+      }
+      
+      // Initialize on first real data if not already initialized
+      if (!isInitializedRef.current && currentValuesString) {
+        console.log('[useAutoSaveSurveyForm] Initializing baseline values');
+        previousValuesRef.current = currentValuesString;
+        isInitializedRef.current = true;
+        return; // Skip autosave on initialization
+      }
+      
       console.log('[useAutoSaveSurveyForm] Comparing values:', {
         currentValues,
         currentValuesString,
@@ -320,17 +367,13 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
     };
   }, [watch, watchChanges, watchDelay, autoSave, skipFocusBlur, validateBeforeSave, trigger, extractValues]);
 
-  // Initialize previous values when form is first loaded
+  // Reset initialization flag when watchChanges changes
   useEffect(() => {
-    if (watchChanges) {
-      const initialValues = getValues();
-      console.log('[useAutoSaveSurveyForm] Initializing with values:', initialValues);
-      if (initialValues && Object.keys(initialValues).length > 0) {
-        const extractedValues = extractValues(initialValues);
-        previousValuesRef.current = JSON.stringify(extractedValues);
-      }
+    if (!watchChanges) {
+      isInitializedRef.current = false;
+      previousValuesRef.current = null;
     }
-  }, [watchChanges, getValues, extractValues]);
+  }, [watchChanges]);
 
   // Enhanced save function that gets current form values and optionally validates
   const save = useCallback(async (data?: T, options?: { auto?: boolean }) => {
@@ -351,8 +394,14 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
     return autoSave.save(currentData, options);
   }, [autoSave, getValues, validateBeforeSave, trigger]);
 
+  // Function to skip changes for the next 500ms (useful before reset)
+  const skipNextChange = useCallback(() => {
+    skipUntilRef.current = Date.now() + 500;
+  }, []);
+
   return {
     ...autoSave,
-    save
+    save,
+    skipNextChange
   };
 } 

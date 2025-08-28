@@ -64,21 +64,6 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   // Track if we've done the initial reset to prevent wiping user input on autosave
   const [hasInitialReset, setHasInitialReset] = useState(false);
 
-  useEffect(() => {
-    if (phraseHydrated && phrase && !hasInitialReset) {
-      // Only reset on initial load, not on subsequent updates from autosave
-      methods.reset({
-        id: phrase.id,
-        name: phrase.name ?? '',
-        phrase: phrase.phrase ?? '',
-        phraseLevel2: phrase.phraseLevel2 ?? undefined,
-        associatedElementIds: phrase.associatedElementIds ?? [],
-        associatedComponentIds: phrase.associatedComponentIds ?? []
-      } as any, { keepDirtyValues: true });
-      setHasInitialReset(true);
-    }
-  }, [phraseHydrated, phrase, methods, hasInitialReset]);
-
   // Autosave functionality
   const savePhrase = useCallback(
     async (data: ConditionFormData, { auto = false }: { auto?: boolean } = {}) => {
@@ -118,7 +103,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   );
 
   const timings = getAutoSaveTimings(2000);
-  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+  const { saveStatus, isSaving, lastSavedAt, skipNextChange } = useAutoSaveForm(
     savePhrase,
     watch,
     getValues,
@@ -131,6 +116,23 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
       validateBeforeSave: true // Enable validation before auto-save
     }
   );
+
+  useEffect(() => {
+    if (phraseHydrated && phrase && !hasInitialReset) {
+      // Skip the next autosave trigger since we're about to reset
+      skipNextChange();
+      // Only reset on initial load, not on subsequent updates from autosave
+      methods.reset({
+        id: phrase.id,
+        name: phrase.name ?? '',
+        phrase: phrase.phrase ?? '',
+        phraseLevel2: phrase.phraseLevel2 ?? undefined,
+        associatedElementIds: phrase.associatedElementIds ?? [],
+        associatedComponentIds: phrase.associatedComponentIds ?? []
+      } as any, { keepDirtyValues: true });
+      setHasInitialReset(true);
+    }
+  }, [phraseHydrated, phrase, methods, hasInitialReset, skipNextChange]);
 
   if(!elementsHydrated || !componentsHydrated) {
     return <div>Loading...</div>;

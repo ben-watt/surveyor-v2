@@ -50,20 +50,6 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   // Track if we've done the initial reset to prevent wiping user input on autosave
   const [hasInitialReset, setHasInitialReset] = useState(false);
 
-  useEffect(() => {
-    if (elementHydrated && element && !hasInitialReset) {
-      // Only reset on initial load, not on subsequent updates from autosave
-      form.reset({
-        id: element.id,
-        name: element.name ?? '',
-        sectionId: element.sectionId ?? '',
-        order: element.order ?? undefined,
-        description: element.description ?? undefined,
-      }, { keepDirtyValues: true });
-      setHasInitialReset(true);
-    }
-  }, [form, elementHydrated, element, hasInitialReset]);
-
   const saveElement = useCallback(
     async (data: ElementFormData, { auto = false }: { auto?: boolean } = {}) => {
       console.debug("[DataForm] saveElement", { data, auto });
@@ -96,7 +82,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   );
 
   const timings = getAutoSaveTimings(2000);
-  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+  const { saveStatus, isSaving, lastSavedAt, skipNextChange } = useAutoSaveForm(
     saveElement,
     watch,
     getValues,
@@ -109,6 +95,22 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
       validateBeforeSave: true // Enable validation before auto-save
     }
   );
+
+  useEffect(() => {
+    if (elementHydrated && element && !hasInitialReset) {
+      // Skip the next autosave trigger since we're about to reset
+      skipNextChange();
+      // Only reset on initial load, not on subsequent updates from autosave
+      form.reset({
+        id: element.id,
+        name: element.name ?? '',
+        sectionId: element.sectionId ?? '',
+        order: element.order ?? undefined,
+        description: element.description ?? undefined,
+      }, { keepDirtyValues: true });
+      setHasInitialReset(true);
+    }
+  }, [form, elementHydrated, element, hasInitialReset, skipNextChange]);
 
   // Remove onSubmit since we're using autosave only
   // The form will automatically save as the user types

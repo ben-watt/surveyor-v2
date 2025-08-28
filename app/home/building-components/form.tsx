@@ -51,19 +51,6 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   // Track if we've done the initial reset to prevent wiping user input on autosave
   const [hasInitialReset, setHasInitialReset] = useState(false);
 
-  useEffect(() => {
-    if (componentHydrated && component && !hasInitialReset) {
-      // Only reset on initial load, not on subsequent updates from autosave
-      methods.reset({
-        id: component.id,
-        name: component.name ?? '',
-        elementId: component.elementId ?? '',
-        materials: component.materials ?? []
-      } as any, { keepDirtyValues: true });
-      setHasInitialReset(true);
-    }
-  }, [methods, componentHydrated, component, hasInitialReset]);
-
   const saveComponent = useCallback(
     async (data: ComponentFormData, { auto = false }: { auto?: boolean } = {}) => {
       try {
@@ -100,7 +87,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   );
 
   const timings = getAutoSaveTimings(2000);
-  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+  const { saveStatus, isSaving, lastSavedAt, skipNextChange } = useAutoSaveForm(
     saveComponent,
     watch,
     getValues,
@@ -113,6 +100,21 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
       validateBeforeSave: true // Enable validation before auto-save
     }
   );
+
+  useEffect(() => {
+    if (componentHydrated && component && !hasInitialReset) {
+      // Skip the next autosave trigger since we're about to reset
+      skipNextChange();
+      // Only reset on initial load, not on subsequent updates from autosave
+      methods.reset({
+        id: component.id,
+        name: component.name ?? '',
+        elementId: component.elementId ?? '',
+        materials: component.materials ?? []
+      } as any, { keepDirtyValues: true });
+      setHasInitialReset(true);
+    }
+  }, [methods, componentHydrated, component, hasInitialReset, skipNextChange]);
 
 
   if (!componentHydrated || !elementsHydrateds) {
