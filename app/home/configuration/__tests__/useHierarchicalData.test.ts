@@ -59,7 +59,7 @@ describe('useHierarchicalData', () => {
       expect(foundationElement).toBeDefined();
       expect(foundationElement?.name).toBe('Foundation');
       expect(foundationElement?.type).toBe('element');
-      expect(foundationElement?.children).toHaveLength(3); // 1 component + 2 element conditions
+      expect(foundationElement?.children).toHaveLength(1); // 1 component only
       
       // Check component structure
       const concreteComponent = foundationElement?.children.find(child => child.id === 'component-1');
@@ -94,7 +94,7 @@ describe('useHierarchicalData', () => {
       expect(structureSection.children[1].name).toBe('Walls'); // order: 2
     });
 
-    it('should associate conditions with correct entities', async () => {
+    it('should associate conditions with correct components', async () => {
       const { result } = renderHook(() => useHierarchicalData());
       
       await waitFor(() => {
@@ -112,15 +112,10 @@ describe('useHierarchicalData', () => {
         expect((componentCondition.data as any).associatedComponentIds).toContain('component-1');
       }
 
-      // Find element-level condition (no component association) - should be condition-5
-      const elementCondition = foundationElement.children.find(child => 
-        child.type === 'condition' && child.data.id === 'condition-5'
-      );
-      expect(elementCondition?.type).toBe('condition');
-      if (elementCondition?.type === 'condition') {
-        expect((elementCondition.data as any).associatedComponentIds).toHaveLength(0);
-        expect((elementCondition.data as any).associatedElementIds).toContain('element-1');
-      }
+      // Verify that conditions without component associations are not displayed
+      // (element-level conditions are no longer supported)
+      const elementLevelConditions = foundationElement.children.filter(child => child.type === 'condition');
+      expect(elementLevelConditions).toHaveLength(0);
     });
 
     it('should handle empty data sets', async () => {
@@ -227,7 +222,6 @@ describe('useHierarchicalData', () => {
 
       const condition = concreteComponent?.children[0];
       if (condition?.type === 'condition') {
-        expect((condition.data as any).associatedElementIds).toContain('element-1');
         expect((condition.data as any).associatedComponentIds).toContain('component-1');
       }
     });

@@ -62,9 +62,6 @@ function buildHierarchy(
 
     const elementNodes: TreeNode[] = sectionElements.map(element => {
       const elementComponents = components.filter(component => component.elementId === element.id);
-      const elementConditions = phrases.filter(phrase => 
-        phrase.associatedElementIds.includes(element.id)
-      );
 
       const componentNodes: TreeNode[] = elementComponents.map(component => {
         const componentConditions = phrases.filter(phrase =>
@@ -92,23 +89,12 @@ function buildHierarchy(
         };
       });
 
-      // Add element-level conditions
-      const elementConditionNodes: TreeNode[] = elementConditions.map(condition => ({
-        id: `condition-${condition.id}`,
-        type: 'condition' as const,
-        name: condition.name,
-        data: condition,
-        children: [],
-        isExpanded: false,
-        parentId: element.id,
-      }));
-
       return {
         id: element.id,
         type: 'element' as const,
         name: element.name,
         data: element,
-        children: [...componentNodes, ...elementConditionNodes],
+        children: [...componentNodes],
         isExpanded: false,
         parentId: section.id,
         order: element.order ?? undefined,

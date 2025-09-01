@@ -315,8 +315,6 @@ const mapToPhrase = (data: any): Phrase => ({
   createdAt: data.createdAt,
   name: data.name,
   type: data.type,
-  associatedMaterialIds: data.associatedMaterialIds,
-  associatedElementIds: data.associatedElementIds,
   associatedComponentIds: data.associatedComponentIds,
   phrase: data.phrase,
   phraseLevel2: data.phraseLevel2,

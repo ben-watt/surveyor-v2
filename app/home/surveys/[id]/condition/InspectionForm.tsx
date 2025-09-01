@@ -533,7 +533,6 @@ function InspectionFormContent({
                     defaultValues={{
                       type: "Condition",
                       associatedComponentIds: [component.id],
-                      associatedElementIds: [element.id],
                     }}
                   />
                 ),

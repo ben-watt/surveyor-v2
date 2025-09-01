@@ -106,12 +106,11 @@ const schema = a.schema({
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     name: a.string().required(),
+    order: a.float().default(0),
     type: a.string().required(), // "Defect" or "Condition"
-    associatedMaterialIds: a.string().required().array().required(),
-    associatedElementIds:  a.string().required().array().required(),
     associatedComponentIds:  a.string().required().array().required(),
     phrase: a.string().required(),
-    phraseLevel2: a.string(), // NEW: Level 2 wording (optional)
+    phraseLevel2: a.string(),
     tenantId: a.string().required(),
   })
   .identifier(['tenantId', 'id'])
@@ -126,6 +125,7 @@ const schema = a.schema({
     .model({
       id: a.id().required(),
       name: a.string().required(),
+      order: a.float().default(0),
       materials: a.ref("Material").required().array().required(),
       syncStatus: a.string().required(),
       syncError: a.string(),

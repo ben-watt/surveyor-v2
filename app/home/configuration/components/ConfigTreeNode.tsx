@@ -100,7 +100,7 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
       case 'section':
         return ['element'];
       case 'element':
-        return ['component', 'condition'];
+        return ['component'];
       case 'component':
         return ['condition'];
       default:

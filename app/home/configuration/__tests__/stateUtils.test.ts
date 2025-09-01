@@ -252,11 +252,7 @@ describe('stateUtils', () => {
     it('should work with condition ID prefixing', () => {
       const tree = mockHierarchicalData.tree;
 
-      // Element-level condition
-      const elementConditionPath = findPathToEntity(tree, 'element-1-condition-5');
-      expect(elementConditionPath).toEqual(['section-1', 'element-1', 'element-1-condition-5']);
-
-      // Component-level condition
+      // Component-level condition (only type supported now)
       const componentConditionPath = findPathToEntity(tree, 'element-1-condition-1');
       expect(componentConditionPath).toEqual(['section-1', 'element-1', 'component-1', 'element-1-condition-1']);
     });

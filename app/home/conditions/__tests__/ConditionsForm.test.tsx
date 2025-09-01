@@ -23,24 +23,17 @@ jest.mock('../../clients/Database', () => ({
       type: 'condition',
       phrase: '',
       phraseLevel2: '',
-      associatedElementIds: [],
       associatedComponentIds: [],
-      associatedMaterialIds: [],
-      owner: '',
+      order: 0,
       createdAt: '',
       updatedAt: '',
       syncStatus: 'synced',
       tenantId: 't1'
     } : undefined],
   },
-  elementStore: {
-    useList: () => [true, [
-      { id: 'e1', name: 'Element 1', order: 0, sectionId: 's1', description: '', createdAt: '', updatedAt: '', syncStatus: 'synced', tenantId: 't1' },
-    ]],
-  },
   componentStore: {
     useList: () => [true, [
-      { id: 'c1', name: 'Component 1', elementId: 'e1', materials: [], createdAt: '', updatedAt: '', syncStatus: 'synced', tenantId: 't1' },
+      { id: 'c1', name: 'Component 1', elementId: 'e1', materials: [], order: 0, createdAt: '', updatedAt: '', syncStatus: 'synced', tenantId: 't1' },
     ]],
   }
 }));
@@ -61,12 +54,12 @@ describe('Condition DataForm autosave on create', () => {
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'Condition Name');
 
-    // Select associated elements
+    // Select associated components
     // Desktop combobox trigger has role combobox
-    const elementCombo = screen.getAllByRole('combobox')[0];
-    await userEvent.click(elementCombo);
-    const elOption = await screen.findByText('Element 1');
-    await userEvent.click(elOption);
+    const componentCombo = screen.getAllByRole('combobox')[0];
+    await userEvent.click(componentCombo);
+    const compOption = await screen.findByText('Component 1');
+    await userEvent.click(compOption);
 
     // Enter required phrase to satisfy validation before autosave
     const phraseTextarea = screen.getByRole('textbox', { name: /phrase \(level 3\)/i });

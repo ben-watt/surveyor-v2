@@ -527,4 +527,14 @@ db.version(2).stores({
   imageMetadata: 'id, tenantId, imagePath, updatedAt, syncStatus, [tenantId+updatedAt]'
 });
 
+db.version(21)
+.upgrade(async tx => {
+  console.log("[Dexie] Upgrading phrases...");
+  return tx.table<Phrase, "id", "tenantId">('phrases').toCollection().modify((phrase) => {
+    delete (phrase as any)["associatedMaterialIds"];
+    delete (phrase as any)["associatedElementIds"];
+  });
+  
+});
+
 export { db, CreateDexieHooks };

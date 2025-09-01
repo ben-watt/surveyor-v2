@@ -38,10 +38,8 @@ interface MockCondition {
   type: string;
   phrase: string;
   phraseLevel2: string;
-  associatedElementIds: string[];
   associatedComponentIds: string[];
-  associatedMaterialIds: string[];
-  owner: string;
+  order: number;
   syncStatus: string;
   createdAt: string;
   updatedAt: string;
@@ -185,10 +183,8 @@ export const mockConditions: Condition[] = [
     type: "defect",
     phrase: "Visible crack in concrete footing",
     phraseLevel2: "",
-    associatedElementIds: ["element-1"],
     associatedComponentIds: ["component-1"],
-    associatedMaterialIds: [],
-    owner: "system",
+    order: 1,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -200,10 +196,8 @@ export const mockConditions: Condition[] = [
     type: "defect",
     phrase: "Several bricks are loose in the wall",
     phraseLevel2: "",
-    associatedElementIds: ["element-2"],
     associatedComponentIds: ["component-2"],
-    associatedMaterialIds: [],
-    owner: "system",
+    order: 2,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -215,10 +209,8 @@ export const mockConditions: Condition[] = [
     type: "defect",
     phrase: "Rust visible on electrical panel housing",
     phraseLevel2: "",
-    associatedElementIds: ["element-3"],
     associatedComponentIds: ["component-3"],
-    associatedMaterialIds: [],
-    owner: "system",
+    order: 3,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -230,25 +222,8 @@ export const mockConditions: Condition[] = [
     type: "defect",
     phrase: "Small leak detected in copper pipe joint",
     phraseLevel2: "",
-    associatedElementIds: ["element-4"],
     associatedComponentIds: ["component-4"],
-    associatedMaterialIds: [],
-    owner: "system",
-    syncStatus: SyncStatus.Synced,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-    tenantId: "tenant-1",
-  },
-  {
-    id: "condition-5",
-    name: "Element Level Condition",
-    type: "defect",
-    phrase: "Condition associated with element but no specific component",
-    phraseLevel2: "",
-    associatedElementIds: ["element-1"],
-    associatedComponentIds: [],
-    associatedMaterialIds: [],
-    owner: "system",
+    order: 4,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -332,15 +307,6 @@ export const mockHierarchicalData = {
                   parentId: "component-1",
                 },
               ],
-              isExpanded: false,
-              parentId: "element-1",
-            },
-            {
-              id: "element-1-condition-5",
-              name: "Element Level Condition", 
-              type: "condition" as const,
-              data: mockConditions[4],
-              children: [],
               isExpanded: false,
               parentId: "element-1",
             },

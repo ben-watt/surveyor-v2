@@ -112,8 +112,6 @@ export async function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[
           id: crypto.randomUUID(),
           name: phraseName,
           type: "Condition",
-          associatedMaterialIds: [d.specification],
-          associatedElementIds: matchingElement.id ? [matchingElement.id] : [],
           associatedComponentIds: matchingComponent.id ? [matchingComponent.id] : [],
           phrase: phraseText,
           createdAt: new Date().toISOString(),
