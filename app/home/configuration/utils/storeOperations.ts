@@ -70,6 +70,9 @@ export async function batchUpdateOrders(
 ): Promise<Result<void, Error>> {
   try {
     const errors: Error[] = [];
+    const componentUpdates: { id: string; order: number }[] = [];
+    const elementUpdates: { id: string; order: number }[] = [];
+    const conditionUpdates: { id: string; order: number }[] = [];
     
     for (const update of updates) {
       let result: Result<void, Error>;
@@ -79,13 +82,15 @@ export async function batchUpdateOrders(
           result = await updateSectionOrder(update.id, update.order);
           break;
         case 'element':
+          elementUpdates.push({ id: update.id, order: update.order });
           result = await updateElementOrder(update.id, update.order);
           break;
         case 'component':
+          componentUpdates.push({ id: update.id, order: update.order });
           result = await updateComponentOrder(update.id, update.order);
           break;
         case 'condition':
-          // Update phrase order in place
+          conditionUpdates.push({ id: update.id, order: update.order });
           result = await updateConditionOrderInternal(update.id, update.order);
           break;
         default:
@@ -96,6 +101,7 @@ export async function batchUpdateOrders(
         errors.push(result.val);
       }
     }
+    // Note: if needed, we can rebalance after many updates using a separate read of siblings.
     
     if (errors.length > 0) {
       return Err(new Error(`Failed to update ${errors.length} items: ${errors.map(e => e.message).join(', ')}`));

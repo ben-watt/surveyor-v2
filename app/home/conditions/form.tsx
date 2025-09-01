@@ -76,6 +76,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           await phraseStore.add({
             id: idRef.current,
             name: data.name,
+            order: 0,
             type: "condition",
             phrase: data.phrase,
             phraseLevel2: data.phraseLevel2,

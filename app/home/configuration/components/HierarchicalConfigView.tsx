@@ -30,6 +30,7 @@ import {
   useSensors,
   DragOverlay,
 } from '@dnd-kit/core';
+import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
@@ -51,9 +52,12 @@ export function HierarchicalConfigView() {
   const handleReorder = useCallback(async (updates: Array<{ id: string; order: number }>) => {
     try {
       // Find node types for all updates
-      const findNodeType = (nodeId: string, nodes: TreeNode[]): 'section' | 'element' | 'component' | 'condition' | null => {
+      const findNodeType = (
+        nodeId: string,
+        nodes: TreeNode[]
+      ): 'section' | 'element' | 'component' | 'condition' | null => {
         for (const node of nodes) {
-          if (node.id === nodeId) return node.type as 'section' | 'element' | 'component';
+          if (node.id === nodeId) return node.type as 'section' | 'element' | 'component' | 'condition';
           const found = findNodeType(nodeId, node.children);
           if (found) return found;
         }
@@ -404,6 +408,7 @@ export function HierarchicalConfigView() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}

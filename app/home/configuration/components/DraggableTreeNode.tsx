@@ -53,27 +53,29 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
   } = useSortable({
     id: node.id,
     disabled: !isDragEnabled,
+    animateLayoutChanges: ({ isSorting, isDragging }) => !(isSorting || isDragging),
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  };
+    willChange: 'transform',
+  } as React.CSSProperties;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        'relative',
-        isDragging && 'opacity-50',
+        'relative transition-[background,box-shadow,opacity] duration-150',
+        isDragging && 'opacity-90 shadow-lg',
         isOver && isValidDropTarget && 'bg-green-50 dark:bg-green-950',
         isOver && !isValidDropTarget && 'bg-red-50 dark:bg-red-950'
       )}
     >
       {/* Drop indicator line */}
       {isDropping && dropPosition === 'before' && (
-        <div className="absolute -top-0.5 left-0 right-0 h-0.5 bg-blue-500 z-10" />
+        <div className="absolute -top-0.5 left-2 right-2 h-0.5 bg-blue-500 rounded-full z-10" />
       )}
       
       <div className="relative">
@@ -83,7 +85,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
           <div className={cn(
             'relative',
             isDropping && dropPosition === 'inside' && 
-            'ring-2 ring-blue-500 ring-offset-2 rounded-lg'
+            'ring-2 ring-blue-500 ring-offset-1 rounded-md'
           )}>
             <ConfigTreeNode
               node={node}
@@ -243,7 +245,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
       
       {/* Drop indicator line */}
       {isDropping && dropPosition === 'after' && (
-        <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-blue-500 z-10" />
+        <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 bg-blue-500 rounded-full z-10" />
       )}
       
     </div>

@@ -64,6 +64,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
           await componentStore.add({
             id: idRef.current,
             name: data.name,
+            order: 0,
             elementId: data.elementId,
             materials: data.materials,
           });

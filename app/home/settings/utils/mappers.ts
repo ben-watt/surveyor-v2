@@ -69,6 +69,7 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
         const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
         componentData.push({
           id: componentId,
+          order: 0,
           elementId: matchingElement?.id ? matchingElement.id : "",
           name: d.type,
           materials: [{ name: d.specification }],
@@ -111,6 +112,7 @@ export async function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[
         phrases.push({
           id: crypto.randomUUID(),
           name: phraseName,
+          order: 0,
           type: "Condition",
           associatedComponentIds: matchingComponent.id ? [matchingComponent.id] : [],
           phrase: phraseText,

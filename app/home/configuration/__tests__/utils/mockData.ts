@@ -26,6 +26,7 @@ interface MockComponent {
   name: string;
   materials: { name: string }[];
   elementId: string;
+  order: number;
   syncStatus: string;
   createdAt: string;
   updatedAt: string;
@@ -139,6 +140,7 @@ export const mockComponents: BuildingComponent[] = [
     name: "Concrete Footing",
     materials: [{ name: "Concrete" }],
     elementId: "element-1",
+    order: 1,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -149,6 +151,7 @@ export const mockComponents: BuildingComponent[] = [
     name: "Brick Wall",
     materials: [{ name: "Brick" }],
     elementId: "element-2",
+    order: 2,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -159,6 +162,7 @@ export const mockComponents: BuildingComponent[] = [
     name: "Electrical Panel",
     materials: [{ name: "Metal" }],
     elementId: "element-3",
+    order: 3,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -169,6 +173,7 @@ export const mockComponents: BuildingComponent[] = [
     name: "Copper Pipe",
     materials: [{ name: "Copper" }],
     elementId: "element-4",
+    order: 4,
     syncStatus: SyncStatus.Synced,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",

@@ -163,18 +163,74 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
     const validation = canDrop(dragState.activeNode, overNode, dropPosition);
     
     if (!validation.isValid) {
+      // Special case: moving across parents by dropping on a sibling in a different container
+      const source = dragState.activeNode;
+      const sourceParent = getParentNode(source.id);
+      const targetParent = getParentNode(overNode.id);
+      const isSameType = source.type === overNode.type;
+      const isSameParent = sourceParent?.id === targetParent?.id;
+      const isSiblingPosition = dropPosition === 'before' || dropPosition === 'after';
+      if (isSameType && !isSameParent && isSiblingPosition && targetParent) {
+        try {
+          // Compute a new order near the target inside targetParent
+          const siblings = targetParent.children.filter(child => child.type === source.type);
+          const targetIdx = siblings.findIndex(s => s.id === overNode.id);
+          const targetOrder = (overNode.data as any).order || 0;
+          const prevOrder = targetIdx > 0 ? ((siblings[targetIdx - 1].data as any).order || 0) : null;
+          const nextOrder = targetIdx < siblings.length - 1 ? ((siblings[targetIdx + 1].data as any).order || 0) : null;
+
+          let newOrder = targetOrder;
+          if (dropPosition === 'before') {
+            newOrder = prevOrder !== null && prevOrder !== undefined ? (prevOrder + targetOrder) / 2 : targetOrder - 1000;
+          } else {
+            newOrder = nextOrder !== null && nextOrder !== undefined ? (targetOrder + nextOrder) / 2 : targetOrder + 1000;
+          }
+
+          await onMove(source.id, targetParent.id, newOrder);
+          toast.success(`${source.name} moved successfully`);
+        } catch (error) {
+          console.error('Failed to move item across parents:', error);
+          toast.error('Failed to move item. Please try again.');
+        }
+        resetDragState();
+        return;
+      }
+
       toast.error(validation.reason || "Invalid drop location");
       resetDragState();
       return;
     }
 
     try {
-      if (dropPosition === 'inside') {
+      const source = dragState.activeNode;
+      const sourceParent = getParentNode(source.id);
+      const targetParent = getParentNode(overNode.id);
+
+      // Cross-parent reorder via before/after on a target in another container → treat as move
+      const isCrossParentSiblingDrop =
+        (dropPosition === 'before' || dropPosition === 'after') &&
+        source.type === overNode.type &&
+        (sourceParent?.id !== targetParent?.id) && !!targetParent;
+
+      if (isCrossParentSiblingDrop && targetParent) {
+        const siblings = targetParent.children.filter(child => child.type === source.type);
+        const targetIdx = siblings.findIndex(s => s.id === overNode.id);
+        const targetOrder = (overNode.data as any).order || 0;
+        const prevOrder = targetIdx > 0 ? ((siblings[targetIdx - 1].data as any).order || 0) : null;
+        const nextOrder = targetIdx < siblings.length - 1 ? ((siblings[targetIdx + 1].data as any).order || 0) : null;
+        let newOrder = targetOrder;
+        if (dropPosition === 'before') {
+          newOrder = prevOrder !== null && prevOrder !== undefined ? (prevOrder + targetOrder) / 2 : targetOrder - 1000;
+        } else {
+          newOrder = nextOrder !== null && nextOrder !== undefined ? (targetOrder + nextOrder) / 2 : targetOrder + 1000;
+        }
+        await onMove(source.id, targetParent.id, newOrder);
+      } else if (dropPosition === 'inside') {
         // Moving to a new parent
-        await handleMoveToNewParent(dragState.activeNode, overNode);
+        await handleMoveToNewParent(source, overNode);
       } else {
         // Reordering within same parent
-        await handleReorderSiblings(dragState.activeNode, overNode, dropPosition);
+        await handleReorderSiblings(source, overNode, dropPosition);
       }
       
       toast.success(`${dragState.activeNode.name} moved successfully`);
@@ -219,6 +275,15 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
       if (parentNode) {
         siblings = parentNode.children.filter(child => child.type === 'component');
       }
+    } else if (parentType === 'component') {
+      // Dropping in a component (conditions)
+      if (source.type !== 'condition') {
+        throw new Error('Only conditions can be placed in components');
+      }
+      const parentNode = findNode(parentId);
+      if (parentNode) {
+        siblings = parentNode.children.filter(child => child.type === 'condition');
+      }
     }
     
     // Calculate order based on position
@@ -242,9 +307,11 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
       // Reorder section
       const updates = [{ id: source.id, order, type: 'section' as const }];
       await onReorder(updates);
-    } else {
+    } else if (source.type === 'element' || source.type === 'component' || source.type === 'condition') {
       // Move to new parent
       await onMove(source.id, newParentId, order);
+    } else {
+      // No-op for unknown types
     }
   };
 
@@ -330,8 +397,17 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
       }
     }
 
+    // Force 'inside' when dragging into valid container headers to avoid invalid before/after
+    if (
+      (activeNode.type === 'element' && overNode.type === 'section') ||
+      (activeNode.type === 'component' && overNode.type === 'element') ||
+      (activeNode.type === 'condition' && overNode.type === 'component')
+    ) {
+      return 'inside';
+    }
+
     // For non-siblings, check if can drop inside containers
-    if ((overNode.type === 'section' || overNode.type === 'element') && overRect) {
+    if ((overNode.type === 'section' || overNode.type === 'element' || (overNode.type === 'component' && activeNode.type === 'condition')) && overRect) {
       const validation = canDrop(activeNode, overNode, 'inside');
       if (validation.isValid) {
         const threshold = overRect.height * 0.25;
