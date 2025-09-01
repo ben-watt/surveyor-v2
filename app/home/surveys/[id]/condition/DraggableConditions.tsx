@@ -9,14 +9,20 @@ interface DraggableConditionsProps {
   watch: UseFormWatch<any>;
 }
 
-export function DraggableConditions({
-  conditions,
-}: DraggableConditionsProps) {
+export function DraggableConditions({ conditions }: DraggableConditionsProps) {
   const [phrasesHydrated, phrases] = phraseStore.useList();
+
+  const ordered = Array.isArray(conditions)
+    ? [...conditions].sort((a, b) => {
+        const aOrder = phrases.find(p => p.id === a.id)?.order || 0;
+        const bOrder = phrases.find(p => p.id === b.id)?.order || 0;
+        return aOrder - bOrder;
+      })
+    : conditions;
 
   return (
     <div>
-      {conditions.map((condition) => (
+      {ordered.map((condition) => (
         <div
           key={condition.id}
           className="space-y-2 border-b border-gray-200 p-4 text-xs bg-white rounded-md shadow-sm hover:shadow-md transition-shadow cursor-move"

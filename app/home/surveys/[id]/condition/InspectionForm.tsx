@@ -287,6 +287,7 @@ function InspectionFormContent({
             (phrase.associatedComponentIds.includes(component.id) ||
               phrase.associatedElementIds.includes(element.id))
         )
+        .sort((a, b) => (a.order || 0) - (b.order || 0))
         .map((phrase) => ({
           value: {
             id: phrase.id,

@@ -3,7 +3,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
 import { FormSection } from "@/app/home/components/FormSection";
 import { Button } from "@/components/ui/button";
-import { surveyStore, sectionStore } from "@/app/home/clients/Database";
+import { surveyStore, sectionStore, componentStore } from "@/app/home/clients/Database";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import toast from "react-hot-toast";
@@ -79,6 +79,7 @@ const ElementForm: React.FC<ElementFormProps> = ({ surveyId, sectionId, elementI
 
   const [isSurveyHydrated, survey] = surveyStore.useGet(surveyId);
   const [isSectionsHydrated, surveySections] = sectionStore.useList();
+  const [isComponentsHydrated, components] = componentStore.useList();
   
   const imageUploadPath = useMemo(() => 
     `report-images/${surveyId}/elements/${elementId}`, 
@@ -173,6 +174,15 @@ const ElementForm: React.FC<ElementFormProps> = ({ surveyId, sectionId, elementI
     }
   }, [surveySections, sectionId, surveyId, elementId]);
 
+  const sortedComponents = useMemo(() => {
+    const comps = getElement()?.components || [];
+    if (!Array.isArray(comps) || comps.length === 0) return comps;
+    const orderMap = new Map<string, number>();
+    components.forEach(c => orderMap.set(c.id, c.order || 0));
+    return [...comps].sort((a, b) => (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0));
+  }, [components, getElement]);
+
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -215,7 +225,7 @@ const ElementForm: React.FC<ElementFormProps> = ({ surveyId, sectionId, elementI
 
         <FormSection title="Components">
           <ComponentsList
-            components={getElement()?.components || []}
+            components={sortedComponents}
             surveyId={surveyId}
             onRemoveComponent={handleRemoveComponent}
           />
