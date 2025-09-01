@@ -107,11 +107,17 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
     // Check if we're over a drop zone
     const overData = over.data?.current;
     if (overData?.type === 'dropzone') {
+      // Map dropzone positions to logical drop positions
+      const mapped: DropPosition = overData.position === 'top'
+        ? 'before'
+        : overData.position === 'bottom'
+          ? 'after'
+          : 'inside';
       setDragState(prev => ({
         ...prev,
         overId: over.id as string,
         overNode: null,
-        dropPosition: overData.position as 'before' | 'after',
+        dropPosition: mapped,
       }));
       return;
     }
@@ -291,7 +297,11 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
       order = siblings.length > 0 
         ? Math.min(...siblings.map(s => (s.data as any).order || 0)) - 1000
         : 1000;
-    } else { // position === 'bottom'
+    } else if (position === 'bottom') {
+      order = siblings.length > 0
+        ? Math.max(...siblings.map(s => (s.data as any).order || 0)) + 1000
+        : 1000;
+    } else { // 'inside' → append to end of container
       order = siblings.length > 0
         ? Math.max(...siblings.map(s => (s.data as any).order || 0)) + 1000
         : 1000;

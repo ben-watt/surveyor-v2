@@ -106,7 +106,7 @@ const schema = a.schema({
     createdAt: a.datetime().required(),
     updatedAt: a.datetime().required(),
     name: a.string().required(),
-    order: a.float().required().default(0),
+    order: a.float().default(0),
     type: a.string().required(), // "Defect" or "Condition"
     associatedComponentIds:  a.string().required().array().required(),
     phrase: a.string().required(),
@@ -125,7 +125,7 @@ const schema = a.schema({
     .model({
       id: a.id().required(),
       name: a.string().required(),
-      order: a.float().required().default(0),
+      order: a.float().default(0),
       materials: a.ref("Material").required().array().required(),
       syncStatus: a.string().required(),
       syncError: a.string(),

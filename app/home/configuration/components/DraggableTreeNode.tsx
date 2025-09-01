@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { TreeNode } from '../hooks/useHierarchicalData';
+import { DragState } from '../hooks/useDragDrop';
 import { ConfigTreeNode } from './ConfigTreeNode';
 import DropZone from './DropZone';
 
@@ -18,10 +19,7 @@ interface DraggableTreeNodeProps {
   isValidDropTarget?: boolean;
   isDropping?: boolean;
   dropPosition?: 'before' | 'after' | 'inside' | null;
-  dragState?: {
-    isDragging: boolean;
-    activeNode: TreeNode | null;
-  };
+  dragState?: DragState;
   lastEditedEntity?: { id: string; type: string; timestamp: number } | null;
   expandedNodes?: Set<string>;
   onCreateChild?: (parentType: string, parentId: string, childType: string) => void;
@@ -62,15 +60,22 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
     willChange: 'transform',
   } as React.CSSProperties;
 
+  // Collapse children while hovered during drag for clearer line placement
+  useEffect(() => {
+    if (!dragState?.isDragging) return;
+    if (!isExpanded) return;
+    if (dragState?.overId === node.id) {
+      onToggle(node.id);
+    }
+  }, [dragState?.isDragging, dragState?.overId, isExpanded, node.id, onToggle]);
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
         'relative transition-[background,box-shadow,opacity] duration-150',
-        isDragging && 'opacity-90 shadow-lg',
-        isOver && isValidDropTarget && 'bg-green-50 dark:bg-green-950',
-        isOver && !isValidDropTarget && 'bg-red-50 dark:bg-red-950'
+        isDragging && 'opacity-90 shadow-lg'
       )}
     >
       {/* Drop indicator line */}
@@ -82,11 +87,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
         {/* Node header - only the header row, not children */}
         <div className="relative group">
           {/* Node header content - render just the header without expanded children */}
-          <div className={cn(
-            'relative',
-            isDropping && dropPosition === 'inside' && 
-            'ring-2 ring-blue-500 ring-offset-1 rounded-md'
-          )}>
+          <div className={cn('relative')}>
             <ConfigTreeNode
               node={node}
               onToggleExpand={onToggle}
