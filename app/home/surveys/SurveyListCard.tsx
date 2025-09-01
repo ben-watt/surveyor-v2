@@ -92,6 +92,26 @@ export function BuildingSurveyListCard({
   };
 
   const statusBadgeProps = getStatusBadgeProps(survey.status);
+  
+  const getOwnerDisplayName = () => {
+    const owner = survey.owner;
+    if (!owner) {
+      return "Unknown";
+    }
+    const trimmedName = owner.name?.trim();
+    if (trimmedName && trimmedName !== owner.id) {
+      return trimmedName;
+    }
+    const email = owner.email?.trim();
+    if (email) {
+      const handle = email.split("@")[0] || email;
+      return handle;
+    }
+    if (isUserHydrated && user?.sub === owner.id) {
+      return "You";
+    }
+    return "Unknown";
+  };
 
   return (
     <Card 
@@ -154,7 +174,7 @@ export function BuildingSurveyListCard({
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
-                    👤 {survey.owner?.name || "Unknown"}
+                    👤 {getOwnerDisplayName()}
                   </Badge>
                   <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
                     📅 {survey.reportDetails?.reportDate
