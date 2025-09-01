@@ -1,4 +1,4 @@
-import { sectionStore, elementStore, componentStore } from '../../clients/Database';
+import { sectionStore, elementStore, componentStore, phraseStore } from '../../clients/Database';
 import { getCurrentTenantId } from '../../utils/tenant-utils';
 import { Result, Ok, Err } from 'ts-results';
 
@@ -66,7 +66,7 @@ export async function updateComponentOrder(componentId: string, order: number, e
 }
 
 export async function batchUpdateOrders(
-  updates: Array<{ id: string; order: number; type: 'section' | 'element' | 'component' }>
+  updates: Array<{ id: string; order: number; type: 'section' | 'element' | 'component' | 'condition' }>
 ): Promise<Result<void, Error>> {
   try {
     const errors: Error[] = [];
@@ -84,6 +84,10 @@ export async function batchUpdateOrders(
         case 'component':
           result = await updateComponentOrder(update.id, update.order);
           break;
+        case 'condition':
+          // Update phrase order in place
+          result = await updateConditionOrderInternal(update.id, update.order);
+          break;
         default:
           result = Err(new Error(`Unknown entity type: ${update.type}`));
       }
@@ -100,5 +104,55 @@ export async function batchUpdateOrders(
     return Ok(undefined);
   } catch (error) {
     return Err(error as Error);
+  }
+}
+
+// Normalize condition node id (nodes use `condition-<id>`)
+function normalizeConditionId(id: string): string {
+  return id.startsWith('condition-') ? id.replace(/^condition-/, '') : id;
+}
+
+async function updateConditionOrderInternal(conditionNodeId: string, order: number): Promise<Result<void, Error>> {
+  try {
+    const phraseId = normalizeConditionId(conditionNodeId);
+    const existing = await phraseStore.get(phraseId);
+    if (!existing) return Err(new Error(`Condition ${phraseId} not found`));
+    await phraseStore.update(phraseId, (draft: any) => {
+      (draft as any).order = order;
+    });
+    return Ok(undefined);
+  } catch (e) {
+    return Err(e as Error);
+  }
+}
+
+export async function updateConditionOrder(conditionNodeId: string, order: number): Promise<Result<void, Error>> {
+  return updateConditionOrderInternal(conditionNodeId, order);
+}
+
+export async function moveConditionToComponent(
+  conditionNodeId: string,
+  fromComponentId: string | undefined,
+  toComponentId: string,
+  order: number
+): Promise<Result<void, Error>> {
+  try {
+    const phraseId = normalizeConditionId(conditionNodeId);
+    const existing = await phraseStore.get(phraseId);
+    if (!existing) return Err(new Error(`Condition ${phraseId} not found`));
+
+    await phraseStore.update(phraseId, (draft: any) => {
+      const current = Array.isArray((draft as any).associatedComponentIds)
+        ? ([...(draft as any).associatedComponentIds] as string[])
+        : [];
+      const withoutFrom = typeof fromComponentId === 'string' ? current.filter(id => id !== fromComponentId) : current;
+      const ensured = withoutFrom.includes(toComponentId) ? withoutFrom : [...withoutFrom, toComponentId];
+      (draft as any).associatedComponentIds = ensured;
+      (draft as any).order = order;
+    });
+
+    return Ok(undefined);
+  } catch (e) {
+    return Err(e as Error);
   }
 }

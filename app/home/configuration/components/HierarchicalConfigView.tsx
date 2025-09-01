@@ -36,7 +36,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import toast from 'react-hot-toast';
-import { updateSectionOrder, updateElementOrder, updateComponentOrder, batchUpdateOrders } from '../utils/storeOperations';
+import { updateSectionOrder, updateElementOrder, updateComponentOrder, batchUpdateOrders, moveConditionToComponent, updateConditionOrder } from '../utils/storeOperations';
 
 export function HierarchicalConfigView() {
   const router = useRouter();
@@ -51,7 +51,7 @@ export function HierarchicalConfigView() {
   const handleReorder = useCallback(async (updates: Array<{ id: string; order: number }>) => {
     try {
       // Find node types for all updates
-      const findNodeType = (nodeId: string, nodes: TreeNode[]): 'section' | 'element' | 'component' | null => {
+      const findNodeType = (nodeId: string, nodes: TreeNode[]): 'section' | 'element' | 'component' | 'condition' | null => {
         for (const node of nodes) {
           if (node.id === nodeId) return node.type as 'section' | 'element' | 'component';
           const found = findNodeType(nodeId, node.children);
@@ -88,6 +88,15 @@ export function HierarchicalConfigView() {
         return null;
       };
       
+      const findParentId = (id: string, nodes: TreeNode[], parentId?: string): string | undefined => {
+        for (const node of nodes) {
+          if (node.id === id) return parentId;
+          const found = findParentId(id, node.children, node.id);
+          if (found !== undefined) return found;
+        }
+        return undefined;
+      };
+
       const node = findNode(treeData);
       if (!node) throw new Error('Node not found');
       
@@ -98,6 +107,15 @@ export function HierarchicalConfigView() {
       } else if (node.type === 'component' && newParentId) {
         // Moving component to different element  
         const result = await updateComponentOrder(nodeId, order, newParentId);
+        if (result.err) throw result.val;
+      } else if (node.type === 'condition' && newParentId) {
+        // Moving condition to different component
+        const fromParentId = findParentId(nodeId, treeData);
+        const result = await moveConditionToComponent(nodeId, fromParentId, newParentId, order);
+        if (result.err) throw result.val;
+      } else if (node.type === 'condition') {
+        // Reordering condition within same component
+        const result = await updateConditionOrder(nodeId, order);
         if (result.err) throw result.val;
       }
     } catch (error) {

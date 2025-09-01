@@ -219,8 +219,8 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
         }`}
         style={{ paddingLeft: `${Math.max(level * 12 + 8, 8)}px` }}
       >
-        {/* Drag handle - only show for draggable entities (not conditions) */}
-        {node.type !== 'condition' && dragAttributes && dragListeners && (
+        {/* Drag handle - show for all draggable entities including conditions */}
+        {dragAttributes && dragListeners && (
           <div
             {...dragAttributes}
             {...dragListeners}

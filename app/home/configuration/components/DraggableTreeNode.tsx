@@ -186,19 +186,56 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
               </>
             )}
 
-            {/* Render children for non-container nodes */}
-            {node.type !== 'section' && node.type !== 'element' && node.children.length > 0 && (
-              node.children.map((child) => (
-                <ConfigTreeNode
-                  key={child.id}
-                  node={child}
-                  onToggleExpand={onToggle}
-                  level={depth + 1}
-                  expandedNodes={new Set(child.isExpanded ? [child.id] : [])}
-                  lastEditedEntity={lastEditedEntity}
-                  onCreateChild={onCreateChild}
+            {/* Render children for component (conditions) with sortable context and edge drop zones */}
+            {node.type === 'component' && (
+              <>
+                <DropZone
+                  id={`${node.id}-conditions-drop-top`}
+                  position="top"
+                  parentType="component"
+                  parentId={node.id}
+                  isActive={Boolean(
+                    dragState?.isDragging &&
+                    dragState?.activeNode &&
+                    dragState.activeNode.type === 'condition'
+                  )}
                 />
-              ))
+                {node.children.length > 0 ? (
+                  <SortableContext
+                    items={node.children.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {node.children.map((child) => (
+                      <DraggableTreeNode
+                        key={child.id}
+                        node={child}
+                        depth={depth + 1}
+                        isExpanded={child.isExpanded || false}
+                        onToggle={onToggle}
+                        searchQuery={searchQuery}
+                        isDragEnabled={isDragEnabled}
+                        isValidDropTarget={false}
+                        isDropping={false}
+                        dragState={dragState}
+                        lastEditedEntity={lastEditedEntity}
+                        expandedNodes={expandedNodes}
+                        onCreateChild={onCreateChild}
+                      />
+                    ))}
+                  </SortableContext>
+                ) : null}
+                <DropZone
+                  id={`${node.id}-conditions-drop-bottom`}
+                  position="bottom"
+                  parentType="component"
+                  parentId={node.id}
+                  isActive={Boolean(
+                    dragState?.isDragging &&
+                    dragState?.activeNode &&
+                    dragState.activeNode.type === 'condition'
+                  )}
+                />
+              </>
             )}
           </div>
         )}

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 interface DropZoneProps {
   id: string;
   position: 'top' | 'bottom';
-  parentType: 'root' | 'section' | 'element';
+  parentType: 'root' | 'section' | 'element' | 'component';
   parentId?: string;
   isActive?: boolean;
   children?: React.ReactNode;

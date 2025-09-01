@@ -37,8 +37,8 @@ const validationRules: Record<NodeType, {
     canReorder: true,
   },
   condition: {
-    allowedParents: ['element', 'component'],
-    cannotBeChildOf: ['section', 'condition'],
+    allowedParents: ['component'],
+    cannotBeChildOf: ['section', 'element', 'condition'],
     canReorder: true,
   },
 };

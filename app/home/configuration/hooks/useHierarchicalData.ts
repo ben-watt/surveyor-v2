@@ -68,8 +68,7 @@ function buildHierarchy(
       const componentNodes: TreeNode[] = elementComponents.map(component => {
         const componentConditions = phrases
           .filter(phrase => phrase.associatedComponentIds.includes(component.id))
-          // Temporary deterministic ordering until condition ordering is implemented
-          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
 
         const conditionNodes: TreeNode[] = componentConditions.map(condition => ({
           id: `condition-${condition.id}`,
