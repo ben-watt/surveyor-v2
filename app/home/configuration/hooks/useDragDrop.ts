@@ -307,62 +307,48 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
   const determineDropPosition = (event: DragOverEvent | DragEndEvent, overNode: TreeNode): DropPosition => {
     const activeNode = dragState.activeNode;
     if (!activeNode) return 'after';
-    
+
+    // Prefer rects provided by DnD Kit to avoid relying on the initial activator event
+    const overRect = event.over?.rect;
+    const activeRect = (event as any).active?.rect?.current?.translated || (event as any).active?.rect?.current?.initial;
+    const pointerY = activeRect
+      ? (activeRect.top + activeRect.height / 2)
+      : ((event as any).activatorEvent?.clientY as number | undefined);
+
     // Check if dragging over a sibling (same parent and type)
     const activeParent = getParentNode(activeNode.id);
     const overParent = getParentNode(overNode.id);
-    const areSiblings = activeParent?.id === overParent?.id && 
-                        activeNode.type === overNode.type;
-    
+    const areSiblings = activeParent?.id === overParent?.id && activeNode.type === overNode.type;
+
     // For root-level sections, they are siblings if both are sections
-    const areRootSiblings = !activeParent && !overParent && 
-                            activeNode.type === 'section' && overNode.type === 'section';
-    
-    if (areSiblings || areRootSiblings) {
-      // For siblings, determine before/after based on cursor position
-      const rect = event.over?.rect;
-      const y = event.activatorEvent instanceof MouseEvent 
-        ? (event.activatorEvent as any).clientY 
-        : 0;
-      
-      if (rect && y) {
-        const midpoint = rect.top + rect.height / 2;
-        return y < midpoint ? 'before' : 'after';
+    const areRootSiblings = !activeParent && !overParent && activeNode.type === 'section' && overNode.type === 'section';
+
+    if ((areSiblings || areRootSiblings) && overRect) {
+      const overMidY = overRect.top + overRect.height / 2;
+      if (pointerY !== undefined) {
+        return pointerY < overMidY ? 'before' : 'after';
       }
-      return 'after';
     }
-    
-    // For non-siblings, check if can drop inside
-    if (overNode.type === 'section' || overNode.type === 'element') {
-      // Only return 'inside' if it's a valid container for the dragged type
+
+    // For non-siblings, check if can drop inside containers
+    if ((overNode.type === 'section' || overNode.type === 'element') && overRect) {
       const validation = canDrop(activeNode, overNode, 'inside');
       if (validation.isValid) {
-        // Check if we're near the edges for before/after even for containers
-        const rect = event.over?.rect;
-        const y = event.activatorEvent instanceof MouseEvent 
-          ? (event.activatorEvent as any).clientY 
-          : 0;
-        
-        if (rect && y) {
-          const threshold = rect.height * 0.25;
-          if (y < rect.top + threshold) return 'before';
-          if (y > rect.bottom - threshold) return 'after';
+        const threshold = overRect.height * 0.25;
+        if (pointerY !== undefined) {
+          if (pointerY < overRect.top + threshold) return 'before';
+          if (pointerY > overRect.bottom - threshold) return 'after';
+          return 'inside';
         }
-        return 'inside';
       }
     }
-    
-    // For leaf nodes or invalid drops, determine before/after based on position
-    const rect = event.over?.rect;
-    const y = event.activatorEvent instanceof MouseEvent 
-      ? (event.activatorEvent as any).clientY 
-      : 0;
-    
-    if (rect && y) {
-      const midpoint = rect.top + rect.height / 2;
-      return y < midpoint ? 'before' : 'after';
+
+    // Fallback to before/after based on midpoints
+    if (overRect && pointerY !== undefined) {
+      const overMidY = overRect.top + overRect.height / 2;
+      return pointerY < overMidY ? 'before' : 'after';
     }
-    
+
     return 'after';
   };
 

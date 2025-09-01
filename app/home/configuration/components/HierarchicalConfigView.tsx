@@ -391,11 +391,7 @@ export function HierarchicalConfigView() {
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={[
-                'root-drop-top',
-                ...displayData.map(n => n.id),
-                'root-drop-bottom'
-              ]}
+              items={displayData.map(n => n.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-1">

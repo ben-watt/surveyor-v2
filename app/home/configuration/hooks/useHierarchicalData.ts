@@ -61,12 +61,15 @@ function buildHierarchy(
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     const elementNodes: TreeNode[] = sectionElements.map(element => {
-      const elementComponents = components.filter(component => component.elementId === element.id);
+      const elementComponents = components
+        .filter(component => component.elementId === element.id)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
 
       const componentNodes: TreeNode[] = elementComponents.map(component => {
-        const componentConditions = phrases.filter(phrase =>
-          phrase.associatedComponentIds.includes(component.id)
-        );
+        const componentConditions = phrases
+          .filter(phrase => phrase.associatedComponentIds.includes(component.id))
+          // Temporary deterministic ordering until condition ordering is implemented
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         const conditionNodes: TreeNode[] = componentConditions.map(condition => ({
           id: `condition-${condition.id}`,

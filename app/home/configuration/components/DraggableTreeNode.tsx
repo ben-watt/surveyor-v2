@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useSortable } from '@dnd-kit/sortable';
+import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { TreeNode } from '../hooks/useHierarchicalData';
@@ -120,29 +120,40 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                     )
                   )}
                 />
-                
-                {node.children.map((child) => {
-                  // Each element and component gets its own drag handle
-                  if (child.type === 'element' || child.type === 'component') {
-                    return (
-                      <DraggableTreeNode
-                        key={child.id}
-                        node={child}
-                        depth={depth + 1}
-                        isExpanded={child.isExpanded || false}
-                        onToggle={onToggle}
-                        searchQuery={searchQuery}
-                        isDragEnabled={isDragEnabled}
-                        isValidDropTarget={false}
-                        isDropping={false}
-                        dragState={dragState}
-                        lastEditedEntity={lastEditedEntity}
-                        expandedNodes={expandedNodes}
-                        onCreateChild={onCreateChild}
-                      />
-                    );
-                  } else {
-                    // Conditions render as regular tree nodes
+
+                {/* Sortable list for immediate children at this level */}
+                <SortableContext
+                  items={node.children
+                    .filter((c) => (node.type === 'section' ? c.type === 'element' : c.type === 'component'))
+                    .map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {node.children.map((child) => {
+                    // Each element and component gets its own drag handle
+                    if (
+                      (node.type === 'section' && child.type === 'element') ||
+                      (node.type === 'element' && child.type === 'component')
+                    ) {
+                      return (
+                        <DraggableTreeNode
+                          key={child.id}
+                          node={child}
+                          depth={depth + 1}
+                          isExpanded={child.isExpanded || false}
+                          onToggle={onToggle}
+                          searchQuery={searchQuery}
+                          isDragEnabled={isDragEnabled}
+                          isValidDropTarget={false}
+                          isDropping={false}
+                          dragState={dragState}
+                          lastEditedEntity={lastEditedEntity}
+                          expandedNodes={expandedNodes}
+                          onCreateChild={onCreateChild}
+                        />
+                      );
+                    }
+
+                    // Conditions render as regular tree nodes for now
                     return (
                       <ConfigTreeNode
                         key={child.id}
@@ -154,9 +165,9 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                         onCreateChild={onCreateChild}
                       />
                     );
-                  }
-                })}
-                
+                  })}
+                </SortableContext>
+
                 {/* Bottom drop zone */}
                 <DropZone
                   id={`${node.id}-drop-bottom`}
@@ -174,7 +185,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                 />
               </>
             )}
-            
+
             {/* Render children for non-container nodes */}
             {node.type !== 'section' && node.type !== 'element' && node.children.length > 0 && (
               node.children.map((child) => (
