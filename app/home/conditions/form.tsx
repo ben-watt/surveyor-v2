@@ -23,16 +23,14 @@ const conditionSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phrase: z.string().min(1, "Phrase is required"),
   phraseLevel2: z.string().nullable().optional(),
-  associatedElementIds: z.array(z.string()).transform(val => val || []),
-  associatedComponentIds: z.array(z.string()).transform(val => val || []),
-  associatedMaterialIds: z.array(z.string()).transform(val => val || [])
+  associatedComponentIds: z.array(z.string()).transform(val => val || [])
 });
 
 type ConditionFormData = z.infer<typeof conditionSchema>;
 
 type UpdateForm = Omit<
   Phrase,
-  "createdAt" | "updatedAt" | "element" | "owner"
+  "createdAt" | "updatedAt" | "element"
 >;
 
 interface DataFormProps {
@@ -49,15 +47,12 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
       name: "",
       phrase: "",
       phraseLevel2: undefined,
-      associatedElementIds: [],
       associatedComponentIds: [],
-      associatedMaterialIds: [],
-      ...defaultValues 
+      ...defaultValues
     },
     mode: 'onChange'
   });
   const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
-  const [elementsHydrated, elements] = elementStore.useList();
   const [componentsHydrated, components] = componentStore.useList();
   const [phraseHydrated, phrase] = phraseStore.useGet(idRef.current);
 
@@ -74,9 +69,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
             draft.type = "condition";
             draft.phrase = data.phrase;
             draft.phraseLevel2 = data.phraseLevel2;
-            draft.associatedElementIds = data.associatedElementIds ?? [];
             draft.associatedComponentIds = data.associatedComponentIds ?? [];
-            draft.associatedMaterialIds = data.associatedMaterialIds ?? [];
           });
           if (!auto) toast.success("Phrase updated");
         } else {
@@ -86,9 +79,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
             type: "condition",
             phrase: data.phrase,
             phraseLevel2: data.phraseLevel2,
-            associatedElementIds: data.associatedElementIds ?? [],
             associatedComponentIds: data.associatedComponentIds ?? [],
-            associatedMaterialIds: data.associatedMaterialIds ?? [],
           });
           if (!auto) toast.success("Phrase created");
         }
@@ -102,7 +93,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     [phraseHydrated, phrase, onSave]
   );
 
-  const timings = getAutoSaveTimings(2000);
+  const timings = getAutoSaveTimings();
   const { saveStatus, isSaving, lastSavedAt, skipNextChange } = useAutoSaveForm(
     savePhrase,
     watch,
@@ -127,14 +118,13 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
         name: phrase.name ?? '',
         phrase: phrase.phrase ?? '',
         phraseLevel2: phrase.phraseLevel2 ?? undefined,
-        associatedElementIds: phrase.associatedElementIds ?? [],
         associatedComponentIds: phrase.associatedComponentIds ?? []
       } as any, { keepDirtyValues: true });
       setHasInitialReset(true);
     }
   }, [phraseHydrated, phrase, methods, hasInitialReset, skipNextChange]);
 
-  if(!elementsHydrated || !componentsHydrated) {
+  if(!componentsHydrated) {
     return <div>Loading...</div>;
   }
 
@@ -155,14 +145,6 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           labelTitle="Phrase (Level 2)"
           placeholder="Simpler wording for Level 2 surveys"
           register={() => register("phraseLevel2")}
-          errors={errors}
-        />
-        <DynamicComboBox
-          labelTitle="Associated Elements"
-          name="associatedElementIds"
-          control={control}
-          data={elements.map((x) => ({ label: x.name, value: x.id }))}
-          isMulti={true}
           errors={errors}
         />
         <DynamicComboBox

@@ -86,7 +86,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
     [componentHydrated, component, drawer, router]
   );
 
-  const timings = getAutoSaveTimings(2000);
+  const timings = getAutoSaveTimings();
   const { saveStatus, isSaving, lastSavedAt, skipNextChange } = useAutoSaveForm(
     saveComponent,
     watch,

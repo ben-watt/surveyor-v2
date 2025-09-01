@@ -69,7 +69,7 @@ export default function SectionForm({ initialData }: SectionFormProps) {
     }
   };
 
-  const timings = getAutoSaveTimings(1000);
+  const timings = getAutoSaveTimings();
   const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
     saveSection,
     watch,
