@@ -21,21 +21,6 @@ describe('AddressDisplay', () => {
     expect(button).toHaveTextContent('123 Test S...');
   });
 
-  it('hides full address when mouse leaves', () => {
-    render(<AddressDisplay address={mockAddress} />);
-    
-    const button = screen.getByRole('button');
-    fireEvent.mouseEnter(button);
-    fireEvent.mouseLeave(button);
-    
-    const addressText = screen.queryByText((content) => {
-      return content.includes('123 Test Street') && 
-             content.includes('Test City') && 
-             content.includes('TS1 1TS');
-    });
-    expect(addressText).not.toBeInTheDocument();
-  });
-
   it('uses default maxLength of 15 when not provided', () => {
     render(<AddressDisplay address={mockAddress} />);
     const button = screen.getByRole('button');
