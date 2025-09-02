@@ -1,12 +1,9 @@
-import Image from "next/image";
+import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreVertical, Trash2 } from "lucide-react";
+import { MoreVertical, Trash2 } from "lucide-react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
-import { useEffect, useState } from "react";
-import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
-import ImagePlaceholder from "../components/ImagePlaceholder";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +13,13 @@ import {
 import { surveyStore } from "../clients/Database";
 import { toast } from "react-hot-toast";
 import { useUserAttributes } from "../utils/useUser";
-import { formatShortDate } from "../utils/dateFormatters";
+import { formatRelativeTime } from "../utils/dateFormatters";
 import { getOwnerDisplayName as computeOwnerDisplayName } from "../utils/useUser";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getAllSurveyImages } from "./building-survey-reports/Survey";
+import { zodSectionStatusMap } from "./schemas";
+import { FormStatus } from "./building-survey-reports/BuildingSurveyReportSchema";
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData;
@@ -28,20 +30,7 @@ export function BuildingSurveyListCard({
   survey,
   onView,
 }: BuildingSurveyListCardProps) {
-  const [image, setImage] = useState<string>();
   const [isUserHydrated, user] = useUserAttributes();
-
-  useEffect(() => {
-    if (!survey.reportDetails?.moneyShot || survey.reportDetails.moneyShot.length === 0) {
-      return;
-    }
-
-    imageUploadStore.get(survey.reportDetails.moneyShot[0].path).then((image) => {
-      if (image.ok) {
-        setImage(image.unwrap().href);
-      }
-    });
-  }, [survey.reportDetails?.moneyShot]);
 
   const handleDelete = async () => {
     try {
@@ -61,10 +50,9 @@ export function BuildingSurveyListCard({
     }
   };
 
-  const imageAlt = survey.reportDetails?.address.formatted
-    ? `Survey at ${survey.reportDetails.address.formatted}`
-    : "Building survey image";
-  const fullTitle = survey.reportDetails?.address.formatted || "Untitled Survey";
+  const isDraft = survey.status === "draft";
+  const fullTitle = survey.reportDetails?.address.formatted || "New survey";
+  const title = fullTitle.length > 80 ? `${fullTitle.slice(0, 80)}…` : fullTitle;
 
   const getStatusBadgeProps = (status: string) => {
     switch (status) {
@@ -99,41 +87,63 @@ export function BuildingSurveyListCard({
     currentUser: user,
   });
 
+  // Get createdAt from raw dexie list for this survey id (lightweight, memoized by hook)
+  const [isRawHydrated, rawList] = surveyStore.useRawList();
+  const createdAt = isRawHydrated
+    ? rawList.find((s) => s.id === survey.id)?.createdAt
+    : undefined;
+  const createdAtDate = createdAt ? new Date(createdAt) : undefined;
+
+  // Compute a total image count using helper
+  const imageCount = getAllSurveyImages(survey).filter(i => !i.isArchived).length;
+
+  // Compute compact progress (always compute; render only for drafts)
+  const { progressPercent, completedSections, totalSections } = useMemo(() => {
+    const sectionStatuses = {
+      'Report Details': zodSectionStatusMap['Report Details'](survey.reportDetails),
+      'Property Description': zodSectionStatusMap['Property Description'](survey.propertyDescription),
+      'Property Condition': zodSectionStatusMap['Property Condition'](survey.sections),
+      'Checklist': zodSectionStatusMap['Checklist'](survey.checklist),
+    } as const;
+    const keys = ['Report Details','Property Description','Property Condition','Checklist'] as const;
+    const total = keys.length;
+    const completed = keys.filter(k => sectionStatuses[k].status === (FormStatus.Complete as any)).length;
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { progressPercent: percent, completedSections: completed, totalSections: total };
+  }, [survey.reportDetails, survey.propertyDescription, survey.sections, survey.checklist]);
+
   return (
     <Card 
-      role="article" 
+      role="button"
+      tabIndex={0}
       aria-labelledby={`survey-title-${survey.id}`} 
-      className={`overflow-hidden relative transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border-l-4 ${getCardBorderColor(survey.status)} group cursor-pointer`}
+      onClick={() => onView(survey.id)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onView(survey.id);
+        }
+      }}
+      className={`overflow-hidden relative transition-all duration-200 hover:shadow-lg hover:-translate-y-1 group cursor-pointer`}
     >
-      <div className="flex flex-col sm:flex-row h-full">
-        <div className="relative w-full sm:w-2/5 min-w-0 sm:min-w-[140px] aspect-[16/9] sm:aspect-auto">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
-          {image ? (
-            <Image
-              src={image}
-              alt={imageAlt}
-              fill
-              sizes="(max-width: 640px) 100vw, 40vw"
-              className="object-cover transition-transform duration-200 group-hover:scale-105"
-              onError={() => setImage(undefined)}
-            />
-          ) : (
-            <ImagePlaceholder />
-          )}
-          <Badge
-            {...statusBadgeProps}
-            className={`absolute top-3 left-3 shadow-sm capitalize ${statusBadgeProps.className}`}
-          >
-            {survey.status}
-          </Badge>
-        </div>
-        <CardContent className="flex-1 p-5">
+      <div className="flex flex-col h-full">
+        <CardContent className="flex-1 p-3">
           <div className="flex flex-col h-full justify-between">
             <div>
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <h3 id={`survey-title-${survey.id}`} title={fullTitle} className="font-bold text-xl leading-tight line-clamp-2 flex-1 text-gray-900">
-                  {fullTitle}
-                </h3>
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge
+                    {...statusBadgeProps}
+                    className={`shrink-0 capitalize ${statusBadgeProps.className}`}
+                  >
+                    {survey.status}
+                  </Badge>
+                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
+                    🏢 Level {survey.reportDetails?.level ?? "—"}
+                  </Badge>
+
+                </div>
+                {isUserHydrated && user && user.sub === survey.owner?.id && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -148,45 +158,62 @@ export function BuildingSurveyListCard({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
-                      onClick={handleDelete}
+                      onClick={() => {
+                        if (confirm("Delete this survey? This cannot be undone.")) {
+                          void handleDelete();
+                        }
+                      }}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete Survey
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                )}
               </div>
+              <h3 id={`survey-title-${survey.id}`} title={fullTitle} className="font-bold text-xl leading-tight line-clamp-2 break-words flex-1 text-gray-900">
+                  {title}
+                  </h3> 
 
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
-                    👤 {ownerDisplayName}
-                  </Badge>
-                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
-                    📅 {survey.reportDetails?.reportDate
-                      ? formatShortDate(survey.reportDetails.reportDate)
-                      : "No date set"}
-                  </Badge>
-                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
-                    🏢 Level {survey.reportDetails?.level ?? "—"}
-                  </Badge>
+
+              <div className="space-y-3 mt-3">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={survey.owner?.signaturePath?.[0]} alt={ownerDisplayName} />
+                            <AvatarFallback>{ownerDisplayName?.[0] || "?"}</AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>{ownerDisplayName}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
+
+                {isDraft && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className="w-full bg-muted rounded h-1.5 overflow-hidden" aria-hidden>
+                      <div className={`h-1.5 ${progressPercent === 100 ? 'bg-green-500' : 'bg-primary'}`} style={{ width: `${progressPercent}%` }} />
+                    </div>
+                    <div className="mt-1 text-[11px] text-gray-500 text-nowrap">{completedSections} / {totalSections}</div>
+                  </div>
+                )}
+
+              
+
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
               <div className="text-xs text-gray-500">
-                {survey.reportDetails?.reportDate ? `Report ${formatShortDate(survey.reportDetails.reportDate)}` : "Draft survey"}
+                {createdAtDate ? `Created ${formatRelativeTime(createdAtDate)}` : (isDraft ? "Draft" : "")}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                onClick={() => onView(survey.id)}
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                View Details
-              </Button>
+              <div className="text-xs text-gray-500 flex items-center gap-3" aria-hidden>
+                <span>🖼️ {imageCount}</span>
+              </div>
             </div>
           </div>
         </CardContent>
