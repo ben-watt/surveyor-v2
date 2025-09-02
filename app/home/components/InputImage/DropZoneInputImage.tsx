@@ -381,7 +381,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           {maxFiles !== activeFiles.length && (
             <div className="flex flex-col items-center justify-center">
               <input {...getInputProps()} />
-              <p className="text-sm text-gray-500 m-2">
+              <p className="text-sm text-gray-500 m-2 text-center">
                 Drag & drop files, {" "}
                 <u className="cursor-pointer">fetch from device</u>
                 {", or "}
@@ -393,7 +393,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
                   }}
                   className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 underline transition-colors"
                 >
-                  take photos
+                  quick capture
                 </button>
               </p>
             </div>

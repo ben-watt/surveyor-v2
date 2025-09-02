@@ -100,19 +100,19 @@ describe('DropZoneInputImage', () => {
     });
   });
 
-  it('renders take photos button', async () => {
+  it('renders quick capture button', async () => {
     render(<DropZoneInputImage {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('take photos')).toBeInTheDocument();
+      expect(screen.getByText('quick capture')).toBeInTheDocument();
     });
   });
 
-  it('opens camera modal when take photos button is clicked', async () => {
+  it('opens camera modal when quick capture button is clicked', async () => {
     render(<DropZoneInputImage {...defaultProps} />);
     
     await waitFor(() => {
-      const takePhotosButton = screen.getByText('take photos');
+      const takePhotosButton = screen.getByText('quick capture');
       fireEvent.click(takePhotosButton);
     });
     
@@ -124,7 +124,7 @@ describe('DropZoneInputImage', () => {
     
     // Open camera modal
     await waitFor(() => {
-      const takePhotosButton = screen.getByText('take photos');
+      const takePhotosButton = screen.getByText('quick capture');
       fireEvent.click(takePhotosButton);
     });
     
@@ -161,7 +161,7 @@ describe('DropZoneInputImage', () => {
     
     // Open camera modal
     await waitFor(() => {
-      const takePhotosButton = screen.getByText('take photos');
+      const takePhotosButton = screen.getByText('quick capture');
       fireEvent.click(takePhotosButton);
     });
     
@@ -209,7 +209,7 @@ describe('DropZoneInputImage', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('hides take photos button when max files reached', async () => {
+  it('hides quick capture button when max files reached', async () => {
     // Mock files at max capacity
     const mockFiles = Array.from({ length: 5 }, (_, i) => ({
       fullPath: `/test/path/file${i}.jpg`,
@@ -234,7 +234,7 @@ describe('DropZoneInputImage', () => {
     render(<DropZoneInputImage {...defaultProps} maxFiles={5} />);
     
     await waitFor(() => {
-      expect(screen.queryByText('take photos')).not.toBeInTheDocument();
+      expect(screen.queryByText('quick capture')).not.toBeInTheDocument();
     });
   });
 
@@ -242,7 +242,7 @@ describe('DropZoneInputImage', () => {
     render(<DropZoneInputImage {...defaultProps} maxFiles={3} />);
     
     await waitFor(() => {
-      const takePhotosButton = screen.getByText('take photos');
+      const takePhotosButton = screen.getByText('quick capture');
       fireEvent.click(takePhotosButton);
     });
     
@@ -267,7 +267,7 @@ describe('DropZoneInputImage', () => {
     render(<DropZoneInputImage {...defaultProps} />);
     
     await waitFor(() => {
-      const takePhotosButton = screen.getByText('take photos');
+      const takePhotosButton = screen.getByText('quick capture');
       
       // Create a mock event
       const mockEvent = {
@@ -286,7 +286,7 @@ describe('DropZoneInputImage', () => {
     
     await waitFor(() => {
       expect(screen.getByText(/drag & drop files/i)).toBeInTheDocument();
-      expect(screen.getByText('take photos')).toBeInTheDocument();
+      expect(screen.getByText('quick capture')).toBeInTheDocument();
     });
   });
 
@@ -294,7 +294,7 @@ describe('DropZoneInputImage', () => {
     render(<DropZoneInputImage path="/test" features={{}} />);
     
     await waitFor(() => {
-      expect(screen.getByText('take photos')).toBeInTheDocument();
+      expect(screen.getByText('quick capture')).toBeInTheDocument();
     });
   });
 
@@ -310,7 +310,7 @@ describe('DropZoneInputImage', () => {
     
     // Open camera and capture
     await waitFor(() => {
-      const takePhotosButton = screen.getByText('take photos');
+      const takePhotosButton = screen.getByText('quick capture');
       fireEvent.click(takePhotosButton);
     });
     
