@@ -51,10 +51,18 @@ export const CameraModal = ({
   const [isCapturing, setIsCapturing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [showFlash, setShowFlash] = useState(false);
   const cameraStartedRef = useRef(false);
   // Fallback preview zoom scaling when hardware zoom isn't available
   const [previewZoomScale, setPreviewZoomScale] = useState<number>(1);
+  // A11y + focus management
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const captureButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+  const pinchStartDistRef = useRef<number | null>(null);
 
   // Resize image using existing pipeline
   const resizeImage = useCallback((file: File): Promise<File> => {
@@ -117,6 +125,85 @@ export const CameraModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]); // Intentionally exclude stopCamera to prevent restart loops
 
+  // Focus trap, keyboard controls, and focus return to trigger
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previouslyFocusedElementRef.current = document.activeElement as HTMLElement | null;
+
+    const focusableSelectors = [
+      'a[href]',
+      'area[href]',
+      'button:not([disabled])',
+      'input:not([disabled]):not([type="hidden"])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+      '[role="button"]'
+    ].join(',');
+
+    const getFocusable = (): HTMLElement[] => {
+      const root = modalRef.current;
+      if (!root) return [];
+      const nodes = root.querySelectorAll<HTMLElement>(focusableSelectors);
+      return Array.from(nodes).filter(el => !el.hasAttribute('aria-hidden'));
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isUploading) {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusables = getFocusable();
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const current = document.activeElement as HTMLElement | null;
+        if (e.shiftKey) {
+          if (!current || current === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (!current || current === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+
+      if (e.key === ' ' || e.key === 'Enter') {
+        const target = e.target as HTMLElement;
+        const tag = target.tagName.toLowerCase();
+        const isFormControl = target.isContentEditable || ['input', 'select', 'textarea', 'button'].includes(tag);
+        if (!isFormControl) {
+          e.preventDefault();
+          if (!isCapturing && stream && capturedPhotos.length < maxPhotos && !isUploading) {
+            captureButtonRef.current?.focus();
+            captureButtonRef.current?.click();
+          }
+        }
+      }
+    };
+
+    // Initial focus inside dialog
+    setTimeout(() => {
+      (closeButtonRef.current || captureButtonRef.current || modalRef.current)?.focus();
+    }, 0);
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      // Restore focus to previously focused element
+      if (previouslyFocusedElementRef.current) {
+        try { previouslyFocusedElementRef.current.focus(); } catch {}
+      }
+    };
+  }, [isOpen, isUploading, onClose, isCapturing, stream, capturedPhotos.length, maxPhotos]);
+
   // Handle photo capture
   const handleCapture = useCallback(async () => {
     console.log('🔵 handleCapture called!', { 
@@ -158,6 +245,29 @@ export const CameraModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capturePhoto, isCapturing, capturedPhotos.length, stream, hasPermission, previewZoomScale]); // maxPhotos is stable prop
 
+  // Zoom helpers
+  const clamp = useCallback((value: number, min: number, max: number) => {
+    return Math.min(max, Math.max(min, value));
+  }, []);
+
+  const adjustZoom = useCallback(async (delta: number) => {
+    try {
+      if (supportedFeatures?.zoom && capabilities?.zoom) {
+        const min = capabilities.zoom.min ?? 1;
+        const max = capabilities.zoom.max ?? 3;
+        const step = capabilities.zoom.step || 0.1;
+        const base = currentZoom ?? min;
+        const next = clamp(base + delta * step, min, max);
+        await setZoom(next);
+      } else {
+        const next = clamp(previewZoomScale + delta * 0.1, 1, 3);
+        setPreviewZoomScale(next);
+      }
+    } catch (err) {
+      console.error('Zoom adjust error', err);
+    }
+  }, [supportedFeatures?.zoom, capabilities?.zoom, currentZoom, setZoom, previewZoomScale, clamp]);
+
   // Remove captured photo
   const removePhoto = useCallback((photoId: string) => {
     setCapturedPhotos(prev => {
@@ -174,8 +284,13 @@ export const CameraModal = ({
     if (capturedPhotos.length === 0 || isUploading) return;
 
     setIsUploading(true);
+    setUploadSuccess(false);
+    setUploadingIndex(0);
+    setUploadProgress(0);
     try {
-      for (const photo of capturedPhotos) {
+      const total = capturedPhotos.length;
+      for (let index = 0; index < total; index++) {
+        const photo = capturedPhotos[index];
         // Create file from blob
         const fileName = `camera-${photo.timestamp}.jpg`;
         const originalFile = new File([photo.blob], fileName, { 
@@ -204,6 +319,11 @@ export const CameraModal = ({
 
         // Notify parent component
         onPhotoCaptured?.(filePath);
+
+        // Update progress after each file
+        const nextIndex = index + 1;
+        setUploadingIndex(nextIndex < total ? nextIndex : null);
+        setUploadProgress(Math.round((nextIndex / total) * 100));
       }
 
       // Clear captured photos and show success
@@ -212,6 +332,8 @@ export const CameraModal = ({
         return [];
       });
       setUploadSuccess(true);
+      setUploadingIndex(null);
+      setUploadProgress(100);
       
       // Auto-close if max photos reached, otherwise show success briefly
       if (capturedPhotos.length >= maxPhotos) {
@@ -226,6 +348,8 @@ export const CameraModal = ({
       console.error('Error uploading photos:', err);
     } finally {
       setIsUploading(false);
+      setUploadingIndex(null);
+      setUploadProgress(0);
     }
   }, [capturedPhotos, isUploading, path, resizeImage, onPhotoCaptured, onClose, maxPhotos]);
 
@@ -274,27 +398,33 @@ export const CameraModal = ({
         }
       `}</style>
       <div 
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="camera-title"
         className="fixed inset-0 bg-black overflow-hidden"
-      style={{ 
-        zIndex: 9999999,
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: 'auto'
-      }}
-      onClick={(e) => {
-        console.log('🟡 Modal background clicked!', e.target);
-        e.stopPropagation();
-        e.preventDefault();
-      }}
-    >
+        tabIndex={-1}
+        style={{ 
+          zIndex: 9999999,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          pointerEvents: 'auto'
+        }}
+        onClick={(e) => {
+          console.log('🟡 Modal background clicked!', e.target);
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-black/50 text-white">
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-black/50 backdrop-blur-md text-white border-b border-white/10 pt-[env(safe-area-inset-top)]">
         <button
+          ref={closeButtonRef}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -307,7 +437,7 @@ export const CameraModal = ({
         </button>
         
         <div className="text-center">
-          <p className="text-sm font-medium">Camera</p>
+          <p id="camera-title" className="text-sm font-medium">Camera</p>
           <p className="text-xs text-gray-300">
             {capturedPhotos.length}/{maxPhotos} photos
           </p>
@@ -325,7 +455,40 @@ export const CameraModal = ({
       </div>
 
       {/* Camera View */}
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div
+        className="relative w-full h-full flex items-center justify-center"
+        onWheel={(e) => {
+          e.preventDefault();
+          const direction = e.deltaY > 0 ? -1 : 1;
+          adjustZoom(direction);
+        }}
+        onTouchStart={(e) => {
+          if (e.touches.length === 2) {
+            const [t1, t2] = [e.touches[0], e.touches[1]];
+            const dx = t2.clientX - t1.clientX;
+            const dy = t2.clientY - t1.clientY;
+            pinchStartDistRef.current = Math.hypot(dx, dy);
+          }
+        }}
+        onTouchMove={(e) => {
+          if (e.touches.length === 2 && pinchStartDistRef.current != null) {
+            e.preventDefault();
+            const [t1, t2] = [e.touches[0], e.touches[1]];
+            const dx = t2.clientX - t1.clientX;
+            const dy = t2.clientY - t1.clientY;
+            const dist = Math.hypot(dx, dy);
+            const diff = dist - pinchStartDistRef.current;
+            if (Math.abs(diff) > 4) {
+              adjustZoom(diff > 0 ? 0.5 : -0.5);
+              pinchStartDistRef.current = dist;
+            }
+          }
+        }}
+        onTouchEnd={() => {
+          pinchStartDistRef.current = null;
+        }}
+        style={{ touchAction: 'none' }}
+      >
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10">
             <div className="text-center text-white">
@@ -425,49 +588,113 @@ export const CameraModal = ({
       {/* Photo Thumbnails */}
       {capturedPhotos.length > 0 && (
         <div className="absolute bottom-32 left-0 right-0 z-10">
-          <div className="flex gap-3 px-4 py-3 overflow-x-auto scrollbar-hide">
-            {capturedPhotos.map((photo, index) => (
-              <div 
-                key={photo.id} 
-                className="relative flex-shrink-0 group"
-                style={{
-                  animation: `slideIn 0.3s ease-out ${index * 0.1}s both`
-                }}
-              >
-                <div className="relative overflow-hidden rounded-xl border-2 border-white/30 shadow-lg backdrop-blur-sm bg-white/10 p-1 hover:border-white/60 transition-all duration-300 group-hover:scale-105">
-                  <img
-                    src={photo.preview}
-                    alt={`Captured ${photo.id}`}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                  
-                  {/* Gradient overlay on hover */}
-                  <div className="absolute inset-1 bg-gradient-to-t from-black/30 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                </div>
-                
-                <button
-                  onClick={() => removePhoto(photo.id)}
-                  className="absolute -top-1 -right-1 w-7 h-7 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full flex items-center justify-center text-xs hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-110 active:scale-95 shadow-lg z-20"
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black/60 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/60 to-transparent" />
+            <div className="flex gap-3 px-6 py-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+              {capturedPhotos.map((photo, index) => (
+                <div 
+                  key={photo.id} 
+                  className="relative flex-shrink-0 group snap-center"
+                  style={{
+                    animation: `slideIn 0.3s ease-out ${index * 0.1}s both`
+                  }}
                 >
-                  <X size={14} className="drop-shadow-sm" />
-                </button>
-                
-                {/* Photo number indicator */}
-                <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md">
-                  {index + 1}
+                  <div className="relative overflow-hidden rounded-xl shadow-lg backdrop-blur-sm bg-white/10 p-1 hover:bg-white/15 transition-all duration-300 group-hover:scale-105">
+                    <img
+                      src={photo.preview}
+                      alt={`Captured ${photo.id}`}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div className="absolute inset-1 bg-gradient-to-t from-black/30 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </div>
+                  
+                  <button
+                    onClick={() => removePhoto(photo.id)}
+                    className="absolute -top-1 -right-1 w-7 h-7 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full flex items-center justify-center text-xs hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-110 active:scale-95 shadow-lg z-20"
+                  >
+                    <X size={14} className="drop-shadow-sm" />
+                  </button>
+                  
+                  <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                    {index + 1}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-6 bg-black/50">
-        <div className="flex items-center justify-center gap-6">
-          {/* Zoom Control */}
-          <div className="flex items-center gap-3 text-white">
-            <label htmlFor="camera-zoom" className="text-xs opacity-80" aria-label="Zoom level">Zoom</label>
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-6 bg-black/50 backdrop-blur-md rounded-t-2xl border-t border-white/10"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+      >
+        <div className="max-w-screen-lg mx-auto flex items-center justify-between gap-4">
+          {/* Upload CTA / Success (left) */}
+          <div className="min-w-[180px]">
+            {uploadSuccess ? (
+              <div role="status" aria-live="polite" className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium shadow-lg">
+                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                  <CheckCircle size={16} className="text-white" />
+                </div>
+                <span className="truncate">Uploaded</span>
+              </div>
+            ) : capturedPhotos.length > 0 ? (
+              <button
+                onClick={uploadPhotos}
+                disabled={isUploading}
+                className="group relative overflow-hidden px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg w-full"
+                aria-label="Upload photos"
+              >
+                <div className="relative flex items-center justify-center gap-2">
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      <span>Uploading {uploadProgress}%</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full" />
+                      </div>
+                      <span>
+                        Upload {capturedPhotos.length} Photo{capturedPhotos.length > 1 ? 's' : ''}
+                      </span>
+                    </>
+                  )}
+                </div>
+                {isUploading && (
+                  <div className="mt-2 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-white/80" style={{ width: `${uploadProgress}%` }} />
+                  </div>
+                )}
+              </button>
+            ) : null}
+          </div>
+
+          {/* Capture Button (center) */}
+          <button
+            ref={captureButtonRef}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleCapture();
+            }}
+            disabled={isCapturing || !stream || capturedPhotos.length >= maxPhotos || isUploading}
+            className="w-16 h-16 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+            aria-label="Capture photo"
+          >
+            {isCapturing ? (
+              <Loader2 className="animate-spin" size={32} />
+            ) : (
+              <Camera size={32} className="text-black" />
+            )}
+          </button>
+
+          {/* Zoom Control (right) */}
+          <div className="flex items-center justify-end gap-3 text-white min-w-[180px]">
+            <span className="text-xs opacity-80" aria-hidden="true">Zoom</span>
             <input
               id="camera-zoom"
               type="range"
@@ -492,59 +719,6 @@ export const CameraModal = ({
                 : `${previewZoomScale.toFixed(1)}x`}
             </span>
           </div>
-          {/* Capture Button */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleCapture();
-            }}
-            disabled={isCapturing || !stream || capturedPhotos.length >= maxPhotos || isUploading}
-            className="w-16 h-16 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
-            aria-label="Capture photo"
-          >
-            {isCapturing ? (
-              <Loader2 className="animate-spin" size={32} />
-            ) : (
-              <Camera size={32} className="text-black" />
-            )}
-          </button>
-
-          {/* Upload Button or Success Message */}
-          {uploadSuccess ? (
-            <div className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium shadow-lg transform scale-105 transition-all duration-300">
-              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                <CheckCircle size={16} className="text-white" />
-              </div>
-              Photos uploaded successfully!
-            </div>
-          ) : capturedPhotos.length > 0 ? (
-            <button
-              onClick={uploadPhotos}
-              disabled={isUploading}
-              className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg transform hover:scale-105 active:scale-95 min-w-[160px]"
-              aria-label="Upload photos"
-            >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              
-              <div className="relative flex items-center justify-center gap-3">
-                {isUploading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    <span>Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    </div>
-                    <span>Upload {capturedPhotos.length} Photo{capturedPhotos.length > 1 ? 's' : ''}</span>
-                  </>
-                )}
-              </div>
-            </button>
-          ) : null}
         </div>
       </div>
     </div>
