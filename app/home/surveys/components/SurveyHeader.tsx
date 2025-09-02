@@ -6,13 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportSchema";
 import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
-import { CalendarDays, CalendarFold, MapPin, User, Zap } from "lucide-react";
+import { CalendarDays, CalendarFold, MapPin, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDateTime, formatRelativeTime, formatShortDate } from "@/app/home/utils/dateFormatters";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getOwnerDisplayName as computeOwnerDisplayName, useUserAttributes } from "@/app/home/utils/useUser";
 import { surveyStore } from "@/app/home/clients/Database";
+import { UserAvatar } from "../../components/UserAvatar";
 
 interface SurveyHeaderProps {
   survey: BuildingSurveyFormData;
@@ -74,10 +74,7 @@ export function SurveyHeader({ survey, isFormValid, onSaveAsDraft, onSave }: Sur
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center gap-2" aria-label="Survey owner">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={survey.owner?.signaturePath?.[0]} alt={ownerDisplayName} />
-                            <AvatarFallback>{ownerDisplayName?.[0] || '?'}</AvatarFallback>
-                          </Avatar>
+                          <UserAvatar name={ownerDisplayName} imageUrl={survey.owner?.signaturePath?.[0]} size="sm" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>{ownerDisplayName}</TooltipContent>

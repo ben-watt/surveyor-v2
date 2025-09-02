@@ -15,7 +15,7 @@ import { toast } from "react-hot-toast";
 import { useUserAttributes } from "../utils/useUser";
 import { formatRelativeTime } from "../utils/dateFormatters";
 import { getOwnerDisplayName as computeOwnerDisplayName } from "../utils/useUser";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "../components/UserAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getAllSurveyImages } from "./building-survey-reports/Survey";
 import { zodSectionStatusMap } from "./schemas";
@@ -171,7 +171,7 @@ export function BuildingSurveyListCard({
                 </DropdownMenu>
                 )}
               </div>
-              <h3 id={`survey-title-${survey.id}`} title={fullTitle} className="font-bold text-xl leading-tight line-clamp-2 break-words flex-1 text-gray-900">
+              <h3 id={`survey-title-${survey.id}`} title={fullTitle} className="font-bold text-xl leading-tight truncate flex-1 text-gray-900">
                   {title}
                   </h3> 
 
@@ -182,10 +182,7 @@ export function BuildingSurveyListCard({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={survey.owner?.signaturePath?.[0]} alt={ownerDisplayName} />
-                            <AvatarFallback>{ownerDisplayName?.[0] || "?"}</AvatarFallback>
-                          </Avatar>
+                          <UserAvatar name={ownerDisplayName} imageUrl={survey.owner?.signaturePath?.[0]} size="sm" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>{ownerDisplayName}</TooltipContent>
