@@ -25,7 +25,7 @@ import { useUserAttributes } from "../../utils/useUser";
 import { SurveyHeader } from "../components/SurveyHeader";
 import { SurveyProgressStepper } from "../components/SurveyProgressStepper";
 import { EnhancedFormSection } from "../components/EnhancedFormSection";
-import { zodSectionStatusMap } from "../schemas";
+import { getSectionStatusesFromSurvey } from "../utils/progress";
 
 interface BuildingSurveyFormProps {
   id: string;
@@ -299,15 +299,11 @@ function Report({ initFormValues }: ReportProps) {
     console.error(errors);
   };
 
-  // Compute section statuses using Zod schemas (presence inferred from data existence!)
-  const sectionStatuses = useMemo(() => {
-    return {
-      'Report Details': zodSectionStatusMap['Report Details'](initFormValues.reportDetails),
-      'Property Description': zodSectionStatusMap['Property Description'](initFormValues.propertyDescription),
-      'Property Condition': zodSectionStatusMap['Property Condition'](initFormValues.sections),
-      'Checklist': zodSectionStatusMap['Checklist'](initFormValues.checklist)
-    };
-  }, [initFormValues.reportDetails, initFormValues.propertyDescription, initFormValues.sections, initFormValues.checklist]);
+  // Compute section statuses via shared helper
+  const sectionStatuses = useMemo(
+    () => getSectionStatusesFromSurvey(initFormValues),
+    [initFormValues]
+  );
 
   const getSectionStatus = (sectionTitle: string): FormStatus => {
     const statusResult = sectionStatuses[sectionTitle as keyof typeof sectionStatuses];

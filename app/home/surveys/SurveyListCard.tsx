@@ -18,8 +18,8 @@ import { getOwnerDisplayName as computeOwnerDisplayName } from "../utils/useUser
 import { UserAvatar } from "../components/UserAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getAllSurveyImages } from "./building-survey-reports/Survey";
-import { zodSectionStatusMap } from "./schemas";
 import { FormStatus } from "./building-survey-reports/BuildingSurveyReportSchema";
+import { computeSurveyProgress } from "./utils/progress";
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData;
@@ -67,19 +67,6 @@ export function BuildingSurveyListCard({
     }
   };
 
-  const getCardBorderColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "border-l-green-500";
-      case "draft":
-        return "border-l-yellow-400";
-      case "in-progress":
-        return "border-l-blue-500";
-      default:
-        return "border-l-gray-200";
-    }
-  };
-
   const statusBadgeProps = getStatusBadgeProps(survey.status);
   
   const ownerDisplayName = computeOwnerDisplayName(survey.owner, {
@@ -98,19 +85,10 @@ export function BuildingSurveyListCard({
   const imageCount = getAllSurveyImages(survey).filter(i => !i.isArchived).length;
 
   // Compute compact progress (always compute; render only for drafts)
-  const { progressPercent, completedSections, totalSections } = useMemo(() => {
-    const sectionStatuses = {
-      'Report Details': zodSectionStatusMap['Report Details'](survey.reportDetails),
-      'Property Description': zodSectionStatusMap['Property Description'](survey.propertyDescription),
-      'Property Condition': zodSectionStatusMap['Property Condition'](survey.sections),
-      'Checklist': zodSectionStatusMap['Checklist'](survey.checklist),
-    } as const;
-    const keys = ['Report Details','Property Description','Property Condition','Checklist'] as const;
-    const total = keys.length;
-    const completed = keys.filter(k => sectionStatuses[k].status === (FormStatus.Complete as any)).length;
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { progressPercent: percent, completedSections: completed, totalSections: total };
-  }, [survey.reportDetails, survey.propertyDescription, survey.sections, survey.checklist]);
+  const { progressPercent, completedSections, totalSections } = useMemo(
+    () => computeSurveyProgress(survey),
+    [survey]
+  );
 
   return (
     <Card 
