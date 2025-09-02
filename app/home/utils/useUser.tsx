@@ -1,5 +1,10 @@
-import { AuthUser, fetchUserAttributes, FetchUserAttributesOutput, getCurrentUser } from 'aws-amplify/auth';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  AuthUser,
+  fetchUserAttributes,
+  FetchUserAttributesOutput,
+  getCurrentUser,
+} from 'aws-amplify/auth';
 
 export type OwnerLike = {
   id?: string | null;
@@ -36,7 +41,46 @@ export function getOwnerDisplayName(
   return 'Unknown';
 }
 
-async function useAuth() {  
+// Module-level cache to avoid duplicate Cognito requests across components
+let cachedCurrentUser: AuthUser | null = null;
+let currentUserPromise: Promise<AuthUser> | null = null;
+
+let cachedAttributes: FetchUserAttributesOutput | null = null;
+let attributesPromise: Promise<FetchUserAttributesOutput> | null = null;
+
+async function loadCurrentUserOnce(): Promise<AuthUser> {
+  if (cachedCurrentUser) return cachedCurrentUser;
+  if (currentUserPromise) return currentUserPromise;
+
+  currentUserPromise = getCurrentUser()
+    .then(user => {
+      cachedCurrentUser = user;
+      return user;
+    })
+    .finally(() => {
+      currentUserPromise = null;
+    });
+
+  return currentUserPromise;
+}
+
+async function loadUserAttributesOnce(): Promise<FetchUserAttributesOutput> {
+  if (cachedAttributes) return cachedAttributes;
+  if (attributesPromise) return attributesPromise;
+
+  attributesPromise = fetchUserAttributes()
+    .then(attrs => {
+      cachedAttributes = attrs;
+      return attrs;
+    })
+    .finally(() => {
+      attributesPromise = null;
+    });
+
+  return attributesPromise;
+}
+
+async function useAuth() {
   try {
     const { username, userId, signInDetails } = await getCurrentUser();
     console.log(`The username: ${username}`);
@@ -52,17 +96,20 @@ export function useUserHook(): [boolean, AuthUser | null] {
   const [isHydrated, setIsHydrated] = useState(false);
   
   useEffect(() => {
-    async function fetch() {
-      try {
-        const user = await getCurrentUser();
-        setUser(user);
+    let isMounted = true;
+    loadCurrentUserOnce()
+      .then(u => {
+        if (!isMounted) return;
+        setUser(u);
         setIsHydrated(true);
-      } catch (err) {
-        console.error("[useUserHook] error", err);
-      }
-    }
+      })
+      .catch(err => {
+        console.error('[useUserHook] error', err);
+      });
 
-    fetch();
+    return () => {
+      isMounted = false;
+    };
   }, []); 
 
   return [isHydrated, user];
@@ -73,24 +120,23 @@ export function useUserAttributes(): [boolean, FetchUserAttributesOutput | null]
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    async function fetch() {
-      try {
-        console.log("[useUserAttributes] fetching user attributes");
-        const user = await fetchUserAttributes();
-        if(user) {
-          setUser(user);
+    let isMounted = true;
+    console.log('[useUserAttributes] fetching user attributes');
+    loadUserAttributesOnce()
+      .then(attrs => {
+        if (!isMounted) return;
+        if (attrs) {
+          setUser(attrs);
           setIsHydrated(true);
         }
-      } catch (err) {
-        console.error("[useUserAttributes] error", err);
-      }
-    }
+      })
+      .catch(err => {
+        console.error('[useUserAttributes] error', err);
+      });
 
-    const timeout = setTimeout(() => {
-      fetch();
-    }, 200);
-
-    return () => clearTimeout(timeout);
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return [isHydrated, user];
