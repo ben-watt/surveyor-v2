@@ -16,6 +16,11 @@ const mockUseCameraStream = {
   capturePhoto: jest.fn(),
   hasPermission: false,
   setVideoRef: jest.fn(),
+  // New hook fields mocked with safe defaults
+  capabilities: {},
+  supportedFeatures: { zoom: false, imageCapture: false },
+  currentZoom: null,
+  setZoom: jest.fn(async () => {}),
 };
 
 jest.mock('@/app/home/hooks/useCameraStream', () => ({
@@ -68,6 +73,9 @@ describe('CameraModal', () => {
       devices: [],
       activeDeviceId: null,
       hasPermission: false,
+      capabilities: {},
+      supportedFeatures: { zoom: false, imageCapture: false },
+      currentZoom: null,
     });
   });
 

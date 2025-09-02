@@ -39,7 +39,12 @@ export const CameraModal = ({
     switchCamera,
     capturePhoto,
     hasPermission,
-    setVideoRef
+    setVideoRef,
+    // New quality/zoom additions
+    capabilities,
+    supportedFeatures,
+    currentZoom,
+    setZoom
   } = useCameraStream();
 
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([]);
@@ -48,6 +53,8 @@ export const CameraModal = ({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
   const cameraStartedRef = useRef(false);
+  // Fallback preview zoom scaling when hardware zoom isn't available
+  const [previewZoomScale, setPreviewZoomScale] = useState<number>(1);
 
   // Resize image using existing pipeline
   const resizeImage = useCallback((file: File): Promise<File> => {
@@ -129,7 +136,10 @@ export const CameraModal = ({
     setTimeout(() => setShowFlash(false), 200);
     
     try {
-      const photoBlob = await capturePhoto();
+      const photoBlob = await capturePhoto({
+        // Always pass preview zoom; it is ignored when not needed
+        previewZoomScale: previewZoomScale > 1 ? previewZoomScale : 1
+      });
       if (photoBlob) {
         const photo: CapturedPhoto = {
           id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -146,7 +156,7 @@ export const CameraModal = ({
       setIsCapturing(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturePhoto, isCapturing, capturedPhotos.length, stream, hasPermission]); // maxPhotos is stable prop
+  }, [capturePhoto, isCapturing, capturedPhotos.length, stream, hasPermission, previewZoomScale]); // maxPhotos is stable prop
 
   // Remove captured photo
   const removePhoto = useCallback((photoId: string) => {
@@ -352,7 +362,10 @@ export const CameraModal = ({
               style={{ 
                 width: '100vw', 
                 height: '100vh',
-                objectFit: 'cover'
+                objectFit: 'cover',
+                // Apply CSS zoom scaling when hardware zoom is unavailable
+                transform: !(supportedFeatures?.zoom) && previewZoomScale > 1 ? `scale(${previewZoomScale})` : undefined,
+                transformOrigin: !(supportedFeatures?.zoom) && previewZoomScale > 1 ? 'center center' : undefined
               }}
               onLoadedMetadata={(e) => {
                 const video = e.target as HTMLVideoElement;
@@ -452,16 +465,43 @@ export const CameraModal = ({
       {/* Controls */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-6 bg-black/50">
         <div className="flex items-center justify-center gap-6">
+          {/* Zoom Control */}
+          <div className="flex items-center gap-3 text-white">
+            <label htmlFor="camera-zoom" className="text-xs opacity-80" aria-label="Zoom level">Zoom</label>
+            <input
+              id="camera-zoom"
+              type="range"
+              aria-label="Camera zoom"
+              min={(supportedFeatures?.zoom && capabilities?.zoom ? capabilities.zoom.min : undefined) ?? 1}
+              max={(supportedFeatures?.zoom && capabilities?.zoom ? capabilities.zoom.max : undefined) ?? 3}
+              step={(supportedFeatures?.zoom && capabilities?.zoom ? (capabilities.zoom.step || 0.1) : undefined) ?? 0.1}
+              value={(supportedFeatures?.zoom && currentZoom != null) ? currentZoom : previewZoomScale}
+              onChange={async (e) => {
+                const value = parseFloat(e.target.value);
+                if (supportedFeatures?.zoom && capabilities?.zoom) {
+                  await setZoom(value);
+                } else {
+                  setPreviewZoomScale(value);
+                }
+              }}
+              className="w-40 accent-blue-500"
+            />
+            <span className="text-xs tabular-nums w-10 text-right" aria-live="polite">
+              {supportedFeatures?.zoom && currentZoom != null
+                ? `${(currentZoom / (capabilities?.zoom?.min || 1)).toFixed(1)}x`
+                : `${previewZoomScale.toFixed(1)}x`}
+            </span>
+          </div>
           {/* Capture Button */}
           <button
             onClick={(e) => {
-              console.log('🟡 BUTTON CLICKED!');
               e.preventDefault();
               e.stopPropagation();
               handleCapture();
             }}
             disabled={isCapturing || !stream || capturedPhotos.length >= maxPhotos || isUploading}
             className="w-16 h-16 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+            aria-label="Capture photo"
           >
             {isCapturing ? (
               <Loader2 className="animate-spin" size={32} />
@@ -483,6 +523,7 @@ export const CameraModal = ({
               onClick={uploadPhotos}
               disabled={isUploading}
               className="group relative overflow-hidden px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg transform hover:scale-105 active:scale-95 min-w-[160px]"
+              aria-label="Upload photos"
             >
               {/* Shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />

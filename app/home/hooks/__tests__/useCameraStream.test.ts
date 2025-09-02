@@ -12,10 +12,16 @@ const mockVideoElement = {
   currentTime: 1.5,
 } as HTMLVideoElement;
 
+const mockTrackBase = {
+  stop: jest.fn(),
+  getSettings: jest.fn(() => ({ deviceId: 'device1' })),
+  getCapabilities: jest.fn(() => ({})),
+  applyConstraints: jest.fn(async () => {}),
+};
+
 const mockStream = {
-  getTracks: jest.fn(() => [
-    { stop: jest.fn(), getSettings: jest.fn(() => ({ deviceId: 'device1' })) }
-  ]),
+  getTracks: jest.fn(() => [mockTrackBase as any]),
+  getVideoTracks: jest.fn(() => [mockTrackBase as any]),
 } as unknown as MediaStream;
 
 const mockCanvas = {
@@ -84,8 +90,8 @@ describe('useCameraStream', () => {
     expect(mockGetUserMedia).toHaveBeenCalledWith({
       video: {
         facingMode: 'environment',
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
+        width: { ideal: 2560 },
+        height: { ideal: 1440 },
       },
       audio: false,
     });
@@ -175,8 +181,12 @@ describe('useCameraStream', () => {
     });
 
     expect(mockGetUserMedia).toHaveBeenCalledTimes(2);
+    // Second call should fallback to 1080p ideals
     expect(mockGetUserMedia).toHaveBeenLastCalledWith({
-      video: true,
+      video: expect.objectContaining({
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      }),
       audio: false,
     });
     expect(result.current.stream).toBe(mockStream);
@@ -267,6 +277,65 @@ describe('useCameraStream', () => {
 
     expect(capturedBlob).toBeInstanceOf(Blob);
     expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
+  });
+
+  it('exposes zoom capabilities and applies hardware zoom when available', async () => {
+    const trackWithZoom = {
+      ...mockTrackBase,
+      getCapabilities: jest.fn(() => ({ zoom: { min: 1, max: 3, step: 0.1 } })),
+      getSettings: jest.fn(() => ({ deviceId: 'device1', zoom: 1 })),
+      applyConstraints: jest.fn(async () => {}),
+    };
+    const streamWithZoom = {
+      getTracks: jest.fn(() => [trackWithZoom as any]),
+      getVideoTracks: jest.fn(() => [trackWithZoom as any]),
+    } as unknown as MediaStream;
+
+    mockGetUserMedia.mockResolvedValueOnce(streamWithZoom);
+
+    const { result } = renderHook(() => useCameraStream());
+
+    await act(async () => {
+      await result.current.startCamera();
+    });
+
+    expect(result.current.supportedFeatures.zoom).toBe(true);
+    expect(result.current.capabilities.zoom).toEqual({ min: 1, max: 3, step: 0.1 });
+
+    await act(async () => {
+      await result.current.setZoom(2);
+    });
+
+    expect(trackWithZoom.applyConstraints).toHaveBeenCalled();
+  });
+
+  it('uses ImageCapture for high-quality capture when available', async () => {
+    // Mock ImageCapture API
+    const takePhoto = jest.fn(async () => new Blob(['photo'], { type: 'image/jpeg' }));
+    (globalThis as any).ImageCapture = jest.fn(function () {
+      return { takePhoto };
+    });
+    // Mock createImageBitmap
+    (globalThis as any).createImageBitmap = jest.fn(async () => ({ width: 3000, height: 2000 }));
+
+    const { result } = renderHook(() => useCameraStream());
+
+    await act(async () => {
+      await result.current.startCamera();
+      result.current.setVideoRef(mockVideoElement);
+    });
+
+    let capturedBlob: Blob | null = null;
+    await act(async () => {
+      capturedBlob = await result.current.capturePhoto({ targetLongEdge: 2000, jpegQuality: 0.9 });
+    });
+
+    expect(takePhoto).toHaveBeenCalled();
+    expect(capturedBlob).toBeInstanceOf(Blob);
+
+    // Cleanup mocked globals
+    delete (globalThis as any).ImageCapture;
+    delete (globalThis as any).createImageBitmap;
   });
 
   it('fails to capture photo without stream', async () => {

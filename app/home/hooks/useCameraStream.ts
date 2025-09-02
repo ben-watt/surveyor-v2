@@ -13,6 +13,27 @@ export interface CameraStreamOptions {
   height?: number | { ideal: number };
 }
 
+export interface CameraCapabilitiesSummary {
+  zoom?: {
+    min: number;
+    max: number;
+    step?: number;
+  };
+}
+
+export interface SupportedCameraFeatures {
+  zoom: boolean;
+  imageCapture: boolean;
+}
+
+export interface CaptureOptions {
+  targetLongEdge?: number;
+  jpegQuality?: number; // 0..1
+  // When hardware zoom is not supported and preview uses CSS scale,
+  // pass the preview scale so we crop the canvas to match the UI.
+  previewZoomScale?: number; // 1 = no zoom, >1 zoom-in
+}
+
 export interface UseCameraStreamReturn {
   stream: MediaStream | null;
   isLoading: boolean;
@@ -22,9 +43,14 @@ export interface UseCameraStreamReturn {
   startCamera: (options?: CameraStreamOptions) => Promise<void>;
   stopCamera: () => void;
   switchCamera: (deviceId: string) => Promise<void>;
-  capturePhoto: () => Promise<Blob | null>;
+  capturePhoto: (options?: CaptureOptions) => Promise<Blob | null>;
   hasPermission: boolean;
   setVideoRef: (el: HTMLVideoElement | null) => void;
+  // Quality/zoom additions
+  capabilities: CameraCapabilitiesSummary;
+  supportedFeatures: SupportedCameraFeatures;
+  currentZoom: number | null;
+  setZoom: (value: number) => Promise<void>;
 }
 
 export const useCameraStream = (): UseCameraStreamReturn => {
@@ -35,6 +61,14 @@ export const useCameraStream = (): UseCameraStreamReturn => {
   const [activeDeviceId, setActiveDeviceId] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoTrackRef = useRef<MediaStreamTrack | null>(null);
+  const imageCaptureRef = useRef<any | null>(null);
+  const [capabilities, setCapabilities] = useState<CameraCapabilitiesSummary>({});
+  const [supportedFeatures, setSupportedFeatures] = useState<SupportedCameraFeatures>({
+    zoom: false,
+    imageCapture: false
+  });
+  const [currentZoom, setCurrentZoom] = useState<number | null>(null);
 
   // Check if getUserMedia is supported
   const isSupported = useCallback(() => {
@@ -81,18 +115,43 @@ export const useCameraStream = (): UseCameraStreamReturn => {
         stream.getTracks().forEach(track => track.stop());
       }
 
-      // Default constraints optimized for surveys (rear camera, high quality)
-      const constraints: MediaStreamConstraints = {
+      // Start with higher ideal resolution; gracefully fallback on errors below
+      const highConstraints: MediaStreamConstraints = {
         video: {
           facingMode: options.facingMode || 'environment',
-          width: options.width || { ideal: 1920 },
-          height: options.height || { ideal: 1080 },
+          width: options.width || { ideal: 2560 },
+          height: options.height || { ideal: 1440 },
           ...(options.deviceId && { deviceId: { exact: options.deviceId } })
         },
         audio: false
       };
 
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      let newStream: MediaStream | null = null;
+      try {
+        newStream = await navigator.mediaDevices.getUserMedia(highConstraints);
+      } catch {
+        // Fallback to 1080p ideals
+        const fallback1080: MediaStreamConstraints = {
+          video: {
+            facingMode: options.facingMode || 'environment',
+            width: options.width || { ideal: 1920 },
+            height: options.height || { ideal: 1080 },
+            ...(options.deviceId && { deviceId: { exact: options.deviceId } })
+          },
+          audio: false
+        };
+        try {
+          newStream = await navigator.mediaDevices.getUserMedia(fallback1080);
+        } catch {
+          // Last resort: browser default
+          newStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+      }
+
+      if (!newStream) {
+        throw new Error('Failed to start camera');
+      }
+
       setStream(newStream);
       setHasPermission(true);
       
@@ -101,6 +160,45 @@ export const useCameraStream = (): UseCameraStreamReturn => {
       if (videoTrack) {
         const settings = videoTrack.getSettings();
         setActiveDeviceId(settings.deviceId || null);
+        videoTrackRef.current = videoTrack;
+
+        // Read capabilities and settings for features like zoom
+        try {
+          const caps = (videoTrack as any).getCapabilities
+            ? (videoTrack as any).getCapabilities()
+            : undefined;
+          const sett = videoTrack.getSettings();
+          const zoomCap = caps && typeof caps.zoom === 'object' ? caps.zoom : undefined;
+          setCapabilities(prev => ({
+            ...prev,
+            ...(zoomCap
+              ? { zoom: { min: zoomCap.min, max: zoomCap.max, step: zoomCap.step } }
+              : {})
+          }));
+          setSupportedFeatures(prev => ({
+            ...prev,
+            zoom: !!zoomCap,
+            imageCapture: typeof (globalThis as any).ImageCapture === 'function'
+          }));
+          setCurrentZoom(typeof (sett as any).zoom === 'number' ? (sett as any).zoom : null);
+        } catch {
+          setSupportedFeatures(prev => ({
+            ...prev,
+            zoom: false,
+            imageCapture: typeof (globalThis as any).ImageCapture === 'function'
+          }));
+        }
+
+        // Initialize ImageCapture when available for higher-quality stills
+        try {
+          if (typeof (globalThis as any).ImageCapture === 'function') {
+            imageCaptureRef.current = new (globalThis as any).ImageCapture(videoTrack);
+          } else {
+            imageCaptureRef.current = null;
+          }
+        } catch {
+          imageCaptureRef.current = null;
+        }
       }
 
       // Update devices list with labels now that we have permission
@@ -152,6 +250,8 @@ export const useCameraStream = (): UseCameraStreamReturn => {
       });
       setStream(null);
       setActiveDeviceId(null);
+      videoTrackRef.current = null;
+      imageCaptureRef.current = null;
     }
   }, [stream]);
 
@@ -163,7 +263,7 @@ export const useCameraStream = (): UseCameraStreamReturn => {
   }, [startCamera]);
 
   // Capture photo from current stream
-  const capturePhoto = useCallback(async (): Promise<Blob | null> => {
+  const capturePhoto = useCallback(async (options?: CaptureOptions): Promise<Blob | null> => {
     console.log('🔵 capturePhoto called', { 
       hasStream: !!stream, 
       hasVideoRef: !!videoRef.current 
@@ -176,37 +276,88 @@ export const useCameraStream = (): UseCameraStreamReturn => {
     }
 
     try {
-      const video = videoRef.current;
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
+      const targetLongEdge = options?.targetLongEdge ?? 2400;
+      const jpegQuality = options?.jpegQuality ?? 0.92;
 
-      if (!context) {
-        setError('Failed to create canvas context');
-        return null;
+      // Prefer ImageCapture when available for full-resolution stills
+      if (!imageCaptureRef.current && (globalThis as any).ImageCapture && videoTrackRef.current) {
+        try {
+          imageCaptureRef.current = new (globalThis as any).ImageCapture(videoTrackRef.current);
+        } catch {
+          imageCaptureRef.current = null;
+        }
       }
 
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      if (imageCaptureRef.current) {
+        try {
+          const blob: Blob = await imageCaptureRef.current.takePhoto();
+          // Downscale with canvas to a practical size
+          const bitmap = await createImageBitmap(blob);
+          const { width: srcW, height: srcH } = bitmap;
+          const scale = targetLongEdge / Math.max(srcW, srcH);
+          const destW = Math.round(srcW * Math.min(1, scale));
+          const destH = Math.round(srcH * Math.min(1, scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = destW;
+          canvas.height = destH;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            return blob;
+          }
+          ctx.drawImage(bitmap, 0, 0, destW, destH);
+          return await new Promise(resolve =>
+            canvas.toBlob(b => resolve(b as Blob), 'image/jpeg', jpegQuality)
+          );
+        } catch (icErr) {
+          console.warn('ImageCapture failed, falling back to canvas:', icErr);
+        }
+      }
 
-      if (canvas.width === 0 || canvas.height === 0) {
+      // Fallback to drawing the current video frame to canvas
+      const video = videoRef.current;
+      const srcW = video.videoWidth;
+      const srcH = video.videoHeight;
+      if (srcW === 0 || srcH === 0) {
         setError('Video not ready for capture');
         return null;
       }
 
-      // Draw video frame to canvas
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Apply fallback zoom by cropping the source rectangle when preview uses CSS scale
+      const previewScale = options?.previewZoomScale && options.previewZoomScale > 1
+        ? options.previewZoomScale
+        : 1;
+      const cropW = Math.round(srcW / previewScale);
+      const cropH = Math.round(srcH / previewScale);
+      const sx = Math.floor((srcW - cropW) / 2);
+      const sy = Math.floor((srcH - cropH) / 2);
 
-      // Convert to blob
-      return new Promise((resolve) => {
-        canvas.toBlob(
-          (blob) => {
-            resolve(blob);
-          },
-          'image/jpeg',
-          0.8 // 80% quality for good balance of size/quality
-        );
-      });
+      // First render cropped frame to an intermediate canvas at full source size
+      const stage = document.createElement('canvas');
+      stage.width = cropW;
+      stage.height = cropH;
+      const sctx = stage.getContext('2d');
+      if (!sctx) {
+        setError('Failed to create canvas context');
+        return null;
+      }
+      sctx.drawImage(video, sx, sy, cropW, cropH, 0, 0, cropW, cropH);
+
+      // Downscale to target long edge
+      const scale = targetLongEdge / Math.max(cropW, cropH);
+      const outW = Math.round(cropW * Math.min(1, scale));
+      const outH = Math.round(cropH * Math.min(1, scale));
+      const out = document.createElement('canvas');
+      out.width = outW;
+      out.height = outH;
+      const octx = out.getContext('2d');
+      if (!octx) {
+        setError('Failed to create canvas context');
+        return null;
+      }
+      octx.drawImage(stage, 0, 0, outW, outH);
+      return await new Promise(resolve =>
+        out.toBlob(b => resolve(b as Blob), 'image/jpeg', jpegQuality)
+      );
     } catch (err) {
       console.error('Error capturing photo:', err);
       setError('Failed to capture photo');
@@ -218,6 +369,28 @@ export const useCameraStream = (): UseCameraStreamReturn => {
   const setVideoRef = useCallback((videoElement: HTMLVideoElement | null) => {
     videoRef.current = videoElement;
   }, []);
+
+  const setZoom = useCallback(async (value: number) => {
+    const track = videoTrackRef.current as any;
+    if (!track || !supportedFeatures.zoom) return;
+    try {
+      const caps = track.getCapabilities ? track.getCapabilities() : undefined;
+      const range = caps?.zoom;
+      const min = range?.min ?? value;
+      const max = range?.max ?? value;
+      const clamped = Math.min(max, Math.max(min, value));
+      // Try advanced first (wider support on some devices), then basic
+      await track.applyConstraints({ advanced: [{ zoom: clamped }] });
+      setCurrentZoom(clamped);
+    } catch {
+      try {
+        await (videoTrackRef.current as any).applyConstraints({ zoom: value });
+        setCurrentZoom(value);
+      } catch (e) {
+        console.warn('Failed to apply hardware zoom:', e);
+      }
+    }
+  }, [supportedFeatures.zoom]);
 
   // Update video src when stream changes
   useEffect(() => {
@@ -249,6 +422,10 @@ export const useCameraStream = (): UseCameraStreamReturn => {
     switchCamera,
     capturePhoto,
     hasPermission,
-    setVideoRef
+    setVideoRef,
+    capabilities,
+    supportedFeatures,
+    currentZoom,
+    setZoom
   };
 };
