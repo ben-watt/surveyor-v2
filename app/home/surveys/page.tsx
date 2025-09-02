@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "./components/EmptyState";
 import { useUserAttributes } from "../utils/useUser";
+import { getOwnerDisplayName } from "../utils/useUser";
 
 interface FilterState {
   status: string[];
@@ -46,11 +47,20 @@ function HomePage() {
     return Array.from(statuses).filter(Boolean);
   }, [data]);
 
-  // Get unique owner values from data
+  // Get unique owner values from data using consistent display logic
   const availableOwners = React.useMemo(() => {
-    const owners = new Set(data.map(survey => survey.owner?.name).filter(Boolean));
+    const owners = new Set(
+      data
+        .map(survey =>
+          getOwnerDisplayName(survey.owner, {
+            isUserHydrated,
+            currentUser,
+          })
+        )
+        .filter(name => Boolean(name) && name !== 'You' && name !== 'Unknown')
+    );
     return Array.from(owners);
-  }, [data]);
+  }, [data, isUserHydrated, currentUser]);
 
   const activeFilterCount = filters.status.length + filters.owner.length;
 
@@ -66,8 +76,13 @@ function HomePage() {
     if (filters.owner.length > 0) {
       filtered = filtered.filter(survey => {
         const isMySurveysSelected = filters.owner.includes('My Surveys');
-        const isMyOwnedSurvey = isUserHydrated && currentUser && survey.owner?.id === currentUser.sub;
-        const isOwnerNameSelected = filters.owner.includes(survey.owner?.name || '');
+        const isMyOwnedSurvey =
+          isUserHydrated && currentUser && survey.owner?.id === currentUser.sub;
+        const ownerDisplay = getOwnerDisplayName(survey.owner, {
+          isUserHydrated,
+          currentUser,
+        });
+        const isOwnerNameSelected = filters.owner.includes(ownerDisplay);
         
         // Show survey if it matches any of the selected owner criteria
         if (isMySurveysSelected && isMyOwnedSurvey) return true;
@@ -81,11 +96,16 @@ function HomePage() {
     if (searchQuery.trim()) {
       const searchLower = searchQuery.toLowerCase();
       filtered = filtered.filter((survey) => {
+        const ownerDisplay = getOwnerDisplayName(survey.owner, {
+          isUserHydrated,
+          currentUser,
+        }).toLowerCase();
         return (
           survey.reportDetails.clientName?.toLowerCase().includes(searchLower) ||
           survey.reportDetails.address?.formatted?.toLowerCase().includes(searchLower) ||
           survey.status?.toLowerCase().includes(searchLower) ||
-          survey.owner?.name?.toLowerCase().includes(searchLower)
+          survey.owner?.name?.toLowerCase().includes(searchLower) ||
+          ownerDisplay.includes(searchLower)
         );
       });
     }

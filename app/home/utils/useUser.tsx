@@ -1,6 +1,41 @@
 import { AuthUser, fetchUserAttributes, FetchUserAttributesOutput, getCurrentUser } from 'aws-amplify/auth';
 import { useState, useEffect } from 'react';
 
+export type OwnerLike = {
+  id?: string | null;
+  name?: string | null;
+  email?: string | null;
+};
+
+export type CurrentUserLike = {
+  sub?: string | null;
+};
+
+export function getOwnerDisplayName(
+  owner: OwnerLike | undefined | null,
+  options?: { isUserHydrated?: boolean; currentUser?: CurrentUserLike | null }
+): string {
+  if (!owner) return 'Unknown';
+
+  const ownerId = owner.id ?? undefined;
+  const trimmedName = owner.name?.trim();
+  if (trimmedName && trimmedName !== ownerId) {
+    return trimmedName;
+  }
+
+  const email = owner.email?.trim();
+  if (email) {
+    const handle = email.split('@')[0] || email;
+    return handle;
+  }
+
+  if (options?.isUserHydrated && options?.currentUser?.sub && ownerId && options.currentUser.sub === ownerId) {
+    return 'You';
+  }
+
+  return 'Unknown';
+}
+
 async function useAuth() {  
   try {
     const { username, userId, signInDetails } = await getCurrentUser();
