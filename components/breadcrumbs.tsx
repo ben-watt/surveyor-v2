@@ -16,8 +16,16 @@ export function Breadcrumbs() {
     
     // Create array of segment objects with href and label
     return segments.map((segment, index) => {
-      // Check if segment matches UUID pattern (8-4-4-4-12 format)
-      const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
+      const decodedSegment = (() => {
+        try {
+          return decodeURIComponent(segment);
+        } catch {
+          return segment;
+        }
+      })();
+      // Check if segment contains a UUID pattern (8-4-4-4-12 format)
+      const guidMatch = decodedSegment.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+      const hasGuid = Boolean(guidMatch);
       
       // Check if this is a configuration entity path that should redirect to main config
       const isConfigEntityPath = index >= 2 && 
@@ -25,9 +33,14 @@ export function Breadcrumbs() {
         configEntityTypes.includes(segment) &&
         index < segments.length - 1; // Not the last segment
       
+      const isAlphabeticLike = /^[a-zA-Z][a-zA-Z-_\s]*$/.test(decodedSegment);
       return {
         href: isConfigEntityPath ? '/home/configuration' : '/' + segments.slice(0, index + 1).join('/'),
-        label: isGuid ? segment.substring(0, 8) + '...' : startCase(segment)
+        label: hasGuid
+          ? guidMatch![0].substring(0, 8) + '...'
+          : isAlphabeticLike
+            ? startCase(decodedSegment)
+            : decodedSegment
       };
 
     });
