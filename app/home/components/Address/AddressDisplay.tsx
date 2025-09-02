@@ -77,7 +77,6 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
       >
-        <p className="text-sm">{formattedAddress}</p>
         {hasLocation && (
           <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}>
             <div style={mapContainerStyle} className="relative">

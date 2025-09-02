@@ -6,9 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportSchema";
 import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
-import { CalendarDays, MapPin, User, Zap } from "lucide-react";
+import { CalendarDays, CalendarFold, MapPin, User, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { formatShortDate } from "@/app/home/utils/dateFormatters";
+import { formatDateTime, formatRelativeTime, formatShortDate } from "@/app/home/utils/dateFormatters";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getOwnerDisplayName as computeOwnerDisplayName, useUserAttributes } from "@/app/home/utils/useUser";
+import { surveyStore } from "@/app/home/clients/Database";
 
 interface SurveyHeaderProps {
   survey: BuildingSurveyFormData;
@@ -19,6 +23,18 @@ interface SurveyHeaderProps {
 
 export function SurveyHeader({ survey, isFormValid, onSaveAsDraft, onSave }: SurveyHeaderProps) {
   const router = useRouter();
+  const [isUserHydrated, user] = useUserAttributes();
+
+  const ownerDisplayName = computeOwnerDisplayName(survey.owner, {
+    isUserHydrated,
+    currentUser: user,
+  });
+
+  const [isRawHydrated, rawList] = surveyStore.useRawList();
+  const createdAt = isRawHydrated
+    ? rawList.find(s => s.id === survey.id)?.createdAt
+    : undefined;
+  const createdAtDate = createdAt ? new Date(createdAt) : undefined;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -54,17 +70,63 @@ export function SurveyHeader({ survey, isFormValid, onSaveAsDraft, onSave }: Sur
               
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span>{survey.owner?.name || 'Unknown'}</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2" aria-label="Survey owner">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={survey.owner?.signaturePath?.[0]} alt={ownerDisplayName} />
+                            <AvatarFallback>{ownerDisplayName?.[0] || '?'}</AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>{ownerDisplayName}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
+
+                <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
+                🏢 Level {survey.reportDetails?.level ?? "—"}
+              </Badge>
+
+                {createdAtDate && (
+                  <div className="flex items-center gap-2">
+                    <CalendarFold className="w-4 h-4" />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="underline decoration-dotted"
+                            aria-label="Created date"
+                          >
+                            {formatRelativeTime(createdAtDate)}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{`Created: ${formatDateTime(createdAtDate)}`}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2">
                   <CalendarDays className="w-4 h-4" />
-                  <span>
-                    {survey.reportDetails.reportDate 
-                      ? formatShortDate(survey.reportDetails.reportDate)
-                      : 'No date set'
-                    }
-                  </span>
+                  {survey.reportDetails.reportDate ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="underline decoration-dotted"
+                            aria-label="Report date"
+                          >
+                            {formatRelativeTime(survey.reportDetails.reportDate)}
+                          </span>
+                          </TooltipTrigger>
+                          <TooltipContent>{`Report Date: ${formatShortDate(survey.reportDetails.reportDate)}`}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-amber-600">No date set</span>
+                  )}
                 </div>
               </div>
             </div>

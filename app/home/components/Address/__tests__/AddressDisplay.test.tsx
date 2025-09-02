@@ -21,21 +21,6 @@ describe('AddressDisplay', () => {
     expect(button).toHaveTextContent('123 Test S...');
   });
 
-  it('shows full address on hover', () => {
-    render(<AddressDisplay address={mockAddress} />);
-    
-    const button = screen.getByRole('button');
-    fireEvent.mouseEnter(button);
-    
-    // The formatted address should be in a paragraph element
-    const addressText = screen.getByText((content) => {
-      return content.includes('123 Test Street') && 
-             content.includes('Test City') && 
-             content.includes('TS1 1TS');
-    });
-    expect(addressText).toBeInTheDocument();
-  });
-
   it('hides full address when mouse leaves', () => {
     render(<AddressDisplay address={mockAddress} />);
     

@@ -10,8 +10,6 @@ import {
 import { useForm, FormProvider } from "react-hook-form";
 import InputError from "@/app/home/components/InputError";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { MultiFormSection } from "@/app/home/components/FormSection";
 import {
   surveyStore,
   sectionStore,
@@ -21,25 +19,8 @@ import { Section, Element } from "@/app/home/clients/Dexie";
 import { Ok, Result } from "ts-results";
 
 import { useAsyncError } from "@/app/home/hooks/useAsyncError";
-import { useAutoSaveForm } from "@/app/home/hooks/useAutoSaveForm";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
-import { getConditionStatus } from "./Survey";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Zap } from "lucide-react";
-import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
 import { useUserAttributes } from "../../utils/useUser";
 import { SurveyHeader } from "../components/SurveyHeader";
 import { SurveyProgressStepper } from "../components/SurveyProgressStepper";
@@ -291,17 +272,6 @@ function Report({ initFormValues }: ReportProps) {
     }
   };
 
-  const { saveStatus, isSaving } = useAutoSaveForm(
-    saveData,
-    watch,
-    getValues,
-    trigger,
-    {
-      delay: 2000,
-      enabled: !!initFormValues.id,
-      validateBeforeSave: false, // Allow saving partial/invalid data
-    }
-  );
 
   const saveAsDraft = async () => {
     console.log("[BuildingSurveyForm] saveAsDraft", methods.getValues());
