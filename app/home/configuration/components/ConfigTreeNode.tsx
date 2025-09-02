@@ -1,9 +1,9 @@
 import React from 'react';
-import { ChevronRight, ChevronDown, Layers, Grid2x2, Blocks, MessageSquare, MoreHorizontal, Plus, GripVertical } from 'lucide-react';
+import { ChevronRight, ChevronDown, Layers, Grid2x2, Blocks, MessageSquare, MoreHorizontal, Plus, GripVertical, Cloud, CloudOff, RefreshCw, AlertTriangle, Trash2, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TreeNode } from '../hooks/useHierarchicalData';
-import { Component, Phrase } from '../../clients/Dexie';
+import { Component, Phrase, SyncStatus as SyncStatusEnum } from '../../clients/Dexie';
 import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { sectionStore, elementStore, componentStore, phraseStore } from '../../clients/Database';
 import { setNavigationContext } from '../utils/stateUtils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface ConfigTreeNodeProps {
   node: TreeNode;
@@ -29,6 +31,65 @@ interface ConfigTreeNodeProps {
 export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, expandedNodes, onCreateChild, dragAttributes, dragListeners, headerOnly = false }: ConfigTreeNodeProps) {
   const router = useRouter();
   const hasChildren = node.children.length > 0;
+
+  /**
+   * Resolve a store instance by node type.
+   */
+  const getStoreForType = () => {
+    switch (node.type) {
+      case 'section':
+        return sectionStore;
+      case 'element':
+        return elementStore;
+      case 'component':
+        return componentStore;
+      case 'condition':
+        return phraseStore;
+      default:
+        return undefined;
+    }
+  };
+
+  /**
+   * Convert a sync status into icon metadata for rendering.
+   */
+  const getSyncMeta = (status: string | undefined) => {
+    const normalized = (status || '').toLowerCase();
+    switch (normalized) {
+      case SyncStatusEnum.Synced:
+        return { Icon: Cloud, className: 'text-gray-900 dark:text-gray-100', label: 'Synced' };
+      case SyncStatusEnum.Queued:
+        return { Icon: RefreshCw, className: 'text-blue-500 animate-spin', label: 'Queued' };
+      case SyncStatusEnum.Draft:
+        return { Icon: CloudOff, className: 'text-yellow-500', label: 'Draft' };
+      case SyncStatusEnum.Failed:
+        return { Icon: AlertTriangle, className: 'text-red-500', label: 'Failed' };
+      case SyncStatusEnum.PendingDelete:
+        return { Icon: Trash2, className: 'text-orange-500', label: 'Pending delete' };
+      case SyncStatusEnum.Archived:
+        return { Icon: Archive, className: 'text-gray-400', label: 'Archived' };
+      default:
+        return { Icon: CloudOff, className: 'text-muted-foreground', label: 'Unknown' } as const;
+    }
+  };
+
+  /**
+   * Retry syncing the current entity by re-queuing and triggering a sync.
+   */
+  const handleRetrySync = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const store = getStoreForType();
+    if (!store) return;
+    try {
+      await store.update((node.data as any).id, draft => {
+        (draft as any).syncStatus = SyncStatusEnum.Queued;
+        (draft as any).syncError = undefined;
+      });
+      await store.sync();
+    } catch (error) {
+      console.error('Failed to retry sync:', error);
+    }
+  };
 
   const handleNodeClick = () => {
     const entityId = node.data.id;
@@ -246,12 +307,66 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
         <div className="flex-1 min-w-0" onClick={handleNodeClick}>
           {getNodeDetails()}
         </div>
+
+        {/* Per-entity sync status */}
+        {(() => {
+          const status = (node.data as any)?.syncStatus as string | undefined;
+          const meta = getSyncMeta(status);
+          const IconComp = meta.Icon;
+          const aria = `Sync status: ${meta.label}${(node.data as any)?.syncError ? '. Click for details' : ''}`;
+          return (
+            <TooltipProvider>
+              <Popover>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PopoverTrigger asChild>
+                      <button
+                        aria-label={aria}
+                        role="button"
+                        className={`h-8 w-8 sm:h-6 sm:w-6 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-1 flex-shrink-0`}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <IconComp className={`h-4 w-4 ${meta.className}`} />
+                      </button>
+                    </PopoverTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <span className="text-xs">{meta.label}{(node.data as any)?.syncError ? ' — click for details' : ''}</span>
+                  </TooltipContent>
+                </Tooltip>
+                <PopoverContent align="end" className="w-72 p-3" onClick={e => e.stopPropagation()}>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <IconComp className={`h-4 w-4 ${meta.className}`} />
+                      <span className="text-sm font-medium">{meta.label}</span>
+                    </div>
+                    {(node.data as any)?.updatedAt && (
+                      <div className="text-xs text-muted-foreground">
+                        Updated: {new Date((node.data as any).updatedAt).toLocaleString()}
+                      </div>
+                    )}
+                    {(node.data as any)?.syncError && (
+                      <div className="text-xs text-red-600 dark:text-red-400 break-words">
+                        {(node.data as any).syncError}
+                      </div>
+                    )}
+                    {status === SyncStatusEnum.Failed && (
+                      <Button size="sm" variant="outline" onClick={handleRetrySync} aria-label="Retry sync">
+                        <RefreshCw className="h-3 w-3 mr-2" /> Retry sync
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </TooltipProvider>
+          );
+        })()}
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="h-10 w-10 sm:h-8 sm:w-8 p-0 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+              className="h-10 w-10 sm:h-8 sm:w-8 p-0 opacity-100 transition-opacity flex-shrink-0"
               onClick={(e) => e.stopPropagation()}
             >
               <span className="sr-only">Open menu</span>
