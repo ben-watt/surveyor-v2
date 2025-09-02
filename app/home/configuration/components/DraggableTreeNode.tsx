@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
@@ -60,14 +60,8 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
     willChange: 'transform',
   } as React.CSSProperties;
 
-  // Collapse children while hovered during drag for clearer line placement
-  useEffect(() => {
-    if (!dragState?.isDragging) return;
-    if (!isExpanded) return;
-    if (dragState?.overId === node.id) {
-      onToggle(node.id);
-    }
-  }, [dragState?.isDragging, dragState?.overId, isExpanded, node.id, onToggle]);
+  // Virtually collapse only the active dragged node (not parents) during drag
+  const effectiveExpanded = isExpanded && !(dragState?.isDragging && dragState.activeId === node.id);
 
   return (
     <div
@@ -92,7 +86,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
               node={node}
               onToggleExpand={onToggle}
               level={depth}
-              expandedNodes={isExpanded ? new Set([node.id]) : new Set()}
+              expandedNodes={effectiveExpanded ? new Set([node.id]) : new Set()}
               dragAttributes={attributes}
               dragListeners={listeners}
               lastEditedEntity={lastEditedEntity}
@@ -103,7 +97,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
         </div>
         
         {/* Render children separately, outside of the draggable container */}
-        {isExpanded && (
+        {effectiveExpanded && (
           <div className="ml-4">
             {/* Show drop zones for container nodes */}
             {(node.type === 'section' || node.type === 'element') && (
