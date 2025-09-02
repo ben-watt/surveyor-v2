@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams } from "next/navigation";
 import { DataForm } from "../../../conditions/form";
+import { PageHeader } from "@/components/page-header";
 
 export default function EditConditionPage() {
   const params = useParams<{ id: string }>();
@@ -10,11 +11,8 @@ export default function EditConditionPage() {
   const id = decodeURIComponent(rawId);
 
   return (
-    <div className="container mx-auto px-5">
-      <div className="flex mt-4 mb-4">
-        <h1 className="text-4xl dark:text-white">Edit Condition</h1>
-      </div>
+    <PageHeader title="Edit Condition" subtitle="Edit a condition used to describe the state of components.">
       <DataForm id={id} />
-    </div>
+    </PageHeader>
   );
 }

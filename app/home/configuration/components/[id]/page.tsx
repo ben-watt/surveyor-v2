@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams } from "next/navigation";
 import { DataForm } from "../../../building-components/form";
+import { PageHeader } from "@/components/page-header";
 
 export default function EditComponentPage() {
   const params = useParams<{ id: string }>();
@@ -10,11 +11,8 @@ export default function EditComponentPage() {
   const id = decodeURIComponent(rawId);
 
   return (
-    <div className="container mx-auto px-5">
-      <div className="flex mt-4 mb-4">
-        <h1 className="text-4xl dark:text-white">Edit Component</h1>
-      </div>
+    <PageHeader title="Edit Component" subtitle="Edit a component used within an element.">
       <DataForm id={id} />
-    </div>
+    </PageHeader>
   );
 }

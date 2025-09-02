@@ -4,6 +4,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import SectionForm from "../../../sections/form";
 import { sectionStore } from "@/app/home/clients/Database";
+import { PageHeader } from "@/components/page-header";
 
 export default function EditSectionPage() {
   const params = useParams<{ id: string }>();
@@ -20,12 +21,8 @@ export default function EditSectionPage() {
   }
 
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="text-3xl dark:text-white">Edit Section</h1>
-        <p className="text-sm text-muted-foreground">Edit an existing section used to group elements in a building survey report.</p>
-      </div>
+    <PageHeader title="Edit Section" subtitle="Edit an existing section used to group elements in a building survey report.">
       <SectionForm initialData={section} />
-    </div>
+    </PageHeader>
   );
 }
