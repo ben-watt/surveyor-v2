@@ -199,7 +199,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
         </div>
 
         <div>
-          <label className="text-sm">Front Elevation</label>
+          <label className="text-sm">General Photos</label>
           <RhfDropZoneInputImage
             path={`report-images/${surveyId}/frontElevationImagesUri/`}
             minFiles={1}
