@@ -160,21 +160,11 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
         );
       
       case 'component':
-        const component = node.data as Component;
         const componentConditionCount = node.children.length;
         return (
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-              {component.materials && component.materials.length > 0 && (
-                <div className="flex gap-1 flex-wrap">
-                  {component.materials.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{component.materials.length - 2} more
-                    </Badge>
-                  )}
-                </div>
-              )}
               {componentConditionCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {componentConditionCount} conditions
