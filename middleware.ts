@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
         console.log('Middleware: Auth check failed', { 
           pathname, 
           hostname,
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
         return false;
       }

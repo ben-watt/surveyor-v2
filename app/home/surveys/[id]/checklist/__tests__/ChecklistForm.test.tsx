@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useParams, useRouter } from 'next/navigation';
 import { surveyStore } from '@/app/home/clients/Database';
-// import ChecklistPage from '../page'; // Temporarily disabled for static export build
+import ChecklistPage from '../page';
 import { FormStatus } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 // Mock dependencies
