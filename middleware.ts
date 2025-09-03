@@ -2,72 +2,61 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchAuthSession } from "aws-amplify/auth/server";
 import { runWithAmplifyServerContext } from "@/app/home/utils/amplify-utils";
 
-export async function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+/**
+ * Determines if the request is from a development environment
+ * Development environments use localhost or IP addresses where SSR auth may not work properly
+ */
+function isDevEnvironment(hostname: string): boolean {
+  return hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+}
 
-  const { pathname } = request.nextUrl;
-  const hostname = request.nextUrl.hostname;
-
-  // For development environments (IP addresses or localhost), disable middleware authentication to prevent redirect loops
-  const isDevEnvironment = hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
-  
-  if (isDevEnvironment) {
-    console.log('Middleware: Skipping auth check for development environment', { pathname, hostname });
-    return response;
-  }
-
-  const authenticated = await runWithAmplifyServerContext({
+/**
+ * Checks if the user is authenticated using Amplify server-side auth
+ */
+async function checkAuthentication(request: NextRequest, response: NextResponse): Promise<boolean> {
+  return runWithAmplifyServerContext({
     nextServerContext: { request, response },
     operation: async (contextSpec: any) => {
       try {
         const session = await fetchAuthSession(contextSpec, {});
-        const isAuth = session.tokens !== undefined;
-        console.log('Middleware: Auth check', { 
-          pathname, 
-          hostname,
-          authenticated: isAuth, 
-          hasTokens: !!session.tokens 
-        });
-        return isAuth;
+        return session.tokens !== undefined;
       } catch (error) {
-        console.log('Middleware: Auth check failed', { 
-          pathname, 
-          hostname,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        // Auth check failed - user is not authenticated
         return false;
       }
     },
   });
+}
 
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+  const { pathname } = request.nextUrl;
+  const hostname = request.nextUrl.hostname;
+
+  // Skip authentication for development environments to prevent SSR/client session mismatches
+  if (isDevEnvironment(hostname)) {
+    return response;
+  }
+
+  // Define route types
   const authPages = new Set(["/", "/login", "/signup", "/reset-password"]);
   const isAuthPage = authPages.has(pathname);
   const isProtected = pathname.startsWith("/home");
 
-  console.log('Middleware: Route check', { 
-    pathname, 
-    hostname,
-    authenticated, 
-    isAuthPage, 
-    isProtected 
-  });
+  // Check authentication status
+  const authenticated = await checkAuthentication(request, response);
 
-  if (authenticated) {
-    if (isAuthPage) {
-      console.log('Middleware: Redirecting authenticated user from auth page to /home/surveys');
-      return NextResponse.redirect(new URL("/home/surveys", request.url));
-    }
-    console.log('Middleware: Allowing authenticated user to access protected route');
-    return response;
+  // Redirect authenticated users away from auth pages
+  if (authenticated && isAuthPage) {
+    return NextResponse.redirect(new URL("/home/surveys", request.url));
   }
 
-  if (isProtected) {
-    console.log('Middleware: Redirecting unauthenticated user to login');
-    const url = new URL("/login", request.url);
-    return NextResponse.redirect(url);
+  // Redirect unauthenticated users from protected routes
+  if (!authenticated && isProtected) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  console.log('Middleware: Allowing access to public route');
+  // Allow access to the requested route
   return response;
 }
 

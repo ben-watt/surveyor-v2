@@ -16,16 +16,14 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  // Check if user is already authenticated on component mount
+  // Redirect if user is already authenticated
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        console.log('Login: Checking if user is already authenticated')
         await getCurrentUser()
-        console.log('Login: User already authenticated, redirecting to /home/surveys')
+        // User is already authenticated, redirect to home
         window.location.href = "/home/surveys"
       } catch (error) {
-        console.log('Login: User not authenticated, staying on login page')
         // User not authenticated, stay on login page
       }
     }
@@ -39,66 +37,34 @@ export default function SignIn() {
     setError(null)
 
     try {
-      console.log('Login: Starting sign in process', { 
-        email, 
-        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown' 
-      })
-      
       const result = await signIn({
         username: email,
         password: password
       })
       
-      console.log('Login: signIn completed', { 
-        result,
-        nextStep: result.nextStep?.signInStep 
-      })
+      // For development environments (IP addresses/localhost), use different redirect strategy
+      const isDevEnvironment = typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname));
       
-      // For IP addresses, add longer delay and force page reload
-      const isIPAddress = typeof window !== 'undefined' && /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname);
-      
-      if (isIPAddress) {
-        console.log('Login: IP address detected, using extended delay approach');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Login: Attempting navigation to /home/surveys');
-        try {
-          // Try router push first
-          router.push("/home/surveys");
-          // If that doesn't work after a delay, force page reload
-          setTimeout(() => {
-            if (window.location.pathname === '/login') {
-              console.log('Login: Router push failed, forcing page reload');
-              window.location.href = "/home/surveys";
-            }
-          }, 2000);
-        } catch (navError) {
-          console.error('Login: Router push failed, using window.location', navError);
-          window.location.href = "/home/surveys";
-        }
+      if (isDevEnvironment) {
+        // Give time for session to establish, then use full page reload
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = "/home/surveys";
       } else {
-        // Add a small delay to let the session establish
-        await new Promise(resolve => setTimeout(resolve, 100))
-        console.log('Login: Redirecting to /home/surveys')
-        router.push("/home/surveys")
+        // Production - use standard routing
+        await new Promise(resolve => setTimeout(resolve, 100));
+        router.push("/home/surveys");
       }
     } catch (err: any) {
-      console.error('Login: signIn failed', { 
-        error: err.message, 
-        name: err.name,
-        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
-      })
-      
       // Handle the case where user is already signed in
       if (err.name === 'UserAlreadyAuthenticatedException') {
-        console.log('Login: User already authenticated, forcing redirect to /home/surveys')
-        // Force a full page reload to properly establish session
-        window.location.href = "/home/surveys"
-        return // Don't show error message
+        window.location.href = "/home/surveys";
+        return;
       }
       
-      setError(err.message || "Failed to sign in")
+      setError(err.message || "Failed to sign in");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
