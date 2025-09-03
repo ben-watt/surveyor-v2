@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
 import { ImageMetadataDialog } from "./ImageMetadataDialog";
-import { CameraModal } from "./CameraModal";
+import { CameraModalWrapper } from "./CameraModalWrapper";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import Resizer from "react-image-file-resizer";
 import { join } from "path";
@@ -429,7 +429,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       </section>
 
       {/* Camera Modal */}
-      <CameraModal
+      <CameraModalWrapper
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         path={path}

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:capacitor": "next build",
     "start": "next start",
     "lint": "next lint",
     "fix": "next lint --fix",
@@ -13,7 +14,15 @@
     "test": "jest --silent",
     "test:watch": "jest --watch",
     "prepare": "husky",
-    "sandbox": "npx dotenvx run --env-file=.env.local -- ampx sandbox"
+    "sandbox": "npx dotenvx run --env-file=.env.local -- ampx sandbox",
+    "cap:sync": "npx cap sync",
+    "cap:copy": "npx cap copy",
+    "cap:add:ios": "npx cap add ios",
+    "cap:add:android": "npx cap add android",
+    "ios": "npx cap open ios",
+    "android": "npx cap open android",
+    "build:ios": "npm run build:capacitor && npx cap sync ios",
+    "build:android": "npm run build:capacitor && npx cap sync android"
   },
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.6.1",
@@ -24,6 +33,12 @@
     "@aws-sdk/client-rum": "^3.787.0",
     "@aws-sdk/client-s3": "^3.806.0",
     "@aws-sdk/util-dynamodb": "^3.806.0",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/camera": "^7.0.2",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/filesystem": "^7.1.4",
+    "@capacitor/ios": "^7.4.3",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
