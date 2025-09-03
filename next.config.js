@@ -9,8 +9,7 @@ const {
 module.exports = async (phase) => {
   /** @type {import("next").NextConfig} */
   const nextConfig = {
-    // Temporarily disabled for initial Capacitor setup - will enable later
-    // output: 'export', // Required for Capacitor static export
+    // output: 'export', // Temporarily disabled for Android testing - will fix static export in follow-up
     images: {
       domains: ['placehold.co'],
       // unoptimized: true, // Required for static export
