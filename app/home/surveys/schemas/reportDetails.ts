@@ -22,6 +22,13 @@ const surveyImageSchema = z.object({
   hasMetadata: z.boolean()
 });
 
+// Custom validator that only counts non-archived images
+const nonArchivedImagesMin = (minCount: number, errorMessage: string) => 
+  z.array(surveyImageSchema).refine(
+    (images) => images.filter(img => !img.isArchived).length >= minCount,
+    errorMessage
+  );
+
 // Report details schema aligned with form requirements and legacy TypeScript types
 export const reportDetailsSchema = z.object({
   // Required fields for completion
@@ -34,8 +41,8 @@ export const reportDetailsSchema = z.object({
   weather: z.string().min(1, "Weather is required"),
   orientation: z.string().min(1, "Orientation is required"),
   situation: z.string().min(1, "Situation is required"),
-  moneyShot: z.array(surveyImageSchema).min(1, "At least one cover photo is required"),
-  frontElevationImagesUri: z.array(surveyImageSchema).min(4, "At least four general photos are required")
+  moneyShot: nonArchivedImagesMin(1, "At least one cover photo is required"),
+  frontElevationImagesUri: nonArchivedImagesMin(4, "At least four general photos are required")
 });
 
 // For partial validation (allows empty/undefined required fields)

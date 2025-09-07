@@ -40,25 +40,39 @@ function createImageUploadStore(db: Dexie, name: string) {
             console.debug("[ImageUploadStore] sync archived", items);
             items.forEach(async (item: ImageUpload) => {
                 console.debug("[ImageUploadStore] sync archived", item.path);
-                const path = item.path.split("/");
-                const fileName = path.pop();
-                const folder = path.join("/");
+                
+                // Skip archiving if the file has actual content (was never uploaded to S3)
+                if (item.file && item.file.size > 0) {
+                    console.debug("[ImageUploadStore] skipping archive sync for local-only file", item.path);
+                    table.delete([item.path, item.tenantId]);
+                    return;
+                }
+                
+                try {
+                    const path = item.path.split("/");
+                    const fileName = path.pop();
+                    const folder = path.join("/");
 
-                await copy({
-                    source: {
+                    await copy({
+                        source: {
+                            path: item.path,
+                        },
+                        destination: {
+                            path: `${folder}/archived/${fileName}`,
+                        }
+                    });
+
+                    await remove({
                         path: item.path,
-                    },
-                    destination: {
-                        path: `${folder}/archived/${fileName}`,
-                    }
-                })
+                    });
 
-                await remove({
-                    path: item.path,
-                })
-
-                table.delete([item.path, item.tenantId]);
-                console.debug("[ImageUploadStore] deleted", [item.path, item.tenantId]);
+                    table.delete([item.path, item.tenantId]);
+                    console.debug("[ImageUploadStore] archived and deleted", [item.path, item.tenantId]);
+                } catch (error) {
+                    console.warn("[ImageUploadStore] failed to archive file (likely doesn't exist in S3 yet)", item.path, error);
+                    // If the source file doesn't exist in S3, just remove it from local DB
+                    table.delete([item.path, item.tenantId]);
+                }
             });
         });
     }
@@ -175,6 +189,57 @@ function createImageUploadStore(db: Dexie, name: string) {
                 syncStatus: SyncStatus.Archived,
                 updatedAt: new Date().toISOString(),
             });
+
+            sync();
+        },
+        unarchive: async (path: string, newFileData: CreateImageUpload) => {
+            console.debug("[ImageUploadStore] unarchive", path);
+            const tenantId = await getCurrentTenantId();
+            
+            // First, check if there's an existing entry for this path
+            const existingItem = await table.get([path, tenantId]);
+            
+            if (existingItem) {
+                // If the existing item was archived but never synced to S3 (still has original file data),
+                // we can simply change its status back to queued
+                if (existingItem.syncStatus === SyncStatus.Archived && existingItem.file && existingItem.file.size > 0) {
+                    console.debug("[ImageUploadStore] unarchiving local file", path);
+                    await table.put({
+                        ...existingItem,
+                        file: newFileData.file,
+                        href: newFileData.href,
+                        metadata: newFileData.metadata,
+                        syncStatus: SyncStatus.Queued,
+                        updatedAt: new Date().toISOString(),
+                    });
+                } else {
+                    // If it was fully archived to S3, we need to create a new entry
+                    console.debug("[ImageUploadStore] creating new entry for previously archived file", path);
+                    await table.put({
+                        id: path,
+                        tenantId: tenantId || "",
+                        path: path,
+                        file: newFileData.file,
+                        href: newFileData.href,
+                        metadata: newFileData.metadata,
+                        syncStatus: SyncStatus.Queued,
+                        updatedAt: new Date().toISOString(),
+                    });
+                }
+            } else {
+                // No existing entry, create new one
+                console.debug("[ImageUploadStore] creating new entry for unarchived file", path);
+                await table.put({
+                    id: path,
+                    tenantId: tenantId || "",
+                    path: path,
+                    file: newFileData.file,
+                    href: newFileData.href,
+                    metadata: newFileData.metadata,
+                    syncStatus: SyncStatus.Queued,
+                    updatedAt: new Date().toISOString(),
+                });
+            }
 
             sync();
         },

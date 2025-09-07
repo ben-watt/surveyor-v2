@@ -132,6 +132,119 @@ describe('Zod-Based Status Computers', () => {
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
     });
+
+    describe('Archived Photos Behavior', () => {
+      it('should not count archived photos toward minimum requirements', () => {
+        // Test case: User uploads 4 frontElevation photos, then archives 1
+        // Should still be valid since we have 3 non-archived + 1 archived = 4 total
+        // But the validation should only count the 3 non-archived ones
+        const resultWithArchivedPhotos = zodReportDetailsStatus({
+          clientName: 'John Doe',
+          address: { 
+            formatted: '123 Main St, London, SW1A 1AA, UK',
+            line1: '123 Main St',
+            line2: 'Apt 4',
+            city: 'London',
+            county: 'Greater London',
+            postcode: 'SW1A 1AA',
+            location: { lat: 51.5074, lng: -0.1278 }
+           },
+          inspectionDate: new Date('2024-01-15'),
+          reportDate: new Date('2024-01-20'),
+          level: '2',
+          reference: '123456',
+          weather: 'Sunny',
+          orientation: 'North',
+          situation: 'Situation',
+          moneyShot: [{ path: 'cover.jpg', isArchived: false, hasMetadata: false }],
+          frontElevationImagesUri: [
+            { path: 'front1.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front2.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front3.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front4.jpg', isArchived: true, hasMetadata: false } // This is archived
+          ]
+        });
+        
+        // This should FAIL validation because only 3 non-archived photos exist (need 4)
+        expect(resultWithArchivedPhotos.status).toBe(FormStatus.InProgress);
+        expect(resultWithArchivedPhotos.isValid).toBe(false);
+        expect(resultWithArchivedPhotos.errors).toContain(
+          'frontElevationImagesUri: At least four general photos are required'
+        );
+      });
+
+      it('should pass validation when enough non-archived photos exist', () => {
+        const resultWithEnoughPhotos = zodReportDetailsStatus({
+          clientName: 'John Doe',
+          address: { 
+            formatted: '123 Main St, London, SW1A 1AA, UK',
+            line1: '123 Main St',
+            line2: 'Apt 4',
+            city: 'London',
+            county: 'Greater London',
+            postcode: 'SW1A 1AA',
+            location: { lat: 51.5074, lng: -0.1278 }
+           },
+          inspectionDate: new Date('2024-01-15'),
+          reportDate: new Date('2024-01-20'),
+          level: '2',
+          reference: '123456',
+          weather: 'Sunny',
+          orientation: 'North',
+          situation: 'Situation',
+          moneyShot: [{ path: 'cover.jpg', isArchived: false, hasMetadata: false }],
+          frontElevationImagesUri: [
+            { path: 'front1.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front2.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front3.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front4.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front5.jpg', isArchived: true, hasMetadata: false }, // Extra archived photo
+            { path: 'front6.jpg', isArchived: true, hasMetadata: false }  // Another archived photo
+          ]
+        });
+        
+        // This should PASS validation because 4 non-archived photos exist
+        expect(resultWithEnoughPhotos.status).toBe(FormStatus.Complete);
+        expect(resultWithEnoughPhotos.isValid).toBe(true);
+        expect(resultWithEnoughPhotos.errors).toEqual([]);
+      });
+
+      it('should handle moneyShot archived photos correctly', () => {
+        const resultWithArchivedMoneyShot = zodReportDetailsStatus({
+          clientName: 'John Doe',
+          address: { 
+            formatted: '123 Main St, London, SW1A 1AA, UK',
+            line1: '123 Main St',
+            line2: 'Apt 4',
+            city: 'London',
+            county: 'Greater London',
+            postcode: 'SW1A 1AA',
+            location: { lat: 51.5074, lng: -0.1278 }
+           },
+          inspectionDate: new Date('2024-01-15'),
+          reportDate: new Date('2024-01-20'),
+          level: '2',
+          reference: '123456',
+          weather: 'Sunny',
+          orientation: 'North',
+          situation: 'Situation',
+          moneyShot: [{ path: 'cover.jpg', isArchived: true, hasMetadata: false }], // Archived cover photo
+          frontElevationImagesUri: [
+            { path: 'front1.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front2.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front3.jpg', isArchived: false, hasMetadata: false },
+            { path: 'front4.jpg', isArchived: false, hasMetadata: false }
+          ]
+        });
+        
+        // This should FAIL validation because moneyShot is archived (need 1 non-archived)
+        expect(resultWithArchivedMoneyShot.status).toBe(FormStatus.InProgress);
+        expect(resultWithArchivedMoneyShot.isValid).toBe(false);
+        expect(resultWithArchivedMoneyShot.errors).toContain(
+          'moneyShot: At least one cover photo is required'
+        );
+      });
+    });
   });
 
   describe('Performance & Memoization', () => {

@@ -193,8 +193,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
               metadata: false
             }}
             rhfProps={{
-              name: 'moneyShot',
-              rules: { required: "At least one image is required" }
+              name: 'moneyShot'
             }}
           />
         </div>
@@ -210,8 +209,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
               metadata: true
             }}
             rhfProps={{
-              name: 'frontElevationImagesUri',
-              rules: { validate: (v) => v.length >= 4 || "At least four images are required" }
+              name: 'frontElevationImagesUri'
             }}
           />
         </div>
