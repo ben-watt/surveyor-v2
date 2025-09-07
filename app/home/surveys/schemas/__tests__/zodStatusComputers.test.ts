@@ -27,11 +27,29 @@ describe('Zod-Based Status Computers', () => {
     it('returns Complete for all required fields', () => {
       const result = zodReportDetailsStatus({
         clientName: 'John Doe',
-        address: { formatted: '123 Main St' },
+        address: { 
+          formatted: '123 Main St, London, SW1A 1AA, UK',
+          line1: '123 Main St',
+          line2: 'Apt 4',
+          city: 'London',
+          county: 'Greater London',
+          postcode: 'SW1A 1AA',
+          location: { lat: 51.5074, lng: -0.1278 }
+         },
         inspectionDate: new Date('2024-01-15'),
         reportDate: new Date('2024-01-20'),
         level: '2',
-        reference: '123456'
+        reference: '123456',
+        weather: 'Sunny',
+        orientation: 'North',
+        situation: 'Situation',
+        moneyShot: [{ path: '123456', isArchived: false, hasMetadata: false }],
+        frontElevationImagesUri: [
+          { path: '123456', isArchived: false, hasMetadata: false },
+          { path: '123456', isArchived: false, hasMetadata: false },
+          { path: '123456', isArchived: false, hasMetadata: false },
+          { path: '123456', isArchived: false, hasMetadata: false }
+        ]
       });
       expect(result.status).toBe(FormStatus.Complete);
       expect(result.hasData).toBe(true);
@@ -41,7 +59,7 @@ describe('Zod-Based Status Computers', () => {
 
     it('provides detailed error messages', () => {
       const result = zodReportDetailsStatus({
-        clientName: '', // Empty but present  
+        clientName: '',
       });
       expect(result.isValid).toBe(false);
       expect(result.errors?.length || 0).toBeGreaterThan(0);

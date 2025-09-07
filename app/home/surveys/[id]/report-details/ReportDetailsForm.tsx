@@ -3,6 +3,8 @@ import InputDate from "@/app/home/components/Input/InputDate";
 import Input from "@/app/home/components/Input/InputText";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { reportDetailsSchema, ReportDetailsInput } from "../../schemas/reportDetails";
 import { FormStatus, ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
 import { memo } from "react";
@@ -16,7 +18,7 @@ import { DevTool } from "@hookform/devtools";
 
 interface ReportDetailsFormProps {
   surveyId: string;
-  reportDetails: ReportDetails;
+  reportDetails: ReportDetailsInput;
 }
 
 const AddressField = memo(({ control, errors }: any) => (
@@ -51,9 +53,10 @@ const LevelField = memo(({ control, errors }: any) => (
 LevelField.displayName = 'LevelField';
 
 const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) => {
-  const methods = useForm<ReportDetails>({
+  const methods = useForm<ReportDetailsInput>({
+    resolver: zodResolver(reportDetailsSchema),
     defaultValues: reportDetails,
-    mode: 'onChange' // Enable validation on change
+    mode: 'onChange'
   });
   const {
     register,
@@ -67,7 +70,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
-  const saveData = async (data: ReportDetails, { auto = false } = {}) => {
+  const saveData = async (data: ReportDetailsInput, { auto = false } = {}) => {
     if (!surveyId) return;
 
     console.log("[ReportDetailsForm] Save data", data);
@@ -76,7 +79,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
       await surveyStore.update(surveyId, (survey) => {
         survey.reportDetails = {
           ...data,
-        };
+        } as ReportDetails;
       });
 
       if (!auto) {
@@ -212,8 +215,6 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             }}
           />
         </div>
-        <DevTool control={control} />
-        
         <LastSavedIndicatorWithUploads
           status={saveStatus}
           isUploading={isUploading}
