@@ -44,7 +44,7 @@ export function useAutoSave<T>(
   options: AutoSaveOptions = {}
 ): AutoSaveResult<T> {
   const {
-    delay = 3000,
+    delay = 500,
     showToast = false,
     enabled = true,
     errorMessage = 'Failed to save changes',
