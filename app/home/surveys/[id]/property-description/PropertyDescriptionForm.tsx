@@ -2,32 +2,22 @@ import { DynamicComboBox } from "@/app/home/components/Input";
 import Input from "@/app/home/components/Input/InputText";
 import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
 import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { surveyStore } from "@/app/home/clients/Database";
 import { memo } from "react";
 import { useRouter } from "next/navigation";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import { useAutoSaveForm } from "@/app/home/hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "@/app/home/components/LastSavedIndicator";
+import { 
+  propertyDescriptionSchema, 
+  PropertyDescriptionInput
+} from "../../schemas/propertyDescription";
+import { updatePropertyDescriptionStatus } from "../../schemas";
 
 interface PropertyDescriptionFormProps {
   surveyId: string;
-  propertyDescription: PropertyDescriptionData;
-}
-
-// Simple property description type that matches our new schema
-interface PropertyDescriptionData {
-  propertyType: string;
-  constructionDetails: string;
-  yearOfConstruction: string;
-  grounds: string;
-  services: string;
-  energyRating: string;
-  numberOfBedrooms: number;
-  numberOfBathrooms: number;
-  tenure: string;
-  yearOfExtensions?: string;
-  yearOfConversions?: string;
-  otherServices?: string;
+  propertyDescription: PropertyDescriptionInput;
 }
 
 const TenureField = memo(({ control, errors }: any) => (
@@ -42,7 +32,6 @@ const TenureField = memo(({ control, errors }: any) => (
       ]}
       name="tenure"
       control={control}
-      rules={{ required: true }}
       errors={errors}
     />
   </div>
@@ -65,7 +54,6 @@ const EnergyRatingField = memo(({ control, errors }: any) => (
       ]}
       name="energyRating"
       control={control}
-      rules={{ required: true }}
       errors={errors}
     />
   </div>
@@ -73,7 +61,8 @@ const EnergyRatingField = memo(({ control, errors }: any) => (
 EnergyRatingField.displayName = 'EnergyRatingField';
 
 const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDescriptionFormProps) => {
-  const methods = useForm<PropertyDescriptionData>({
+  const methods = useForm<PropertyDescriptionInput>({
+    resolver: zodResolver(propertyDescriptionSchema),
     defaultValues: propertyDescription,
     mode: 'onChange' // Enable validation on change
   });
@@ -89,14 +78,21 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
-  const saveData = async (data: PropertyDescriptionData, { auto = false } = {}) => {
+  const saveData = async (data: PropertyDescriptionInput, { auto = false } = {}) => {
     if (!surveyId) return;
 
+    console.log("[PropertyDescriptionForm] Save data", data);
+
     try {
+      // Update form metadata with current validation status
+      const updatedMeta = updatePropertyDescriptionStatus(data);
+      const dataWithMeta = {
+        ...data,
+        _meta: updatedMeta
+      };
+
       await surveyStore.update(surveyId, (survey) => {
-        survey.propertyDescription = {
-          ...data,
-        };
+        survey.propertyDescription = dataWithMeta;
       });
 
       if (!auto) {
@@ -116,7 +112,6 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
     getValues,
     trigger,
     {
-      delay: 1000,
       enabled: !!surveyId,
       validateBeforeSave: false, // Allow saving partial/invalid data
     }
@@ -129,7 +124,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Property Type"
             placeholder="Detached, Semi-detached, Terraced, Flat, Bungalow, Maisonette, Other"
-            register={() => register("propertyType", { required: true })}
+            register={() => register("propertyType")}
           />
         </div>
 
@@ -137,7 +132,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <TextAreaInput
             labelTitle="Construction Details"
             placeholder="Brick, Stone, Timber, Concrete, Steel, Glass, Other"
-            register={() => register("constructionDetails", { required: true })}
+            register={() => register("constructionDetails")}
           />
         </div>
         
@@ -145,7 +140,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Year of Construction"
             placeholder="presumed 1990s - side extension"
-            register={() => register("yearOfConstruction", { required: true })}
+            register={() => register("yearOfConstruction")}
           />
         </div>
 
@@ -169,7 +164,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <TextAreaInput
             labelTitle="Grounds"
             placeholder="Garden, Yard, Paved, Lawn, Other"
-            register={() => register("grounds", { required: true })}
+            register={() => register("grounds")}
           />
         </div>
 
@@ -177,7 +172,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Services"
             placeholder="Electricity, Gas, Water, Drainage, Telephone, Broadband, Other"
-            register={() => register("services", { required: true })}
+            register={() => register("services")}
           />
         </div>
 
@@ -197,9 +192,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
             placeholder="Number of Bedrooms"
             type="number"
             register={() => register("numberOfBedrooms", { 
-              required: true,
-              valueAsNumber: true,
-              min: 0
+              valueAsNumber: true
             })}
           />
         </div>
@@ -210,9 +203,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
             placeholder="Number of Bathrooms"
             type="number"
             register={() => register("numberOfBathrooms", { 
-              required: true,
-              valueAsNumber: true,
-              min: 0
+              valueAsNumber: true
             })}
           />
         </div>

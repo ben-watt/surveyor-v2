@@ -99,7 +99,6 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     getValues,
     trigger,
     {
-      delay: 1000,
       enabled: !!surveyId,
       validateBeforeSave: false, // Allow saving partial/invalid data
       imagePaths: [
