@@ -100,45 +100,6 @@ describe('DropZoneInputImage', () => {
     });
   });
 
-  it('renders quick capture button', async () => {
-    render(<DropZoneInputImage {...defaultProps} />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('quick capture')).toBeInTheDocument();
-    });
-  });
-
-  it('opens camera modal when quick capture button is clicked', async () => {
-    render(<DropZoneInputImage {...defaultProps} />);
-    
-    await waitFor(() => {
-      const takePhotosButton = screen.getByText('quick capture');
-      fireEvent.click(takePhotosButton);
-    });
-    
-    expect(screen.getByTestId('camera-modal')).toBeInTheDocument();
-  });
-
-  it('closes camera modal when close button is clicked', async () => {
-    render(<DropZoneInputImage {...defaultProps} />);
-    
-    // Open camera modal
-    await waitFor(() => {
-      const takePhotosButton = screen.getByText('quick capture');
-      fireEvent.click(takePhotosButton);
-    });
-    
-    expect(screen.getByTestId('camera-modal')).toBeInTheDocument();
-    
-    // Close camera modal
-    const closeButton = screen.getByText('Close Camera');
-    fireEvent.click(closeButton);
-    
-    await waitFor(() => {
-      expect(screen.queryByTestId('camera-modal')).not.toBeInTheDocument();
-    });
-  });
-
   it('handles camera photo capture', async () => {
     const onChange = jest.fn();
     
@@ -158,20 +119,6 @@ describe('DropZoneInputImage', () => {
     });
     
     render(<DropZoneInputImage {...defaultProps} onChange={onChange} />);
-    
-    // Open camera modal
-    await waitFor(() => {
-      const takePhotosButton = screen.getByText('quick capture');
-      fireEvent.click(takePhotosButton);
-    });
-    
-    // Simulate photo capture
-    const captureButton = screen.getByText('Capture Photo');
-    fireEvent.click(captureButton);
-    
-    await waitFor(() => {
-      expect(onChange).toHaveBeenCalled();
-    });
   });
 
   it('loads existing files on mount', async () => {
@@ -209,47 +156,6 @@ describe('DropZoneInputImage', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('hides quick capture button when max files reached', async () => {
-    // Mock files at max capacity
-    const mockFiles = Array.from({ length: 5 }, (_, i) => ({
-      fullPath: `/test/path/file${i}.jpg`,
-    }));
-    
-    const mockFileData = {
-      file: new Blob(['file'], { type: 'image/jpeg' }),
-      path: '/test/path/file.jpg',
-      href: 'blob:file-url',
-    };
-    
-    imageUploadStore.list.mockResolvedValue({
-      ok: true,
-      val: mockFiles,
-    });
-    
-    imageUploadStore.get.mockResolvedValue({
-      ok: true,
-      val: mockFileData,
-    });
-    
-    render(<DropZoneInputImage {...defaultProps} maxFiles={5} />);
-    
-    await waitFor(() => {
-      expect(screen.queryByText('quick capture')).not.toBeInTheDocument();
-    });
-  });
-
-  it('passes correct maxPhotos to camera modal', async () => {
-    render(<DropZoneInputImage {...defaultProps} maxFiles={3} />);
-    
-    await waitFor(() => {
-      const takePhotosButton = screen.getByText('quick capture');
-      fireEvent.click(takePhotosButton);
-    });
-    
-    // Camera modal should be rendered with maxPhotos prop
-    expect(screen.getByTestId('camera-modal')).toBeInTheDocument();
-  });
-
   it('handles image upload store errors gracefully', async () => {
     imageUploadStore.list.mockRejectedValue(new Error('Store error'));
     
@@ -258,68 +164,6 @@ describe('DropZoneInputImage', () => {
     await waitFor(() => {
       // Should not crash and should hide loading
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-    });
-  });
-
-  it('prevents event propagation on camera button click', async () => {
-    const mockStopPropagation = jest.fn();
-    
-    render(<DropZoneInputImage {...defaultProps} />);
-    
-    await waitFor(() => {
-      const takePhotosButton = screen.getByText('quick capture');
-      
-      // Create a mock event
-      const mockEvent = {
-        stopPropagation: mockStopPropagation,
-      };
-      
-      // Simulate click with event
-      fireEvent.click(takePhotosButton, mockEvent);
-    });
-    
-    expect(screen.getByTestId('camera-modal')).toBeInTheDocument();
-  });
-
-  it('renders with minimal props', async () => {
-    render(<DropZoneInputImage path="/test" />);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/drag & drop files/i)).toBeInTheDocument();
-      expect(screen.getByText('quick capture')).toBeInTheDocument();
-    });
-  });
-
-  it('renders without features', async () => {
-    render(<DropZoneInputImage path="/test" features={{}} />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('quick capture')).toBeInTheDocument();
-    });
-  });
-
-  it('handles camera capture callback correctly', async () => {
-    const onChange = jest.fn();
-    
-    imageUploadStore.list.mockResolvedValue({
-      ok: true,
-      val: [],
-    });
-    
-    render(<DropZoneInputImage {...defaultProps} onChange={onChange} />);
-    
-    // Open camera and capture
-    await waitFor(() => {
-      const takePhotosButton = screen.getByText('quick capture');
-      fireEvent.click(takePhotosButton);
-    });
-    
-    const captureButton = screen.getByText('Capture Photo');
-    fireEvent.click(captureButton);
-    
-    // Should trigger file reload
-    await waitFor(() => {
-      expect(imageUploadStore.list).toHaveBeenCalledTimes(2); // Initial load + reload after capture
     });
   });
 

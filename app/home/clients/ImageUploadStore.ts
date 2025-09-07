@@ -179,17 +179,10 @@ function createImageUploadStore(db: Dexie, name: string) {
             sync();
         },
         remove: async (path: string) => {
-            console.debug("[ImageUploadStore] remove", path);
-            const localImage = await table.get(path);
-            if (localImage) {
-                console.debug("[ImageUploadStore] remove", localImage);
-                table.delete(path);
-            } else {
-                console.debug("[ImageUploadStore] remove", path);
-                await remove({
-                    path: path,
-                });
-            }
+            table.delete(path);
+            await remove({
+                path: path,
+            });
         },
         sync: async () => {
             sync();

@@ -206,11 +206,13 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       try {
         const result = await imageUploadStore.list(path);
         console.debug("[DropZoneInputImage] loadExistingFiles", result);
+
         if (result.ok) {
           const existingFiles = await Promise.all(
             result.val.map(async (item) => {
               const fileResult = await imageUploadStore.get(item.fullPath);
               if (fileResult.ok) {
+
                 const fileData = fileResult.val;
                 const file = new File(
                   [fileData.file],
@@ -219,6 +221,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
                     type: fileData.file.type,
                   }
                 );
+
                 return Object.assign(file, {
                   preview: fileData.href,
                   path: fileData.path,
@@ -250,6 +253,9 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
 
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: maxFiles,
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.ico', '.webp'],
+    },
     onDrop: async (acceptedFiles: FileWithPath[]) => {
 
       const processedFiles = await Promise.all(
@@ -295,11 +301,12 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
   const handleDelete = async (file: FileWithPath) => {
     const filePath = join(path, file.name);
     try {
+      console.debug("[DropZoneInputImage] handleDelete", filePath);
       await imageUploadStore.remove(filePath);
       setFiles(files.filter((f) => f !== file));
       onChange?.(files.filter((f) => f !== file));
     } catch (error) {
-      console.error("Error removing file:", error);
+      console.error("[DropZoneInputImage] Error removing file:", error);
     }
   };
 
@@ -382,19 +389,8 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
             <div className="flex flex-col items-center justify-center">
               <input {...getInputProps()} />
               <p className="text-sm text-gray-500 m-2 text-center">
-                Drag & drop files, {" "}
+                Drag & drop files, {" or "}
                 <u className="cursor-pointer">fetch from device</u>
-                {", or "}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsCameraOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 underline transition-colors"
-                >
-                  quick capture
-                </button>
               </p>
             </div>
           )}

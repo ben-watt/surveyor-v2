@@ -12,7 +12,7 @@ import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import AddressInput from "@/app/home/components/Input/AddressInput";
 import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
-import { useReportDetailsFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
+import { DevTool } from "@hookform/devtools";
 
 interface ReportDetailsFormProps {
   surveyId: string;
@@ -64,15 +64,13 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     trigger,
   } = methods;
   
-  // Reactive status computation
-  const watchedData = watch();
-  const formStatus = useReportDetailsFormStatus(watchedData || {}, trigger);
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
   const saveData = async (data: ReportDetails, { auto = false } = {}) => {
     if (!surveyId) return;
 
+    console.log("[ReportDetailsForm] Save data", data);
 
     try {
       await surveyStore.update(surveyId, (survey) => {
@@ -214,6 +212,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             }}
           />
         </div>
+        <DevTool control={control} />
         
         <LastSavedIndicatorWithUploads
           status={saveStatus}
