@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { formMetaSchema } from './formMeta';
 
 // Address schema aligned with legacy TypeScript Address type
 const addressSchema = z.object({
@@ -42,8 +43,14 @@ export const reportDetailsSchema = z.object({
   orientation: z.string().min(1, "Orientation is required"),
   situation: z.string().min(1, "Situation is required"),
   moneyShot: nonArchivedImagesMin(1, "At least one cover photo is required"),
-  frontElevationImagesUri: nonArchivedImagesMin(4, "At least four general photos are required")
+  frontElevationImagesUri: nonArchivedImagesMin(4, "At least four general photos are required"),
+  
+  // Form metadata for status tracking (eliminates need for runtime validation)
+  _meta: formMetaSchema.optional()
 });
+
+// Schema for form fields only (without metadata) - useful for validation
+export const reportDetailsFieldsSchema = reportDetailsSchema.omit({ _meta: true });
 
 // For partial validation (allows empty/undefined required fields)
 export const reportDetailsPartialSchema = reportDetailsSchema.partial();
@@ -54,5 +61,6 @@ export { addressSchema, surveyImageSchema };
 // Export inferred types
 export type ReportDetailsInput = z.input<typeof reportDetailsSchema>;
 export type ReportDetailsOutput = z.output<typeof reportDetailsSchema>;
+export type ReportDetailsFields = z.infer<typeof reportDetailsFieldsSchema>;
 export type AddressInput = z.input<typeof addressSchema>;
 export type SurveyImageInput = z.input<typeof surveyImageSchema>;

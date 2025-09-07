@@ -54,40 +54,60 @@ z.array(z.object({
 
 ## Migration Strategy
 
-### Phase 1: Report Details (Current Focus)
+### ✅ Phase 1: Report Details (COMPLETED)
 
-#### Step 1: Align Zod Schema with Current Behavior
-- Update `reportDetails.ts` to match form requirements
-- Make `weather`, `orientation`, `situation` required
-- Align image structure with `SurveyImage` type
-- Fix address field requirements
+#### ✅ Step 1: Align Zod Schema with Current Behavior
+- ✅ Updated `reportDetails.ts` to match form requirements
+- ✅ Made `weather`, `orientation`, `situation` required
+- ✅ Aligned image structure with `SurveyImage` type
+- ✅ Fixed address field requirements
+- ✅ Added archived photo validation (non-archived images only)
 
-#### Step 2: Update Form Integration
-- Replace TypeScript imports with Zod schema
-- Use `zodResolver` from `@hookform/resolvers/zod`
-- Update type annotations to use Zod inferred types
+#### ✅ Step 2: Update Form Integration
+- ✅ Replaced TypeScript imports with Zod schema
+- ✅ Used `zodResolver` from `@hookform/resolvers/zod`
+- ✅ Updated type annotations to use Zod inferred types
 
-#### Step 3: Validation & Testing
-- Ensure existing tests pass
-- Add Zod-specific validation tests
-- Verify form behavior remains unchanged
+#### ✅ Step 3: Validation & Testing
+- ✅ All existing tests pass
+- ✅ Added Zod-specific validation tests for archived photos
+- ✅ Verified form behavior remains unchanged
 
-### Phase 2: Property Description
-- Create `propertyDescription.ts` Zod schema
-- Migrate `PropertyDescriptionForm.tsx`
-- Follow same pattern as report details
+### ✅ Phase 2: Metadata-Based Status Architecture (COMPLETED) 
 
-### Phase 3: Survey Sections & Elements
+**🚀 MAJOR IMPROVEMENT**: Instead of computing form status via runtime validation, we now store status directly on each form:
+
+#### ✅ New Architecture Implemented:
+- ✅ Created `formMeta.ts` schema for status tracking
+- ✅ Added `_meta` field to all form schemas
+- ✅ Replaced complex memoized status computers with instant metadata lookup
+- ✅ Backward compatibility maintained for forms without metadata
+
+#### ✅ Benefits Achieved:
+- **O(1) status lookup** instead of O(n) validation
+- **Persistent status** across page refreshes
+- **Self-contained forms** that own their status
+- **Eliminated complex memoization** 
+- **Cleaner architecture** as we add more forms
+
+### 🔄 Phase 3: Property Description (IN PROGRESS)
+- ✅ Created `propertyDescription.ts` Zod schema with metadata
+- ⏳ TODO: Migrate `PropertyDescriptionForm.tsx` to use Zod resolver
+- ⏳ TODO: Update auto-save to populate `_meta` field
+
+### Phase 4: Survey Sections & Elements
 - Create schemas for:
   - `SurveySection`
   - `ElementSection` 
-  - `Inspection`
+  - `Inspection` 
   - `Phrase`
 - Handle complex nested validations
+- Add metadata to each schema
 
-### Phase 4: Complete Migration
+### Phase 5: Complete Migration
 - Remove legacy TypeScript schema file
-- Update all imports across codebase
+- Update all imports across codebase 
+- Remove `zodStatusComputer.ts` (no longer needed)
 - Create comprehensive test suite
 
 ## Schema Alignment Utility

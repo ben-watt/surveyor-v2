@@ -248,7 +248,7 @@ describe('Zod-Based Status Computers', () => {
   });
 
   describe('Performance & Memoization', () => {
-    it('memoizes results for identical input', () => {
+    it('returns consistent results for identical input', () => {
       const testData = { clientName: 'John Doe' };
       
       // First call
@@ -256,8 +256,8 @@ describe('Zod-Based Status Computers', () => {
       // Second call with same data
       const result2 = zodReportDetailsStatus(testData);
       
-      // Results should be identical (memoized)
-      expect(result1).toBe(result2);
+      // Results should be structurally identical (no longer using memoization)
+      expect(result1).toStrictEqual(result2);
     });
 
     it('recomputes for different input', () => {
