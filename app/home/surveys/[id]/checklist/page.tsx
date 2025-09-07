@@ -15,7 +15,6 @@ import { DynamicDrawer } from "@/app/home/components/Drawer";
 import { useAutoSaveForm } from "../../../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../../../components/LastSavedIndicator";
 import { createFormOptions, createAutosaveConfig } from "../../../hooks/useFormConfig";
-import { useChecklistFormStatus } from "../../../hooks/useReactiveFormStatus";
 import toast from "react-hot-toast";
 
 import { useEffect, useState } from "react";
@@ -84,13 +83,8 @@ const ChecklistForm = ({ id, initValues, surveyData }: ChecklistFormProps) => {
   const [entityData, setEntityData] = useState<any>(null);
   const methods = useForm<Checklist>(createFormOptions(initValues));
   const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
-  
-  // Reactive status computation  
-  const watchedData = watch();
-  const formStatus = useChecklistFormStatus(watchedData?.items, trigger);
   const router = useRouter();
 
-  // Set entity data when component mounts
   useEffect(() => {
     if (surveyData) {
       setEntityData(surveyData);

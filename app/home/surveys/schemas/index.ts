@@ -19,7 +19,6 @@ import { FormStatus } from '../building-survey-reports/BuildingSurveyReportSchem
 export * from './reportDetails';
 export * from './propertyDescription';  
 export * from './checklist';
-export * from './zodStatusComputer';
 
 // Create memoized status computers using simple presence-aware approach
 export const zodReportDetailsStatus = memoizeZodStatusComputer(
@@ -31,11 +30,12 @@ export const zodReportDetailsStatus = memoizeZodStatusComputer(
 
     // Has data, check if it meets requirements for completion
     const validationResult = reportDetailsSchema.safeParse(data);
+    console.log("[zodReportDetailsStatus] validationResult", validationResult);
     return {
       status: validationResult.success ? FormStatus.Complete : FormStatus.InProgress,
       hasData: true,
       isValid: validationResult.success,
-      errors: validationResult.success ? [] : validationResult.error?.errors.map(e => 
+      errors: validationResult.success ? [] : validationResult.error?.issues.map(e => 
         `${e.path.join('.')}: ${e.message}`
       ) || []
     };
@@ -55,7 +55,7 @@ export const zodPropertyDescriptionStatus = memoizeZodStatusComputer(
       status: validationResult.success ? FormStatus.Complete : FormStatus.InProgress,
       hasData: true,
       isValid: validationResult.success,
-      errors: validationResult.success ? [] : validationResult.error?.errors.map(e => 
+      errors: validationResult.success ? [] : validationResult.error?.issues.map(e => 
         `${e.path.join('.')}: ${e.message}`
       ) || []
     };
@@ -75,7 +75,7 @@ export const zodChecklistStatus = memoizeZodStatusComputer(
       status: validationResult.success ? FormStatus.Complete : FormStatus.InProgress,
       hasData: true,
       isValid: validationResult.success,
-      errors: validationResult.success ? [] : validationResult.error?.errors.map(e => 
+      errors: validationResult.success ? [] : validationResult.error?.issues.map(e => 
         `${e.path.join('.')}: ${e.message}`
       ) || []
     };

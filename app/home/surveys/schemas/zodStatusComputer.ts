@@ -1,5 +1,3 @@
-import { z } from 'zod';
-import { FormStatus } from '../building-survey-reports/BuildingSurveyReportSchema';
 import type { StatusResult } from './types';
 
 // Removed unused status computer functions - now using simpler inline approach

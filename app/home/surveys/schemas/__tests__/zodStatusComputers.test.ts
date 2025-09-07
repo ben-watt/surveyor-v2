@@ -30,7 +30,8 @@ describe('Zod-Based Status Computers', () => {
         address: { formatted: '123 Main St' },
         inspectionDate: new Date('2024-01-15'),
         reportDate: new Date('2024-01-20'),
-        level: '2'
+        level: '2',
+        reference: '123456'
       });
       expect(result.status).toBe(FormStatus.Complete);
       expect(result.hasData).toBe(true);

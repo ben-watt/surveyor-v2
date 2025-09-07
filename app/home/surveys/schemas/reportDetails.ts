@@ -20,9 +20,7 @@ export const reportDetailsSchema = z.object({
   inspectionDate: z.coerce.date({ message: "Inspection date is required" }),
   reportDate: z.coerce.date({ message: "Report date is required" }),
   level: z.enum(['2', '3'], { message: "Survey level is required" }),
-  
-  // Optional fields
-  reference: z.string().optional(),
+  reference: z.string().min(1, "Reference is required"),
   weather: z.string().optional(),
   orientation: z.string().optional(),
   situation: z.string().optional(),

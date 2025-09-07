@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import { useAutoSaveForm } from "@/app/home/hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "@/app/home/components/LastSavedIndicator";
-import { usePropertyDescriptionFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
 
 interface PropertyDescriptionFormProps {
   surveyId: string;
@@ -87,9 +86,6 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
     trigger,
   } = methods;
   
-  // Reactive status computation
-  const watchedData = watch();
-  const formStatus = usePropertyDescriptionFormStatus(watchedData || {}, trigger);
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 

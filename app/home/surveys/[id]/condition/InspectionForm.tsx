@@ -40,12 +40,9 @@ import {
   InspectionFormProps,
   RAG_OPTIONS,
 } from "./types";
-import { FormStatus } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import InputMoney from "@/app/home/components/Input/InputMoney";
 import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
-import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
-import { useInspectionFormStatus } from "@/app/home/hooks/useReactiveFormStatus";
 import { FormErrorBoundary } from "@/app/home/components/FormErrorBoundary";
 import { FORM_DEBOUNCE_DELAYS } from "@/app/home/config/formConstants";
 
@@ -231,10 +228,6 @@ function InspectionFormContent({
     trigger,
     formState: { errors },
   } = methods;
-  
-  // Reactive status computation
-  const watchedData = watch();
-  const formStatus = useInspectionFormStatus(watchedData || {}, trigger);
 
   // Only watch specific fields we need
   const surveySection = watch("surveySection");
