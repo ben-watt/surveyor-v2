@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Trash2 } from "lucide-react";
+import { ImageIcon, MoreVertical, Trash2 } from "lucide-react";
 import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ import { getOwnerDisplayName as computeOwnerDisplayName } from "../utils/useUser
 import { UserAvatar } from "../components/UserAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getAllSurveyImages } from "./building-survey-reports/Survey";
-import { FormStatus } from "./building-survey-reports/BuildingSurveyReportSchema";
 import { computeSurveyProgress } from "./utils/progress";
 
 interface BuildingSurveyListCardProps {
@@ -186,8 +185,9 @@ export function BuildingSurveyListCard({
               <div className="text-xs text-gray-500">
                 {createdAtDate ? `Created ${formatRelativeTime(createdAtDate)}` : (isDraft ? "Draft" : "")}
               </div>
-              <div className="text-xs text-gray-500 flex items-center gap-3" aria-hidden>
-                <span>🖼️ {imageCount}</span>
+              <div className="text-xs text-gray-500 flex items-center gap-1" aria-hidden>
+                <ImageIcon className="w-4 h-4" />
+                <span> {imageCount}</span>
               </div>
             </div>
           </div>

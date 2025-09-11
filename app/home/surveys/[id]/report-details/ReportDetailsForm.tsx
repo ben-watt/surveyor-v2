@@ -14,7 +14,6 @@ import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import AddressInput from "@/app/home/components/Input/AddressInput";
 import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
 import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
-import { DevTool } from "@hookform/devtools";
 
 interface ReportDetailsFormProps {
   surveyId: string;

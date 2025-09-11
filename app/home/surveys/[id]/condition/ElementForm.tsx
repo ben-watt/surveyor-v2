@@ -199,7 +199,6 @@ const ElementForm: React.FC<ElementFormProps> = ({ surveyId, sectionId, elementI
 
   return (
     <FormProvider {...methods}>
-      <DevTool control={control} />
       <div className="space-y-6">
         <FormSection title="Element Details">
           <TextAreaInput
