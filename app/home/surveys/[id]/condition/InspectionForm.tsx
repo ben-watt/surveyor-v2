@@ -8,7 +8,6 @@ import {
 import { FormSection } from "@/app/home/components/FormSection";
 import { merge } from "lodash";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { v4 as uuidv4 } from "uuid";
 import {
   componentStore,
@@ -217,7 +216,7 @@ function InspectionFormContent({
   const drawer = useDynamicDrawer();
   const methods = useForm<InspectionFormData>({ 
     defaultValues: initialValues,
-    mode: 'onChange' // Enable validation on change
+    mode: 'onChange'
   });
   const {
     register,
@@ -235,8 +234,6 @@ function InspectionFormContent({
   const component = watch("component");
   const useNameOverride = watch("useNameOverride");
   const conditions = watch("conditions");
-
-  
 
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
@@ -273,12 +270,12 @@ function InspectionFormContent({
 
   const phrasesOptions = useMemo(
     (): { value: FormPhrase; label: string }[] =>
+      phrases.length > 0 ?
       phrases
         .filter(
           (phrase) =>
             phrase.type.toLowerCase() === "condition" &&
-            (phrase.associatedComponentIds.includes(component.id) ||
-              phrase.associatedElementIds.includes(element.id))
+            (phrase.associatedComponentIds.includes(component.id))
         )
         .sort((a, b) => (a.order || 0) - (b.order || 0))
         .map((phrase) => ({
@@ -288,8 +285,8 @@ function InspectionFormContent({
             phrase: level === "2" ? (phrase.phraseLevel2 || "No level 2 text") : (phrase.phrase || "No level 3 text"),
           },
           label: phrase.name,
-        })),
-    [phrases, component.id, element.id, level]
+        })): [],
+    [phrases, component.id, level]
   );
 
   // Reset dependent fields when parent fields change

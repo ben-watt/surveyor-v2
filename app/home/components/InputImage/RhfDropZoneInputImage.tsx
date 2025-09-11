@@ -3,6 +3,7 @@ import { UseControllerProps, useController } from 'react-hook-form';
 import { DropZoneInputFile, DropZoneInputImage, DropZoneInputImageProps } from './DropZoneInputImage';
 import { ErrorMessage } from '@hookform/error-message';
 import { Label } from '../Input/Label';
+import InputError from '../InputError';
 
 export interface RhfDropZoneInputImageProps extends Omit<DropZoneInputImageProps, 'onChange'> {
   rhfProps: UseControllerProps;
@@ -35,7 +36,7 @@ export const RhfDropZoneInputImage: React.FC<RhfDropZoneInputImageProps> = ({
       />
       <ErrorMessage
         name={rhfProps.name}
-        render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+        render={({ message }) => InputError({ message })}
       />
     </div>
   );
