@@ -364,9 +364,22 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
         }
       }
       
-      // Add new files to state
+      // Add new files to state and notify parent
       if (newFiles.length > 0) {
-        setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+        setFiles((prevFiles) => {
+          const updatedFiles = [...prevFiles, ...newFiles];
+          // Call onChange with the updated files
+          setTimeout(() => onChange?.(updatedFiles), 0);
+          return updatedFiles;
+        });
+      } else {
+        // If no new files but files were modified (unarchived/replaced), still notify
+        setTimeout(() => {
+          setFiles((currentFiles) => {
+            onChange?.(currentFiles);
+            return currentFiles;
+          });
+        }, 0);
       }
       
       // Show success toast for unarchived files
@@ -377,9 +390,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           duration: 3000,
         });
       }
-
-      // Notify parent of changes
-      onChange?.(files);
     },
   });
 
@@ -388,8 +398,9 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     try {
       console.debug("[DropZoneInputImage] handleDelete", filePath);
       await imageUploadStore.remove(filePath);
-      setFiles(files.filter((f) => f !== file));
-      onChange?.(files.filter((f) => f !== file));
+      const updatedFiles = files.filter((f) => f !== file);
+      setFiles(updatedFiles);
+      onChange?.(updatedFiles);
     } catch (error) {
       console.error("[DropZoneInputImage] Error removing file:", error);
     }
@@ -400,18 +411,21 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
     try {
       await imageUploadStore.archive(filePath);
       // Mark file as archived
-      setFiles(files.map((f) => f === file ? { ...f, isArchived: true } : f));
-      onChange?.(files.filter((f) => f !== file));
+      const updatedFiles = files.map((f) => f === file ? { ...f, isArchived: true } : f);
+      setFiles(updatedFiles);
+      // Only non-archived files should be reported to parent
+      onChange?.(updatedFiles.filter((f) => !f.isArchived));
     } catch (error) {
       console.error("Error archiving file:", error);
     }
   };
 
   const handleMetadataChange = (updatedFile: DropZoneInputFile) => {
-    setFiles(prevFiles => 
-      prevFiles.map(f => f.name === updatedFile.name ? updatedFile : f)
-    );
-    onChange?.(files);
+    setFiles(prevFiles => {
+      const updatedFiles = prevFiles.map(f => f.name === updatedFile.name ? updatedFile : f);
+      onChange?.(updatedFiles.filter(f => !f.isArchived));
+      return updatedFiles;
+    });
   };
 
   const handleCameraCapture = useCallback(async (filePath: string) => {
