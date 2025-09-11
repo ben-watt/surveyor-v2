@@ -121,7 +121,7 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved 2 hours ago')).toBeInTheDocument();
+    expect(screen.getByText('Last saved about 2 hours ago')).toBeInTheDocument();
   });
 
   it('should format single hour correctly', () => {
@@ -134,7 +134,7 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved 1 hour ago')).toBeInTheDocument();
+    expect(screen.getByText('Last saved about 1 hour ago')).toBeInTheDocument();
   });
 
   it('should format days correctly', () => {

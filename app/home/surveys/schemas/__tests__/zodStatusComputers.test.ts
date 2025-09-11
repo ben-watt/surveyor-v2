@@ -241,7 +241,7 @@ describe('Zod-Based Status Computers', () => {
         expect(resultWithArchivedMoneyShot.status).toBe(FormStatus.InProgress);
         expect(resultWithArchivedMoneyShot.isValid).toBe(false);
         expect(resultWithArchivedMoneyShot.errors).toContain(
-          'moneyShot: At least one cover photo is required'
+          'moneyShot: Only one cover photo is required'
         );
       });
     });

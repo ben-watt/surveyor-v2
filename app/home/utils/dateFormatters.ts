@@ -1,3 +1,5 @@
+import { formatDistanceToNow } from 'date-fns';
+
 function getDaySuffix(day: number): string {
   if (day > 3 && day < 21) return 'th';
   switch (day % 10) {
@@ -46,23 +48,24 @@ export function formatDateWithSuffix(date: Date | string): string {
 }
 
 /**
- * Formats a date as relative time (e.g., "Just now", "2 minutes ago", "3 hours ago")
- * For dates older than 24 hours, returns the formatted date and time
+ * Formats a date as relative time (e.g., "Just now", "2 minutes ago", "3 hours ago", "in 2 hours")
+ * For dates more than 24 hours away, returns the formatted date and time
  */
 export function formatRelativeTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60));
+  const diffInMinutes = Math.abs(now.getTime() - dateObj.getTime()) / (1000 * 60);
   
+  // For very recent dates (within 1 minute), show "Just now"
   if (diffInMinutes < 1) {
     return 'Just now';
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-  } else if (diffInMinutes < 1440) {
-    const hours = Math.floor(diffInMinutes / 60);
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  } else {
-    // Show full date and time for older dates
-    return formatDateTime(dateObj);
   }
+  
+  // For dates within 24 hours, use date-fns relative formatting
+  if (diffInMinutes < 1440) {
+    return formatDistanceToNow(dateObj, { addSuffix: true });
+  }
+  
+  // For dates more than 24 hours away, show full date and time
+  return formatDateTime(dateObj);
 } 

@@ -42,7 +42,7 @@ export const reportDetailsSchema = z.object({
   weather: z.string().min(1, "Weather is required"),
   orientation: z.string().min(1, "Orientation is required"),
   situation: z.string().min(1, "Situation is required"),
-  moneyShot: nonArchivedImagesMin(1, "At least one cover photo is required"),
+  moneyShot: nonArchivedImagesMin(1, "Only one cover photo is required"),
   frontElevationImagesUri: nonArchivedImagesMin(4, "At least four general photos are required"),
   
   // Form metadata for status tracking (eliminates need for runtime validation)
