@@ -64,6 +64,8 @@ export function useAutoSave<T>(
   const resetStatus = useCallback(() => {
     setSaveStatus('idle');
     setHasPendingChanges(false);
+    // Clear last saved data to allow fresh comparisons
+    lastSavedDataRef.current = null;
   }, []);
 
   const save = useCallback(async (data: T, { auto = false }: { auto?: boolean } = {}) => {
@@ -148,6 +150,8 @@ export function useAutoSave<T>(
     }
     
     console.log('[useAutoSave] Triggering autosave with delay:', delay);
+    console.log('[useAutoSave] Current data for autosave:', data);
+    console.log('[useAutoSave] Last saved data:', lastSavedDataRef.current);
     
     // Set pending status immediately when changes are detected
     setSaveStatus('pending');

@@ -4,8 +4,8 @@ import {
   FormProvider,
   useForm,
 } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Checklist,
   FormStatus,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
@@ -14,10 +14,14 @@ import { useRouter } from "next/navigation";
 import { DynamicDrawer } from "@/app/home/components/Drawer";
 import { useAutoSaveForm } from "../../../hooks/useAutoSaveForm";
 import { LastSavedIndicator } from "../../../components/LastSavedIndicator";
-import { createFormOptions, createAutosaveConfig } from "../../../hooks/useFormConfig";
+import { 
+  checklistSchema,
+  ChecklistInput,
+  updateChecklistStatus
+} from "../../schemas";
 import toast from "react-hot-toast";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 
 const ChecklistPage = () => {
@@ -62,26 +66,34 @@ const ChecklistPage = () => {
   );
 };
 
-interface ChecklistFormData {
-  items: Array<{
-    id: string;
-    text: string;
-    required: boolean;
-    value: boolean;
-    type: string;
-    order: number;
-  }>;
-}
-
 interface ChecklistFormProps {
   id: string;
-  initValues: Checklist;
+  initValues: any; // Legacy format - will be transformed to ChecklistInput
   surveyData: any; // The full survey data to access updatedAt
 }
 
 const ChecklistForm = ({ id, initValues, surveyData }: ChecklistFormProps) => {
   const [entityData, setEntityData] = useState<any>(null);
-  const methods = useForm<Checklist>(createFormOptions(initValues));
+  
+  // Transform legacy Input<boolean>[] format to new Zod format
+  const transformedInitValues = useMemo(() => ({
+    items: initValues?.items?.map((item: any) => ({
+      value: item.value,
+      required: item.required,
+      type: item.type,
+      label: item.label,
+      placeholder: item.placeholder,
+      order: item.order
+    })) || [],
+    _meta: initValues?._meta
+  }), [initValues]);
+  
+  const methods = useForm<ChecklistInput>({
+    resolver: zodResolver(checklistSchema),
+    defaultValues: transformedInitValues,
+    mode: 'onChange'
+  });
+
   const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
   const router = useRouter();
 
@@ -93,47 +105,76 @@ const ChecklistForm = ({ id, initValues, surveyData }: ChecklistFormProps) => {
 
 
   // Autosave functionality
-  const saveChecklist = async (data: Checklist, { auto = false }: { auto?: boolean } = {}) => {
+  const saveChecklist = async (data: ChecklistInput, { auto = false }: { auto?: boolean } = {}) => {
+    if (!id) return;
+
     try {
-      await surveyStore.update(id, (currentState) => {
-        // Update each checklist item's value property
-        if (data.items && currentState.checklist.items) {
-          data.items.forEach((item, index) => {
-            if (currentState.checklist.items[index]) {
-              currentState.checklist.items[index].value = item.value;
-            }
-          });
-        }
+      console.log('[ChecklistForm] Starting save with data:', data);
+      
+      // Update form metadata with current validation status
+      const updatedMeta = updateChecklistStatus(data);
+      const dataWithMeta = {
+        ...data,
+        _meta: updatedMeta
+      };
+
+      await surveyStore.update(id, (survey) => {
+        // Transform Zod format back to legacy format for storage compatibility
+        const legacyFormat = {
+          ...dataWithMeta,
+          items: dataWithMeta.items.map((item: any) => ({
+            value: item.value,
+            required: item.required,
+            type: item.type,
+            label: item.label,
+            placeholder: item.placeholder,
+            order: item.order
+          }))
+        };
+        survey.checklist = legacyFormat;
       });
+
+      console.log('[ChecklistForm] Save completed successfully:', { auto });
 
       if (!auto) {
         toast.success("Checklist saved successfully");
         router.push(`/home/surveys/${id}`);
       }
     } catch (error) {
-      console.error("Failed to save checklist", error);
+      console.error("[ChecklistForm] Save failed", error);
       if (!auto) toast.error("Error saving checklist");
       throw error; // Re-throw for autosave error handling
     }
   };
 
-  const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
+  const { saveStatus, isSaving, lastSavedAt, resetStatus } = useAutoSaveForm(
     saveChecklist,
     watch,
     getValues,
     trigger,
-    createAutosaveConfig({ enabled: true })
+    {
+      enabled: !!id,
+      validateBeforeSave: false,
+      delay: 500 // Use 500ms delay instead of default 300ms
+    }
   );
+
+  // Reset autosave status when form initializes to prevent false data comparison
+  useEffect(() => {
+    if (id && transformedInitValues) {
+      resetStatus();
+    }
+  }, [id, transformedInitValues, resetStatus]);
 
 
   return (
     <FormProvider {...methods}>
       <div className="space-y-4">
-        {initValues.items.map((checklist, index) => {
+        {transformedInitValues.items.map((checklist: any, index: number) => {
           return (
             <div className="mt-4 mb-4" key={index}>
               <div>
-                {mapToInputType(checklist, `items.${index}.value`, register, control, errors)}
+                {mapToInputType(checklist, `items.${index}.value` as any, register, control, errors)}
               </div>
             </div>
           );

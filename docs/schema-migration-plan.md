@@ -90,12 +90,22 @@ z.array(z.object({
 - **Eliminated complex memoization** 
 - **Cleaner architecture** as we add more forms
 
-### 🔄 Phase 3: Property Description (IN PROGRESS)
+### ✅ Phase 3: Property Description (COMPLETED)
 - ✅ Created `propertyDescription.ts` Zod schema with metadata
-- ⏳ TODO: Migrate `PropertyDescriptionForm.tsx` to use Zod resolver
-- ⏳ TODO: Update auto-save to populate `_meta` field
+- ✅ Migrated `PropertyDescriptionForm.tsx` to use Zod resolver
+- ✅ Updated auto-save to populate `_meta` field with metadata
+- ✅ All existing tests pass with new architecture
 
-### Phase 4: Survey Sections & Elements
+### ✅ Phase 4: Checklist (COMPLETED)
+- ✅ Updated `checklist.ts` schema with metadata support
+- ✅ Added `updateChecklistStatus` helper function
+- ✅ Migrated `ChecklistForm` to use Zod resolver and metadata
+- ✅ Created data transformation layer for backward compatibility
+- ✅ Updated auto-save to populate `_meta` field
+- ✅ Created comprehensive metadata workflow tests
+- ✅ All 455 tests passing
+
+### Phase 5: Survey Sections & Elements
 - Create schemas for:
   - `SurveySection`
   - `ElementSection` 
@@ -104,7 +114,7 @@ z.array(z.object({
 - Handle complex nested validations
 - Add metadata to each schema
 
-### Phase 5: Complete Migration
+### Phase 6: Complete Migration
 - Remove legacy TypeScript schema file
 - Update all imports across codebase 
 - Remove `zodStatusComputer.ts` (no longer needed)

@@ -10,6 +10,7 @@ import {
 } from './propertyDescription';
 import { 
   checklistSchema,
+  checklistFieldsSchema,
 } from './checklist';
 import { getFormStatus, updateFormMeta } from './formMeta';
 import type { StatusResult } from './types';
@@ -102,6 +103,11 @@ export const updateReportDetailsStatus = (data: unknown) => {
 
 export const updatePropertyDescriptionStatus = (data: unknown) => {
   const validationResult = propertyDescriptionFieldsSchema.safeParse(data);
+  return updateFormMeta(data, validationResult);
+};
+
+export const updateChecklistStatus = (data: unknown) => {
+  const validationResult = checklistFieldsSchema.safeParse(data);
   return updateFormMeta(data, validationResult);
 };
 

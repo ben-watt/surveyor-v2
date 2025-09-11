@@ -36,6 +36,7 @@ jest.mock('../../../../hooks/useAutoSaveForm', () => ({
     saveStatus: 'idle',
     isSaving: false,
     lastSavedAt: null,
+    resetStatus: jest.fn(),
   })),
 }));
 
@@ -179,6 +180,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 
@@ -213,6 +215,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 
@@ -257,6 +260,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 
@@ -313,6 +317,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 
@@ -354,6 +359,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 
@@ -400,6 +406,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 
@@ -452,6 +459,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 
@@ -476,6 +484,7 @@ describe('ChecklistForm', () => {
           saveStatus: 'idle',
           isSaving: false,
           lastSavedAt: null,
+          resetStatus: jest.fn(),
         };
       });
 

@@ -62,7 +62,7 @@ export function CompactPhotoGrid({
         </div>
         
         <div 
-          className="grid grid-cols-2 gap-2 rounded-lg overflow-hidden cursor-pointer"
+          className="grid grid-cols-2 gap-1 rounded-lg overflow-hidden cursor-pointer"
           onClick={() => router.push(galleryUrl)}
         >
           {previewPhotos.slice(0, 4).map((photo, index) => (
