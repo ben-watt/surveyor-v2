@@ -24,8 +24,37 @@ export interface TenantUser {
 const client = generateClient<Schema>();
 
 // Add cache variable at the top level after imports
-let preferredTenantCache: { value: string | null; timestamp: number } | null = null;
+type PreferredTenantCache = { value: string | null; timestamp: number } | null;
+type UserAttributes = { [key: string]: string | undefined };
+
+let preferredTenantCache: PreferredTenantCache = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+let preferredTenantInFlight: Promise<string | null> | null = null;
+
+function isCacheValid(cache: PreferredTenantCache): boolean {
+  return !!cache && Date.now() - cache.timestamp < CACHE_DURATION;
+}
+
+function derivePreferredTenant(attributes: UserAttributes): string | null {
+  const preferred = attributes['custom:preferredTenant'];
+  const userSub = attributes.sub;
+  return !preferred || preferred === 'personal' ? userSub || null : preferred;
+}
+
+async function fetchAndCachePreferredTenant(): Promise<string | null> {
+  try {
+    const attributes = (await fetchUserAttributes()) as unknown as UserAttributes;
+    const result = derivePreferredTenant(attributes);
+    preferredTenantCache = { value: result, timestamp: Date.now() };
+    console.debug('[getPreferredTenant] updated preferredTenantCache', preferredTenantCache);
+    return result;
+  } catch (error) {
+    console.error('[getPreferredTenant] Error getting preferred tenant:', error);
+    return null;
+  } finally {
+    preferredTenantInFlight = null;
+  }
+}
 
 /**
  * Get the current tenant ID from user attributes
@@ -36,19 +65,6 @@ export async function getCurrentTenantId(): Promise<string | null> {
     return await getPreferredTenant();
   } catch (error) {
     console.error('Error getting current tenant ID:', error);
-    return null;
-  }
-}
-
-/**
- * Get the current tenant name from user attributes
- * Returns null if no preferred tenant is set
- */
-export async function getCurrentTenantName(): Promise<string | null> {
-  try {
-    return await getPreferredTenant();
-  } catch (error) {
-    console.error('Error getting current tenant name:', error);
     return null;
   }
 }
@@ -65,7 +81,7 @@ export function useTenantData() {
   useEffect(() => {
     async function loadTenantData() {
       try {
-        const currentTenantName = await getCurrentTenantName();
+        const currentTenantName = await getCurrentTenantId();
         setCurrentTenant(currentTenantName);
         
         const tenantsList = await listUserTenants();
@@ -283,54 +299,28 @@ export async function setPreferredTenant(tenantName: string): Promise<void> {
     });
     // Clear the cache when setting new preferred tenant
     preferredTenantCache = null;
+    preferredTenantInFlight = null;
   } catch (error) {
     console.error('Error setting preferred tenant:', error);
     throw error;
   }
 }
 
-/**
- * Get user's preferred tenant
- */
 export async function getPreferredTenant(): Promise<string | null> {
-  try {
+  console.debug('[getPreferredTenant] preferredTenantCache', preferredTenantCache);
 
-    console.debug("[getPreferredTenant] preferredTenantCache", preferredTenantCache);
-
-    if (preferredTenantCache && Date.now() - preferredTenantCache.timestamp < CACHE_DURATION) {
-      console.debug("[getPreferredTenant] fetching from cache", preferredTenantCache);
-      return preferredTenantCache.value;
-    }
-
-    const attributes = await fetchUserAttributes();
-    const preferredTenant = attributes['custom:preferredTenant'];
-    let result: string | null;
-    
-    // If no preferred tenant is set, use the user's sub as their personal tenant
-    if (!preferredTenant) {
-      result = attributes.sub || null;
-    }
-    // If preferred tenant is explicitly set to "personal", use the user's sub
-    else if (preferredTenant === 'personal') {
-      result = attributes.sub || null;
-    }
-    else {
-      result = preferredTenant;
-    }
-
-    // Update cache
-    preferredTenantCache = {
-      value: result,
-      timestamp: Date.now()
-    };
-
-    console.debug("[getPreferredTenant] preferredTenantCache", preferredTenantCache);
-    
-    return result;
-  } catch (error) {
-    console.error("[getPreferredTenant] Error getting preferred tenant:", error);
-    return null;
+  if (isCacheValid(preferredTenantCache)) {
+    console.debug('[getPreferredTenant] fetching from cache', preferredTenantCache);
+    return preferredTenantCache!.value;
   }
+
+  if (preferredTenantInFlight) {
+    console.debug('[getPreferredTenant] returning in-flight promise');
+    return preferredTenantInFlight;
+  }
+
+  preferredTenantInFlight = fetchAndCachePreferredTenant();
+  return preferredTenantInFlight;
 }
 
 /**
@@ -375,7 +365,7 @@ export async function deleteTenant(tenantName: string): Promise<void> {
  * Ensures that a data object has the current tenant name
  */
 export async function withTenantId<T>(data: T): Promise<T & { tenantId: string }> {
-  const tenantName = await getCurrentTenantName();
+  const tenantName = await getCurrentTenantId();
   if (!tenantName) {
     throw new Error('No tenant selected. Please ensure a tenant is selected.');
   }

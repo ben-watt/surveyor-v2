@@ -6,7 +6,6 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
-  Router,
   Sparkles,
   UserRoundPen,
 } from "lucide-react"
@@ -32,30 +31,24 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useEffect, useState } from "react"
-import { fetchUserAttributes, signOut } from "aws-amplify/auth"
+import { signOut } from "aws-amplify/auth"
 import { getUrl } from "aws-amplify/storage"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useUserAttributes } from "@/app/home/utils/useUser"
 
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const [profileHref, setProfileHref] = useState<string | undefined>()
-  const [userAttributes, setUserAttributes] = useState<{
-    name: string
-    email: string
-  }>({ name: "User", email: "user@example.com" })
   const router = useRouter()
+
+  const [isHydrated, user] = useUserAttributes()
+
   useEffect(() => {
     async function getProfilePic() {
       try {
-        const attributes = await fetchUserAttributes()
-        setUserAttributes({
-          name: attributes.name || "User",
-          email: attributes.email || "user@example.com"
-        })
-        
-        const pPic = attributes?.profile
+        const pPic = user?.picture
         if (pPic) {
           const presignedUrl = await getUrl({
             path: pPic,
@@ -68,7 +61,7 @@ export function NavUser() {
     }
 
     getProfilePic()
-  }, [])
+  }, [isHydrated, user])
 
   const handleSignOut = () => {
     signOut()
@@ -85,14 +78,14 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={profileHref} alt={userAttributes.name} />
+                <AvatarImage src={profileHref} alt={user?.name || "User"} />
                 <AvatarFallback className="rounded-lg">
-                  {userAttributes.name.substring(0, 2).toUpperCase()}
+                  {user?.name?.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{userAttributes.name}</span>
-                <span className="truncate text-xs">{userAttributes.email}</span>
+                <span className="truncate font-semibold">{user?.name}</span>
+                <span className="truncate text-xs">{user?.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -106,14 +99,14 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={profileHref} alt={userAttributes.name} />
+                  <AvatarImage src={profileHref} alt={user?.name || "User"} />
                   <AvatarFallback className="rounded-lg">
-                    {userAttributes.name.substring(0, 2).toUpperCase()}
+                    {user?.name?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{userAttributes.name}</span>
-                  <span className="truncate text-xs">{userAttributes.email}</span>
+                  <span className="truncate font-semibold">{user?.name}</span>
+                  <span className="truncate text-xs">{user?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
