@@ -135,7 +135,9 @@ export function BuildingSurveyListCard({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"
-                      onClick={() => {
+                      onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
                         if (confirm("Delete this survey? This cannot be undone.")) {
                           void handleDelete();
                         }

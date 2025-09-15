@@ -422,7 +422,6 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         updatedAt: new Date().toISOString(),
       });
       
-      // Trigger sync asynchronously if online
       debounceSync();
       console.debug("[remove] Item removed", id);
     } else {
