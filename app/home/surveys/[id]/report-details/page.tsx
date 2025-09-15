@@ -44,7 +44,6 @@ const ReportDetailFormPage = () => {
       isOpen={isOpen}
       handleClose={handleClose}
       title="Report Details"
-      description="Report Details"
       content={
         <Suspense fallback={<div>Loading form...</div>}>
           <ReportDetailsForm 

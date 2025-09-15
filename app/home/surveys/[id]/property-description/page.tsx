@@ -44,7 +44,6 @@ const PropertyDescriptionPage = () => {
       isOpen={isOpen}
       handleClose={handleClose}
       title="Property Description"
-      description="Property Description"
       content={
         <Suspense fallback={<div>Loading form...</div>}>
           <PropertyDescriptionForm 

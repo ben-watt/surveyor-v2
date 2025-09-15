@@ -52,7 +52,6 @@ const ChecklistPage = () => {
           isOpen={isOpen}
           handleClose={handleClose}
           title="Checklist"
-          description="Checklist"
           content={
             <ChecklistForm
               id={id}

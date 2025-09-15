@@ -51,7 +51,6 @@ const ConditionPage = () => {
           isOpen={isOpen}
           handleClose={handleClose}
           title="Property Condition"
-          description="Property Condition"
           content={<ConditionForm id={id} initValues={survey.sections} />}
         />
       )}
