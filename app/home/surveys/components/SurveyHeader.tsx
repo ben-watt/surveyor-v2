@@ -75,15 +75,7 @@ export function SurveyHeader({
         <div className="flex flex-col gap-4 overflow-hidden">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-bold">
-                Building Survey Report
-              </h1>
-              <Badge
-                className={`${getStatusColor(survey.status)}`}
-                variant="outline"
-              >
-                {survey.status}
-              </Badge>
+              <h1 className="text-2xl font-bold">Building Survey Report</h1>
             </div>
 
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
@@ -119,62 +111,66 @@ export function SurveyHeader({
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-
+                <Badge
+                  className={`${getStatusColor(survey.status)}`}
+                  variant="outline"
+                >
+                  {survey.status}
+                </Badge>
                 <Badge
                   variant="outline"
                   className="bg-gray-50 text-gray-700 border-gray-200 font-medium"
                 >
                   🏢 Level {survey.reportDetails?.level ?? "—"}
                 </Badge>
-                </div>
-                 <div className="flex flex-col gap-2">
-                  {createdAtDate && (
-                    <div className="flex items-center gap-2">
-                      <CalendarFold className="w-4 h-4" />
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span
-                              className="underline decoration-dotted"
-                              aria-label="Created date"
-                            >
-                              {formatRelativeTime(createdAtDate)}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>{`Created: ${formatDateTime(createdAtDate)}`}</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  )}
-
+              </div>
+              <div className="flex flex-col gap-2">
+                {createdAtDate && (
                   <div className="flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4" />
-                    {survey.reportDetails.reportDate ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span
-                              className="underline decoration-dotted"
-                              aria-label="Report date"
-                            >
-                              {formatRelativeTime(
-                                survey.reportDetails.reportDate
-                              )}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>{`Report Date: ${formatShortDate(survey.reportDetails.reportDate)}`}</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <span className="text-amber-600">No date set</span>
-                    )}
+                    <CalendarFold className="w-4 h-4" />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="underline decoration-dotted"
+                            aria-label="Created date"
+                          >
+                            {formatRelativeTime(createdAtDate)}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{`Created: ${formatDateTime(createdAtDate)}`}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4" />
+                  {survey.reportDetails.reportDate ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="underline decoration-dotted"
+                            aria-label="Report date"
+                          >
+                            {formatRelativeTime(
+                              survey.reportDetails.reportDate
+                            )}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{`Report Date: ${formatShortDate(survey.reportDetails.reportDate)}`}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-amber-600">No date set</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="flex justify-end gap-2">
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className="gap-2">
@@ -194,7 +190,9 @@ export function SurveyHeader({
                 >
                   Generate Report
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSaveAsDraft}>Save as Draft</DropdownMenuItem>
+                <DropdownMenuItem onClick={onSaveAsDraft}>
+                  Save as Draft
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={onSave} disabled={!isFormValid}>
                   Save & Complete
                 </DropdownMenuItem>

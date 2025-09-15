@@ -80,7 +80,7 @@ function Home() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-2">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 order-1 lg:order-1">
           <Suspense fallback={<FormSkeleton />}>
