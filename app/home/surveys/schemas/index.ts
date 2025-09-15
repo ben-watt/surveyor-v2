@@ -1,11 +1,9 @@
 // New metadata-based status approach - eliminates need for runtime validation
 
 import { 
-  reportDetailsSchema,
   reportDetailsFieldsSchema,
 } from './reportDetails';
 import { 
-  propertyDescriptionSchema,
   propertyDescriptionFieldsSchema,
 } from './propertyDescription';
 import { 
@@ -114,18 +112,19 @@ export const updateChecklistStatus = (data: unknown) => {
 // Backward compatibility - property condition status (can be enhanced later)
 export const zodPropertyConditionStatus = (data: unknown): StatusResult => {
   const sections = Array.isArray(data) ? data : [];
-  const hasData = sections.some((section: any) => 
-    section.elementSections?.some((element: any) => 
-      element.description || 
-      (element.images && element.images.length > 0) ||
-      (element.components && element.components.length > 0)
+  const isComplete = sections.every((section: any) => 
+    section.elementSections?.every((element: any) => 
+      !element.isPartOfSurvey || (
+      element.description &&
+      (element.images && element.images.length > 0) &&
+      (element.components && element.components.length > 0))
     )
   );
   
   return {
-    status: hasData ? FormStatus.InProgress : FormStatus.Incomplete,
-    hasData,
-    isValid: false, // For now, never consider complete
+    status: isComplete ? FormStatus.Complete : FormStatus.InProgress,
+    hasData: true,
+    isValid: isComplete,
     errors: []
   };
 };
