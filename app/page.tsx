@@ -25,22 +25,24 @@ import { AppIcon } from '@/app/home/components/AppIcon';
 function FrontPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 relative overflow-hidden">
-      {/* Animated background elements */}
+      {/* Background visuals */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-        <div className="absolute top-0 right-10 w-72 h-72 bg-gradient-to-r from-yellow-400/20 to-pink-400/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-2000"></div>
-        <div className="absolute -bottom-32 left-20 w-72 h-72 bg-gradient-to-r from-green-400/20 to-blue-400/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-4000"></div>
+        <div className="absolute inset-0 bg-grid-slate mask-radial-faded"></div>
+        <div className="orb top-10 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/40 to-purple-400/40"></div>
+        <div className="orb -top-10 right-20 w-80 h-80 bg-gradient-to-r from-pink-400/40 to-orange-400/40"></div>
+        <div className="orb -bottom-24 left-24 w-80 h-80 bg-gradient-to-r from-green-400/40 to-blue-400/40"></div>
+        <div className="orb bottom-10 right-10 w-56 h-56 bg-gradient-to-r from-indigo-400/40 to-cyan-400/40"></div>
       </div>
 
       {/* Header Section */}
-      <header className="relative z-10 border-b bg-white/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="relative z-10 border-b glass-header">
+        <div className="container-7xl">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-105">
               <div className="w-8 h-8">
                 <AppIcon color="hsl(var(--primary))" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Survii</span>
+              <span className="text-xl font-bold text-gradient-brand">Survii</span>
             </Link>
             <div className="flex items-center gap-4">
               <Link href="/login">
@@ -49,7 +51,7 @@ function FrontPage() {
                 </Button>
               </Link>
               <Link href="/login">
-                <Button className="text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
+                <Button className="text-base cta-primary btn-shine">
                   Get Started
                 </Button>
               </Link>
@@ -59,8 +61,8 @@ function FrontPage() {
       </header>
       
       {/* Hero Section */}
-      <section className="relative z-10 py-20 sm:py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative z-10 section-y">
+        <div className="container-7xl">
           <div className="text-center">
             <Badge variant="secondary" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium mb-8 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 border-0">
               <span className="relative flex h-2 w-2">
@@ -75,7 +77,7 @@ function FrontPage() {
                 Property Surveys
               </span>
               <br />
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-gradient-brand">
                 Made Simple
               </span>
             </h1>
@@ -87,7 +89,7 @@ function FrontPage() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Link href="/login">
-                <Button size="lg" className="w-full sm:w-auto px-8 py-4 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1">
+                <Button size="lg" className="w-full sm:w-auto px-8 py-4 text-lg cta-primary btn-shine transition-all duration-200 transform hover:-translate-y-1">
                   Start Surveying Today
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -122,8 +124,8 @@ function FrontPage() {
       </section>
 
       {/* Features Section */}
-      <section className="relative z-10 py-20 sm:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative z-10 section-y bg-white">
+        <div className="container-7xl">
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4 px-3 py-1">
               Built for Professionals
@@ -139,7 +141,7 @@ function FrontPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg">
+            <Card className="group card-elevated card-gradient glass-card hover-lift-md">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <Camera className="w-6 h-6 text-white" />
@@ -151,7 +153,7 @@ function FrontPage() {
               </CardHeader>
             </Card>
             
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg">
+            <Card className="group card-elevated card-gradient glass-card hover-lift-md">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <FileText className="w-6 h-6 text-white" />
@@ -163,7 +165,7 @@ function FrontPage() {
               </CardHeader>
             </Card>
             
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg">
+            <Card className="group card-elevated card-gradient glass-card hover-lift-md">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <Smartphone className="w-6 h-6 text-white" />
@@ -175,7 +177,7 @@ function FrontPage() {
               </CardHeader>
             </Card>
             
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg">
+            <Card className="group card-elevated card-gradient glass-card hover-lift-md">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <MapPin className="w-6 h-6 text-white" />
@@ -187,7 +189,7 @@ function FrontPage() {
               </CardHeader>
             </Card>
             
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg">
+            <Card className="group card-elevated card-gradient glass-card hover-lift-md">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <Users className="w-6 h-6 text-white" />
@@ -199,7 +201,7 @@ function FrontPage() {
               </CardHeader>
             </Card>
             
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg">
+            <Card className="group card-elevated card-gradient glass-card hover-lift-md">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <Shield className="w-6 h-6 text-white" />
@@ -276,8 +278,8 @@ function FrontPage() {
       </section>
 
       {/* Social Proof Section */}
-      <section className="relative z-10 py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative z-10 section-y bg-gray-50">
+        <div className="container-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               Trusted by Professional Surveyors
@@ -286,7 +288,7 @@ function FrontPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg bg-white">
+            <Card className="card-elevated card-gradient glass-card">
               <CardHeader>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -310,7 +312,7 @@ function FrontPage() {
               </CardContent>
             </Card>
             
-            <Card className="border-0 shadow-lg bg-white">
+            <Card className="card-elevated card-gradient glass-card">
               <CardHeader>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -334,7 +336,7 @@ function FrontPage() {
               </CardContent>
             </Card>
             
-            <Card className="border-0 shadow-lg bg-white">
+            <Card className="card-elevated card-gradient glass-card">
               <CardHeader>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -362,12 +364,13 @@ function FrontPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 py-20 sm:py-32 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 overflow-hidden">
+      <section className="relative z-10 section-y bg-gradient-brand overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/90 to-purple-800/90"></div>
-          <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-10 left-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-purple-800/90"></div>
+          <div className="absolute inset-0 bg-grid-white opacity-40"></div>
+          <div className="orb top-6 right-10 w-44 h-44 bg-gradient-to-r from-white/20 to-white/5"></div>
+          <div className="orb bottom-6 left-10 w-56 h-56 bg-gradient-to-r from-white/15 to-white/5"></div>
         </div>
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -382,7 +385,7 @@ function FrontPage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Link href="/login">
-              <Button size="lg" className="w-full sm:w-auto px-8 py-4 text-lg bg-white text-blue-600 hover:bg-gray-100 shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:-translate-y-1 font-semibold">
+              <Button size="lg" className="w-full sm:w-auto px-8 py-4 text-lg cta-on-dark btn-shine transition-all duration-200 transform hover:-translate-y-1 font-semibold">
                 Start Free Trial Today
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -390,7 +393,7 @@ function FrontPage() {
             <Button 
               size="lg" 
               variant="outline" 
-              className="w-full sm:w-auto px-8 py-4 text-lg border-2 border-white/30 text-white hover:bg-white/10 transition-all duration-200"
+              className="w-full sm:w-auto px-8 py-4 text-lg cta-outline-on-dark btn-shine transition-all duration-200"
             >
               <Camera className="mr-2 h-5 w-5" />
               See It In Action
@@ -416,7 +419,7 @@ function FrontPage() {
 
       {/* Footer */}
       <footer className="relative z-10 bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-7xl">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
               <div className="w-8 h-8">
