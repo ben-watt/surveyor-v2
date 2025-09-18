@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { listUserTenants, getPreferredTenant, setPreferredTenant, Tenant } from "../utils/tenant-utils";
 import { useRouter } from "next/navigation";
 
@@ -22,33 +22,29 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const LOCAL_TENANTS_KEY = 'sv_tenants';
+  const LOCAL_CURRENT_TENANT_NAME_KEY = 'sv_current_tenant_name';
+
   // Load tenants and set the current tenant
-  const loadTenants = async () => {
+  const loadTenants = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Get all tenants the user has access to
+
       const userTenants = await listUserTenants();
       setTenants(userTenants);
-      
+
       if (userTenants.length > 0) {
-        // Try to get the preferred tenant from user attributes
         const preferredTenantName = await getPreferredTenant();
-        
+
         if (preferredTenantName) {
-          // Find the preferred tenant in the list
-          const preferredTenant = userTenants.find(t => t.name === preferredTenantName);
-          if (preferredTenant) {
-            setCurrentTenantState(preferredTenant);
-            return;
-          }
+          const preferredTenant = userTenants.find(t => t.name === preferredTenantName) || null;
+          setCurrentTenantState(prev => (prev?.name === preferredTenant?.name ? prev : preferredTenant));
+        } else {
+          setCurrentTenantState(prev => (prev === null ? prev : null));
         }
-        
-        // If no preferred tenant or it's not in the list, set to null
-        setCurrentTenantState(null);
       } else {
-        setCurrentTenantState(null);
+        setCurrentTenantState(prev => (prev === null ? prev : null));
       }
     } catch (err) {
       console.error("Error loading tenants:", err);
@@ -56,41 +52,84 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Set the current tenant and save it as preferred
-  const setCurrentTenant = async (tenant: Tenant | null) => {
+  const setCurrentTenant = useCallback(async (tenant: Tenant | null) => {
     try {
-      setCurrentTenantState(tenant);
+      setCurrentTenantState(prev => (prev?.name === tenant?.name ? prev : tenant));
       await setPreferredTenant(tenant ? tenant.name : "personal");
       router.push("/home");
     } catch (err) {
       console.error("Error setting preferred tenant:", err);
       setError("Failed to set preferred tenant");
     }
-  };
+  }, [router]);
 
   // Refresh the tenant list
-  const refreshTenants = async () => {
+  const refreshTenants = useCallback(async () => {
     await loadTenants();
-  };
+  }, [loadTenants]);
 
   // Load tenants on initial render
   useEffect(() => {
+    try {
+      const storedTenantsRaw = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_TENANTS_KEY) : null;
+      const storedCurrentName = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_CURRENT_TENANT_NAME_KEY) : null;
+
+      if (storedTenantsRaw) {
+        const parsed = JSON.parse(storedTenantsRaw) as unknown;
+        if (Array.isArray(parsed)) {
+          const storedTenants = parsed as Tenant[];
+          setTenants(storedTenants);
+
+          if (storedCurrentName) {
+            const matched = storedTenants.find(t => t.name === storedCurrentName) || null;
+            setCurrentTenantState(matched);
+          } else {
+            setCurrentTenantState(null);
+          }
+          setLoading(false);
+          return; // Skip network fetch when we have persisted data
+        }
+      }
+    } catch (e) {
+      // If parsing fails, fall back to fetching
+      console.warn('Failed to read tenants from localStorage; falling back to fetch.');
+    }
+
     loadTenants();
-  }, []);
+  }, [loadTenants]);
+
+  // Persist tenants and current tenant to localStorage
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      localStorage.setItem(LOCAL_TENANTS_KEY, JSON.stringify(tenants));
+      if (currentTenant?.name) {
+        localStorage.setItem(LOCAL_CURRENT_TENANT_NAME_KEY, currentTenant.name);
+      } else {
+        localStorage.removeItem(LOCAL_CURRENT_TENANT_NAME_KEY);
+      }
+    } catch (e) {
+      // Ignore storage errors (quota/permissions)
+    }
+  }, [tenants, currentTenant]);
+
+  const value = useMemo(
+    () => ({
+      currentTenant,
+      tenants,
+      loading,
+      error,
+      setCurrentTenant,
+      refreshTenants,
+    }),
+    [currentTenant, tenants, loading, error, setCurrentTenant, refreshTenants]
+  );
 
   return (
-    <TenantContext.Provider
-      value={{
-        currentTenant,
-        tenants,
-        loading,
-        error,
-        setCurrentTenant,
-        refreshTenants,
-      }}
-    >
+    <TenantContext.Provider value={value}>
       {children}
     </TenantContext.Provider>
   );
