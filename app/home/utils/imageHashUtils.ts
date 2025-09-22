@@ -101,11 +101,12 @@ export async function areFilesIdentical(
  */
 export async function processFileWithHash(
   newFile: File,
-  existingFiles: { name: string; file: File | Blob }[]
+  existingFiles: { name: string; file: File | Blob; isArchived?: boolean }[]
 ): Promise<{
   filename: string;
   isDuplicate: boolean;
   matchedFile?: string;
+  isArchived?: boolean;
 }> {
   // Check if any existing file has the same content
   for (const existing of existingFiles) {
@@ -114,7 +115,8 @@ export async function processFileWithHash(
       return {
         filename: existing.name,
         isDuplicate: true,
-        matchedFile: existing.name
+        matchedFile: existing.name,
+        isArchived: existing.isArchived || false
       };
     }
   }

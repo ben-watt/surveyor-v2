@@ -268,12 +268,12 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
       // Collect existing file data for duplicate/collision detection
       const existingFileData = files.map(f => ({
         name: f.name,
+        isArchived: f.isArchived,
         file: f // Use the actual file for content comparison
       }));
 
       const processedFiles: DropZoneInputFile[] = [];
       const skippedDuplicates: string[] = [];
-      const unarchived: string[] = [];
 
       for (const originalFile of acceptedFiles) {
         try {
@@ -284,6 +284,41 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           const hashResult = await processFileWithHash(resizedFile, existingFileData);
 
           if (hashResult.isDuplicate) {
+            if(hashResult.isArchived) {
+              toast(`File ${hashResult.matchedFile} is already archived and will be restored`, {
+                icon: '📤',
+                duration: 3000,
+              });
+              const finalPath = join(path, hashResult.matchedFile || "");
+              try {
+                await imageUploadStore.remove(finalPath);
+                await imageUploadStore.create({
+                  id: finalPath,
+                  path: finalPath,
+                  file: resizedFile,
+                  href: URL.createObjectURL(resizedFile),
+                  metadata: {
+                    filename: resizedFile.name,
+                    size: resizedFile.size.toString(),
+                    type: resizedFile.type,
+                  },
+                });
+  
+                setFiles((prevFiles) =>
+                  prevFiles.map((f) =>
+                    f.name === hashResult.filename
+                      ? { ...f, isArchived: false, file: resizedFile, preview: URL.createObjectURL(resizedFile) }
+                      : f
+                  )
+                );
+  
+              } catch (error) {
+                console.error("[DropZoneInputImage] Error unarchiving file:", error);
+                toast.error(`Failed to unarchive ${hashResult.filename}`);
+              }
+
+              continue;
+            }
             // Same content already exists
             console.log(`[DropZoneInputImage] Skipping duplicate: ${originalFile.name} (matches ${hashResult.matchedFile})`);
             skippedDuplicates.push(originalFile.name);
@@ -298,84 +333,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
           const finalFile = renameFile(resizedFile, hashResult.filename);
           const finalPath = join(path, hashResult.filename);
 
-          // Check if there's an existing file with this exact name that's archived
-          const existingArchivedFile = files.find((f) => f.name === hashResult.filename && f.isArchived);
-
-          if (existingArchivedFile) {
-            // Unarchive the existing file with new content
-            try {
-              await imageUploadStore.unarchive(finalPath, {
-                id: finalPath,
-                path: finalPath,
-                file: finalFile,
-                href: URL.createObjectURL(finalFile),
-                metadata: {
-                  filename: hashResult.filename,
-                  size: finalFile.size.toString(),
-                  type: finalFile.type,
-                },
-              });
-
-              // Update the existing file in state
-              setFiles((prevFiles) =>
-                prevFiles.map((f) =>
-                  f.name === hashResult.filename
-                    ? { ...f, isArchived: false, file: finalFile, preview: URL.createObjectURL(finalFile) }
-                    : f
-                )
-              );
-
-              unarchived.push(hashResult.filename);
-            } catch (error) {
-              console.error("[DropZoneInputImage] Error unarchiving file:", error);
-              toast.error(`Failed to unarchive ${hashResult.filename}`);
-            }
-          } else {
-            // Create new file or replace existing active file
-            try {
-              const fileData = {
-                id: finalPath,
-                path: finalPath,
-                file: finalFile,
-                href: URL.createObjectURL(finalFile),
-                metadata: {
-                  filename: hashResult.filename,
-                  size: finalFile.size.toString(),
-                  type: finalFile.type,
-                },
-              };
-
-              await imageUploadStore.create(fileData);
-
-              // Check if we're replacing an existing active file
-              const existingActiveFile = files.find((f) => f.name === hashResult.filename && !f.isArchived);
-
-              if (existingActiveFile) {
-                // Update existing file in state
-                setFiles((prevFiles) =>
-                  prevFiles.map((f) =>
-                    f.name === hashResult.filename
-                      ? { ...f, file: finalFile, preview: URL.createObjectURL(finalFile) }
-                      : f
-                  )
-                );
-              } else {
-                // Add as new file
-                const newDropZoneFile = Object.assign(finalFile, {
-                  preview: URL.createObjectURL(finalFile),
-                  path: finalPath,
-                  isArchived: false,
-                  hasMetadata: false
-                }) as DropZoneInputFile;
-
-                processedFiles.push(newDropZoneFile);
-              }
-            } catch (error) {
-              console.error("[DropZoneInputImage] Error creating file:", error);
-              toast.error(`Failed to upload ${hashResult.filename}`);
-            }
-          }
-
           // Add to existing file data for next iteration
           const newFileData = Object.assign(finalFile, {
             preview: URL.createObjectURL(finalFile),
@@ -385,6 +342,7 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
 
           existingFileData.push({
             name: hashResult.filename,
+            isArchived: false,
             file: newFileData
           });
 
@@ -410,15 +368,6 @@ export const DropZoneInputImage = (props: DropZoneInputImageProps) => {
             return currentFiles;
           });
         }, 0);
-      }
-
-      // Show success messages
-      if (unarchived.length > 0) {
-        const fileNames = unarchived.join(', ');
-        toast.success(`Unarchived: ${fileNames}`, {
-          icon: '📤',
-          duration: 3000,
-        });
       }
 
       if (skippedDuplicates.length > 0) {
