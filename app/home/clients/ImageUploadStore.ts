@@ -154,7 +154,7 @@ function createImageUploadStore(db: Dexie, name: string) {
             try {
                 imageUploadStatusStore.setUploading(data.path, true);
                 const tenantId = await getCurrentTenantId();
-                await table.add({
+                await table.put({
                     id: data.path,
                     tenantId: tenantId || "",
                     path: data.path,
