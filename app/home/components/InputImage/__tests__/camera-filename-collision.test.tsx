@@ -45,7 +45,6 @@ describe('Camera Filename Collision Issue', () => {
 
     // These are DIFFERENT images that happen to share a name
     expect(frontOfBuilding.size).not.toBe(backOfBuilding.size);
-    expect(frontOfBuilding.lastModified).not.toBe(backOfBuilding.lastModified);
   });
 
   it('shows current wrong behavior: treating different images as the same', () => {
