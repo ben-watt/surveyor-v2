@@ -60,6 +60,18 @@ const Thumbnail = ({
     }
   }, [image]);
 
+  const toFileSize = useCallback((size: number): [number, string] => {
+    if (size < 1024) {
+      return [size, "B"];
+    } else if (size < 1024 * 1024) {
+      return [Math.round(size / 1024), "KB"];
+    } else if (size < 1024 * 1024 * 1024) {
+      return [Math.round(size / 1024 / 1024), "MB"];
+    } else {
+      return [Math.round(size / 1024 / 1024 / 1024), "GB"];
+    }
+  }, []);
+
   const handleEdit = () => {
     if (!image) return;
 
@@ -85,58 +97,70 @@ const Thumbnail = ({
 
   if (!hydrated || !image) {
     return (
-      <div className="animate-pulse bg-gray-200 rounded aspect-square" />
+      <div className="animate-pulse bg-gray-200 rounded aspect-[3/2]" />
     );
   }
 
   return (
-    <div className="relative group overflow-hidden rounded-lg bg-gray-50">
-      <ProgressiveImage
-        imageId={imageId}
-        className="aspect-square object-cover w-full"
-        alt={image.fileName}
-      />
-
-      <button
-        className="absolute top-2 right-2 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onDelete(filePath);
-        }}
-        title="Delete image"
-      >
-        <X className="h-4 w-4" />
-      </button>
-
-      {features?.archive && !image.isArchived && (
+    <div className="relative rounded-md overflow-hidden" key={image.fileName}>
+      <div>
+        <ProgressiveImage
+          imageId={imageId}
+          className="aspect-[3/2] object-cover"
+          alt={image.fileName}
+        />
+      </div>
+      <aside className="absolute top-0 left-0 right-0 bottom-0 from-black/70 to-black/0 bg-gradient-to-b"></aside>
+      <aside className="absolute top-0 left-9 right-9 text-white p-2 text-xs">
+        <p className="truncate">{image.fileName}</p>
+        <p className="text-background/50 text-[0.6rem]">
+          {image.fileSize ? (() => {
+            const [size, unit] = toFileSize(image.fileSize);
+            return `${size} ${unit}`;
+          })() : 'Unknown size'}
+        </p>
+      </aside>
+      <aside className="absolute top-0 left-0">
         <button
-          className="absolute top-2 right-12 p-2 bg-white/80 rounded-full hover:bg-white transition-colors"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onArchive(filePath);
+          className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onDelete(filePath);
           }}
-          title="Archive image"
         >
-          <Archive className="h-4 w-4" />
+          <X />
         </button>
-      )}
-
+      </aside>
       {features?.metadata && (
-        <button
-          className={`absolute bottom-2 right-2 p-2 rounded-full hover:bg-white transition-colors ${
-            hasMetadata ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-white/80'
-          }`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleEdit();
-          }}
-          title="Edit metadata"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
+        <aside className="absolute top-0 right-0">
+          <button
+            className={`p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
+              hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
+            }`}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              handleEdit();
+            }}
+          >
+            <Pencil size={16} />
+          </button>
+        </aside>
+      )}
+      {features?.archive && (
+        <aside className="absolute bottom-0 left-0">
+          <button
+            className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onArchive(filePath);
+            }}
+          >
+            <Archive size={16} />
+          </button>
+        </aside>
       )}
     </div>
   );
@@ -344,84 +368,107 @@ export const DropZoneInputImageV2 = ({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      <div className="container border border-gray-300 rounded-md p-4 bg-gray-100">
+        Loading...
       </div>
     );
   }
 
-  const showDropzone = !maxFiles || files.length < maxFiles;
+  const activeFiles = files.filter((f) => !f.isArchived);
+  const archivedFiles = files.filter((f) => f.isArchived);
 
   return (
     <>
-      <div className="space-y-4">
-        <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {files.map((file) => {
-            const imageId = pathToIdMap.get(file.path);
-            if (!imageId) return null;
-
-            return (
-              <Thumbnail
-                key={file.path}
-                imageId={imageId}
-                filePath={file.path}
-                onDelete={handleDelete}
-                onArchive={handleArchive}
-                features={features}
-                onMetadataChange={handleMetadataChange}
-              />
-            );
-          })}
-        </section>
-
-        {showDropzone && (
-          <div
-            {...getRootProps()}
-            className="p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
-          >
-            <input {...getInputProps()} />
-            <div className="text-center">
-              <p className="text-gray-600">
-                Drag & drop images here, or click to select
+      <section className="container border border-gray-300 rounded-md p-4 bg-gray-100">
+        <div {...getRootProps({ className: "dropzone" })}>
+          {maxFiles !== activeFiles.length && (
+            <div className="flex flex-col items-center justify-center">
+              <input {...getInputProps()} />
+              <p className="text-sm text-gray-500 m-2 text-center">
+                Drag & drop files, {" or "}
+                <u className="cursor-pointer">fetch from device</u>
               </p>
-              {maxFiles && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {files.length}/{maxFiles} images
-                </p>
-              )}
             </div>
+          )}
+        </div>
+        <aside>
+          <ul
+            className={`${
+              maxFiles && maxFiles > 1
+                ? "grid grid-cols-2 gap-2"
+                : "flex flex-wrap gap-2 justify-center"
+            }`}
+          >
+            {activeFiles.map((file) => {
+              const imageId = pathToIdMap.get(file.path);
+              if (!imageId) return null;
+
+              return (
+                <Thumbnail
+                  key={file.path}
+                  imageId={imageId}
+                  filePath={file.path}
+                  onDelete={handleDelete}
+                  onArchive={handleArchive}
+                  features={features}
+                  onMetadataChange={handleMetadataChange}
+                />
+              );
+            })}
+          </ul>
+        </aside>
+        {features.archive && archivedFiles.length > 0 && (
+          <div className="mt-4 flex items-center justify-start gap-2 text-gray-500">
+            <Archive size={16} />
+            <span className="text-sm">{archivedFiles.length} archived</span>
           </div>
         )}
+      </section>
 
-        {isUploading && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
-              <p className="mt-4">Uploading images...</p>
-            </div>
+      {/* Camera Modal */}
+      <CameraModalWrapper
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        path={path}
+        onPhotoCaptured={async (filePath: string) => {
+          // Reload files to include newly captured photos
+          try {
+            const result = await enhancedImageStore.getActiveImages();
+            if (!result.ok) return;
+
+            const pathImages = result.val.filter(img =>
+              img.imagePath.startsWith(path) && !img.isArchived
+            );
+
+            const newPathToIdMap = new Map<string, string>();
+            const existingFiles: DropZoneInputFile[] = pathImages.map(img => {
+              newPathToIdMap.set(img.imagePath, img.id);
+
+              return {
+                path: img.imagePath,
+                isArchived: img.isArchived || false,
+                hasMetadata: !!(img.caption || img.notes)
+              };
+            });
+
+            setPathToIdMap(newPathToIdMap);
+            setFiles(existingFiles);
+            onChange?.(existingFiles);
+          } catch (error) {
+            console.error("Error reloading files after camera capture:", error);
+          }
+          setIsCameraOpen(false);
+        }}
+        maxPhotos={maxFiles}
+      />
+
+      {isUploading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+            <p className="mt-4">Uploading images...</p>
           </div>
-        )}
-
-        <button
-          onClick={() => setIsCameraOpen(true)}
-          className="w-full p-4 bg-blue-500 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"
-        >
-          <Camera className="h-5 w-5" />
-          Take Photo
-        </button>
-      </div>
-
-      {isCameraOpen && (
-        <CameraModalWrapper
-          isOpen={isCameraOpen}
-          onClose={() => setIsCameraOpen(false)}
-          path={path}
-          onPhotoCaptured={async (filePath: string) => {
-            // This would be called when a photo is captured via the existing modal
-            setIsCameraOpen(false);
-          }}
-          maxPhotos={maxFiles ? maxFiles - files.length : undefined}
-        />
+        </div>
       )}
     </>
   );
