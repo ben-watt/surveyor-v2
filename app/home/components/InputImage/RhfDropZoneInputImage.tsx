@@ -1,6 +1,6 @@
 import React from 'react';
 import { UseControllerProps, useController } from 'react-hook-form';
-import { DropZoneInputFile, DropZoneInputImage, DropZoneInputImageProps } from './DropZoneInputImage';
+import { DropZoneInputFile, DropZoneInputImage, DropZoneInputImageProps } from './index';
 import { ErrorMessage } from '@hookform/error-message';
 import { Label } from '../Input/Label';
 import InputError from '../InputError';

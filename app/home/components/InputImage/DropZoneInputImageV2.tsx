@@ -6,43 +6,50 @@ import { SimpleImageMetadataDialog } from "./SimpleImageMetadataDialog";
 import { CameraModalWrapper } from "./CameraModalWrapper";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import { resizeImage } from "@/app/home/utils/imageResizer";
-// Note: Using custom path join to avoid leading slashes for AWS Amplify
-const joinPath = (...parts: string[]) => {
-  return parts.filter(Boolean).join('/').replace(/^\/+/, ''); // Remove leading slashes
-};
 import toast from "react-hot-toast";
-import { processFileWithHash, renameFile } from "@/app/home/utils/imageHashUtils";
+import { processFileWithHash } from "@/app/home/utils/imageHashUtils";
 import { ProgressiveImage } from "../ProgressiveImage";
-import { ImageMetadata } from "../../clients/Database";
 
-interface DropZoneInputImageEnhancedProps {
+// Custom path join to avoid leading slashes for AWS Amplify
+const joinPath = (...parts: string[]) => {
+  return parts.filter(Boolean).join('/').replace(/^\/+/, '');
+};
+
+export interface DropZoneInputImageV2Props {
   path: string;
   maxFiles?: number;
   minFiles?: number;
-  onChange?: (imageIds: string[]) => void;
+  onChange?: (filePaths: DropZoneInputFile[]) => void;
   features?: {
     archive?: boolean;
     metadata?: boolean;
   };
 }
 
-export type { DropZoneInputImageEnhancedProps };
+export type DropZoneInputFile = {
+  path: string;
+  isArchived: boolean;
+  hasMetadata: boolean;
+  preview?: string;
+};
 
-interface ThumbnailEnhancedProps {
+interface ThumbnailProps {
   imageId: string;
-  onDelete: (imageId: string) => void;
-  onArchive: (imageId: string) => void;
-  features?: DropZoneInputImageEnhancedProps['features'];
-  onMetadataChange: (imageId: string) => void;
+  filePath: string;
+  onDelete: (filePath: string) => void;
+  onArchive: (filePath: string) => void;
+  features?: DropZoneInputImageV2Props['features'];
+  onMetadataChange: (filePath: string) => void;
 }
 
-const ThumbnailEnhanced = ({
+const Thumbnail = ({
   imageId,
+  filePath,
   onDelete,
   onArchive,
   features,
   onMetadataChange
-}: ThumbnailEnhancedProps) => {
+}: ThumbnailProps) => {
   const { openDrawer, closeDrawer } = useDynamicDrawer();
   const [hydrated, image] = enhancedImageStore.useGet(imageId);
   const [hasMetadata, setHasMetadata] = useState(false);
@@ -68,7 +75,7 @@ const ThumbnailEnhanced = ({
             draft.notes = notes;
           });
           setHasMetadata(true);
-          onMetadataChange(imageId);
+          onMetadataChange(filePath);
           closeDrawer();
         }}
         onClose={closeDrawer}
@@ -95,7 +102,7 @@ const ThumbnailEnhanced = ({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          onDelete(imageId);
+          onDelete(filePath);
         }}
         title="Delete image"
       >
@@ -108,7 +115,7 @@ const ThumbnailEnhanced = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onArchive(imageId);
+            onArchive(filePath);
           }}
           title="Archive image"
         >
@@ -135,34 +142,50 @@ const ThumbnailEnhanced = ({
   );
 };
 
-export const DropZoneInputImageEnhanced = ({
+export const DropZoneInputImageV2 = ({
   path,
   maxFiles,
   minFiles,
   onChange,
   features = { archive: false, metadata: false }
-}: DropZoneInputImageEnhancedProps) => {
-  const [imageIds, setImageIds] = useState<string[]>([]);
+}: DropZoneInputImageV2Props) => {
+  const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Map of imagePath -> imageId for tracking
+  const [pathToIdMap, setPathToIdMap] = useState<Map<string, string>>(new Map());
 
   // Load existing images for this path
   useEffect(() => {
     const loadExistingImages = async () => {
       try {
         const result = await enhancedImageStore.getActiveImages();
-
-        if (result.ok) {
-          // Filter images for this specific path
-          const pathImages = result.val.filter(img =>
-            img.imagePath.startsWith(path) && !img.isArchived
-          );
-
-          const ids = pathImages.map(img => img.id);
-          setImageIds(ids);
-          onChange?.(ids);
+        if (!result.ok) {
+          setIsLoading(false);
+          return;
         }
+
+        // Filter images for this specific path
+        const pathImages = result.val.filter(img =>
+          img.imagePath.startsWith(path) && !img.isArchived
+        );
+
+        const newPathToIdMap = new Map<string, string>();
+        const existingFiles: DropZoneInputFile[] = pathImages.map(img => {
+          newPathToIdMap.set(img.imagePath, img.id);
+
+          return {
+            path: img.imagePath,
+            isArchived: img.isArchived || false,
+            hasMetadata: !!(img.caption || img.notes)
+          };
+        });
+
+        setPathToIdMap(newPathToIdMap);
+        setFiles(existingFiles);
+        onChange?.(existingFiles);
       } catch (error) {
         console.error("Error loading existing images:", error);
       } finally {
@@ -175,7 +198,6 @@ export const DropZoneInputImageEnhanced = ({
 
   const handleUpload = async (file: File, fileName: string) => {
     const finalPath = joinPath(path, fileName);
-    const id = crypto.randomUUID();
 
     setIsUploading(true);
     try {
@@ -183,7 +205,6 @@ export const DropZoneInputImageEnhanced = ({
         file,
         finalPath,
         {
-          id,
           onProgress: (progress) => {
             console.debug(`Upload progress for ${fileName}: ${progress}%`);
           }
@@ -191,8 +212,19 @@ export const DropZoneInputImageEnhanced = ({
       );
 
       if (uploadResult.ok) {
-        setImageIds(prev => [...prev, uploadResult.val]);
-        onChange?.([...imageIds, uploadResult.val]);
+        const newFile: DropZoneInputFile = {
+          path: finalPath,
+          isArchived: false,
+          hasMetadata: false
+        };
+
+        // Update path to ID mapping
+        setPathToIdMap(prev => new Map(prev.set(finalPath, uploadResult.val)));
+
+        const updatedFiles = [...files, newFile];
+        setFiles(updatedFiles);
+        onChange?.(updatedFiles);
+
         return uploadResult.val;
       } else {
         throw uploadResult.val;
@@ -212,7 +244,7 @@ export const DropZoneInputImageEnhanced = ({
       'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.ico', '.webp'],
     },
     onDrop: async (acceptedFiles: FileWithPath[]) => {
-      console.log("[DropZoneInputImageEnhanced] Processing files");
+      console.log("[DropZoneInputImageV2] Processing files");
 
       // Get existing files for duplicate detection
       const existingImages = await enhancedImageStore.getActiveImages();
@@ -221,8 +253,6 @@ export const DropZoneInputImageEnhanced = ({
         isArchived: img.isArchived || false,
         file: new Blob() // Placeholder for hash comparison
       })) : [];
-
-      const newImageIds: string[] = [];
 
       for (const originalFile of acceptedFiles) {
         try {
@@ -240,7 +270,6 @@ export const DropZoneInputImageEnhanced = ({
 
               if (existingImage) {
                 await enhancedImageStore.unarchiveImage(existingImage.id);
-                newImageIds.push(existingImage.id);
                 toast(`Restored archived image: ${hashResult.matchedFile}`, {
                   icon: '📤',
                   duration: 3000,
@@ -257,37 +286,31 @@ export const DropZoneInputImageEnhanced = ({
 
           // Upload the new file
           const finalFileName = hashResult.filename;
-          const uploadedId = await handleUpload(resizedFile, finalFileName);
+          await handleUpload(resizedFile, finalFileName);
 
-          if (uploadedId) {
-            newImageIds.push(uploadedId);
-            existingFileData.push({
-              name: finalFileName,
-              isArchived: false,
-              file: resizedFile
-            });
-          }
+          existingFileData.push({
+            name: finalFileName,
+            isArchived: false,
+            file: resizedFile
+          });
         } catch (error) {
           console.error("Error processing file:", error);
           toast.error(`Failed to process ${originalFile.name}`);
         }
       }
-
-      if (newImageIds.length > 0) {
-        const updatedIds = [...imageIds, ...newImageIds];
-        setImageIds(updatedIds);
-        onChange?.(updatedIds);
-      }
     },
   });
 
-  const handleDelete = async (imageId: string) => {
+  const handleDelete = async (filePath: string) => {
     try {
-      // For now, we'll archive instead of hard delete
-      await enhancedImageStore.archiveImage(imageId);
-      const updatedIds = imageIds.filter(id => id !== imageId);
-      setImageIds(updatedIds);
-      onChange?.(updatedIds);
+      const imageId = pathToIdMap.get(filePath);
+      if (imageId) {
+        await enhancedImageStore.archiveImage(imageId);
+      }
+
+      const updatedFiles = files.filter(f => f.path !== filePath);
+      setFiles(updatedFiles);
+      onChange?.(updatedFiles);
       toast.success("Image deleted");
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -295,12 +318,16 @@ export const DropZoneInputImageEnhanced = ({
     }
   };
 
-  const handleArchive = async (imageId: string) => {
+  const handleArchive = async (filePath: string) => {
     try {
-      await enhancedImageStore.archiveImage(imageId);
-      const updatedIds = imageIds.filter(id => id !== imageId);
-      setImageIds(updatedIds);
-      onChange?.(updatedIds);
+      const imageId = pathToIdMap.get(filePath);
+      if (imageId) {
+        await enhancedImageStore.archiveImage(imageId);
+      }
+
+      const updatedFiles = files.filter(f => f.path !== filePath);
+      setFiles(updatedFiles);
+      onChange?.(updatedFiles);
       toast.success("Image archived");
     } catch (error) {
       console.error("Error archiving image:", error);
@@ -308,27 +335,11 @@ export const DropZoneInputImageEnhanced = ({
     }
   };
 
-  const handleMetadataChange = (imageId: string) => {
-    // Trigger re-render if needed
-    console.debug("Metadata updated for:", imageId);
-  };
-
-  const handleCameraCapture = async (capturedFiles: File[]) => {
-    setIsCameraOpen(false);
-
-    const newImageIds: string[] = [];
-    for (const file of capturedFiles) {
-      const uploadedId = await handleUpload(file, file.name);
-      if (uploadedId) {
-        newImageIds.push(uploadedId);
-      }
-    }
-
-    if (newImageIds.length > 0) {
-      const updatedIds = [...imageIds, ...newImageIds];
-      setImageIds(updatedIds);
-      onChange?.(updatedIds);
-    }
+  const handleMetadataChange = (filePath: string) => {
+    // Update hasMetadata flag
+    setFiles(prev => prev.map(f =>
+      f.path === filePath ? { ...f, hasMetadata: true } : f
+    ));
   };
 
   if (isLoading) {
@@ -339,22 +350,28 @@ export const DropZoneInputImageEnhanced = ({
     );
   }
 
-  const showDropzone = !maxFiles || imageIds.length < maxFiles;
+  const showDropzone = !maxFiles || files.length < maxFiles;
 
   return (
     <>
       <div className="space-y-4">
         <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {imageIds.map((imageId) => (
-            <ThumbnailEnhanced
-              key={imageId}
-              imageId={imageId}
-              onDelete={handleDelete}
-              onArchive={handleArchive}
-              features={features}
-              onMetadataChange={handleMetadataChange}
-            />
-          ))}
+          {files.map((file) => {
+            const imageId = pathToIdMap.get(file.path);
+            if (!imageId) return null;
+
+            return (
+              <Thumbnail
+                key={file.path}
+                imageId={imageId}
+                filePath={file.path}
+                onDelete={handleDelete}
+                onArchive={handleArchive}
+                features={features}
+                onMetadataChange={handleMetadataChange}
+              />
+            );
+          })}
         </section>
 
         {showDropzone && (
@@ -369,7 +386,7 @@ export const DropZoneInputImageEnhanced = ({
               </p>
               {maxFiles && (
                 <p className="text-sm text-gray-500 mt-1">
-                  {imageIds.length}/{maxFiles} images
+                  {files.length}/{maxFiles} images
                 </p>
               )}
             </div>
@@ -401,10 +418,9 @@ export const DropZoneInputImageEnhanced = ({
           path={path}
           onPhotoCaptured={async (filePath: string) => {
             // This would be called when a photo is captured via the existing modal
-            // For now, we'll just close the modal
             setIsCameraOpen(false);
           }}
-          maxPhotos={maxFiles ? maxFiles - imageIds.length : undefined}
+          maxPhotos={maxFiles ? maxFiles - files.length : undefined}
         />
       )}
     </>
