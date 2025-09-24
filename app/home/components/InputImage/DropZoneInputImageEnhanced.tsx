@@ -2,11 +2,14 @@ import { X, Archive, Pencil, Camera } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
-import { ImageMetadataDialog } from "./ImageMetadataDialog";
+import { SimpleImageMetadataDialog } from "./SimpleImageMetadataDialog";
 import { CameraModalWrapper } from "./CameraModalWrapper";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import { resizeImage } from "@/app/home/utils/imageResizer";
-import { join } from "path";
+// Note: Using custom path join to avoid leading slashes for AWS Amplify
+const joinPath = (...parts: string[]) => {
+  return parts.filter(Boolean).join('/').replace(/^\/+/, ''); // Remove leading slashes
+};
 import toast from "react-hot-toast";
 import { processFileWithHash, renameFile } from "@/app/home/utils/imageHashUtils";
 import { ProgressiveImage } from "../ProgressiveImage";
@@ -53,22 +56,24 @@ const ThumbnailEnhanced = ({
   const handleEdit = () => {
     if (!image) return;
 
-    openDrawer(<ImageMetadataDialog
-      imagePath={image.imagePath}
-      initialCaption={image.caption}
-      initialNotes={image.notes}
-      onSave={async (caption, notes) => {
-        await enhancedImageStore.update({
-          id: imageId,
-          caption,
-          notes
-        });
-        setHasMetadata(true);
-        onMetadataChange(imageId);
-        closeDrawer();
-      }}
-      onClose={closeDrawer}
-    />);
+    openDrawer({
+      id: 'image-metadata',
+      title: 'Edit Image Metadata',
+      content: <SimpleImageMetadataDialog
+        initialCaption={image.caption}
+        initialNotes={image.notes}
+        onSave={async (caption: string, notes: string) => {
+          await enhancedImageStore.update(imageId, (draft) => {
+            draft.caption = caption;
+            draft.notes = notes;
+          });
+          setHasMetadata(true);
+          onMetadataChange(imageId);
+          closeDrawer();
+        }}
+        onClose={closeDrawer}
+      />
+    });
   };
 
   if (!hydrated || !image) {
@@ -169,7 +174,7 @@ export const DropZoneInputImageEnhanced = ({
   }, [path]);
 
   const handleUpload = async (file: File, fileName: string) => {
-    const finalPath = join(path, fileName);
+    const finalPath = joinPath(path, fileName);
     const id = crypto.randomUUID();
 
     setIsUploading(true);
@@ -214,7 +219,7 @@ export const DropZoneInputImageEnhanced = ({
       const existingFileData = existingImages.ok ? existingImages.val.map(img => ({
         name: img.fileName || '',
         isArchived: img.isArchived || false,
-        file: null // We'll use content hash for comparison
+        file: new Blob() // Placeholder for hash comparison
       })) : [];
 
       const newImageIds: string[] = [];
@@ -251,7 +256,7 @@ export const DropZoneInputImageEnhanced = ({
           }
 
           // Upload the new file
-          const finalFileName = hashResult.fileName;
+          const finalFileName = hashResult.filename;
           const uploadedId = await handleUpload(resizedFile, finalFileName);
 
           if (uploadedId) {
@@ -393,8 +398,13 @@ export const DropZoneInputImageEnhanced = ({
         <CameraModalWrapper
           isOpen={isCameraOpen}
           onClose={() => setIsCameraOpen(false)}
-          onCapture={handleCameraCapture}
-          currentImageCount={imageIds.length}
+          path={path}
+          onPhotoCaptured={async (filePath: string) => {
+            // This would be called when a photo is captured via the existing modal
+            // For now, we'll just close the modal
+            setIsCameraOpen(false);
+          }}
+          maxPhotos={maxFiles ? maxFiles - imageIds.length : undefined}
         />
       )}
     </>

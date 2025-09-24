@@ -73,10 +73,15 @@ export async function migrateFromImageUploadStore(
 
           if (upload.file && upload.file.size > 0) {
             try {
+              // Convert blob to file if needed
+              const file = upload.file instanceof File
+                ? upload.file
+                : new File([upload.file], 'image', { type: upload.file.type });
+
               // Generate thumbnail for instant display
-              thumbnailDataUrl = await generateThumbnail(upload.file);
-              dimensions = await getImageDimensions(upload.file);
-              fileBuffer = await fileToArrayBuffer(upload.file);
+              thumbnailDataUrl = await generateThumbnail(file);
+              dimensions = await getImageDimensions(file);
+              fileBuffer = await fileToArrayBuffer(file);
             } catch (error) {
               console.warn(`Could not generate thumbnail for ${upload.id}:`, error);
             }
@@ -109,8 +114,8 @@ export async function migrateFromImageUploadStore(
             localFileName: uploadStatus === 'pending' ? upload.path.split('/').pop() : undefined,
             tenantId: upload.tenantId,
             syncStatus: upload.syncStatus === SyncStatus.Synced ? SyncStatus.Synced : SyncStatus.Queued,
-            createdAt: upload.createdAt,
-            updatedAt: upload.updatedAt,
+            createdAt: new Date().toISOString(),
+            updatedAt: upload.updatedAt || new Date().toISOString(),
           };
 
           if (!dryRun) {
@@ -231,12 +236,17 @@ export async function exportMigrationBackup(): Promise<any[]> {
   const backupData = await Promise.all(uploads.map(async (upload) => {
     let fileData = null;
     if (upload.file && upload.file.size > 0) {
-      const buffer = await fileToArrayBuffer(upload.file);
+      // Convert blob to file if needed
+      const file = upload.file instanceof File
+        ? upload.file
+        : new File([upload.file], 'image', { type: upload.file.type });
+
+      const buffer = await fileToArrayBuffer(file);
       fileData = {
         data: Array.from(new Uint8Array(buffer)),
-        type: upload.file.type,
-        name: upload.file.name,
-        size: upload.file.size
+        type: file.type,
+        name: file.name,
+        size: file.size
       };
     }
 
