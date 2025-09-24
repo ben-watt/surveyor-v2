@@ -157,6 +157,7 @@ const schema = a.schema({
       mimeType: a.string(),
       width: a.integer(),
       height: a.integer(),
+      contentHash: a.string(),              // SHA-256 hash for duplicate detection
       caption: a.string(),
       notes: a.string(),
       isArchived: a.boolean().default(false),  // Archive management

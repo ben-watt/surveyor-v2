@@ -7,8 +7,8 @@ import { SimpleImageMetadataDialog } from "./SimpleImageMetadataDialog";
 import { CameraModalWrapper } from "./CameraModalWrapper";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import { resizeImage } from "@/app/home/utils/imageResizer";
+import { generateImageHash } from "@/app/home/utils/imageHashUtils";
 import toast from "react-hot-toast";
-import { processFileWithHash } from "@/app/home/utils/imageHashUtils";
 import { ProgressiveImage } from "../ProgressiveImage";
 
 // Custom path join to avoid leading slashes for AWS Amplify
@@ -186,31 +186,54 @@ export const DropZoneInputImageV2 = ({
   useEffect(() => {
     const loadExistingImages = async () => {
       try {
-        const result = await enhancedImageStore.getActiveImages();
-        if (!result.ok) {
-          setIsLoading(false);
-          return;
+        // Load both active and archived images
+        const [activeResult, archivedResult] = await Promise.all([
+          enhancedImageStore.getActiveImages(),
+          enhancedImageStore.getArchivedImages()
+        ]);
+
+        let allImages: ImageMetadata[] = [];
+        if (activeResult.ok) {
+          allImages = [...allImages, ...activeResult.val];
+        }
+        if (archivedResult.ok) {
+          allImages = [...allImages, ...archivedResult.val];
         }
 
+        // Deduplicate by ID to avoid duplicate keys
+        const deduplicatedImages = allImages.reduce((unique, img) => {
+          if (!unique.find(existing => existing.id === img.id)) {
+            unique.push(img);
+          }
+          return unique;
+        }, [] as ImageMetadata[]);
+
         // Filter images for this specific path
-        const pathImages = result.val.filter(img =>
-          img.imagePath.startsWith(path) && !img.isArchived
+        const pathImages = deduplicatedImages.filter(img =>
+          img.imagePath.startsWith(path)
         );
 
+        // Create path->id mapping and deduplicate files by path
         const newPathToIdMap = new Map<string, string>();
-        const existingFiles: DropZoneInputFile[] = pathImages.map(img => {
-          newPathToIdMap.set(img.imagePath, img.id);
+        const filesByPath = new Map<string, DropZoneInputFile>();
 
-          return {
-            path: img.imagePath,
-            isArchived: img.isArchived || false,
-            hasMetadata: !!(img.caption || img.notes)
-          };
+        pathImages.forEach(img => {
+          // Only keep the first occurrence of each path to avoid duplicates
+          if (!filesByPath.has(img.imagePath)) {
+            newPathToIdMap.set(img.imagePath, img.id);
+            filesByPath.set(img.imagePath, {
+              path: img.imagePath,
+              isArchived: img.isArchived || false,
+              hasMetadata: !!(img.caption || img.notes)
+            });
+          }
         });
+
+        const existingFiles: DropZoneInputFile[] = Array.from(filesByPath.values());
 
         setPathToIdMap(newPathToIdMap);
         setFiles(existingFiles);
-        onChange?.(existingFiles);
+        onChange?.(existingFiles.filter(f => !f.isArchived));
       } catch (error) {
         console.error("Error loading existing images:", error);
       } finally {
@@ -237,19 +260,8 @@ export const DropZoneInputImageV2 = ({
       );
 
       if (uploadResult.ok) {
-        const newFile: DropZoneInputFile = {
-          path: finalPath,
-          isArchived: false,
-          hasMetadata: false
-        };
-
-        // Update path to ID mapping
-        setPathToIdMap(prev => new Map(prev.set(finalPath, uploadResult.val)));
-
-        const updatedFiles = [...files, newFile];
-        setFiles(updatedFiles);
-        onChange?.(updatedFiles.filter(f => !f.isArchived));
-
+        // Don't update state immediately - let the reload logic handle UI updates
+        // This prevents duplicate keys from race conditions
         return uploadResult.val;
       } else {
         throw uploadResult.val;
@@ -271,54 +283,63 @@ export const DropZoneInputImageV2 = ({
     onDrop: async (acceptedFiles: FileWithPath[]) => {
       console.log("[DropZoneInputImageV2] Processing files");
 
-      // Get existing files for duplicate detection
-      const existingImages = await enhancedImageStore.getActiveImages();
-      const existingFileData = existingImages.ok ? existingImages.val.map(img => ({
-        name: img.fileName || '',
-        isArchived: img.isArchived || false,
-        file: new Blob() // Placeholder for hash comparison
-      })) : [];
+      // Get existing images for immediate duplicate detection
+      const [activeImages, archivedImages] = await Promise.all([
+        enhancedImageStore.getActiveImages(),
+        enhancedImageStore.getArchivedImages()
+      ]);
+
+      let allExistingImages: ImageMetadata[] = [];
+      if (activeImages.ok) allExistingImages.push(...activeImages.val);
+      if (archivedImages.ok) allExistingImages.push(...archivedImages.val);
+
+      // Filter to images in this path
+      const pathImages = allExistingImages.filter(img => img.imagePath.startsWith(path));
 
       for (const originalFile of acceptedFiles) {
         try {
-          // Resize the image
+          // Resize the image first
           const resizedFile = await resizeImage(originalFile);
 
-          // Check for duplicates
-          const hashResult = await processFileWithHash(resizedFile, existingFileData);
+          // Generate content hash for duplicate detection
+          const contentHash = await generateImageHash(resizedFile);
 
-          if (hashResult.isDuplicate) {
-            if (hashResult.isArchived) {
-              // Unarchive the existing image
-              const existingImage = existingImages.ok ?
-                existingImages.val.find(img => img.fileName === hashResult.matchedFile) : null;
-
-              if (existingImage) {
-                await enhancedImageStore.unarchiveImage(existingImage.id);
-                toast(`Restored archived image: ${hashResult.matchedFile}`, {
-                  icon: '📤',
-                  duration: 3000,
-                });
-              }
+          // Check for immediate duplicate
+          const existingImage = pathImages.find(img => img.contentHash === contentHash);
+          if (existingImage) {
+            if (existingImage.isArchived) {
+              // Unarchive existing image
+              await enhancedImageStore.unarchiveImage(existingImage.id);
+              toast(`Restored archived image: ${existingImage.fileName}`, {
+                icon: '📤',
+                duration: 3000,
+              });
             } else {
-              toast(`Skipping duplicate: ${hashResult.matchedFile}`, {
-                icon: '⚠️',
+              // Skip duplicate active image
+              toast(`Image already exists: ${existingImage.fileName}`, {
+                icon: '📋',
                 duration: 3000,
               });
             }
-            continue;
+            continue; // Skip this file
           }
 
-          // Upload the new file
-          const finalFileName = hashResult.filename;
-          const imageId = await handleUpload(resizedFile, finalFileName);
+          // Upload the new file with original filename
+          const uploadResult = await enhancedImageStore.uploadImage(
+            resizedFile,
+            joinPath(path, resizedFile.name),
+            {
+              onProgress: (progress) => {
+                console.debug(`Upload progress for ${resizedFile.name}: ${progress}%`);
+              }
+            }
+          );
 
-          if (imageId) {
-            existingFileData.push({
-              name: finalFileName,
-              isArchived: false,
-              file: resizedFile
-            });
+          if (uploadResult.ok) {
+            console.log(`Successfully processed ${originalFile.name}`);
+          } else {
+            console.error(`Failed to upload ${originalFile.name}:`, uploadResult.val);
+            toast.error(`Failed to upload ${originalFile.name}`);
           }
         } catch (error) {
           console.error("Error processing file:", error);
@@ -328,27 +349,45 @@ export const DropZoneInputImageV2 = ({
 
       // Reload files after processing to ensure UI is updated
       try {
-        const result = await enhancedImageStore.getActiveImages();
-        if (result.ok) {
-          const pathImages = result.val.filter(img =>
-            img.imagePath.startsWith(path) && !img.isArchived
-          );
+        const [activeResult, archivedResult] = await Promise.all([
+          enhancedImageStore.getActiveImages(),
+          enhancedImageStore.getArchivedImages()
+        ]);
 
-          const newPathToIdMap = new Map<string, string>();
-          const updatedFiles: DropZoneInputFile[] = pathImages.map(img => {
-            newPathToIdMap.set(img.imagePath, img.id);
-
-            return {
-              path: img.imagePath,
-              isArchived: img.isArchived || false,
-              hasMetadata: !!(img.caption || img.notes)
-            };
-          });
-
-          setPathToIdMap(newPathToIdMap);
-          setFiles(updatedFiles);
-          onChange?.(updatedFiles.filter(f => !f.isArchived));
+        let allImages: ImageMetadata[] = [];
+        if (activeResult.ok) {
+          allImages = [...allImages, ...activeResult.val];
         }
+        if (archivedResult.ok) {
+          allImages = [...allImages, ...archivedResult.val];
+        }
+
+        // Deduplicate by ID to avoid duplicate keys
+        const deduplicatedImages = allImages.reduce((unique, img) => {
+          if (!unique.find(existing => existing.id === img.id)) {
+            unique.push(img);
+          }
+          return unique;
+        }, [] as ImageMetadata[]);
+
+        const pathImages = deduplicatedImages.filter(img =>
+          img.imagePath.startsWith(path)
+        );
+
+        const newPathToIdMap = new Map<string, string>();
+        const updatedFiles: DropZoneInputFile[] = pathImages.map(img => {
+          newPathToIdMap.set(img.imagePath, img.id);
+
+          return {
+            path: img.imagePath,
+            isArchived: img.isArchived || false,
+            hasMetadata: !!(img.caption || img.notes)
+          };
+        });
+
+        setPathToIdMap(newPathToIdMap);
+        setFiles(updatedFiles);
+        onChange?.(updatedFiles.filter(f => !f.isArchived));
       } catch (error) {
         console.error("Error reloading images after upload:", error);
       }
@@ -364,7 +403,7 @@ export const DropZoneInputImageV2 = ({
 
       const updatedFiles = files.filter(f => f.path !== filePath);
       setFiles(updatedFiles);
-      onChange?.(updatedFiles);
+      onChange?.(updatedFiles.filter(f => !f.isArchived));
       toast.success("Image deleted");
     } catch (error) {
       console.error("Error deleting image:", error);

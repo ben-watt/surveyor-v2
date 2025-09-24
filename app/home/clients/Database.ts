@@ -378,6 +378,7 @@ export interface ImageMetadata {
   mimeType?: string;
   width?: number;
   height?: number;
+  contentHash?: string;  // SHA-256 hash for duplicate detection
   caption?: string;
   notes?: string;
   isArchived?: boolean;  // Archive management
@@ -423,6 +424,7 @@ const mapToImageMetadata = (data: any): ImageMetadata => ({
   mimeType: data.mimeType,
   width: data.width,
   height: data.height,
+  contentHash: data.contentHash,
   caption: data.caption,
   notes: data.notes,
   isArchived: data.isArchived,

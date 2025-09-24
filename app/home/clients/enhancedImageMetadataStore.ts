@@ -8,6 +8,7 @@ import {
   fileToArrayBuffer,
   arrayBufferToFile
 } from '../utils/imageResizer';
+import { generateImageHash } from '../utils/imageHashUtils';
 import { getCurrentTenantId } from '../utils/tenant-utils';
 
 export interface UploadImageOptions {
@@ -39,6 +40,12 @@ class EnhancedImageMetadataStore {
 
       const id = options.id || crypto.randomUUID();
 
+      // Generate content hash for duplicate detection
+      const contentHash = await generateImageHash(file);
+
+      // Duplicate detection is now handled at the UI level
+      // This method assumes the file is unique and should be uploaded
+
       // Generate thumbnail immediately for instant preview
       const [thumbnailDataUrl, dimensions, fileBuffer] = await Promise.all([
         generateThumbnail(file),
@@ -56,6 +63,7 @@ class EnhancedImageMetadataStore {
         mimeType: file.type,
         width: dimensions.width,
         height: dimensions.height,
+        contentHash, // Store content hash for duplicate detection
         isArchived: false,
         uploadStatus: 'pending',
         caption: options.caption,
