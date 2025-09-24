@@ -9,7 +9,7 @@
  */
 
 import { render, screen, waitFor } from '@testing-library/react';
-import { DropZoneInputImage } from '../DropZoneInputImage';
+import { DropZoneInputImage } from '../index';
 import { imageUploadStore } from '@/app/home/clients/ImageUploadStore';
 import { act } from 'react';
 

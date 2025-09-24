@@ -213,11 +213,11 @@ function PhotoGallery() {
         allImages.push(...archivedResult.val);
       }
 
-      // For enhanced store images, use thumbnails for display (they're base64 and always work)
+      // Use thumbnails for authenticated display - they're embedded and don't require separate auth
       const imagePromises = allImages.map(async (img) => {
         return {
           id: img.id,
-          url: img.thumbnailDataUrl || '', // Use thumbnail instead of full URL to avoid S3 auth issues
+          url: img.thumbnailDataUrl || '', // Use thumbnails to avoid auth issues while keeping images private
           isArchived: img.isArchived || false,
           imagePath: img.imagePath,
           fileName: img.fileName

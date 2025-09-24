@@ -93,14 +93,18 @@ class EnhancedImageMetadataStore {
   }
 
   /**
-   * Start background upload to S3
+   * Start background upload to S3 with retry mechanism
    */
   private async startBackgroundUpload(
     id: string,
     file: File,
     path: string,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
+    retryCount = 0
   ): Promise<void> {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
+
     const abortController = new AbortController();
     this.uploadQueue.set(id, abortController);
 
@@ -143,11 +147,23 @@ class EnhancedImageMetadataStore {
     } catch (error) {
       if ((error as any)?.name === 'AbortError') {
         console.log('Upload cancelled for', id);
+      } else if (retryCount < MAX_RETRIES) {
+        console.warn(`Upload attempt ${retryCount + 1} failed for ${id}, retrying in ${RETRY_DELAY}ms:`, error);
+
+        // Remove from current upload queue
+        this.uploadQueue.delete(id);
+
+        // Schedule retry with exponential backoff
+        setTimeout(() => {
+          this.startBackgroundUpload(id, file, path, onProgress, retryCount + 1);
+        }, RETRY_DELAY);
+
+        return;
       } else {
-        console.error('Upload failed for', id, error);
+        console.error('Upload failed permanently for', id, 'after', MAX_RETRIES, 'attempts:', error);
         await db.table<ImageMetadata>('imageMetadata').update(id, {
           uploadStatus: 'failed',
-          syncError: (error as Error).message
+          syncError: `Failed after ${MAX_RETRIES} attempts: ${(error as Error).message}`
         } as any);
       }
     } finally {
