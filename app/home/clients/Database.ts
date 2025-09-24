@@ -389,6 +389,28 @@ export interface ImageMetadata {
   tenantId: string;
 }
 
+// Helper to remove local-only fields before syncing to server
+const removeLocalOnlyFields = (data: any): any => {
+  const { uploadProgress, localFileData, localFileType, localFileName, ...serverData } = data;
+
+  // Convert SyncStatus enum to string for server
+  const convertedData = {
+    ...serverData,
+    syncStatus: serverData.syncStatus === SyncStatus.Queued ? 'queued' :
+                serverData.syncStatus === SyncStatus.Synced ? 'synced' :
+                serverData.syncStatus === SyncStatus.Failed ? 'failed' :
+                serverData.syncStatus || 'queued', // Default to queued
+  };
+
+  // Ensure required fields are not null/undefined
+  return {
+    ...convertedData,
+    imagePath: convertedData.imagePath || '',
+    createdAt: convertedData.createdAt || new Date().toISOString(),
+    updatedAt: convertedData.updatedAt || new Date().toISOString(),
+  };
+};
+
 const mapToImageMetadata = (data: any): ImageMetadata => ({
   id: data.id,
   syncStatus: SyncStatus.Synced,
@@ -423,8 +445,9 @@ export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMet
       return Ok(response.data.map(mapToImageMetadata));
     },
     create: async (data): Promise<Result<ImageMetadata, Error>> => {
-      // Add tenant ID to new metadata
-      const serverData = await withTenantId(data);
+      // Remove local-only fields and add tenant ID
+      const cleanData = removeLocalOnlyFields(data);
+      const serverData = await withTenantId(cleanData);
       const response = await client.models.ImageMetadata.create(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
@@ -432,8 +455,9 @@ export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMet
       return Ok(mapToImageMetadata(response.data));
     },
     update: async (data): Promise<Result<ImageMetadata, Error>> => {
-      // Add tenant ID to update
-      const serverData = await withTenantId(data);
+      // Remove local-only fields and add tenant ID
+      const cleanData = removeLocalOnlyFields(data);
+      const serverData = await withTenantId(cleanData);
       const response = await client.models.ImageMetadata.update(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));

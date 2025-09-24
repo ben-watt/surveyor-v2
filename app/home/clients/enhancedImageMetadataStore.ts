@@ -60,10 +60,11 @@ class EnhancedImageMetadataStore {
         uploadStatus: 'pending',
         caption: options.caption,
         notes: options.notes,
-        // Store file data for offline support
+        // Store file data for offline support (local-only fields)
         localFileData: fileBuffer,
         localFileType: file.type,
         localFileName: file.name,
+        uploadProgress: 0, // Initialize progress
         tenantId,
         syncStatus: SyncStatus.Queued,
         createdAt: new Date().toISOString(),

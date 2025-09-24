@@ -2,6 +2,7 @@ import { X, Archive, Pencil, Camera } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
+import { ImageMetadata } from "@/app/home/clients/Database";
 import { SimpleImageMetadataDialog } from "./SimpleImageMetadataDialog";
 import { CameraModalWrapper } from "./CameraModalWrapper";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
@@ -247,7 +248,7 @@ export const DropZoneInputImageV2 = ({
 
         const updatedFiles = [...files, newFile];
         setFiles(updatedFiles);
-        onChange?.(updatedFiles);
+        onChange?.(updatedFiles.filter(f => !f.isArchived));
 
         return uploadResult.val;
       } else {
@@ -310,17 +311,46 @@ export const DropZoneInputImageV2 = ({
 
           // Upload the new file
           const finalFileName = hashResult.filename;
-          await handleUpload(resizedFile, finalFileName);
+          const imageId = await handleUpload(resizedFile, finalFileName);
 
-          existingFileData.push({
-            name: finalFileName,
-            isArchived: false,
-            file: resizedFile
-          });
+          if (imageId) {
+            existingFileData.push({
+              name: finalFileName,
+              isArchived: false,
+              file: resizedFile
+            });
+          }
         } catch (error) {
           console.error("Error processing file:", error);
           toast.error(`Failed to process ${originalFile.name}`);
         }
+      }
+
+      // Reload files after processing to ensure UI is updated
+      try {
+        const result = await enhancedImageStore.getActiveImages();
+        if (result.ok) {
+          const pathImages = result.val.filter(img =>
+            img.imagePath.startsWith(path) && !img.isArchived
+          );
+
+          const newPathToIdMap = new Map<string, string>();
+          const updatedFiles: DropZoneInputFile[] = pathImages.map(img => {
+            newPathToIdMap.set(img.imagePath, img.id);
+
+            return {
+              path: img.imagePath,
+              isArchived: img.isArchived || false,
+              hasMetadata: !!(img.caption || img.notes)
+            };
+          });
+
+          setPathToIdMap(newPathToIdMap);
+          setFiles(updatedFiles);
+          onChange?.(updatedFiles.filter(f => !f.isArchived));
+        }
+      } catch (error) {
+        console.error("Error reloading images after upload:", error);
       }
     },
   });
@@ -405,7 +435,7 @@ export const DropZoneInputImageV2 = ({
 
               return (
                 <Thumbnail
-                  key={file.path}
+                  key={imageId}
                   imageId={imageId}
                   filePath={file.path}
                   onDelete={handleDelete}
@@ -417,7 +447,7 @@ export const DropZoneInputImageV2 = ({
             })}
           </ul>
         </aside>
-        {features.archive && archivedFiles.length > 0 && (
+        {features?.archive && archivedFiles.length > 0 && (
           <div className="mt-4 flex items-center justify-start gap-2 text-gray-500">
             <Archive size={16} />
             <span className="text-sm">{archivedFiles.length} archived</span>
@@ -433,11 +463,21 @@ export const DropZoneInputImageV2 = ({
         onPhotoCaptured={async (filePath: string) => {
           // Reload files to include newly captured photos
           try {
-            const result = await enhancedImageStore.getActiveImages();
-            if (!result.ok) return;
+            const [activeResult, archivedResult] = await Promise.all([
+              enhancedImageStore.getActiveImages(),
+              enhancedImageStore.getArchivedImages()
+            ]);
 
-            const pathImages = result.val.filter(img =>
-              img.imagePath.startsWith(path) && !img.isArchived
+            let allImages: ImageMetadata[] = [];
+            if (activeResult.ok) {
+              allImages = [...allImages, ...activeResult.val];
+            }
+            if (archivedResult.ok) {
+              allImages = [...allImages, ...archivedResult.val];
+            }
+
+            const pathImages = allImages.filter(img =>
+              img.imagePath.startsWith(path)
             );
 
             const newPathToIdMap = new Map<string, string>();
@@ -453,7 +493,7 @@ export const DropZoneInputImageV2 = ({
 
             setPathToIdMap(newPathToIdMap);
             setFiles(existingFiles);
-            onChange?.(existingFiles);
+            onChange?.(existingFiles.filter(f => !f.isArchived));
           } catch (error) {
             console.error("Error reloading files after camera capture:", error);
           }
