@@ -382,6 +382,7 @@ export interface ImageMetadata {
   notes?: string;
   isArchived?: boolean;  // Archive management
   uploadStatus?: 'pending' | 'uploaded' | 'failed';  // Simple status tracking
+  uploadProgress?: number;  // Upload progress percentage (0-100)
   localFileData?: ArrayBuffer;  // Temporary storage for offline uploads (using ArrayBuffer instead of File)
   localFileType?: string;  // MIME type for reconstructing File from ArrayBuffer
   localFileName?: string;  // File name for reconstructing File from ArrayBuffer
