@@ -2,15 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import { surveyStore } from "@/app/home/clients/Database";
+import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
 import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Archive } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { SurveyImage } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 
 interface PhotoSection {
   name: string;
-  photos: { url: string; isArchived: boolean }[];
+  photos: { id: string; url: string; isArchived: boolean; imagePath: string; fileName?: string }[];
 }
 
 function PhotoGallery() {
@@ -21,116 +22,217 @@ function PhotoGallery() {
   const [showArchived, setShowArchived] = useState(false);
   const router = useRouter();
 
+
+  // Move loadPhotos outside of useEffect so it can be called from handleArchiveToggle
+  const loadPhotos = async () => {
+    if (!survey) return;
+
+    // Get all images from the enhanced store
+    const allImages = await getImagesFromEnhancedStore();
+
+    console.log("[PhotoGallery] All images from enhanced store:", allImages);
+    console.log("[PhotoGallery] Survey ID:", id);
+
+    // Log a few sample paths to understand the structure
+    if (allImages.length > 0) {
+      console.log("[PhotoGallery] Sample image paths:", allImages.slice(0, 5).map(img => img.imagePath));
+    }
+
+    // Filter images for this survey (by path prefix) - try multiple patterns
+    const surveyImages = allImages.filter(img =>
+      img.imagePath.includes(`/surveys/${id}/`) ||
+      img.imagePath.includes(`surveys/${id}/`) ||
+      img.imagePath.includes(`/${id}/`) ||
+      img.imagePath.includes(`${id}/`) ||
+      img.imagePath.includes(`survey-${id}`)
+    );
+
+    console.log("[PhotoGallery] All survey images after filtering:", surveyImages);
+
+    // If no images found in enhanced store, try legacy store as fallback
+    if (surveyImages.length === 0) {
+      console.log("[PhotoGallery] No images in enhanced store, trying legacy store...");
+      try {
+        const legacyImages = await loadPhotosFromLegacyStore();
+        if (legacyImages.length > 0) {
+          console.log("[PhotoGallery] Found images in legacy store:", legacyImages);
+          setPhotoSections(legacyImages);
+          return;
+        }
+      } catch (error) {
+        console.error("[PhotoGallery] Error loading from legacy store:", error);
+      }
+    }
+
+    // Group images by section based on their path
+    const sections: PhotoSection[] = [];
+    const groupedImages = new Map<string, typeof surveyImages>();
+
+    surveyImages.forEach(img => {
+      // Extract section name from path
+      let sectionName = "Unknown";
+
+      if (img.imagePath.includes('/money-shot/') || img.imagePath.includes('moneyShot')) {
+        sectionName = "Cover Image";
+      } else if (img.imagePath.includes('/front-elevation/') || img.imagePath.includes('frontElevation')) {
+        sectionName = "Front Elevation";
+      } else if (img.imagePath.includes('/report-images/') || img.imagePath.includes('reportImages')) {
+        sectionName = "Report Images";
+      } else {
+        // Try to extract section name from path
+        const pathParts = img.imagePath.split('/');
+        const lastPart = pathParts[pathParts.length - 2] || 'Images';
+        sectionName = lastPart.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+      }
+
+      if (!groupedImages.has(sectionName)) {
+        groupedImages.set(sectionName, []);
+      }
+      groupedImages.get(sectionName)?.push(img);
+    });
+
+    // Convert grouped images to sections
+    groupedImages.forEach((photos, name) => {
+      if (photos.length > 0) {
+        sections.push({ name, photos });
+      }
+    });
+
+    console.log("[PhotoGallery] Organized sections:", sections);
+    setPhotoSections(sections);
+  };
+
   console.log("[PhotoGallery] photoSections", survey);
 
-  useEffect(() => {
-    async function getImagesFromStore(
-        imagePaths: SurveyImage[]
-      ): Promise<{url: string, isArchived: boolean}[]> {
+  // Fallback function to load from legacy store if enhanced store is empty
+  const loadPhotosFromLegacyStore = async (): Promise<PhotoSection[]> => {
+    if (!survey) return [];
+
+    const sections: PhotoSection[] = [];
+
+    async function getImagesFromLegacyStore(
+      imagePaths: SurveyImage[]
+    ): Promise<{ id: string; url: string; isArchived: boolean; imagePath: string; fileName?: string }[]> {
       const result = await Promise.all(
         imagePaths.map(async (file) => {
           const result = await imageUploadStore.get(file.path);
-          if(result.err) {
-            console.error("[PhotoGallery] getImagesFromStore", result.err);
+          if (result.err) {
+            console.error("[PhotoGallery] Legacy store error", result.err);
             return null;
           }
-          return {path: file.path, isArchived: file.isArchived, url: result.unwrap().href, hasMetadata: file.hasMetadata};
+          // Create fake data structure to match enhanced store format
+          return {
+            id: file.path, // Use path as ID since legacy doesn't have proper IDs
+            path: file.path,
+            isArchived: file.isArchived,
+            url: result.unwrap().href,
+            hasMetadata: file.hasMetadata,
+            imagePath: file.path,
+            fileName: file.path.split('/').pop()
+          };
         })
       );
       const validResults = result.filter((url) => url !== null);
       return validResults;
     }
 
-    async function loadPhotos() {
-      if (!survey) return;
-
-      const sections: PhotoSection[] = [];
-
-      // Load money shot
-      if (survey.reportDetails?.moneyShot?.length) {
-        const urls = await Promise.all(
-          survey.reportDetails.moneyShot.map(async (file) => {
-            console.log("[PhotoGallery] moneyShot", file);
-            if (!file.path) return null;
-            
-            const result = await imageUploadStore.get(file.path);
-            if (result.err) {
-              console.error("[PhotoGallery] moneyShot", result.err);
-              return null;
-            }
-
-            return { 
-              url: result.unwrap().href,
-              isArchived: file.isArchived || false
-            };
-          })
-        );
-
+    // Load money shot
+    if (survey.reportDetails?.moneyShot?.length) {
+      const images = await getImagesFromLegacyStore(survey.reportDetails.moneyShot);
+      if (images.length > 0) {
         sections.push({
           name: "Cover Image",
-          photos: urls.filter((url) => url !== null),
+          photos: images,
         });
       }
+    }
 
-      // Load front elevation images
-      if (survey.reportDetails?.frontElevationImagesUri?.length) {
-        console.log("[PhotoGallery] frontElevationImagesUri", survey.reportDetails.frontElevationImagesUri);
-        const urls = await Promise.all(
-          survey.reportDetails.frontElevationImagesUri.map(async (file) => {
-            if (!file.path) return null;
-            const result = await imageUploadStore.get(file.path);
-            if (result.err) {
-              console.error("[PhotoGallery] frontElevationImagesUri", result.err);
-              return null;
-            }
-            return { 
-              url: result.unwrap().href,
-              isArchived: file.isArchived || false
-            };
-          })
-        );
-
+    // Load front elevation images
+    if (survey.reportDetails?.frontElevationImagesUri?.length) {
+      const images = await getImagesFromLegacyStore(survey.reportDetails.frontElevationImagesUri);
+      if (images.length > 0) {
         sections.push({
           name: "Front Elevation",
-          photos: urls.filter((url) => url !== null),
+          photos: images,
         });
       }
+    }
 
-      // Load component images
-      if (survey.sections?.length) {
-        for (const section of survey.sections) {
-          for (const elementSection of section.elementSections || []) {
-            if (elementSection.images?.length) {
-              const urls = await getImagesFromStore(elementSection.images);
-              console.log("[PhotoGallery] getImagesFromStore", elementSection.name, urls);
+    // Load component images
+    if (survey.sections?.length) {
+      for (const section of survey.sections) {
+        for (const elementSection of section.elementSections || []) {
+          if (elementSection.images?.length) {
+            const images = await getImagesFromLegacyStore(elementSection.images);
+            if (images.length > 0) {
               sections.push({
                 name: elementSection.name,
-                photos: urls.map((url) => ({ 
-                  url: url.url,
-                  isArchived: url.isArchived
-                })),
+                photos: images,
               });
             }
+          }
 
-            for (const component of elementSection.components || []) {
-              if (component.images?.length) {
-                const urls = await getImagesFromStore(component.images);
+          for (const component of elementSection.components || []) {
+            if (component.images?.length) {
+              const images = await getImagesFromLegacyStore(component.images);
+              if (images.length > 0) {
                 sections.push({
                   name: `${elementSection.name} - ${component.name}`,
-                  photos: urls.map((url) => ({ 
-                    url: url.url,
-                    isArchived: url.isArchived
-                  })),
+                  photos: images,
                 });
               }
             }
           }
         }
       }
-
-      setPhotoSections(sections);
     }
 
+    return sections;
+  };
+
+  const getImagesFromEnhancedStore = async (): Promise<{ id: string; url: string; isArchived: boolean; imagePath: string; fileName?: string }[]> => {
+    try {
+      console.log("[PhotoGallery] Calling enhanced image store methods...");
+
+      // Get both active and archived images
+      const [activeResult, archivedResult] = await Promise.all([
+        enhancedImageStore.getActiveImages(),
+        enhancedImageStore.getArchivedImages()
+      ]);
+
+      console.log("[PhotoGallery] Active images result:", activeResult);
+      console.log("[PhotoGallery] Archived images result:", archivedResult);
+
+      let allImages: any[] = [];
+      if (activeResult.ok) {
+        console.log("[PhotoGallery] Active images count:", activeResult.val.length);
+        allImages.push(...activeResult.val);
+      }
+      if (archivedResult.ok) {
+        console.log("[PhotoGallery] Archived images count:", archivedResult.val.length);
+        allImages.push(...archivedResult.val);
+      }
+
+      // For enhanced store images, use thumbnails for display (they're base64 and always work)
+      const imagePromises = allImages.map(async (img) => {
+        return {
+          id: img.id,
+          url: img.thumbnailDataUrl || '', // Use thumbnail instead of full URL to avoid S3 auth issues
+          isArchived: img.isArchived || false,
+          imagePath: img.imagePath,
+          fileName: img.fileName
+        };
+      });
+
+      const results = await Promise.all(imagePromises);
+      return results.filter(r => r.url); // Filter out images that failed to get URLs
+    } catch (error) {
+      console.error("[PhotoGallery] Error loading images from enhanced store:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
     if (isHydrated && survey) {
       loadPhotos();
     }
@@ -201,8 +303,8 @@ function PhotoGallery() {
                   if (!showArchived && photo.isArchived) return null;
                   return (
                     <div
-                      key={photoIndex}
-                      className={`relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-gray-800 ${photo.isArchived ? 'grayscale' : ''}`}
+                      key={photo.id || photoIndex}
+                      className={`relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-gray-800 ${photo.isArchived ? 'grayscale' : ''} group`}
                     >
                       <Image
                         src={photo.url}
@@ -213,8 +315,17 @@ function PhotoGallery() {
                         loading={sectionIndex === 0 && photoIndex < 6 ? "eager" : "lazy"}
                         quality={75}
                         placeholder="blur"
-                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy02Mi85OEI2PTZFOT5ZXVlZfG1+fW6Ghn6QjpCOd3p3gHj/2wBDARUXFx4eHR8fHXhwLicucHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHD/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy02Mi85OEI2PTZFOT5ZXVlZfG1+fW6Ghn6QjpCOd3p3gHj/2wBDARUXFx4eHR8fHXhwLicucHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHD/wAARCAAIAAoDASIAAhEBAxEAPwCdABmX/9k="
                       />
+
+
+                      {/* Archive indicator */}
+                      {photo.isArchived && (
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 bg-gray-800/80 text-white text-xs rounded">
+                          <Archive size={12} />
+                          <span>Archived</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
