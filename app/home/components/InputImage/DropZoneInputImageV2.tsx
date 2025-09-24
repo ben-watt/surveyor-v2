@@ -242,7 +242,8 @@ export const DropZoneInputImageV2 = ({
     };
 
     loadExistingImages();
-  }, [path]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]); // Intentionally exclude onChange to prevent loops
 
   const handleUpload = async (file: File, fileName: string) => {
     const finalPath = joinPath(path, fileName);

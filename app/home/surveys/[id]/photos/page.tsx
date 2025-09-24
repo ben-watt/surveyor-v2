@@ -236,7 +236,8 @@ function PhotoGallery() {
     if (isHydrated && survey) {
       loadPhotos();
     }
-  }, [isHydrated, survey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, survey]); // loadPhotos recreated on each render, would cause infinite loop
 
   const totalPhotos = photoSections.reduce(
     (total, section) => total + section.photos.length,

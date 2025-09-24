@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { enhancedImageStore } from '../clients/enhancedImageMetadataStore';
 import { cn } from '@/lib/utils';
 
@@ -40,7 +40,7 @@ export function ProgressiveImage({
   }, [image?.thumbnailDataUrl]);
 
   // Load full image from S3
-  const loadFullImage = async () => {
+  const loadFullImage = useCallback(async () => {
     if (!image?.imagePath || isLoadingFull || fullImageLoaded) return;
 
     setIsLoadingFull(true);
@@ -69,14 +69,14 @@ export function ProgressiveImage({
     } finally {
       setIsLoadingFull(false);
     }
-  };
+  }, [image?.imagePath, isLoadingFull, fullImageLoaded, onLoad]);
 
   // Auto-load full image if upload is complete
   useEffect(() => {
     if (image?.uploadStatus === 'uploaded' && !fullImageLoaded && !image.thumbnailDataUrl) {
       loadFullImage();
     }
-  }, [image?.uploadStatus]);
+  }, [image?.uploadStatus, fullImageLoaded, image?.thumbnailDataUrl, loadFullImage]);
 
   if (!hydrated) {
     return (
