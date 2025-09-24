@@ -151,8 +151,16 @@ const schema = a.schema({
       createdAt: a.datetime().required(),
       updatedAt: a.datetime().required(),
       imagePath: a.string().required(),
+      thumbnailDataUrl: a.string(),       // Base64 thumbnail for instant display
+      fileName: a.string(),
+      fileSize: a.integer(),
+      mimeType: a.string(),
+      width: a.integer(),
+      height: a.integer(),
       caption: a.string(),
       notes: a.string(),
+      isArchived: a.boolean().default(false),  // Archive management
+      uploadStatus: a.enum(['pending', 'uploaded', 'failed']),
       tenantId: a.string().required(),
     })
     .identifier(['tenantId', 'id'])

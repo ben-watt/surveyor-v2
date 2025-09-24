@@ -372,8 +372,19 @@ export interface ImageMetadata {
   createdAt: string;
   updatedAt: string;
   imagePath: string;
+  thumbnailDataUrl?: string;  // Base64 thumbnail for instant display
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  width?: number;
+  height?: number;
   caption?: string;
   notes?: string;
+  isArchived?: boolean;  // Archive management
+  uploadStatus?: 'pending' | 'uploaded' | 'failed';  // Simple status tracking
+  localFileData?: ArrayBuffer;  // Temporary storage for offline uploads (using ArrayBuffer instead of File)
+  localFileType?: string;  // MIME type for reconstructing File from ArrayBuffer
+  localFileName?: string;  // File name for reconstructing File from ArrayBuffer
   tenantId: string;
 }
 
@@ -383,8 +394,16 @@ const mapToImageMetadata = (data: any): ImageMetadata => ({
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
   imagePath: data.imagePath,
+  thumbnailDataUrl: data.thumbnailDataUrl,
+  fileName: data.fileName,
+  fileSize: data.fileSize,
+  mimeType: data.mimeType,
+  width: data.width,
+  height: data.height,
   caption: data.caption,
   notes: data.notes,
+  isArchived: data.isArchived,
+  uploadStatus: data.uploadStatus,
   tenantId: data.tenantId,
 });
 

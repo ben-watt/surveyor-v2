@@ -533,7 +533,18 @@ db.version(21)
     delete (phrase as any)["associatedMaterialIds"];
     delete (phrase as any)["associatedElementIds"];
   });
-  
+
+});
+
+// Add indexes for new imageMetadata fields
+db.version(22).stores({
+  surveys: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  imageUploads: 'id, tenantId, path, updatedAt, syncStatus, [tenantId+updatedAt]',
+  imageMetadata: 'id, tenantId, imagePath, uploadStatus, isArchived, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived]'
 });
 
 export { db, CreateDexieHooks };
