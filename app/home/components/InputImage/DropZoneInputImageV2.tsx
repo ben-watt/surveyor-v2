@@ -4,7 +4,6 @@ import { FileWithPath, useDropzone } from "react-dropzone";
 import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
 import { ImageMetadata } from "@/app/home/clients/Database";
 import { SimpleImageMetadataDialog } from "./SimpleImageMetadataDialog";
-import { CameraModalWrapper } from "./CameraModalWrapper";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import { resizeImage } from "@/app/home/utils/imageResizer";
 import { generateImageHash } from "@/app/home/utils/imageHashUtils";
@@ -176,8 +175,8 @@ export const DropZoneInputImageV2 = ({
 }: DropZoneInputImageV2Props) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
 
   // Map of imagePath -> imageId for tracking
   const [pathToIdMap, setPathToIdMap] = useState<Map<string, string>>(new Map());
@@ -436,6 +435,7 @@ export const DropZoneInputImageV2 = ({
     ));
   };
 
+
   if (isLoading) {
     return (
       <div className="container border border-gray-300 rounded-md p-4 bg-gray-100">
@@ -453,14 +453,19 @@ export const DropZoneInputImageV2 = ({
         <div {...getRootProps({ className: "dropzone" })}>
           {maxFiles !== activeFiles.length && (
             <div className="flex flex-col items-center justify-center">
-              <input {...getInputProps()} />
+              <input {...getInputProps({ capture: 'environment' })} />
               <p className="text-sm text-gray-500 m-2 text-center">
                 Drag & drop files, {" or "}
                 <u className="cursor-pointer">fetch from device</u>
+                {" or "}
+                <span className="text-sm text-gray-500 underline cursor-pointer hover:text-gray-700">
+                  take photo
+                </span>
               </p>
             </div>
           )}
         </div>
+
         <aside>
           <ul
             className={`${
@@ -495,52 +500,6 @@ export const DropZoneInputImageV2 = ({
         )}
       </section>
 
-      {/* Camera Modal */}
-      <CameraModalWrapper
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        path={path}
-        onPhotoCaptured={async (filePath: string) => {
-          // Reload files to include newly captured photos
-          try {
-            const [activeResult, archivedResult] = await Promise.all([
-              enhancedImageStore.getActiveImages(),
-              enhancedImageStore.getArchivedImages()
-            ]);
-
-            let allImages: ImageMetadata[] = [];
-            if (activeResult.ok) {
-              allImages = [...allImages, ...activeResult.val];
-            }
-            if (archivedResult.ok) {
-              allImages = [...allImages, ...archivedResult.val];
-            }
-
-            const pathImages = allImages.filter(img =>
-              img.imagePath.startsWith(path)
-            );
-
-            const newPathToIdMap = new Map<string, string>();
-            const existingFiles: DropZoneInputFile[] = pathImages.map(img => {
-              newPathToIdMap.set(img.imagePath, img.id);
-
-              return {
-                path: img.imagePath,
-                isArchived: img.isArchived || false,
-                hasMetadata: !!(img.caption || img.notes)
-              };
-            });
-
-            setPathToIdMap(newPathToIdMap);
-            setFiles(existingFiles);
-            onChange?.(existingFiles.filter(f => !f.isArchived));
-          } catch (error) {
-            console.error("Error reloading files after camera capture:", error);
-          }
-          setIsCameraOpen(false);
-        }}
-        maxPhotos={maxFiles}
-      />
 
       {isUploading && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
