@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Camera, RotateCcw, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { useCameraStream } from '@/app/home/hooks/useCameraStream';
-import { imageUploadStore } from '@/app/home/clients/ImageUploadStore';
+import { enhancedImageStore } from '@/app/home/clients/enhancedImageMetadataStore';
 import { join } from 'path';
 import Resizer from 'react-image-file-resizer';
 
@@ -302,20 +302,21 @@ export const CameraModal = ({
         const resizedFile = await resizeImage(originalFile);
         const filePath = join(path, fileName);
 
-        // Upload using existing image upload store
-        await imageUploadStore.create({
-          id: filePath,
-          path: filePath,
-          file: resizedFile,
-          href: URL.createObjectURL(resizedFile),
-          metadata: {
-            filename: fileName,
-            size: resizedFile.size.toString(),
-            type: resizedFile.type,
-            captureMethod: 'camera',
-            captureTime: new Date(photo.timestamp).toISOString(),
-          },
-        });
+        // Upload using enhanced image store
+        await enhancedImageStore.uploadImage(
+          resizedFile,
+          filePath,
+          {
+            caption: `Camera photo captured at ${new Date(photo.timestamp).toLocaleString()}`,
+            notes: JSON.stringify({
+              filename: fileName,
+              size: resizedFile.size.toString(),
+              type: resizedFile.type,
+              captureMethod: 'camera',
+              captureTime: new Date(photo.timestamp).toISOString(),
+            }),
+          }
+        );
 
         // Notify parent component
         onPhotoCaptured?.(filePath);

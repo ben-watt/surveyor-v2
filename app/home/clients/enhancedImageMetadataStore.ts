@@ -279,6 +279,40 @@ class EnhancedImageMetadataStore {
   }
 
   /**
+   * Get image by path (for compatibility with old system)
+   */
+  async getImageByPath(path: string): Promise<Result<{ href: string; metadata?: ImageMetadata }, Error>> {
+    try {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        return Err(new Error('No tenant ID available'));
+      }
+
+      // First check if we have it locally with thumbnail
+      const localImage = await db.table<ImageMetadata>('imageMetadata')
+        .where('imagePath')
+        .equals(path)
+        .and(item => item.tenantId === tenantId)
+        .first();
+
+      if (localImage && localImage.thumbnailDataUrl) {
+        // Return thumbnail for quick preview
+        return Ok({ href: localImage.thumbnailDataUrl, metadata: localImage });
+      }
+
+      // Otherwise get full URL from S3
+      const urlResult = await this.getFullImageUrl(path);
+      if (urlResult.ok) {
+        return Ok({ href: urlResult.val, metadata: localImage });
+      }
+
+      return urlResult.map((href: string) => ({ href, metadata: localImage }));
+    } catch (error) {
+      return Err(error as Error);
+    }
+  }
+
+  /**
    * Retry failed uploads
    */
   async retryFailedUploads(): Promise<void> {
@@ -379,6 +413,7 @@ export const enhancedImageStore = {
   archiveImage: enhancedImageMetadataStore.archiveImage.bind(enhancedImageMetadataStore),
   unarchiveImage: enhancedImageMetadataStore.unarchiveImage.bind(enhancedImageMetadataStore),
   getFullImageUrl: enhancedImageMetadataStore.getFullImageUrl.bind(enhancedImageMetadataStore),
+  getImageByPath: enhancedImageMetadataStore.getImageByPath.bind(enhancedImageMetadataStore),
   getActiveImages: enhancedImageMetadataStore.getActiveImages.bind(enhancedImageMetadataStore),
   getArchivedImages: enhancedImageMetadataStore.getArchivedImages.bind(enhancedImageMetadataStore),
   retryFailedUploads: enhancedImageMetadataStore.retryFailedUploads.bind(enhancedImageMetadataStore),

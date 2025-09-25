@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog';
 import { enhancedImageStore } from '../clients/enhancedImageMetadataStore';
 import { ChevronLeft, ChevronRight, X, Archive, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -128,6 +128,11 @@ export function ImageViewerModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-7xl w-full h-[90vh] p-0 bg-black/95 border-gray-800">
+        {/* Visually hidden title for accessibility */}
+        <DialogTitle className="sr-only">
+          Image Viewer - {sectionName}
+        </DialogTitle>
+
         {/* Close button */}
         <DialogClose className="absolute right-4 top-4 z-10 rounded-sm opacity-70 text-white hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black">
           <X className="h-6 w-6" />
