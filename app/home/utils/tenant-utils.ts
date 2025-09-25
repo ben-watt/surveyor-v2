@@ -25,14 +25,69 @@ const client = generateClient<Schema>();
 
 // Add cache variable at the top level after imports
 type PreferredTenantCache = { value: string | null; timestamp: number } | null;
+type TenantsCache = { value: Tenant[]; timestamp: number } | null;
 type UserAttributes = { [key: string]: string | undefined };
 
 let preferredTenantCache: PreferredTenantCache = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+let tenantsCache: TenantsCache = null;
+const CACHE_DURATION = 30 * 1000; // 30 seconds for freshness check
 let preferredTenantInFlight: Promise<string | null> | null = null;
+let tenantsInFlight: Promise<Tenant[]> | null = null;
 
-function isCacheValid(cache: PreferredTenantCache): boolean {
+function isCacheValid(cache: PreferredTenantCache | TenantsCache): boolean {
   return !!cache && Date.now() - cache.timestamp < CACHE_DURATION;
+}
+
+async function fetchAndCacheUserTenants(): Promise<Tenant[]> {
+  try {
+    const result = await client.models.Tenant.list();
+
+    if (!result.data) {
+      console.debug('[fetchAndCacheUserTenants] No tenant data returned');
+      return tenantsCache?.value || [];
+    }
+
+    // If user is global-admin, return all tenants
+    const isAdmin = await isGlobalAdmin();
+    let tenants: Tenant[];
+
+    if (isAdmin) {
+      tenants = result.data.map(item => ({
+        name: item.name,
+        description: item.description || undefined,
+        createdAt: item.createdAt,
+        createdBy: item.createdBy
+      }));
+    } else {
+      const userGroups = await getUserGroups();
+      console.debug('[fetchAndCacheUserTenants] User groups:', userGroups);
+
+      tenants = result.data
+        .filter(item => userGroups.includes(item.name))
+        .map(item => ({
+          name: item.name,
+          description: item.description || undefined,
+          createdAt: item.createdAt,
+          createdBy: item.createdBy
+        }));
+    }
+
+    // Cache the fresh data
+    tenantsCache = { value: tenants, timestamp: Date.now() };
+    console.debug('[fetchAndCacheUserTenants] Updated tenants cache with', tenants.length, 'tenants');
+
+    return tenants;
+  } catch (error) {
+    console.error('[fetchAndCacheUserTenants] Error fetching tenants:', error);
+    // Return stale data if available
+    if (tenantsCache?.value) {
+      console.debug('[fetchAndCacheUserTenants] Returning stale cached data due to error');
+      return tenantsCache.value;
+    }
+    throw error;
+  } finally {
+    tenantsInFlight = null;
+  }
 }
 
 function derivePreferredTenant(attributes: UserAttributes): string | null {
@@ -192,40 +247,36 @@ export async function getUserGroups(): Promise<string[]> {
 
 /**
  * List all tenants the current user has access to
+ * Uses stale-while-revalidate pattern for offline-first experience
  */
-export async function listUserTenants(): Promise<Tenant[]> {
-  try {
-    const result = await client.models.Tenant.list();
-    
-    if (!result.data) {
-      return [];
-    }
-    
-    // If user is global-admin, return all tenants
-    const isAdmin = await isGlobalAdmin();
-    if (isAdmin) {
-      return result.data.map(item => ({
-        name: item.name,
-        description: item.description || undefined,
-        createdAt: item.createdAt,
-        createdBy: item.createdBy
-      }));
-    }    
+export async function listUserTenants(forceRefresh: boolean = false): Promise<Tenant[]> {
+  console.debug('[listUserTenants] Cache valid:', isCacheValid(tenantsCache), 'Force refresh:', forceRefresh);
 
-    const userGroups = await getUserGroups();
-
-    return result.data
-      .filter(item => userGroups.includes(item.name))
-      .map(item => ({
-        name: item.name,
-        description: item.description || undefined,
-        createdAt: item.createdAt,
-        createdBy: item.createdBy
-      }));
-  } catch (error) {
-    console.error('Error listing tenants:', error);
-    throw error;
+  // If we have fresh cache and not forcing refresh, return immediately
+  if (!forceRefresh && isCacheValid(tenantsCache)) {
+    console.debug('[listUserTenants] Returning fresh cached data');
+    return tenantsCache!.value;
   }
+
+  // If we have stale data, return it immediately and fetch fresh data in background
+  if (!forceRefresh && tenantsCache?.value) {
+    console.debug('[listUserTenants] Returning stale data, fetching fresh in background');
+    // Start background refresh without awaiting
+    if (!tenantsInFlight) {
+      tenantsInFlight = fetchAndCacheUserTenants();
+    }
+    return tenantsCache.value;
+  }
+
+  // No cached data or forced refresh - fetch fresh data
+  if (tenantsInFlight) {
+    console.debug('[listUserTenants] Using existing in-flight promise');
+    return tenantsInFlight;
+  }
+
+  console.debug('[listUserTenants] Fetching fresh tenant data');
+  tenantsInFlight = fetchAndCacheUserTenants();
+  return tenantsInFlight;
 }
 
 /**
@@ -317,10 +368,23 @@ export async function setPreferredTenant(tenantName: string): Promise<void> {
     // Clear the cache when setting new preferred tenant
     preferredTenantCache = null;
     preferredTenantInFlight = null;
+    console.debug('[setPreferredTenant] Cleared preferred tenant cache after setting to:', tenantName);
   } catch (error) {
     console.error('Error setting preferred tenant:', error);
     throw error;
   }
+}
+
+/**
+ * Clear all tenant-related caches
+ * Call this when you want to force fresh data on next access
+ */
+export function clearTenantCaches(): void {
+  preferredTenantCache = null;
+  preferredTenantInFlight = null;
+  tenantsCache = null;
+  tenantsInFlight = null;
+  console.debug('[clearTenantCaches] All tenant caches cleared');
 }
 
 export async function getPreferredTenant(): Promise<string | null> {

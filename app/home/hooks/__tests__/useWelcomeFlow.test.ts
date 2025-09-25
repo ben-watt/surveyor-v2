@@ -63,8 +63,8 @@ describe('useWelcomeFlow', () => {
     });
 
     it('should not show welcome for existing users with data', async () => {
-      const mockElements = [{ id: '1', name: 'Wall' }];
-      const mockSections = [{ id: '1', name: 'Exterior' }];
+      const mockElements = [{ id: '1', name: 'Wall', createdAt: '2023-01-01', syncStatus: 'synced', updatedAt: '2023-01-01', tenantId: 'test', sectionId: '1' }];
+      const mockSections = [{ id: '1', name: 'Exterior', createdAt: '2023-01-01', syncStatus: 'synced', updatedAt: '2023-01-01', tenantId: 'test' }];
 
       mockElementStoreUseList.mockReturnValue([true, mockElements]);
       mockSectionStoreUseList.mockReturnValue([true, mockSections]);
@@ -347,7 +347,7 @@ describe('useWelcomeFlow', () => {
       });
 
       // Add elements
-      const mockElements = [{ id: '1', name: 'Wall' }];
+      const mockElements = [{ id: '1', name: 'Wall', createdAt: '2023-01-01', syncStatus: 'synced', updatedAt: '2023-01-01', tenantId: 'test', sectionId: '1' }];
       mockElementStoreUseList.mockReturnValue([true, mockElements]);
       mockHasInitialData.mockReturnValue(true);
 

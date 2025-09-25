@@ -6,6 +6,7 @@ import {
   ChevronDown,
   FileText,
   Settings,
+  RefreshCw,
 } from "lucide-react"
 import { AppIcon } from "@/app/home/components/AppIcon"
 
@@ -73,7 +74,8 @@ const configurationNavData = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { currentTenant, tenants, loading, setCurrentTenant } = useTenant();
+  const { currentTenant, tenants, loading, setCurrentTenant, refreshTenants, isServingStaleData, error } = useTenant();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const tenantsData = tenants.map((tenant: Tenant) => ({
     name: tenant.name,
@@ -81,6 +83,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     createdAt: tenant.createdAt,
     createdBy: tenant.createdBy
   }));
+
+  const handleRefreshTenants = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshTenants();
+    } catch (err) {
+      console.error('Failed to refresh tenants:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -106,7 +119,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 align="start"
                 className="w-[--radix-dropdown-menu-trigger-width]"
               >
-                <DropdownMenuLabel>Switch Account</DropdownMenuLabel>
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Switch Account</span>
+                  <button
+                    onClick={handleRefreshTenants}
+                    disabled={isRefreshing || loading}
+                    className="p-1 rounded-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                    title="Refresh organizations"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </button>
+                </DropdownMenuLabel>
+                {(isServingStaleData || error) && (
+                  <div className="px-2 py-1 text-xs text-muted-foreground border-b">
+                    {error ? error : "Showing cached data"}
+                  </div>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className={!currentTenant ? "bg-accent text-accent-foreground" : ""}
@@ -134,9 +162,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </div>
                   </DropdownMenuItem>
                 ))}
-                {tenants.length === 0 && (
+                {tenants.length === 0 && !loading && (
                   <DropdownMenuItem disabled>
-                    No teams available
+                    {error ? "Unable to load teams" : "No teams available"}
+                  </DropdownMenuItem>
+                )}
+                {loading && (
+                  <DropdownMenuItem disabled>
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="h-3 w-3 animate-spin" />
+                      Loading teams...
+                    </div>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />

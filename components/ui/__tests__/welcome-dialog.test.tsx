@@ -10,7 +10,7 @@ jest.mock('../dialog', () => ({
     open ? <div data-testid="dialog">{children}</div> : null,
   DialogContent: ({ children, onPointerDownOutside }: {
     children: React.ReactNode;
-    onPointerDownOutside: (e: Event) => void;
+    onPointerDownOutside?: (e: React.PointerEvent<HTMLDivElement>) => void;
   }) => (
     <div data-testid="dialog-content" onPointerDown={onPointerDownOutside}>
       {children}
@@ -370,6 +370,8 @@ describe('WelcomeDialog', () => {
         open: true,
         isLoading: false,
         showSetupOptions: true,
+        onStartSetup: jest.fn(),
+        onSkipSetup: jest.fn(),
       };
 
       expect(() => {

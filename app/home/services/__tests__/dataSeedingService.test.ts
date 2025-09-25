@@ -76,8 +76,8 @@ jest.mock('../../settings/elements.json', () => [
   { id: '2', name: 'Roof', sectionId: '1', description: 'Roof structure', order: 2 },
 ], { virtual: true });
 jest.mock('../../settings/utils/mappers', () => ({
-  mapElementsToElementData: jest.fn().mockImplementation((elements) =>
-    Promise.resolve(elements.map(el => ({ ...el, id: `${el.id}#test-tenant-123` })))
+  mapElementsToElementData: jest.fn().mockImplementation((elements: any[]) =>
+    Promise.resolve(elements.map((el: any) => ({ ...el, id: `${el.id}#test-tenant-123` })))
   ),
   mapBodToComponentData: jest.fn().mockImplementation(() =>
     Promise.resolve(Array(1).fill(null).map((_, i) => ({

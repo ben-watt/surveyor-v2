@@ -83,7 +83,7 @@ jest.mock('@/components/ui/welcome-dialog', () => ({
             <h3>Setup Complete!</h3>
             <button
               data-testid="get-started-button"
-              onClick={() => onOpenChange?.(false)}
+              onClick={() => {}}
             >
               Get Started
             </button>

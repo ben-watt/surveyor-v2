@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
-import { listUserTenants, getPreferredTenant, setPreferredTenant, Tenant } from "../utils/tenant-utils";
+import { listUserTenants, getPreferredTenant, setPreferredTenant, clearTenantCaches, Tenant } from "../utils/tenant-utils";
 import { useRouter } from "next/navigation";
 
 interface TenantContextType {
@@ -9,6 +9,7 @@ interface TenantContextType {
   tenants: Tenant[];
   loading: boolean;
   error: string | null;
+  isServingStaleData: boolean;
   setCurrentTenant: (tenant: Tenant | null) => Promise<void>;
   refreshTenants: () => Promise<void>;
 }
@@ -20,19 +21,28 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isServingStaleData, setIsServingStaleData] = useState(false);
   const router = useRouter();
 
   const LOCAL_TENANTS_KEY = 'sv_tenants';
   const LOCAL_CURRENT_TENANT_NAME_KEY = 'sv_current_tenant_name';
 
   // Load tenants and set the current tenant
-  const loadTenants = useCallback(async () => {
+  const loadTenants = useCallback(async (forceRefresh: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
+      setIsServingStaleData(false);
 
-      const userTenants = await listUserTenants();
-      setTenants(userTenants);
+      const userTenants = await listUserTenants(forceRefresh);
+      setTenants(prevTenants => {
+        // Check if data might be stale (same as before)
+        if (!forceRefresh && prevTenants.length > 0 && JSON.stringify(prevTenants) === JSON.stringify(userTenants)) {
+          setIsServingStaleData(true);
+          console.debug('[TenantProvider] Serving potentially stale tenant data');
+        }
+        return userTenants;
+      });
 
       if (userTenants.length > 0) {
         const preferredTenantName = await getPreferredTenant();
@@ -48,11 +58,15 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error("Error loading tenants:", err);
-      setError("Failed to load tenants");
+      setTenants(prevTenants => {
+        setError("Failed to load organizations. " + (prevTenants.length > 0 ? "Showing cached data." : "Please check your connection."));
+        setIsServingStaleData(prevTenants.length > 0);
+        return prevTenants; // Keep existing tenants on error
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Remove tenants dependency to prevent infinite loop
 
   // Set the current tenant and save it as preferred
   const setCurrentTenant = useCallback(async (tenant: Tenant | null) => {
@@ -66,9 +80,16 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [router]);
 
-  // Refresh the tenant list
+  // Refresh the tenant list - force fresh data
   const refreshTenants = useCallback(async () => {
-    await loadTenants();
+    console.debug('[TenantProvider] Force refreshing tenants');
+    clearTenantCaches();
+    // Clear localStorage to force fresh data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(LOCAL_TENANTS_KEY);
+    }
+    setIsServingStaleData(false);
+    await loadTenants(true);
   }, [loadTenants]);
 
   // Load tenants on initial render
@@ -122,10 +143,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       tenants,
       loading,
       error,
+      isServingStaleData,
       setCurrentTenant,
       refreshTenants,
     }),
-    [currentTenant, tenants, loading, error, setCurrentTenant, refreshTenants]
+    [currentTenant, tenants, loading, error, isServingStaleData, setCurrentTenant, refreshTenants]
   );
 
   return (
