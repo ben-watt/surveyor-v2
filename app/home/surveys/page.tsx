@@ -24,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "./components/EmptyState";
 import { useUserAttributes } from "../utils/useUser";
 import { getOwnerDisplayName } from "../utils/useUser";
+import { useWelcomeFlow } from "../hooks/useWelcomeFlow";
+import { WelcomeDialog } from "@/components/ui/welcome-dialog";
 
 interface FilterState {
   status: string[];
@@ -40,6 +42,9 @@ function HomePage() {
     status: [],
     owner: [],
   });
+
+  // Welcome flow for new users
+  const welcomeFlow = useWelcomeFlow();
 
   // Get unique status values from data
   const availableStatuses = React.useMemo(() => {
@@ -235,8 +240,18 @@ function HomePage() {
             hasFilters={filters.status.length > 0 || filters.owner.length > 0} 
           />
         )}
-        </div>
       </div>
+
+      <WelcomeDialog
+        open={welcomeFlow.showWelcome}
+        onOpenChange={welcomeFlow.handleCloseWelcome}
+        progress={welcomeFlow.progress}
+        onStartSetup={welcomeFlow.handleStartSetup}
+        onSkipSetup={welcomeFlow.handleSkipSetup}
+        isLoading={welcomeFlow.isLoading}
+        showSetupOptions={welcomeFlow.showSetupOptions}
+      />
+    </div>
   );
 }
 

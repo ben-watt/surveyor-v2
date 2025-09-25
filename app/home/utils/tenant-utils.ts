@@ -58,11 +58,28 @@ async function fetchAndCachePreferredTenant(): Promise<string | null> {
 
 /**
  * Get the current tenant ID from user attributes
- * Returns null if no preferred tenant is set
+ * For new users without a preferred tenant, initializes personal tenant
  */
 export async function getCurrentTenantId(): Promise<string | null> {
   try {
-    return await getPreferredTenant();
+    const preferredTenant = await getPreferredTenant();
+
+    if (preferredTenant) {
+      return preferredTenant;
+    }
+
+    // For new users, initialize personal tenant using their user ID
+    console.debug('[getCurrentTenantId] No preferred tenant found, initializing personal tenant');
+    const user = await getCurrentUser();
+
+    if (user?.userId) {
+      // Set personal tenant as default for new users
+      await setPreferredTenant('personal');
+      console.debug('[getCurrentTenantId] Personal tenant initialized for new user');
+      return user.userId;
+    }
+
+    return null;
   } catch (error) {
     console.error('Error getting current tenant ID:', error);
     return null;

@@ -72,39 +72,71 @@ const normalizeResult = <T>(result: T | Result<T, Error>): Result<T, Error> => {
   return Ok(result);
 };
 
-// Custom hook for auth and tenant management
+// Custom hook for auth and tenant management with retry logic
 const useAuthAndTenant = () => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
-  
+
   useEffect(() => {
     let mounted = true;
-    
+    let retryCount = 0;
+    const maxRetries = 8;
+
     const initialize = async () => {
       try {
+        // Wait for auth tokens with retry logic
         await getCurrentUser();
+        console.debug('[useAuthAndTenant] Auth successful');
+
         if (mounted) {
           setAuthReady(true);
           setAuthSuccess(true);
+
+          // Get tenant ID with fallback for new users
           const tid = await getCurrentTenantId();
-          setTenantId(tid);
+          console.debug('[useAuthAndTenant] Tenant ID:', tid);
+
+          if (!tid) {
+            // For new users, set personal tenant as default
+            console.debug('[useAuthAndTenant] No tenant found, initializing personal tenant');
+            const user = await getCurrentUser();
+            if (user?.userId) {
+              setTenantId(user.userId);
+            }
+          } else {
+            setTenantId(tid);
+          }
         }
       } catch (error) {
+        console.debug(`[useAuthAndTenant] Auth attempt ${retryCount + 1}/${maxRetries} failed:`, error);
+
         if (mounted) {
-          setAuthReady(true);
-          setAuthSuccess(false);
+          retryCount++;
+
+          if (retryCount < maxRetries) {
+            // Retry with exponential backoff
+            const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 8000);
+            setTimeout(initialize, delay);
+          } else {
+            // Max retries reached - mark as ready but failed
+            console.error('[useAuthAndTenant] Auth initialization failed after all retries');
+            setAuthReady(true);
+            setAuthSuccess(false);
+          }
         }
       }
     };
-    
-    const timeout = setTimeout(initialize, 200);
+
+    // Start with a small delay to allow auth to settle
+    const timeout = setTimeout(initialize, 500);
+
     return () => {
       mounted = false;
       clearTimeout(timeout);
     };
   }, []);
-  
+
   return { tenantId, authReady, authSuccess };
 };
 

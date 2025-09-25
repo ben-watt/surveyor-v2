@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { signUp, confirmSignUp, getCurrentUser, signIn } from "aws-amplify/auth"
+import { getCurrentTenantId } from "@/app/home/utils/tenant-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -142,8 +143,24 @@ export default function SignUp() {
       const authReady = await waitForAuthTokens(8, 1000) // Increased attempts for sign-up flow
 
       if (authReady) {
-        console.log("Auth tokens ready, redirecting to dashboard")
-        router.push("/home/surveys")
+        console.log("Auth tokens ready, initializing tenant context")
+
+        // Step 4: Initialize tenant context for new user
+        try {
+          const tenantId = await getCurrentTenantId()
+          console.log("Tenant context initialized:", tenantId)
+
+          // Give sync engine time to initialize with new tenant context
+          await new Promise(resolve => setTimeout(resolve, 1000))
+
+          router.push("/home/surveys")
+        } catch (tenantError) {
+          console.error("Tenant initialization failed:", tenantError)
+          setError("Sign-up successful! Redirecting to dashboard...")
+          setTimeout(() => {
+            router.push("/home/surveys")
+          }, 2000)
+        }
       } else {
         console.warn("Auth tokens not available, redirecting to login")
         setError("Sign-up confirmed! Please sign in to continue.")
