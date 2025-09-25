@@ -8,6 +8,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AppIcon } from '@/app/home/components/AppIcon'
+import { PasswordStrength } from '@/components/ui/password-strength'
+
+interface PasswordRequirements {
+  minLength: boolean
+  hasUpperCase: boolean
+  hasLowerCase: boolean
+  hasNumbers: boolean
+  hasSpecialChar: boolean
+}
 
 export default function SignUp() {
   const [email, setEmail] = useState("")
@@ -17,7 +26,36 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [confirmationCode, setConfirmationCode] = useState("")
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak')
+  const [passwordRequirements, setPasswordRequirements] = useState<PasswordRequirements>({
+    minLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumbers: false,
+    hasSpecialChar: false
+  })
   const router = useRouter()
+
+  const validatePassword = (password: string) => {
+    const requirements: PasswordRequirements = {
+      minLength: password.length >= 8,
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasNumbers: /\d/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    }
+
+    setPasswordRequirements(requirements)
+
+    const score = Object.values(requirements).filter(Boolean).length
+    if (score < 3) setPasswordStrength('weak')
+    else if (score < 5) setPasswordStrength('medium')
+    else setPasswordStrength('strong')
+  }
+
+  const isPasswordValid = () => {
+    return Object.values(passwordRequirements).every(Boolean)
+  }
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault()
@@ -26,6 +64,12 @@ export default function SignUp() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
+      setLoading(false)
+      return
+    }
+
+    if (!isPasswordValid()) {
+      setError("Password does not meet all requirements")
       setLoading(false)
       return
     }
@@ -139,8 +183,17 @@ export default function SignUp() {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    const newPassword = e.target.value
+                    setPassword(newPassword)
+                    validatePassword(newPassword)
+                  }}
                   required
+                />
+                <PasswordStrength
+                  password={password}
+                  requirements={passwordRequirements}
+                  strength={passwordStrength}
                 />
               </div>
               <div className="space-y-2">
@@ -157,10 +210,10 @@ export default function SignUp() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1"
-                disabled={loading}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                disabled={loading || !isPasswordValid() || password !== confirmPassword}
               >
                 {loading ? "Signing up..." : "Sign Up"}
               </Button>
