@@ -32,6 +32,12 @@ export function useWelcomeFlow() {
           showWelcome: true,
           showSetupOptions: true
         }))
+      } else {
+        // User has data - hide welcome dialog
+        setState(prev => ({
+          ...prev,
+          showWelcome: false,
+        }))
       }
     }
   }, [elementsHydrated, sectionsHydrated, elements.length, sections.length])
