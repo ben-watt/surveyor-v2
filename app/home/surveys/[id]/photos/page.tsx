@@ -24,6 +24,25 @@ function PhotoGallery() {
   const [selectedSection, setSelectedSection] = useState<PhotoSection | null>(null);
   const router = useRouter();
 
+  // Ensure survey match by path segment, not substring
+  const isImageForSurvey = (imagePath: string, surveyId: string): boolean => {
+    if (!imagePath || !surveyId) return false;
+    const normalized = imagePath.replace(/^\/+|\/+$/g, '');
+    const segments = normalized.split('/').filter(Boolean);
+
+    const idxReport = segments.indexOf('report-images');
+    if (idxReport !== -1) {
+      return segments[idxReport + 1] === surveyId;
+    }
+
+    const idxSurveys = segments.indexOf('surveys');
+    if (idxSurveys !== -1) {
+      return segments[idxSurveys + 1] === surveyId;
+    }
+
+    return false;
+  };
+
 
   const loadPhotos = async () => {
     if (!survey) return;
@@ -45,13 +64,9 @@ function PhotoGallery() {
 
       console.log("[PhotoGallery] Enhanced store images:", allImages);
 
-      // Filter images for this survey (by path prefix)
+      // Filter images for this survey using path segment checks
       const surveyImages = allImages.filter(img =>
-        img.imagePath.includes(`/surveys/${id}/`) ||
-        img.imagePath.includes(`surveys/${id}/`) ||
-        img.imagePath.includes(`/${id}/`) ||
-        img.imagePath.includes(`${id}/`) ||
-        img.imagePath.includes(`survey-${id}`)
+        isImageForSurvey(String(img.imagePath || ''), id)
       );
 
       console.log("[PhotoGallery] Filtered survey images:", surveyImages);
