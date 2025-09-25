@@ -1,4 +1,4 @@
-import { DropZoneInputFile } from "@/app/home/components/InputImage/DropZoneInputImage"
+import { DropZoneInputFile } from "@/app/home/components/InputImage"
 
 export type BuildingSurveyFormData = {
     id: string,

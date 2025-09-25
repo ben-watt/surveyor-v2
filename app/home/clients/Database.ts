@@ -372,10 +372,45 @@ export interface ImageMetadata {
   createdAt: string;
   updatedAt: string;
   imagePath: string;
+  thumbnailDataUrl?: string;  // Base64 thumbnail for instant display
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  width?: number;
+  height?: number;
+  contentHash?: string;  // SHA-256 hash for duplicate detection
   caption?: string;
   notes?: string;
+  isArchived?: boolean;  // Archive management
+  uploadStatus?: 'pending' | 'uploaded' | 'failed';  // Simple status tracking
+  uploadProgress?: number;  // Upload progress percentage (0-100)
+  localFileData?: ArrayBuffer;  // Temporary storage for offline uploads (using ArrayBuffer instead of File)
+  localFileType?: string;  // MIME type for reconstructing File from ArrayBuffer
+  localFileName?: string;  // File name for reconstructing File from ArrayBuffer
   tenantId: string;
 }
+
+// Helper to remove local-only fields before syncing to server
+const removeLocalOnlyFields = (data: any): any => {
+  const { uploadProgress, localFileData, localFileType, localFileName, ...serverData } = data;
+
+  // Convert SyncStatus enum to string for server
+  const convertedData = {
+    ...serverData,
+    syncStatus: serverData.syncStatus === SyncStatus.Queued ? 'queued' :
+                serverData.syncStatus === SyncStatus.Synced ? 'synced' :
+                serverData.syncStatus === SyncStatus.Failed ? 'failed' :
+                serverData.syncStatus || 'queued', // Default to queued
+  };
+
+  // Ensure required fields are not null/undefined
+  return {
+    ...convertedData,
+    imagePath: convertedData.imagePath || '',
+    createdAt: convertedData.createdAt || new Date().toISOString(),
+    updatedAt: convertedData.updatedAt || new Date().toISOString(),
+  };
+};
 
 const mapToImageMetadata = (data: any): ImageMetadata => ({
   id: data.id,
@@ -383,8 +418,17 @@ const mapToImageMetadata = (data: any): ImageMetadata => ({
   updatedAt: data.updatedAt,
   createdAt: data.createdAt,
   imagePath: data.imagePath,
+  thumbnailDataUrl: data.thumbnailDataUrl,
+  fileName: data.fileName,
+  fileSize: data.fileSize,
+  mimeType: data.mimeType,
+  width: data.width,
+  height: data.height,
+  contentHash: data.contentHash,
   caption: data.caption,
   notes: data.notes,
+  isArchived: data.isArchived,
+  uploadStatus: data.uploadStatus,
   tenantId: data.tenantId,
 });
 
@@ -403,8 +447,9 @@ export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMet
       return Ok(response.data.map(mapToImageMetadata));
     },
     create: async (data): Promise<Result<ImageMetadata, Error>> => {
-      // Add tenant ID to new metadata
-      const serverData = await withTenantId(data);
+      // Remove local-only fields and add tenant ID
+      const cleanData = removeLocalOnlyFields(data);
+      const serverData = await withTenantId(cleanData);
       const response = await client.models.ImageMetadata.create(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));
@@ -412,8 +457,9 @@ export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMet
       return Ok(mapToImageMetadata(response.data));
     },
     update: async (data): Promise<Result<ImageMetadata, Error>> => {
-      // Add tenant ID to update
-      const serverData = await withTenantId(data);
+      // Remove local-only fields and add tenant ID
+      const cleanData = removeLocalOnlyFields(data);
+      const serverData = await withTenantId(cleanData);
       const response = await client.models.ImageMetadata.update(serverData);
       if (response.errors) {
         return Err(new Error(response.errors.map(e => e.message).join(", ")));

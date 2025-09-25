@@ -26,18 +26,6 @@ export type Element = Omit<Schema['Elements']['type'], "components" | "section">
 export type Phrase = Schema['Phrases']['type'];
 export type Section = Omit<Schema['Sections']['type'], "elements"> & TableEntity;
 
-export interface ImageUpload {
-  id: string;
-  tenantId: string;
-  path: string;
-  file: Blob;
-  metadata?: Record<string, string>;
-  href: string;
-  updatedAt: string;
-  syncStatus: string;
-  syncError?: string;
-}
-
 type TableEntity = {
   id: string;
   updatedAt: string;
@@ -512,10 +500,10 @@ const db = new Dexie('Surveys') as Dexie & {
   elements: EntityTable<Element, "id", "tenantId">;
   phrases: EntityTable<Phrase, "id", "tenantId">;
   sections: EntityTable<Section, "id", "tenantId">;
-  imageUploads: EntityTable<ImageUpload, "id", "tenantId">;
   imageMetadata: EntityTable<ImageMetadata, "id", "tenantId">;
 };
 
+// Version 2: Initial schema (kept for upgrade path)
 db.version(2).stores({
   surveys: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
@@ -533,7 +521,29 @@ db.version(21)
     delete (phrase as any)["associatedMaterialIds"];
     delete (phrase as any)["associatedElementIds"];
   });
-  
+
+});
+
+// Add indexes for new imageMetadata fields
+db.version(22).stores({
+  surveys: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  imageUploads: 'id, tenantId, path, updatedAt, syncStatus, [tenantId+updatedAt]',
+  imageMetadata: 'id, tenantId, imagePath, uploadStatus, isArchived, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived]'
+});
+
+// Version 23: Remove imageUploads table (migrated to imageMetadata)
+db.version(23).stores({
+  surveys: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  imageMetadata: 'id, tenantId, imagePath, uploadStatus, isArchived, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived]'
+  // imageUploads table removed in v23
 });
 
 export { db, CreateDexieHooks };

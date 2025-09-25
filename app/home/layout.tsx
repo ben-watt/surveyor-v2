@@ -10,7 +10,6 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { surveyStore, componentStore, elementStore, phraseStore, sectionStore, imageMetadataStore } from "./clients/Database";
-import { imageUploadStore } from "./clients/ImageUploadStore";
 import { OnlineStatus } from "./components/OnlineStatus";
 import { SyncStatus } from "./components/SyncStatus";
 import { TenantProvider } from "./utils/TenantContext";
@@ -29,7 +28,6 @@ export default function RootLayout({
       elementStore.forceSync();
       phraseStore.forceSync();
       sectionStore.forceSync();
-      imageUploadStore.sync(); // Keep regular sync for image uploads
       imageMetadataStore.forceSync();
     };
 

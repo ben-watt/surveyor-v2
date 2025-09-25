@@ -18,9 +18,23 @@ import { LastSavedIndicator } from "../components/LastSavedIndicator";
 // Zod schema for profile validation
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  nickname: z.string().min(1, "Signature text is required"), 
-  profile: z.string().min(1, "Profile picture is required"),
-  picture: z.string().min(1, "Signature image is required"),
+  nickname: z.string().min(1, "Signature text is required"),
+  profile: z.union([
+    z.string().min(1, "Profile picture is required"),
+    z.array(z.object({
+      path: z.string(),
+      isArchived: z.boolean(),
+      hasMetadata: z.boolean()
+    })).min(1, "Profile picture is required")
+  ]),
+  picture: z.union([
+    z.string().min(1, "Signature image is required"),
+    z.array(z.object({
+      path: z.string(),
+      isArchived: z.boolean(),
+      hasMetadata: z.boolean()
+    })).min(1, "Signature image is required")
+  ]),
   sub: z.string(),
   email: z.string().email("Invalid email address")
 });
@@ -37,16 +51,28 @@ function Page() {
 
   useEffect(() => {
     fetchUserAttributes().then((attributes) => {
-      const formData: ProfileFormData = {
+      // Convert string paths to array format expected by RhfDropZoneInputImage
+      const profileValue = attributes.profile
+        ? [{ path: attributes.profile, isArchived: false, hasMetadata: false }]
+        : [];
+      const pictureValue = attributes.picture
+        ? [{ path: attributes.picture, isArchived: false, hasMetadata: false }]
+        : [];
+
+      const formData: any = {
         name: attributes.name || "",
         nickname: attributes.nickname || "",
-        profile: attributes.profile || "",
-        picture: attributes.picture || "",
+        profile: profileValue,
+        picture: pictureValue,
         sub: attributes.sub || "",
         email: attributes.email || "",
       };
       methods.reset(formData, { keepDirtyValues: true });
-      setEntityData(formData);
+      setEntityData({
+        ...formData,
+        profile: attributes.profile || "",
+        picture: attributes.picture || ""
+      });
       setEnableForm(true);
     });
   }, [methods]);
@@ -70,9 +96,16 @@ function Page() {
             let value = data[k as keyof ProfileFormData];
             
             if (k === "profile" || k === "picture") {
-              // Handle file upload fields - they might be File objects
-              if (typeof value === 'object' && value !== null && 'path' in value) {
+              // Handle file upload fields - they return an array of file objects
+              if (Array.isArray(value) && value.length > 0) {
+                // Get the first file's path since maxFiles=1
+                value = value[0]?.path || "";
+              } else if (typeof value === 'object' && value !== null && 'path' in value) {
+                // Handle single object case (backwards compatibility)
                 value = (value as any).path;
+              } else if (!value) {
+                // If no value, skip this attribute
+                return;
               }
             }
 

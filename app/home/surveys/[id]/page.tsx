@@ -6,7 +6,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import BuildingSurveyForm from "../building-survey-reports/BuildingSurveyForm";
 import { surveyStore } from "@/app/home/clients/Database";
-import { imageUploadStore } from "../../clients/ImageUploadStore";
+import { enhancedImageStore } from "../../clients/enhancedImageMetadataStore";
 import { getAllSurveyImages } from "../building-survey-reports/Survey";
 import { SurveyDocuments } from "../../components/SurveyDocuments";
 import { CompactPhotoGrid } from "../components/CompactPhotoGrid";
@@ -40,8 +40,8 @@ function Home() {
       const photos = allPhotos.slice(0, 4);
 
       const result = await Promise.all(photos.filter(Boolean).map(async x => {
-        const url = await imageUploadStore.get(x.path);
-        return url;
+        const imageResult = await enhancedImageStore.getImageByPath(x.path);
+        return imageResult;
       }));
 
       if(result.every(x => x.ok)) {

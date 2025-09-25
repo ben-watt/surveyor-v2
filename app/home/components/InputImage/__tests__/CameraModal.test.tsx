@@ -27,14 +27,14 @@ jest.mock('@/app/home/hooks/useCameraStream', () => ({
   useCameraStream: () => mockUseCameraStream,
 }));
 
-// Mock image upload store
-jest.mock('@/app/home/clients/ImageUploadStore', () => ({
-  imageUploadStore: {
-    create: jest.fn().mockResolvedValue({ ok: true }),
+// Mock enhanced image store
+jest.mock('@/app/home/clients/enhancedImageMetadataStore', () => ({
+  enhancedImageStore: {
+    uploadImage: jest.fn().mockResolvedValue({ ok: true, val: 'mock-image-id' }),
   },
 }));
 
-const { imageUploadStore } = require('@/app/home/clients/ImageUploadStore');
+const { enhancedImageStore } = require('@/app/home/clients/enhancedImageMetadataStore');
 
 // Mock react-image-file-resizer
 jest.mock('react-image-file-resizer', () => ({
@@ -64,7 +64,7 @@ describe('CameraModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    imageUploadStore.create.mockResolvedValue({ ok: true });
+    enhancedImageStore.uploadImage.mockResolvedValue({ ok: true, val: 'mock-image-id' });
     // Reset camera stream mock to defaults
     Object.assign(mockUseCameraStream, {
       stream: null,

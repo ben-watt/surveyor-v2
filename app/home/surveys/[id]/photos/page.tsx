@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { surveyStore } from "@/app/home/clients/Database";
-import { imageUploadStore } from "@/app/home/clients/ImageUploadStore";
-import { ArrowLeft } from "lucide-react";
+import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
+import { ArrowLeft, Archive } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { SurveyImage } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { ImageViewerModal } from "@/app/home/components/ImageViewerModal";
 
 interface PhotoSection {
   name: string;
-  photos: { url: string; isArchived: boolean }[];
+  photos: { id: string; url: string; isArchived: boolean; imagePath: string; fileName?: string }[];
 }
 
 function PhotoGallery() {
@@ -19,122 +19,127 @@ function PhotoGallery() {
   const [isHydrated, survey] = surveyStore.useGet(id);
   const [photoSections, setPhotoSections] = useState<PhotoSection[]>([]);
   const [showArchived, setShowArchived] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedSection, setSelectedSection] = useState<PhotoSection | null>(null);
   const router = useRouter();
 
-  console.log("[PhotoGallery] photoSections", survey);
+  // Ensure survey match by path segment, not substring
+  const isImageForSurvey = (imagePath: string, surveyId: string): boolean => {
+    if (!imagePath || !surveyId) return false;
+    const normalized = imagePath.replace(/^\/+|\/+$/g, '');
+    const segments = normalized.split('/').filter(Boolean);
+
+    const idxReport = segments.indexOf('report-images');
+    if (idxReport !== -1) {
+      return segments[idxReport + 1] === surveyId;
+    }
+
+    const idxSurveys = segments.indexOf('surveys');
+    if (idxSurveys !== -1) {
+      return segments[idxSurveys + 1] === surveyId;
+    }
+
+    return false;
+  };
+
+
+  const loadPhotos = async () => {
+    if (!survey) return;
+
+    try {
+      // Get both active and archived images from enhanced store only
+      const [activeResult, archivedResult] = await Promise.all([
+        enhancedImageStore.getActiveImages(),
+        enhancedImageStore.getArchivedImages()
+      ]);
+
+      let allImages: any[] = [];
+      if (activeResult.ok) {
+        allImages.push(...activeResult.val);
+      }
+      if (archivedResult.ok) {
+        allImages.push(...archivedResult.val);
+      }
+
+      console.log("[PhotoGallery] Enhanced store images:", allImages);
+
+      // Filter images for this survey using path segment checks
+      const surveyImages = allImages.filter(img =>
+        isImageForSurvey(String(img.imagePath || ''), id)
+      );
+
+      console.log("[PhotoGallery] Filtered survey images:", surveyImages);
+
+      // Group images by section based on their path
+      const sections: PhotoSection[] = [];
+      const groupedImages = new Map<string, typeof surveyImages>();
+
+      surveyImages.forEach(img => {
+        // Extract section name from path
+        let sectionName = "Unknown";
+
+        if (img.imagePath.includes('/money-shot/') || img.imagePath.includes('moneyShot')) {
+          sectionName = "Cover Image";
+        } else if (img.imagePath.includes('/front-elevation/') || img.imagePath.includes('frontElevation')) {
+          sectionName = "Front Elevation";
+        } else if (img.imagePath.includes('/report-images/') || img.imagePath.includes('reportImages')) {
+          sectionName = "Report Images";
+        } else {
+          // Try to extract section name from path
+          const pathParts = img.imagePath.split('/');
+          const lastPart = pathParts[pathParts.length - 2] || 'Images';
+          sectionName = lastPart.replace(/([A-Z])/g, ' $1').replace(/^./, (str: string) => str.toUpperCase()).trim();
+        }
+
+        if (!groupedImages.has(sectionName)) {
+          groupedImages.set(sectionName, []);
+        }
+
+        // Convert enhanced store format to PhotoSection format
+        groupedImages.get(sectionName)?.push({
+          id: img.id,
+          url: img.thumbnailDataUrl || '', // Use thumbnail for grid display
+          isArchived: img.isArchived || false,
+          imagePath: img.imagePath,
+          fileName: img.fileName
+        });
+      });
+
+      // Convert grouped images to sections
+      groupedImages.forEach((photos, name) => {
+        if (photos.length > 0) {
+          sections.push({ name, photos });
+        }
+      });
+
+      console.log("[PhotoGallery] Organized sections:", sections);
+      setPhotoSections(sections);
+    } catch (error) {
+      console.error("[PhotoGallery] Error loading photos:", error);
+    }
+  };
+
+  // Handle image click to open modal
+  const handleImageClick = (sectionIndex: number, imageIndex: number) => {
+    const section = photoSections[sectionIndex];
+    const filteredPhotos = showArchived
+      ? section.photos
+      : section.photos.filter(photo => !photo.isArchived);
+
+    if (filteredPhotos.length > 0) {
+      setSelectedSection({ ...section, photos: filteredPhotos });
+      setSelectedImageIndex(imageIndex);
+      setIsModalOpen(true);
+    }
+  };
 
   useEffect(() => {
-    async function getImagesFromStore(
-        imagePaths: SurveyImage[]
-      ): Promise<{url: string, isArchived: boolean}[]> {
-      const result = await Promise.all(
-        imagePaths.map(async (file) => {
-          const result = await imageUploadStore.get(file.path);
-          if(result.err) {
-            console.error("[PhotoGallery] getImagesFromStore", result.err);
-            return null;
-          }
-          return {path: file.path, isArchived: file.isArchived, url: result.unwrap().href, hasMetadata: file.hasMetadata};
-        })
-      );
-      const validResults = result.filter((url) => url !== null);
-      return validResults;
-    }
-
-    async function loadPhotos() {
-      if (!survey) return;
-
-      const sections: PhotoSection[] = [];
-
-      // Load money shot
-      if (survey.reportDetails?.moneyShot?.length) {
-        const urls = await Promise.all(
-          survey.reportDetails.moneyShot.map(async (file) => {
-            console.log("[PhotoGallery] moneyShot", file);
-            if (!file.path) return null;
-            
-            const result = await imageUploadStore.get(file.path);
-            if (result.err) {
-              console.error("[PhotoGallery] moneyShot", result.err);
-              return null;
-            }
-
-            return { 
-              url: result.unwrap().href,
-              isArchived: file.isArchived || false
-            };
-          })
-        );
-
-        sections.push({
-          name: "Cover Image",
-          photos: urls.filter((url) => url !== null),
-        });
-      }
-
-      // Load front elevation images
-      if (survey.reportDetails?.frontElevationImagesUri?.length) {
-        console.log("[PhotoGallery] frontElevationImagesUri", survey.reportDetails.frontElevationImagesUri);
-        const urls = await Promise.all(
-          survey.reportDetails.frontElevationImagesUri.map(async (file) => {
-            if (!file.path) return null;
-            const result = await imageUploadStore.get(file.path);
-            if (result.err) {
-              console.error("[PhotoGallery] frontElevationImagesUri", result.err);
-              return null;
-            }
-            return { 
-              url: result.unwrap().href,
-              isArchived: file.isArchived || false
-            };
-          })
-        );
-
-        sections.push({
-          name: "Front Elevation",
-          photos: urls.filter((url) => url !== null),
-        });
-      }
-
-      // Load component images
-      if (survey.sections?.length) {
-        for (const section of survey.sections) {
-          for (const elementSection of section.elementSections || []) {
-            if (elementSection.images?.length) {
-              const urls = await getImagesFromStore(elementSection.images);
-              console.log("[PhotoGallery] getImagesFromStore", elementSection.name, urls);
-              sections.push({
-                name: elementSection.name,
-                photos: urls.map((url) => ({ 
-                  url: url.url,
-                  isArchived: url.isArchived
-                })),
-              });
-            }
-
-            for (const component of elementSection.components || []) {
-              if (component.images?.length) {
-                const urls = await getImagesFromStore(component.images);
-                sections.push({
-                  name: `${elementSection.name} - ${component.name}`,
-                  photos: urls.map((url) => ({ 
-                    url: url.url,
-                    isArchived: url.isArchived
-                  })),
-                });
-              }
-            }
-          }
-        }
-      }
-
-      setPhotoSections(sections);
-    }
-
     if (isHydrated && survey) {
       loadPhotos();
     }
-  }, [isHydrated, survey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, survey]); // loadPhotos recreated on each render, would cause infinite loop
 
   const totalPhotos = photoSections.reduce(
     (total, section) => total + section.photos.length,
@@ -199,10 +204,18 @@ function PhotoGallery() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
                 {sortedPhotos.map((photo, photoIndex) => {
                   if (!showArchived && photo.isArchived) return null;
+
+                  // Calculate filtered index for modal navigation
+                  const filteredPhotos = showArchived
+                    ? sortedPhotos
+                    : sortedPhotos.filter(p => !p.isArchived);
+                  const filteredIndex = filteredPhotos.findIndex(p => p.id === photo.id);
+
                   return (
                     <div
-                      key={photoIndex}
-                      className={`relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-gray-800 ${photo.isArchived ? 'grayscale' : ''}`}
+                      key={photo.id || photoIndex}
+                      className={`relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-gray-800 ${photo.isArchived ? 'grayscale' : ''} group cursor-pointer`}
+                      onClick={() => handleImageClick(sectionIndex, filteredIndex)}
                     >
                       <Image
                         src={photo.url}
@@ -213,8 +226,16 @@ function PhotoGallery() {
                         loading={sectionIndex === 0 && photoIndex < 6 ? "eager" : "lazy"}
                         quality={75}
                         placeholder="blur"
-                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy02Mi85OEI2PTZFOT5ZXVlZfG1+fW6Ghn6QjpCOd3p3gHj/2wBDARUXFx4eHR8fHXhwLicucHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHD/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy02Mi85OEI2PTZFOT5ZXVlZfG1+fW6Ghn6QjpCOd3p3gHj/2wBDARUXFx4eHR8fHXhwLicucHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHD/wAARCAAIAAoDASIAAhEBAxEAPwCdABmX/9k="
                       />
+
+                      {/* Archive indicator */}
+                      {photo.isArchived && (
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 bg-gray-800/80 text-white text-xs rounded">
+                          <Archive size={12} />
+                          <span>Archived</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -223,6 +244,17 @@ function PhotoGallery() {
           );
         })}
       </div>
+
+      {/* Image Viewer Modal */}
+      {selectedSection && (
+        <ImageViewerModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          photos={selectedSection.photos}
+          initialIndex={selectedImageIndex}
+          sectionName={selectedSection.name}
+        />
+      )}
     </div>
   );
 }
