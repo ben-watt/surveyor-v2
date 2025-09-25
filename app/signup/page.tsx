@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { signUp, confirmSignUp, type ConfirmSignUpInput } from "aws-amplify/auth"
+import { signUp, confirmSignUp, getCurrentUser, signIn } from "aws-amplify/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -57,6 +57,25 @@ export default function SignUp() {
     return Object.values(passwordRequirements).every(Boolean)
   }
 
+  // Helper function to wait for auth tokens with retry logic
+  const waitForAuthTokens = async (maxAttempts = 5, delay = 1000): Promise<boolean> => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await getCurrentUser()
+        console.log(`Auth tokens available after ${attempt} attempts`)
+        return true
+      } catch (error) {
+        console.log(`Auth attempt ${attempt}/${maxAttempts} failed:`, error)
+        if (attempt === maxAttempts) {
+          return false
+        }
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, delay * attempt))
+      }
+    }
+    return false
+  }
+
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -99,13 +118,54 @@ export default function SignUp() {
     setError(null)
 
     try {
-      await confirmSignUp({
+      // Step 1: Confirm the sign-up
+      const confirmResult = await confirmSignUp({
         username: email,
         confirmationCode
       })
-      router.push("/home/surveys") // Redirect to dashboard after successful confirmation
+
+      console.log("Sign-up confirmed successfully", confirmResult)
+
+      // Step 2: Sign in the user to get auth tokens (since autoSignIn might not have worked)
+      try {
+        await signIn({
+          username: email,
+          password: password
+        })
+        console.log("Auto sign-in successful")
+      } catch (signInError: any) {
+        console.log("Auto sign-in failed, but confirmation succeeded:", signInError)
+        // If auto sign-in fails, we'll still try to wait for tokens
+      }
+
+      // Step 3: Wait for auth tokens to be available
+      const authReady = await waitForAuthTokens(8, 1000) // Increased attempts for sign-up flow
+
+      if (authReady) {
+        console.log("Auth tokens ready, redirecting to dashboard")
+        router.push("/home/surveys")
+      } else {
+        console.warn("Auth tokens not available, redirecting to login")
+        setError("Sign-up confirmed! Please sign in to continue.")
+        // Don't redirect to login automatically - show message instead
+        setTimeout(() => {
+          router.push("/login")
+        }, 3000)
+      }
+
     } catch (err: any) {
-      setError(err.message || "Failed to confirm sign up")
+      console.error("Confirmation failed:", err)
+
+      // Handle specific error cases
+      if (err.name === 'CodeMismatchException') {
+        setError("Invalid confirmation code. Please check and try again.")
+      } else if (err.name === 'ExpiredCodeException') {
+        setError("Confirmation code has expired. Please request a new one.")
+      } else if (err.name === 'LimitExceededException') {
+        setError("Too many attempts. Please try again later.")
+      } else {
+        setError(err.message || "Failed to confirm sign up")
+      }
     } finally {
       setLoading(false)
     }
