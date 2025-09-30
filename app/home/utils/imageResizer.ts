@@ -8,23 +8,23 @@ export const resizeImage = (file: File): Promise<File> => {
   return new Promise((resolve) => {
     Resizer.imageFileResizer(
       file,
-      500, // maxWidth
-      400, // maxHeight (for 3:2 aspect ratio)
-      "JPEG", // output format
-      100, // quality
+      2048, // maxWidth for high-quality uploads (longest edge)
+      2048, // maxHeight for high-quality uploads (longest edge)
+      'JPEG', // output format for broad compatibility
+      90, // quality (85-92 is visually lossless for photos)
       0, // rotation
       (uri) => {
         fetch(uri as string)
           .then((res) => res.blob())
           .then((blob) => {
             const resizedFile = new File([blob], file.name, {
-              type: "image/jpeg",
+              type: 'image/jpeg',
               lastModified: Date.now(),
             });
             resolve(resizedFile);
           });
       },
-      "base64",
+      'base64',
     );
   });
 };

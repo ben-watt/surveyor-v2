@@ -4,7 +4,7 @@ import { X, Camera, Image as ImageIcon, AlertCircle, Loader2, CheckCircle } from
 import { useNativeCamera } from '@/app/home/hooks/useNativeCamera';
 import { enhancedImageStore } from '@/app/home/clients/enhancedImageMetadataStore';
 import { join } from 'path';
-import Resizer from 'react-image-file-resizer';
+import { resizeImage } from '@/app/home/utils/imageResizer';
 
 interface NativeCameraModalProps {
   isOpen: boolean;
@@ -62,32 +62,8 @@ export const NativeCameraModal = ({
     };
   }, [isOpen, clearPhotos]);
 
-  // Resize image using existing pipeline
-  const resizeImage = useCallback((file: File): Promise<File> => {
-    return new Promise((resolve) => {
-      Resizer.imageFileResizer(
-        file,
-        500, // maxWidth
-        400, // maxHeight (for 3:2 aspect ratio)
-        'JPEG', // output format
-        100, // quality
-        0, // rotation
-        (uri) => {
-          // Convert the base64 URI to a File object
-          fetch(uri as string)
-            .then((res) => res.blob())
-            .then((blob) => {
-              const resizedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              });
-              resolve(resizedFile);
-            });
-        },
-        'base64',
-      );
-    });
-  }, []);
+  // Use shared high-quality resizer
+  const resizeForUpload = useCallback((file: File) => resizeImage(file), []);
 
   // Handle native camera capture
   const handleNativeCapture = useCallback(async () => {
@@ -132,7 +108,7 @@ export const NativeCameraModal = ({
         });
 
         // Resize image using existing pipeline
-        const resizedFile = await resizeImage(originalFile);
+        const resizedFile = await resizeForUpload(originalFile);
         const filePath = join(path, fileName);
 
         // Upload using enhanced image store
@@ -182,7 +158,7 @@ export const NativeCameraModal = ({
       setUploadingIndex(null);
       setUploadProgress(0);
     }
-  }, [photos, isUploading, path, resizeImage, onPhotoCaptured, onClose, maxPhotos, clearPhotos]);
+  }, [photos, isUploading, path, resizeForUpload, onPhotoCaptured, onClose, maxPhotos, clearPhotos]);
 
   if (!isOpen) return null;
 

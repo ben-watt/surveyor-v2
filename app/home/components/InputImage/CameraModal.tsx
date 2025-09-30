@@ -4,7 +4,7 @@ import { X, Camera, RotateCcw, AlertCircle, Loader2, CheckCircle } from 'lucide-
 import { useCameraStream } from '@/app/home/hooks/useCameraStream';
 import { enhancedImageStore } from '@/app/home/clients/enhancedImageMetadataStore';
 import { join } from 'path';
-import Resizer from 'react-image-file-resizer';
+import { resizeImage } from '@/app/home/utils/imageResizer';
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -64,32 +64,8 @@ export const CameraModal = ({
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const pinchStartDistRef = useRef<number | null>(null);
 
-  // Resize image using existing pipeline
-  const resizeImage = useCallback((file: File): Promise<File> => {
-    return new Promise((resolve) => {
-      Resizer.imageFileResizer(
-        file,
-        500, // maxWidth
-        400, // maxHeight (for 3:2 aspect ratio)
-        'JPEG', // output format
-        100, // quality
-        0, // rotation
-        (uri) => {
-          // Convert the base64 URI to a File object
-          fetch(uri as string)
-            .then((res) => res.blob())
-            .then((blob) => {
-              const resizedFile = new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              });
-              resolve(resizedFile);
-            });
-        },
-        'base64',
-      );
-    });
-  }, []);
+  // Use shared high-quality resizer
+  const resizeForUpload = useCallback((file: File) => resizeImage(file), []);
 
   // Start camera when modal opens
   useEffect(() => {
@@ -299,7 +275,7 @@ export const CameraModal = ({
         });
 
         // Resize image using existing pipeline
-        const resizedFile = await resizeImage(originalFile);
+        const resizedFile = await resizeForUpload(originalFile);
         const filePath = join(path, fileName);
 
         // Upload using enhanced image store
@@ -352,7 +328,7 @@ export const CameraModal = ({
       setUploadingIndex(null);
       setUploadProgress(0);
     }
-  }, [capturedPhotos, isUploading, path, resizeImage, onPhotoCaptured, onClose, maxPhotos]);
+  }, [capturedPhotos, isUploading, path, resizeForUpload, onPhotoCaptured, onClose, maxPhotos]);
 
   // Handle camera switch
   const handleCameraSwitch = useCallback(() => {
