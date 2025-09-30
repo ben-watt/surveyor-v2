@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { getSurveyStatusLabel } from "./utils/status";
 import { EmptyState } from "./components/EmptyState";
 import { useUserAttributes } from "../utils/useUser";
 import { getOwnerDisplayName } from "../utils/useUser";
@@ -186,7 +187,7 @@ function HomePage() {
                 checked={filters.status.includes(status)}
                 onCheckedChange={() => toggleStatusFilter(status)}
               >
-                {status}
+                {getSurveyStatusLabel(status as any)}
               </DropdownMenuCheckboxItem>
             ))}
             <DropdownMenuSeparator />

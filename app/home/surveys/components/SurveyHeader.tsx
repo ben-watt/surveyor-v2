@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -9,10 +8,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BuildingSurveyFormData } from "../building-survey-reports/BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, SurveyStatus } from "../building-survey-reports/BuildingSurveyReportSchema";
+import { getSurveyStatusBadgeClass, getSurveyStatusLabel, getSurveyStatusShortLabel, SURVEY_STATUSES } from "../utils/status";
 import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
-import { CalendarDays, CalendarFold, MapPin, Zap } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { CalendarDays, CalendarFold, MapPin, Check } from "lucide-react";
 import {
   formatDateTime,
   formatRelativeTime,
@@ -33,18 +32,11 @@ import { UserAvatar } from "../../components/UserAvatar";
 
 interface SurveyHeaderProps {
   survey: BuildingSurveyFormData;
-  isFormValid: boolean;
-  onSaveAsDraft: () => void;
-  onSave: () => void;
 }
 
 export function SurveyHeader({
   survey,
-  isFormValid,
-  onSaveAsDraft,
-  onSave,
 }: SurveyHeaderProps) {
-  const router = useRouter();
   const [isUserHydrated, user] = useUserAttributes();
 
   const ownerDisplayName = computeOwnerDisplayName(survey.owner, {
@@ -58,16 +50,7 @@ export function SurveyHeader({
     : undefined;
   const createdAtDate = createdAt ? new Date(createdAt) : undefined;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "draft":
-        return "bg-amber-100 text-amber-800 border-amber-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  const getStatusColor = (status: SurveyStatus) => getSurveyStatusBadgeClass(status);
 
   return (
     <Card>
@@ -111,12 +94,41 @@ export function SurveyHeader({
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <Badge
-                  className={`${getStatusColor(survey.status)}`}
-                  variant="outline"
-                >
-                  {survey.status}
-                </Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Badge
+                      className={`${getStatusColor(survey.status)} cursor-pointer px-2 py-0.5 text-xs whitespace-nowrap`}
+                      variant="outline"
+                      role="button"
+                      aria-label="Survey status"
+                      title={getSurveyStatusLabel(survey.status)}
+                    >
+                      {getSurveyStatusShortLabel(survey.status)}
+                    </Badge>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {SURVEY_STATUSES.map((s) => (
+                      <DropdownMenuItem
+                        key={s.value}
+                        onClick={async () => {
+                          await surveyStore.update(survey.id, (draft) => {
+                            draft.status = s.value;
+                          });
+                        }}
+                        aria-label={`Set status to ${s.label}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {survey.status === s.value ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <span className="w-4 h-4" />
+                          )}
+                          <span>{s.label}</span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Badge
                   variant="outline"
                   className="bg-gray-50 text-gray-700 border-gray-200 font-medium"
@@ -170,35 +182,7 @@ export function SurveyHeader({
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="gap-2">
-                  <Zap className="w-4 h-4" />
-                  Actions
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    router.push(
-                      `/home/editor/${survey.id}?templateId=building-survey`
-                    );
-                  }}
-                  disabled={!isFormValid}
-                >
-                  Generate Report
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSaveAsDraft}>
-                  Save as Draft
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSave} disabled={!isFormValid}>
-                  Save & Complete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          {/* Actions removed per request; status can be set above */}
         </div>
       </CardContent>
     </Card>

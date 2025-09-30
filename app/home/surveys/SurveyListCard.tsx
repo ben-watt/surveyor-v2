@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageIcon, MoreVertical, Trash2 } from "lucide-react";
-import { BuildingSurveyFormData } from "./building-survey-reports/BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, SurveyStatus } from "./building-survey-reports/BuildingSurveyReportSchema";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,14 +53,22 @@ export function BuildingSurveyListCard({
   const fullTitle = survey.reportDetails?.address.formatted || "New survey";
   const title = fullTitle.length > 80 ? `${fullTitle.slice(0, 80)}…` : fullTitle;
 
-  const getStatusBadgeProps = (status: string) => {
+  const getStatusBadgeProps = (status: SurveyStatus) => {
     switch (status) {
       case "completed":
-        return { variant: "default" as const, className: "bg-green-500 hover:bg-green-600 text-white" };
+        return { variant: "secondary" as const, className: "bg-green-100 text-green-800 border-green-200" };
       case "draft":
-        return { variant: "secondary" as const, className: "bg-yellow-100 text-yellow-800 border-yellow-200" };
-      case "in-progress":
-        return { variant: "default" as const, className: "bg-blue-500 hover:bg-blue-600 text-white" };
+        return { variant: "secondary" as const, className: "bg-amber-100 text-amber-800 border-amber-200" };
+      case "ready_for_survey":
+        return { variant: "secondary" as const, className: "bg-blue-100 text-blue-800 border-blue-200" };
+      case "pending_approval":
+        return { variant: "secondary" as const, className: "bg-purple-100 text-purple-800 border-purple-200" };
+      case "approved":
+        return { variant: "secondary" as const, className: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+      case "sent_to_client":
+        return { variant: "secondary" as const, className: "bg-indigo-100 text-indigo-800 border-indigo-200" };
+      case "archived":
+        return { variant: "secondary" as const, className: "bg-gray-100 text-gray-600 border-gray-200" };
       default:
         return { variant: "secondary" as const, className: "" };
     }

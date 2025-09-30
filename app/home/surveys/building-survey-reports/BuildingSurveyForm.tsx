@@ -255,7 +255,8 @@ function Report({ initFormValues }: ReportProps) {
     
     try {
       await surveyStore.update(initFormValues.id, (survey) => {
-        survey.status = "created";
+        // Persist any changes already made elsewhere; no forced status mutation
+        Object.assign(survey, data);
       });
 
       if (!auto) {
@@ -339,9 +340,6 @@ function Report({ initFormValues }: ReportProps) {
         {/* Survey Header */}
         <SurveyHeader 
           survey={initFormValues}
-          isFormValid={isFormValid()}
-          onSaveAsDraft={saveAsDraft}
-          onSave={handleSubmit(onSubmit, onError)}
         />
 
         {/* Progress Stepper */}
