@@ -66,13 +66,16 @@ describe('SurveyDocuments', () => {
     });
   });
 
-  it('renders empty state when no documents are found', async () => {
+  it('renders a Generate report button when no documents are found', async () => {
     (documentStore.list as jest.Mock).mockResolvedValue(Ok([]));
-    
+
     render(<SurveyDocuments surveyId="no-documents" />);
-    
+
     await waitFor(() => {
-      expect(screen.getByText('No reports found for this survey')).toBeInTheDocument();
+      const button = screen.getByRole('button', { name: /generate report/i });
+      expect(button).toBeInTheDocument();
+      const link = button.closest('a');
+      expect(link).toHaveAttribute('href', '/home/editor/no-documents?templateId=building-survey');
     });
   });
 

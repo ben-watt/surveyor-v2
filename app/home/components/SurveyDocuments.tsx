@@ -3,6 +3,7 @@ import { FileText, Clock, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { DocumentRecord, documentStore } from '@/app/home/clients/DocumentStore';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 interface SurveyDocumentsProps {
   surveyId: string;
@@ -55,8 +56,13 @@ export const SurveyDocuments: React.FC<SurveyDocumentsProps> = ({ surveyId, clas
 
   if (documents.length === 0) {
     return (
-      <div className="text-gray-500 p-4 text-center">
-        No reports found for this survey
+      <div className="p-4 text-center">
+        <Link
+          href={`/home/editor/${surveyId}?templateId=building-survey`}
+          aria-label="Generate building survey report"
+        >
+          <Button type="button">Generate report</Button>
+        </Link>
       </div>
     );
   }
