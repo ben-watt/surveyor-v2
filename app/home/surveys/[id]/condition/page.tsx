@@ -6,7 +6,7 @@ import {
   SurveySection,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
-import { ClipboardList, MoreVertical, Search } from "lucide-react";
+import { Camera, CheckCircle2, CircleAlert, ClipboardList, MoreVertical, Search, Shapes } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -22,6 +22,9 @@ import { DynamicDrawer, useDynamicDrawer } from "@/app/home/components/Drawer";
 import InspectionForm from "./InspectionForm";
 import ElementForm from "./ElementForm";
 import { toggleElementSection } from "../../building-survey-reports/Survey";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getElementCompleteness } from "@/app/home/surveys/utils/elementCompleteness";
 
 const ConditionPage = () => {
   const params = useParams<{ id: string }>();
@@ -158,7 +161,7 @@ interface ElementSectionProps {
   surveyId: string;
 }
 
-const ElementSectionComponent = ({
+export const ElementSectionComponent = ({
   elementSection,
   sectionId,
   surveyId,
@@ -187,6 +190,8 @@ const ElementSectionComponent = ({
       ),
     });
   };
+
+  const completeness = getElementCompleteness(elementSection);
 
   return (
     <div
@@ -253,9 +258,85 @@ const ElementSectionComponent = ({
           </DropdownMenu>
         </div>
       </div>
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          {elementSection.components.length} component{elementSection.components.length > 1 ? "s" : ""}
-        </span>
+        {elementSection.isPartOfSurvey ? (
+          <div className="mt-1 flex items-center gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    role="status"
+                    aria-label={completeness.hasDescription ? "Description present" : "Description missing"}
+                    className="text-muted-foreground"
+                  >
+                    {completeness.hasDescription ? (
+                      <span className="inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
+                        <span>Description</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        <CircleAlert className="w-3 h-3 text-red-600" />
+                        <span>Description</span>
+                      </span>
+                    )}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {completeness.hasDescription ? "Description present" : "Description missing"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    role="status"
+                    aria-label={
+                      completeness.imageCount > 0
+                        ? `${completeness.imageCount} image${completeness.imageCount === 1 ? "" : "s"}`
+                        : "No images added"
+                    }
+                    className="text-muted-foreground"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <Camera className={`w-3 h-3 ${completeness.imageCount > 0 ? 'text-muted-foreground' : 'text-red-600'}`} />
+                      <span>{completeness.imageCount}</span>
+                    </span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {completeness.imageCount > 0
+                    ? `${completeness.imageCount} image${completeness.imageCount === 1 ? "" : "s"}`
+                    : "No images added"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    role="status"
+                    aria-label={
+                      completeness.componentCount > 0
+                        ? `${completeness.componentCount} component${completeness.componentCount === 1 ? "" : "s"}`
+                        : "0 components"
+                    }
+                    className="text-muted-foreground"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <Shapes className={`w-3 h-3 ${completeness.componentCount > 0 ? 'text-muted-foreground' : 'text-red-600'}`} />
+                      <span>{completeness.componentCount}</span>
+                    </span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {completeness.componentCount > 0
+                    ? `${completeness.componentCount} component${completeness.componentCount === 1 ? "" : "s"}`
+                    : "0 components"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        ) : null}
     </div>
   );
 };

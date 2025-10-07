@@ -4,6 +4,7 @@ import { Edit, Trash2 } from "lucide-react";
 import { Inspection } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import InspectionForm from "./InspectionForm";
+ 
 
 interface ComponentsListProps {
   components: Inspection[];
