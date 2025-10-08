@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageIcon, MoreVertical, Trash2 } from "lucide-react";
 import { BuildingSurveyFormData, SurveyStatus } from "./building-survey-reports/BuildingSurveyReportSchema";
+import { getSurveyStatusLabel } from "./utils/status";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,17 +56,11 @@ export function BuildingSurveyListCard({
 
   const getStatusBadgeProps = (status: SurveyStatus) => {
     switch (status) {
-      case "completed":
-        return { variant: "secondary" as const, className: "bg-green-100 text-green-800 border-green-200" };
       case "draft":
         return { variant: "secondary" as const, className: "bg-amber-100 text-amber-800 border-amber-200" };
-      case "ready_for_survey":
+      case "ready_for_qa":
         return { variant: "secondary" as const, className: "bg-blue-100 text-blue-800 border-blue-200" };
-      case "pending_approval":
-        return { variant: "secondary" as const, className: "bg-purple-100 text-purple-800 border-purple-200" };
-      case "approved":
-        return { variant: "secondary" as const, className: "bg-emerald-100 text-emerald-800 border-emerald-200" };
-      case "sent_to_client":
+      case "issued_to_client":
         return { variant: "secondary" as const, className: "bg-indigo-100 text-indigo-800 border-indigo-200" };
       case "archived":
         return { variant: "secondary" as const, className: "bg-gray-100 text-gray-600 border-gray-200" };
@@ -121,7 +116,7 @@ export function BuildingSurveyListCard({
                     {...statusBadgeProps}
                     className={`shrink-0 capitalize ${statusBadgeProps.className}`}
                   >
-                    {survey.status}
+                    {getSurveyStatusLabel(survey.status)}
                   </Badge>
                   <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
                     🏢 Level {survey.reportDetails?.level ?? "—"}

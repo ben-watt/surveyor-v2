@@ -2,11 +2,8 @@ import { DropZoneInputFile } from "@/app/home/components/InputImage"
 
 export type SurveyStatus =
   | "draft"
-  | "ready_for_survey"
-  | "pending_approval"
-  | "approved"
-  | "sent_to_client"
-  | "completed"
+  | "ready_for_qa"
+  | "issued_to_client"
   | "archived";
 
 export type BuildingSurveyFormData = {
