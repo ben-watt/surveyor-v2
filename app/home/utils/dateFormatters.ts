@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from 'date-fns';
+// Note: Relative time moved to TimeAgo component
 
 function getDaySuffix(day: number): string {
   if (day > 3 && day < 21) return 'th';
@@ -51,21 +51,4 @@ export function formatDateWithSuffix(date: Date | string): string {
  * Formats a date as relative time (e.g., "Just now", "2 minutes ago", "3 hours ago", "in 2 hours")
  * For dates more than 24 hours away, returns the formatted date and time
  */
-export function formatRelativeTime(date: Date | string): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-  const diffInMinutes = Math.abs(now.getTime() - dateObj.getTime()) / (1000 * 60);
-  
-  // For very recent dates (within 1 minute), show "Just now"
-  if (diffInMinutes < 1) {
-    return 'Just now';
-  }
-  
-  // For dates within 24 hours, use date-fns relative formatting
-  if (diffInMinutes < 1440) {
-    return formatDistanceToNow(dateObj, { addSuffix: true });
-  }
-  
-  // For dates more than 24 hours away, show full date and time
-  return formatDateTime(dateObj);
-} 
+// formatRelativeTime was previously exported; use <TimeAgo /> instead.

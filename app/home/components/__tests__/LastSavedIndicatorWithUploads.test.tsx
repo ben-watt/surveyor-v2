@@ -149,7 +149,7 @@ describe('LastSavedIndicatorWithUploads', () => {
     );
 
     expect(screen.getByText('All changes saved')).toBeInTheDocument();
-    expect(screen.getByText('Last saved 30 minutes ago')).toBeInTheDocument();
+    expect(screen.getByText('30 minutes ago')).toBeInTheDocument();
   });
 
   it('should not show timestamp for pending status', () => {
@@ -210,7 +210,7 @@ describe('LastSavedIndicatorWithUploads', () => {
       />
     );
 
-    expect(screen.getByText('Last saved 5 minutes ago')).toBeInTheDocument();
+    expect(screen.getByText('5 minutes ago')).toBeInTheDocument();
   });
 
   it('should fall back to entityUpdatedAt when no lastSavedAt', () => {
@@ -224,7 +224,7 @@ describe('LastSavedIndicatorWithUploads', () => {
       />
     );
 
-    expect(screen.getByText('Last saved 30 minutes ago')).toBeInTheDocument();
+    expect(screen.getByText('30 minutes ago')).toBeInTheDocument();
   });
 
   it('should include transition animation classes', () => {

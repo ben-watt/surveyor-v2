@@ -14,7 +14,8 @@ import {
 import { surveyStore } from "../clients/Database";
 import { toast } from "react-hot-toast";
 import { useUserAttributes } from "../utils/useUser";
-import { formatRelativeTime } from "../utils/dateFormatters";
+// Relative time rendering with hover is handled by TimeAgo
+import TimeAgo from "../components/TimeAgo";
 import { getOwnerDisplayName as computeOwnerDisplayName } from "../utils/useUser";
 import { UserAvatar } from "../components/UserAvatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -183,7 +184,11 @@ export function BuildingSurveyListCard({
 
             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
               <div className="text-xs text-gray-500">
-                {createdAtDate ? `Created ${formatRelativeTime(createdAtDate)}` : (isDraft ? "Draft" : "")}
+                {createdAtDate ? (
+                  <>
+                    Created <TimeAgo date={createdAtDate} />
+                  </>
+                ) : (isDraft ? "Draft" : "")}
               </div>
               <div className="text-xs text-gray-500 flex items-center gap-1" aria-hidden>
                 <ImageIcon className="w-4 h-4" />

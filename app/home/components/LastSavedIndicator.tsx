@@ -2,7 +2,7 @@ import React from 'react';
 import { CheckCircle, AlertCircle, Loader2, Clock, Circle } from 'lucide-react';
 import { AutoSaveStatus } from '../hooks/useAutoSave';
 import { cn } from '@/lib/utils';
-import { formatRelativeTime } from '../utils/dateFormatters';
+import TimeAgo from './TimeAgo';
 
 interface LastSavedIndicatorProps {
   status: AutoSaveStatus;
@@ -65,10 +65,6 @@ export function LastSavedIndicator({
     }
   };
 
-  const formatTimestamp = (date: Date) => {
-    return formatRelativeTime(date);
-  };
-
   const config = getStatusConfig();
   
   return (
@@ -95,11 +91,19 @@ export function LastSavedIndicator({
             {(() => {
               // If we have a recent autosave timestamp, use that
               if (lastSavedAt) {
-                return `Last saved ${formatTimestamp(lastSavedAt)}`;
+                return (
+                  <>
+                    Last saved <TimeAgo date={lastSavedAt} />
+                  </>
+                );
               }
               // Otherwise, use the entity's updatedAt from the database
               if (entityUpdatedAt) {
-                return `Last saved ${formatTimestamp(new Date(entityUpdatedAt))}`;
+                return (
+                  <>
+                    Last saved <TimeAgo date={new Date(entityUpdatedAt)} />
+                  </>
+                );
               }
               return null;
             })()}

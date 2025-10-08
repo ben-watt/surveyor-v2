@@ -14,9 +14,9 @@ import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
 import { CalendarDays, CalendarFold, MapPin, Check } from "lucide-react";
 import {
   formatDateTime,
-  formatRelativeTime,
   formatShortDate,
 } from "@/app/home/utils/dateFormatters";
+import TimeAgo from "../../components/TimeAgo";
 import {
   Tooltip,
   TooltipContent,
@@ -147,7 +147,7 @@ export function SurveyHeader({
                             className="underline decoration-dotted"
                             aria-label="Created date"
                           >
-                            {formatRelativeTime(createdAtDate)}
+                            <TimeAgo date={createdAtDate} />
                           </span>
                         </TooltipTrigger>
                         <TooltipContent>{`Created: ${formatDateTime(createdAtDate)}`}</TooltipContent>
@@ -166,9 +166,7 @@ export function SurveyHeader({
                             className="underline decoration-dotted"
                             aria-label="Report date"
                           >
-                            {formatRelativeTime(
-                              survey.reportDetails.reportDate
-                            )}
+                            <TimeAgo date={survey.reportDetails.reportDate} />
                           </span>
                         </TooltipTrigger>
                         <TooltipContent>{`Report Date: ${formatShortDate(survey.reportDetails.reportDate)}`}</TooltipContent>

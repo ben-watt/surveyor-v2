@@ -25,8 +25,8 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved')).toBeInTheDocument();
-    expect(screen.getByText('Last saved 30 minutes ago')).toBeInTheDocument();
+    expect(screen.getAllByText('Last saved').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('30 minutes ago')).toBeInTheDocument();
   });
 
   it('should render saving status', () => {
@@ -52,7 +52,7 @@ describe('LastSavedIndicator', () => {
     );
 
     expect(screen.getByText('All changes saved')).toBeInTheDocument();
-    expect(screen.getByText('Last saved 15 minutes ago')).toBeInTheDocument();
+    expect(screen.getByText('15 minutes ago')).toBeInTheDocument();
   });
 
   it('should render autosaved status with timestamp', () => {
@@ -66,7 +66,7 @@ describe('LastSavedIndicator', () => {
     );
 
     expect(screen.getByText('Auto-saved')).toBeInTheDocument();
-    expect(screen.getByText('Last saved 10 minutes ago')).toBeInTheDocument();
+    expect(screen.getByText('10 minutes ago')).toBeInTheDocument();
   });
 
   it('should render error status', () => {
@@ -108,7 +108,7 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved Just now')).toBeInTheDocument();
+    expect(screen.getByText('Just now')).toBeInTheDocument();
   });
 
   it('should format hours correctly', () => {
@@ -121,7 +121,7 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved about 2 hours ago')).toBeInTheDocument();
+    expect(screen.getByText('about 2 hours ago')).toBeInTheDocument();
   });
 
   it('should format single hour correctly', () => {
@@ -134,7 +134,7 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved about 1 hour ago')).toBeInTheDocument();
+    expect(screen.getByText('about 1 hour ago')).toBeInTheDocument();
   });
 
   it('should format days correctly', () => {
@@ -147,11 +147,8 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    // Use a flexible matcher for date format (could be MM/DD/YYYY or DD/MM/YYYY)
-    expect(screen.getByText((content) =>
-      content.startsWith('Last saved') && 
-      (content.includes('12/31/2022') || content.includes('31/12/2022'))
-    )).toBeInTheDocument();
+    // Now shows relative time instead of absolute for days
+    expect(screen.getByText(/(?:about )?1 day ago/)).toBeInTheDocument();
   });
 
   it('should prioritize lastSavedAt over entityUpdatedAt', () => {
@@ -166,7 +163,7 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved 5 minutes ago')).toBeInTheDocument();
+    expect(screen.getByText('5 minutes ago')).toBeInTheDocument();
   });
 
   it('should fall back to entityUpdatedAt when no lastSavedAt', () => {
@@ -179,7 +176,7 @@ describe('LastSavedIndicator', () => {
       />
     );
 
-    expect(screen.getByText('Last saved 30 minutes ago')).toBeInTheDocument();
+    expect(screen.getByText('30 minutes ago')).toBeInTheDocument();
   });
 
   it('should not show timestamp for saving status', () => {
