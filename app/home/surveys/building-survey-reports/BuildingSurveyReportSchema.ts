@@ -151,7 +151,8 @@ export type ElementSection = {
     description: string,
     components: Inspection[],
     images: SurveyImage[],
-    localComponentDefs?: LocalComponentDef[]
+    localComponentDefs?: LocalComponentDef[],
+    localConditionDefs?: LocalConditionDef[]
 }
 
 export type Inspection = {
@@ -192,6 +193,15 @@ export type LocalComponentDef = {
     elementId: string,
     materials?: Material[],
     associatedPhraseIds?: string[],
+    createdAt?: string,
+    updatedAt?: string,
+}
+
+// Local condition definitions are survey-scoped, element-specific reusable phrases
+export type LocalConditionDef = {
+    id: string,
+    name: string,
+    text: string,
     createdAt?: string,
     updatedAt?: string,
 }

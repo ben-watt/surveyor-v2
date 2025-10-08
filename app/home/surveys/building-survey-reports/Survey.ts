@@ -1,4 +1,4 @@
-import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus, SurveyImage, LocalComponentDef } from "./BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus, SurveyImage, LocalComponentDef, LocalConditionDef } from "./BuildingSurveyReportSchema";
 
 // Find or create a section
 function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
@@ -257,6 +257,7 @@ export function getLocalComponentDefs(
   elementId: string
 ): LocalComponentDef[] {
   const es = getElementSection(survey, sectionId, elementId);
+  console.log("local-component-defs", { es })
   return es?.localComponentDefs || [];
 }
 
@@ -286,5 +287,44 @@ export function removeLocalComponentDef(
   const es = getElementSection(survey, sectionId, elementId);
   if (!es || !es.localComponentDefs) return survey;
   es.localComponentDefs = es.localComponentDefs.filter(d => d.id !== defId);
+  return survey;
+}
+
+// Local Condition Definitions helpers
+export function getLocalConditionDefs(
+  survey: BuildingSurveyFormData,
+  sectionId: string,
+  elementId: string
+): LocalConditionDef[] {
+  const es = getElementSection(survey, sectionId, elementId);
+  return es?.localConditionDefs || [];
+}
+
+export function addOrUpdateLocalConditionDef(
+  survey: BuildingSurveyFormData,
+  sectionId: string,
+  elementId: string,
+  def: LocalConditionDef
+): BuildingSurveyFormData {
+  const es = findOrCreateElementSection(survey, sectionId, elementId);
+  if (!es.localConditionDefs) es.localConditionDefs = [];
+  const idx = es.localConditionDefs.findIndex(d => d.id === def.id);
+  if (idx >= 0) {
+    es.localConditionDefs[idx] = { ...es.localConditionDefs[idx], ...def };
+  } else {
+    es.localConditionDefs.push(def);
+  }
+  return survey;
+}
+
+export function removeLocalConditionDef(
+  survey: BuildingSurveyFormData,
+  sectionId: string,
+  elementId: string,
+  defId: string
+): BuildingSurveyFormData {
+  const es = getElementSection(survey, sectionId, elementId);
+  if (!es || !es.localConditionDefs) return survey;
+  es.localConditionDefs = es.localConditionDefs.filter(d => d.id !== defId);
   return survey;
 }
