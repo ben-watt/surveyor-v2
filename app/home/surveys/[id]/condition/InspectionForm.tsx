@@ -285,6 +285,41 @@ function InspectionFormContent({
     );
   }
 
+  function LocalConditionPrompt({ onCreate }: { onCreate: (name: string, text: string) => void }) {
+    const [name, setName] = useState("");
+    const [text, setText] = useState("");
+    const canCreate = name.trim().length > 0 && text.trim().length > 0;
+    return (
+      <div className="space-y-4 p-2">
+        <div>
+          <label className="block text-sm font-medium mb-2">Condition Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., Deteriorated mortar"
+            className="w-full border rounded-md px-3 py-2"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Condition Text</label>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Describe the condition"
+            rows={5}
+            className="w-full border rounded-md px-3 py-2"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="default" onClick={() => onCreate(name.trim(), text.trim())} disabled={!canCreate}>
+            Create & Add
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
     return surveySections.map((section) => ({
@@ -328,26 +363,36 @@ function InspectionFormContent({
   }, [components, element.id, component]);
 
   const phrasesOptions = useMemo((): { value: FormPhrase; label: string }[] => {
-    if (!phrases || phrases.length === 0) return [];
     const isLocalSelected = component && component.id && (
       String(component.id).startsWith("local_") || !components.some((gc) => gc.id === component.id)
     );
-    const filtered = phrases.filter((p) => {
-      if (String(p.type).toLowerCase() !== "condition") return false;
-      if (isLocalSelected) return true; // fallback: show all conditions for locals
-      return p.associatedComponentIds.includes(component.id);
-    });
-    return filtered
+
+    const globals = (phrases || [])
+      .filter((p) => String(p.type).toLowerCase() === "condition")
+      .filter((p) => (isLocalSelected ? true : p.associatedComponentIds.includes(component.id)))
       .sort((a, b) => (a.order || 0) - (b.order || 0))
       .map((p) => ({
         value: {
           id: p.id,
           name: p.name,
           phrase: level === "2" ? (p.phraseLevel2 || "No level 2 text") : (p.phrase || "No level 3 text"),
-        },
+        } as FormPhrase,
         label: p.name,
       }));
-  }, [phrases, component, components, level]);
+
+    const current = (Array.isArray(conditions) ? conditions : []).map((c) => ({
+      value: { id: c.id, name: c.name, phrase: c.phrase || "" } as FormPhrase,
+      label: String(c.id).startsWith("local_") ? `${c.name} - (survey only)` : c.name,
+    }));
+
+    const byId = new Map<string, { value: FormPhrase; label: string }>();
+    for (const list of [current, globals]) {
+      for (const opt of list) {
+        if (!byId.has(opt.value.id)) byId.set(opt.value.id, opt);
+      }
+    }
+    return Array.from(byId.values());
+  }, [phrases, component, components, level, conditions]);
 
   // Reset dependent fields when parent fields change
   useEffect(() => {
@@ -652,15 +697,44 @@ function InspectionFormContent({
             isMulti={true}
             onCreateNew={() => {
               drawer.openDrawer({
-                id: surveyId + "/condition",
-                title: "Create a new condition phrase",
-                description: "Create a new condition phrase for any surveys",
+                id: surveyId + "/local-condition",
+                title: "Create a new condition (survey only)",
+                description: "This condition will be saved only within this survey.",
                 content: (
-                  <PhraseDataForm
-                    onSave={() => drawer.closeDrawer()}
-                    defaultValues={{
-                      type: "Condition",
-                      associatedComponentIds: [component.id],
+                  <LocalConditionPrompt
+                    onCreate={async (name, text) => {
+                      const newId = `local_${uuidv4()}`;
+                      const current = getValues();
+                      const next = [...(Array.isArray(current.conditions) ? current.conditions : [])];
+                      next.push({ id: newId, name, phrase: text });
+                      try {
+                        await surveyStore.update(surveyId, (draft) => {
+                          addOrUpdateComponent(
+                            draft,
+                            current.surveySection?.id || surveySection.id,
+                            current.element?.id || element.id,
+                            {
+                              id: current.component?.id || '',
+                              inspectionId: current.inspectionId,
+                              name: current.component?.name || '',
+                              nameOverride: current.nameOverride,
+                              useNameOverride: current.useNameOverride,
+                              location: current.location,
+                              additionalDescription: current.additionalDescription,
+                              images: current.images || [],
+                              conditions: next.map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || '' })),
+                              ragStatus: current.ragStatus,
+                              costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
+                            }
+                          );
+                        });
+                        setValue("conditions", next, { shouldValidate: true });
+                        drawer.closeDrawer();
+                        toast.success("Local condition added");
+                      } catch (e) {
+                        console.error(e);
+                        toast.error("Failed to add condition");
+                      }
                     }}
                   />
                 ),
