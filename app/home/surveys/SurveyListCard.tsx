@@ -39,11 +39,6 @@ export function BuildingSurveyListCard({
         return;
       }
 
-      if (user.sub !== survey.owner?.id) {
-        toast.error("You are not authorized to delete this survey");
-        return;
-      }
-
       await surveyStore.remove(survey.id);
     } catch (error) {
       toast.error("Failed to delete survey, please try again later");
@@ -123,7 +118,7 @@ export function BuildingSurveyListCard({
                   </Badge>
 
                 </div>
-                {isUserHydrated && user && user.sub === survey.owner?.id && (
+                {isUserHydrated && user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
