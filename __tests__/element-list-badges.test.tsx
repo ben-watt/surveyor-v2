@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { ElementSectionComponent } from '@/app/home/surveys/[id]/condition/page';
+import { ElementSectionComponent } from '@/app/home/surveys/[id]/condition/ElementSectionComponent';
 import type { ElementSection } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 // Mock drawer context usage
