@@ -37,6 +37,9 @@ import {
   getLocalConditionDefs,
   addOrUpdateLocalConditionDef,
 } from "@/app/home/surveys/building-survey-reports/Survey";
+import { useLocalDefs } from "@/app/home/surveys/hooks/useLocalDefs";
+import { ID_PREFIX, isLocalInstanceId } from "@/app/home/surveys/constants/localIds";
+import { instantiateLocalComponentDef } from "@/app/home/surveys/utils/localDefInstance";
 import { DraggableConditions } from "./DraggableConditions";
 import {
   FormPhrase,
@@ -244,6 +247,13 @@ function InspectionFormContent({
   const conditions = watch("conditions");
   const inspectionId = watch("inspectionId");
 
+  const { sectionId: derivedSectionId, componentDefs, conditionDefs, addComponentDef, addConditionDef } = useLocalDefs(
+    survey as any,
+    elements,
+    element?.id,
+    surveySection?.id,
+  );
+
   function LocalComponentNamePrompt({ onCreate }: { onCreate: (name: string) => void }) {
     const [name, setName] = useState("");
     const canCreate = name.trim().length > 0;
@@ -274,39 +284,32 @@ function InspectionFormContent({
     if (maybe && maybe.localDefId && element?.id) {
       const defId = maybe.localDefId as string;
       const name = maybe.name as string;
-      const newId = `local_${uuidv4()}`;
+      const newId = `${ID_PREFIX.instance}${uuidv4()}`;
       const current = getValues();
       (async () => {
         try {
-      await surveyStore.update(surveyId, (draft) => {
-        const elementId = current.element?.id || element.id;
-        const sectionId = surveySection?.id || elements.find((e: any) => e.id === elementId)?.sectionId;
-        if (!elementId || !sectionId) return;
-        addOrUpdateLocalComponentDef(draft, sectionId, elementId, {
-          id: defId,
-          name,
-          elementId,
-        });
-        addOrUpdateComponent(
-          draft,
-          sectionId,
-          elementId,
-          {
-            id: newId,
-            inspectionId: current.inspectionId,
-            name,
-            nameOverride: current.nameOverride,
-            useNameOverride: false,
-            location: current.location,
-            additionalDescription: current.additionalDescription,
-            images: current.images || [],
-            conditions: (current.conditions || []).map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || "" })),
-            ragStatus: current.ragStatus,
-            costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
-          }
-        );
-      });
-          setValue("component", { id: newId, name }, { shouldValidate: true });
+          await surveyStore.update(surveyId, (draft) => {
+            const elementId = current.element?.id || element.id;
+            const sectionId = surveySection?.id || elements.find((e: any) => e.id === elementId)?.sectionId;
+            if (!elementId || !sectionId) return;
+            addOrUpdateLocalComponentDef(draft, sectionId, elementId, {
+              id: defId,
+              name,
+              elementId,
+            });
+            const { instanceId } = instantiateLocalComponentDef(draft as any, sectionId, elementId, name, {
+              inspectionId: current.inspectionId,
+              nameOverride: current.nameOverride,
+              useNameOverride: false,
+              location: current.location,
+              additionalDescription: current.additionalDescription,
+              images: current.images || [],
+              conditions: (current.conditions || []).map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || "" })),
+              ragStatus: current.ragStatus,
+              costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
+            });
+            setValue("component", { id: instanceId, name }, { shouldValidate: true });
+          });
           toast.success("Component added from local list");
         } catch (e) {
           console.error(e);
@@ -403,20 +406,15 @@ function InspectionFormContent({
       .map((c) => ({ value: { id: c.id, name: c.name }, label: c.name }));
 
     const localDefOptions = (() => {
-      if (!survey || !element?.id) return [] as any[];
-      // Fallback: if surveySection.id not yet set, derive from elements list
-      const derivedSectionId = surveySection?.id || elements.find((e: any) => e.id === element.id)?.sectionId;
-      if (!derivedSectionId) return [] as any[];
-      const defs = getLocalComponentDefs(survey, derivedSectionId, element.id);
+      if (!element?.id || !derivedSectionId) return [] as any[];
+      const defs = componentDefs;
       return defs.map((d) => ({
         value: { localDefId: d.id, name: d.name },
         label: `${d.name} - (survey only)`,
       }));
     })();
 
-    const isLocalSelected = component && component.id && (
-      String(component.id).startsWith("local_") || !components.some((gc) => gc.id === component.id)
-    );
+    const isLocalSelected = component && component.id && (isLocalInstanceId(String(component.id)) || !components.some((gc) => gc.id === component.id));
 
     if (isLocalSelected) {
       const label = `${component.name || "(unnamed)"} - (survey only)`;
@@ -426,12 +424,10 @@ function InspectionFormContent({
       }
     }
     return [...globalOptions, ...localDefOptions];
-  }, [components, element.id, component, survey, surveySection?.id, elements]);
+  }, [components, element.id, component, derivedSectionId, componentDefs]);
 
   const phrasesOptions = useMemo((): { value: FormPhrase; label: string }[] => {
-    const isLocalSelected = component && component.id && (
-      String(component.id).startsWith("local_") || !components.some((gc) => gc.id === component.id)
-    );
+    const isLocalSelected = component && component.id && (isLocalInstanceId(String(component.id)) || !components.some((gc) => gc.id === component.id));
 
     const globals = (phrases || [])
       .filter((p) => String(p.type).toLowerCase() === "condition")
@@ -447,8 +443,8 @@ function InspectionFormContent({
       }));
 
     const localDefs = (() => {
-      if (!survey || !surveySection?.id || !element?.id) return [] as { value: FormPhrase; label: string }[];
-      const defs = getLocalConditionDefs(survey, surveySection.id, element.id);
+      if (!element?.id || !derivedSectionId) return [] as { value: FormPhrase; label: string }[];
+      const defs = conditionDefs;
       return defs.map((d) => ({
         value: { id: d.id, name: d.name, phrase: d.text } as FormPhrase,
         label: `${d.name} - (survey only)`,
@@ -457,7 +453,7 @@ function InspectionFormContent({
 
     const current = (Array.isArray(conditions) ? conditions : []).map((c) => ({
       value: { id: c.id, name: c.name, phrase: c.phrase || "" } as FormPhrase,
-      label: String(c.id).startsWith("locond_") || String(c.id).startsWith("local_") ? `${c.name} - (survey only)` : c.name,
+      label: String(c.id).startsWith(ID_PREFIX.condDef) || String(c.id).startsWith(ID_PREFIX.instance) ? `${c.name} - (survey only)` : c.name,
     }));
 
     const byId = new Map<string, { value: FormPhrase; label: string }>();
@@ -484,7 +480,7 @@ function InspectionFormContent({
   useEffect(() => {
     // Only clear selection when a selected GLOBAL component no longer matches the chosen element
     const globalComp = components.find((c) => c.id === component.id);
-    const isLocalSelected = !!component?.id && (!globalComp || String(component.id).startsWith("local_"));
+    const isLocalSelected = !!component?.id && (!globalComp || isLocalInstanceId(String(component.id)));
     const isMismatch = !!globalComp && globalComp.elementId !== element.id;
 
     if (element && component.id && !isLocalSelected && isMismatch) {
@@ -644,7 +640,7 @@ function InspectionFormContent({
                   content: (
                     <LocalComponentNamePrompt
                       onCreate={async (name) => {
-                        const newId = `local_${uuidv4()}`;
+                        const newId = `${ID_PREFIX.instance}${uuidv4()}`;
                         const defId = `localdef_${uuidv4()}`;
                         const current = getValues();
                         try {
@@ -659,27 +655,20 @@ function InspectionFormContent({
                               elementId,
                             });
                             // Create the instance for this inspection
-                            addOrUpdateComponent(
-                              draft,
-                              sectionId,
-                              elementId,
-                              {
-                                id: newId,
-                                inspectionId: current.inspectionId,
-                                name,
-                                nameOverride: current.nameOverride,
-                                useNameOverride: false,
-                                location: current.location,
-                                additionalDescription: current.additionalDescription,
-                                images: current.images || [],
-                                conditions: (current.conditions || []).map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || "" })),
-                                ragStatus: current.ragStatus,
-                                costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
-                              }
-                            );
+                            const { instanceId } = instantiateLocalComponentDef(draft as any, sectionId, elementId, name, {
+                              inspectionId: current.inspectionId,
+                              nameOverride: current.nameOverride,
+                              useNameOverride: false,
+                              location: current.location,
+                              additionalDescription: current.additionalDescription,
+                              images: current.images || [],
+                              conditions: (current.conditions || []).map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || "" })),
+                              ragStatus: current.ragStatus,
+                              costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
+                            });
+                            setValue("component", { id: instanceId, name }, { shouldValidate: true });
                           });
 
-                          setValue("component", { id: newId, name }, { shouldValidate: true });
                           setValue("useNameOverride", false);
                           drawer.closeDrawer();
                           toast.success("Local component created");
@@ -700,7 +689,7 @@ function InspectionFormContent({
               disabled={!component.id}
               onClick={(e) => {
                 e.preventDefault();
-                const isLocal = component && component.id && String(component.id).startsWith("local_");
+                const isLocal = component && component.id && isLocalInstanceId(String(component.id));
                 if (isLocal) {
                   drawer.openDrawer({
                     id: surveyId + "/rename-local-component",
@@ -752,7 +741,7 @@ function InspectionFormContent({
             </Button>
           </div>
 
-          {(!String(component?.id || "").startsWith("local_")) && useNameOverride && component.id && (
+          {(!isLocalInstanceId(String(component?.id || ""))) && useNameOverride && component.id && (
             <Input
               type="text"
               labelTitle="Component Name Override"
@@ -789,7 +778,7 @@ function InspectionFormContent({
                 content: (
                   <LocalConditionPrompt
                     onCreate={async (name, text) => {
-                      const defId = `locond_${uuidv4()}`;
+                      const defId = `${ID_PREFIX.condDef}${uuidv4()}`;
                       const current = getValues();
                       const next = [...(Array.isArray(current.conditions) ? current.conditions : [])];
                       // Append selected condition instance to the form
@@ -797,17 +786,15 @@ function InspectionFormContent({
                       try {
                         await surveyStore.update(surveyId, (draft) => {
                           // Create local condition definition for reuse
-                          addOrUpdateLocalConditionDef(
-                            draft,
-                            current.surveySection?.id || surveySection.id,
-                            current.element?.id || element.id,
-                            { id: defId, name, text }
-                          );
+                          const elId = current.element?.id || element.id;
+                          const secId = current.surveySection?.id || surveySection?.id || elements.find((e: any) => e.id === elId)?.sectionId;
+                          if (!elId || !secId) return;
+                          addOrUpdateLocalConditionDef(draft, secId, elId, { id: defId, name, text });
                           // Persist the inspection conditions with the new instance
                           addOrUpdateComponent(
                             draft,
-                            current.surveySection?.id || surveySection.id,
-                            current.element?.id || element.id,
+                            secId,
+                            elId,
                             {
                               id: current.component?.id || '',
                               inspectionId: current.inspectionId,

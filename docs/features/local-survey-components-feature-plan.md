@@ -80,6 +80,37 @@ All use `findOrCreateElementSection` and are idempotent.
 - “Create new condition” (survey only):
   - Creates a local condition def (id: `locond_<uuid>`) and appends an instance to the form, persisting via `addOrUpdateComponent`
 
+### Consumption Example: useLocalDefs
+
+```tsx
+import { useLocalDefs } from '@/app/home/surveys/hooks/useLocalDefs';
+
+function MyElementPanel({ survey, elements, sectionId, elementId }: any) {
+  const { componentDefs, conditionDefs, addComponentDef, addConditionDef } = useLocalDefs(
+    survey,
+    elements,
+    elementId,
+    sectionId,
+  );
+
+  return (
+    <div>
+      <h3>Local Components</h3>
+      <ul>
+        {componentDefs.map(d => <li key={d.id}>{d.name}</li>)}
+      </ul>
+      <button onClick={() => addComponentDef(survey.id, elementId, 'Custom Item')}>Add Local Component</button>
+
+      <h3 className="mt-4">Local Conditions</h3>
+      <ul>
+        {conditionDefs.map(d => <li key={d.id}>{d.name}</li>)}
+      </ul>
+      <button onClick={() => addConditionDef(survey.id, elementId, 'Spalled brick', 'Brick spalling noted...')}>Add Local Condition</button>
+    </div>
+  );
+}
+```
+
 ### Error Handling & Edge Cases
 
 - If element/section context is missing on create, we show a toast error and no‑op
@@ -135,9 +166,15 @@ Current phrase options are filtered by `phrase.associatedComponentIds.includes(c
 
 ## Possible Improvements & Refactors
 
-- Unify “def → instance” creation with a small utility to reduce duplication
-- Add dedicated hooks: `useLocalDefs(elementId)` to encapsulate section fallback and memoization
-- Make id prefix constants/types central (`ID_PREFIX = { instance: 'local_', compDef: 'localdef_', condDef: 'locond_' }`)
+- Implemented: Unify “def → instance” creation
+  - `app/home/surveys/utils/localDefInstance.ts` → `instantiateLocalComponentDef(...)`
+  - Used in `InspectionForm.tsx` for both selecting a local component def and creating a new local component
+- Implemented: `useLocalDefs(elementId)` hook
+  - `app/home/surveys/hooks/useLocalDefs.ts` encapsulates section fallback + memoization
+  - Exposes `{ sectionId, componentDefs, conditionDefs, addComponentDef, addConditionDef }`
+- Implemented: ID prefixes/constants
+  - `app/home/surveys/constants/localIds.ts` → `ID_PREFIX`, `isLocalInstanceId`, `isLocalComponentDefId`, `isLocalConditionDefId`
+  - Replaced inline string checks with helpers where appropriate
 - Optional: support `associatedPhraseIds` on `LocalComponentDef` to narrow condition options for locals
 - Editing defs (V2): allow rename/delete of local defs and cascade optional updates to selected instances
 - UX polish: render a small badge for “survey only” in combobox items
