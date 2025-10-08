@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from "react";
+import React, { useEffect, useMemo, useCallback, useState } from "react";
 import {
   useForm,
   FormProvider,
@@ -25,7 +25,8 @@ import { Edit, PenLine, X } from "lucide-react";
 import ElementForm from "./ElementForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataForm as ElementDataForm } from "@/app/home/elements/form";
-import { DataForm as ComponentDataForm } from "@/app/home/building-components/form";
+// Removed global component creation from this flow in favor of local
+// import { DataForm as ComponentDataForm } from "@/app/home/building-components/form";
 import { DataForm as PhraseDataForm } from "@/app/home/conditions/form";
 import Input from "@/app/home/components/Input/InputText";
 import {
@@ -234,6 +235,55 @@ function InspectionFormContent({
   const component = watch("component");
   const useNameOverride = watch("useNameOverride");
   const conditions = watch("conditions");
+  const inspectionId = watch("inspectionId");
+
+  function LocalComponentNamePrompt({ onCreate }: { onCreate: (name: string) => void }) {
+    const [name, setName] = useState("");
+    const canCreate = name.trim().length > 0;
+    return (
+      <div className="space-y-4 p-2">
+        <div>
+          <label className="block text-sm font-medium mb-2">Component Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter component name"
+            className="w-full border rounded-md px-3 py-2"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="default" onClick={() => onCreate(name.trim())} disabled={!canCreate}>
+            Create
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  function RenameLocalComponentPrompt({ initialName, onRename }: { initialName: string; onRename: (name: string) => void }) {
+    const [name, setName] = useState(initialName || "");
+    const canSave = name.trim().length > 0 && name.trim() !== initialName;
+    return (
+      <div className="space-y-4 p-2">
+        <div>
+          <label className="block text-sm font-medium mb-2">Rename Local Component</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter new component name"
+            className="w-full border rounded-md px-3 py-2"
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="default" onClick={() => onRename(name.trim())} disabled={!canSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
@@ -257,37 +307,47 @@ function InspectionFormContent({
     [elements, surveySection.id]
   );
 
-  const componentOptions = useMemo(
-    () =>
-      components
-        .filter((component) => component.elementId === element.id)
-        .map((component) => ({
-          value: { id: component.id, name: component.name },
-          label: component.name,
-        })),
-    [components, element.id]
-  );
+  const componentOptions = useMemo(() => {
+    const globalOptions = components
+      .filter((c) => c.elementId === element.id)
+      .map((c) => ({ value: { id: c.id, name: c.name }, label: c.name }));
 
-  const phrasesOptions = useMemo(
-    (): { value: FormPhrase; label: string }[] =>
-      phrases.length > 0 ?
-      phrases
-        .filter(
-          (phrase) =>
-            phrase.type.toLowerCase() === "condition" &&
-            (phrase.associatedComponentIds.includes(component.id))
-        )
-        .sort((a, b) => (a.order || 0) - (b.order || 0))
-        .map((phrase) => ({
-          value: {
-            id: phrase.id,
-            name: phrase.name,
-            phrase: level === "2" ? (phrase.phraseLevel2 || "No level 2 text") : (phrase.phrase || "No level 3 text"),
-          },
-          label: phrase.name,
-        })): [],
-    [phrases, component.id, level]
-  );
+    // If current selection is local (or not in global), include it explicitly
+    const isLocalSelected = component && component.id && (
+      String(component.id).startsWith("local_") || !components.some((gc) => gc.id === component.id)
+    );
+
+    if (isLocalSelected) {
+      const label = `${component.name || "(unnamed)"} - (survey only)`;
+      const exists = globalOptions.some((o) => o.value.id === component.id);
+      if (!exists) {
+        return [...globalOptions, { value: { id: component.id, name: component.name }, label }];
+      }
+    }
+    return globalOptions;
+  }, [components, element.id, component]);
+
+  const phrasesOptions = useMemo((): { value: FormPhrase; label: string }[] => {
+    if (!phrases || phrases.length === 0) return [];
+    const isLocalSelected = component && component.id && (
+      String(component.id).startsWith("local_") || !components.some((gc) => gc.id === component.id)
+    );
+    const filtered = phrases.filter((p) => {
+      if (String(p.type).toLowerCase() !== "condition") return false;
+      if (isLocalSelected) return true; // fallback: show all conditions for locals
+      return p.associatedComponentIds.includes(component.id);
+    });
+    return filtered
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
+      .map((p) => ({
+        value: {
+          id: p.id,
+          name: p.name,
+          phrase: level === "2" ? (p.phraseLevel2 || "No level 2 text") : (p.phrase || "No level 3 text"),
+        },
+        label: p.name,
+      }));
+  }, [phrases, component, components, level]);
 
   // Reset dependent fields when parent fields change
   useEffect(() => {
@@ -302,15 +362,16 @@ function InspectionFormContent({
   }, [surveySection.id, element.id, setValue, elements]);
 
   useEffect(() => {
-    const componentExists = components.some(
-      (c) => c.id === component.id && c.elementId === element.id
-    );
+    // Only clear selection when a selected GLOBAL component no longer matches the chosen element
+    const globalComp = components.find((c) => c.id === component.id);
+    const isLocalSelected = !!component?.id && (!globalComp || String(component.id).startsWith("local_"));
+    const isMismatch = !!globalComp && globalComp.elementId !== element.id;
 
-    if (element && !componentExists && component.id) {
+    if (element && component.id && !isLocalSelected && isMismatch) {
       setValue("component", { id: "", name: "" });
       setValue("conditions", []);
     }
-  }, [element, component.id, components, setValue]);
+  }, [element, component, components, setValue]);
 
   useEffect(() => {
     if (element.id) {
@@ -457,12 +518,45 @@ function InspectionFormContent({
               errors={errors}
               onCreateNew={() => {
                 drawer.openDrawer({
-                  id: surveyId + "/component",
-                  title: "Create a new component",
-                  description: "Create a new component for any element",
+                  id: surveyId + "/local-component",
+                  title: "Create a new component (survey only)",
+                  description: "This component will be saved only within this survey.",
                   content: (
-                    <ComponentDataForm
-                      defaultValues={{ elementId: element.id }}
+                    <LocalComponentNamePrompt
+                      onCreate={async (name) => {
+                        const newId = `local_${uuidv4()}`;
+                        const current = getValues();
+                        try {
+                          await surveyStore.update(surveyId, (draft) => {
+                            addOrUpdateComponent(
+                              draft,
+                              current.surveySection?.id || surveySection.id,
+                              current.element?.id || element.id,
+                              {
+                                id: newId,
+                                inspectionId: current.inspectionId,
+                                name,
+                                nameOverride: current.nameOverride,
+                                useNameOverride: false,
+                                location: current.location,
+                                additionalDescription: current.additionalDescription,
+                                images: current.images || [],
+                                conditions: (current.conditions || []).map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || "" })),
+                                ragStatus: current.ragStatus,
+                                costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
+                              }
+                            );
+                          });
+
+                          setValue("component", { id: newId, name }, { shouldValidate: true });
+                          setValue("useNameOverride", false);
+                          drawer.closeDrawer();
+                          toast.success("Local component created");
+                        } catch (e) {
+                          console.error(e);
+                          toast.error("Failed to create local component");
+                        }
+                      }}
                     />
                   ),
                 });
@@ -472,19 +566,62 @@ function InspectionFormContent({
             <Button
               className="flex-none"
               variant="outline"
-              disabled={!component.name}
+              disabled={!component.id}
               onClick={(e) => {
                 e.preventDefault();
-                setValue("useNameOverride", !useNameOverride, {
-                  shouldValidate: true,
-                });
+                const isLocal = component && component.id && String(component.id).startsWith("local_");
+                if (isLocal) {
+                  drawer.openDrawer({
+                    id: surveyId + "/rename-local-component",
+                    title: "Rename local component",
+                    description: "Update the local component name for this survey",
+                    content: (
+                      <RenameLocalComponentPrompt
+                        initialName={component.name || ""}
+                        onRename={async (newName) => {
+                          const current = getValues();
+                          try {
+                            await surveyStore.update(surveyId, (draft) => {
+                              addOrUpdateComponent(
+                                draft,
+                                current.surveySection?.id || surveySection.id,
+                                current.element?.id || element.id,
+                                {
+                                  id: component.id,
+                                  inspectionId: current.inspectionId,
+                                  name: newName,
+                                  nameOverride: current.nameOverride,
+                                  useNameOverride: false,
+                                  location: current.location,
+                                  additionalDescription: current.additionalDescription,
+                                  images: current.images || [],
+                                  conditions: (current.conditions || []).map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || "" })),
+                                  ragStatus: current.ragStatus,
+                                  costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
+                                }
+                              );
+                            });
+                            setValue("component", { id: component.id, name: newName }, { shouldValidate: true });
+                            drawer.closeDrawer();
+                            toast.success("Local component renamed");
+                          } catch (err) {
+                            console.error(err);
+                            toast.error("Failed to rename local component");
+                          }
+                        }}
+                      />
+                    ),
+                  });
+                } else {
+                  setValue("useNameOverride", !useNameOverride, { shouldValidate: true });
+                }
               }}
             >
               <PenLine className="w-4 h-4" />
             </Button>
           </div>
 
-          {useNameOverride && component.id && (
+          {(!String(component?.id || "").startsWith("local_")) && useNameOverride && component.id && (
             <Input
               type="text"
               labelTitle="Component Name Override"
