@@ -150,7 +150,8 @@ export type ElementSection = {
     isPartOfSurvey: boolean,
     description: string,
     components: Inspection[],
-    images: SurveyImage[]
+    images: SurveyImage[],
+    localComponentDefs?: LocalComponentDef[]
 }
 
 export type Inspection = {
@@ -183,3 +184,14 @@ export type Material = {
 }
 
 export type RagStatus = "Red" | "Amber" | "Green" | "N/I";
+
+// Local component definitions are survey-scoped, element-specific templates
+export type LocalComponentDef = {
+    id: string,
+    name: string,
+    elementId: string,
+    materials?: Material[],
+    associatedPhraseIds?: string[],
+    createdAt?: string,
+    updatedAt?: string,
+}

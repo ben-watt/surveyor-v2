@@ -21,7 +21,7 @@ import { DynamicComboBox } from "@/app/home/components/Input";
 import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import toast from "react-hot-toast";
 
-import { Edit, PenLine, X } from "lucide-react";
+import { Edit, PenLine, X, Upload } from "lucide-react";
 import ElementForm from "./ElementForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataForm as ElementDataForm } from "@/app/home/elements/form";
@@ -32,6 +32,8 @@ import Input from "@/app/home/components/Input/InputText";
 import {
   addOrUpdateComponent,
   findComponent,
+  getLocalComponentDefs,
+  addOrUpdateLocalComponentDef,
 } from "@/app/home/surveys/building-survey-reports/Survey";
 import { DraggableConditions } from "./DraggableConditions";
 import {
@@ -187,6 +189,7 @@ export default function InspectionFormWrapper({
     <InspectionFormContent
       surveyId={surveyId}
       level={survey?.reportDetails?.level || ""}
+      survey={survey}
       initialValues={mergedValues}
       components={components}
       elements={elements}
@@ -200,6 +203,7 @@ export default function InspectionFormWrapper({
 function InspectionFormContent({
   surveyId,
   level,
+  survey,
   initialValues,
   components,
   elements,
@@ -208,6 +212,7 @@ function InspectionFormContent({
 }: {
   surveyId: string;
   level: string;
+  survey: any | null;
   initialValues: InspectionFormData;
   components: any[];
   elements: any[];
@@ -260,6 +265,51 @@ function InspectionFormContent({
       </div>
     );
   }
+
+  // If a user selects a local definition from the combobox, create an instance and switch selection
+  useEffect(() => {
+    const maybe = component as any;
+    if (maybe && maybe.localDefId && surveySection?.id && element?.id) {
+      const defId = maybe.localDefId as string;
+      const name = maybe.name as string;
+      const newId = `local_${uuidv4()}`;
+      const current = getValues();
+      (async () => {
+        try {
+          await surveyStore.update(surveyId, (draft) => {
+            addOrUpdateLocalComponentDef(draft, surveySection.id, element.id, {
+              id: defId,
+              name,
+              elementId: element.id,
+            });
+            addOrUpdateComponent(
+              draft,
+              current.surveySection?.id || surveySection.id,
+              current.element?.id || element.id,
+              {
+                id: newId,
+                inspectionId: current.inspectionId,
+                name,
+                nameOverride: current.nameOverride,
+                useNameOverride: false,
+                location: current.location,
+                additionalDescription: current.additionalDescription,
+                images: current.images || [],
+                conditions: (current.conditions || []).map((x: any) => ({ id: x.id, name: x.name, phrase: x.phrase || "" })),
+                ragStatus: current.ragStatus,
+                costings: (current.costings || []).map((x: any) => ({ cost: x.cost, description: x.description })),
+              }
+            );
+          });
+          setValue("component", { id: newId, name }, { shouldValidate: true });
+          toast.success("Component added from local list");
+        } catch (e) {
+          console.error(e);
+          toast.error("Failed to add component from local list");
+        }
+      })();
+    }
+  }, [component, surveySection?.id, element?.id]);
 
   function RenameLocalComponentPrompt({ initialName, onRename }: { initialName: string; onRename: (name: string) => void }) {
     const [name, setName] = useState(initialName || "");
@@ -347,7 +397,15 @@ function InspectionFormContent({
       .filter((c) => c.elementId === element.id)
       .map((c) => ({ value: { id: c.id, name: c.name }, label: c.name }));
 
-    // If current selection is local (or not in global), include it explicitly
+    const localDefOptions = (() => {
+      if (!survey || !surveySection?.id || !element?.id) return [] as any[];
+      const defs = getLocalComponentDefs(survey, surveySection.id, element.id);
+      return defs.map((d) => ({
+        value: { localDefId: d.id, name: d.name },
+        label: `${d.name} - (survey only)`,
+      }));
+    })();
+
     const isLocalSelected = component && component.id && (
       String(component.id).startsWith("local_") || !components.some((gc) => gc.id === component.id)
     );
@@ -356,11 +414,11 @@ function InspectionFormContent({
       const label = `${component.name || "(unnamed)"} - (survey only)`;
       const exists = globalOptions.some((o) => o.value.id === component.id);
       if (!exists) {
-        return [...globalOptions, { value: { id: component.id, name: component.name }, label }];
+        return [...globalOptions, ...localDefOptions, { value: { id: component.id, name: component.name }, label }];
       }
     }
-    return globalOptions;
-  }, [components, element.id, component]);
+    return [...globalOptions, ...localDefOptions];
+  }, [components, element.id, component, survey, surveySection?.id]);
 
   const phrasesOptions = useMemo((): { value: FormPhrase; label: string }[] => {
     const isLocalSelected = component && component.id && (
@@ -663,6 +721,38 @@ function InspectionFormContent({
               }}
             >
               <PenLine className="w-4 h-4" />
+            </Button>
+            <Button
+              className="flex-none"
+              variant="secondary"
+              disabled={!(component && component.id && String(component.id).startsWith("local_")) || !element?.id}
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  const nameToUse = component.name || "Untitled";
+                  const result = await componentStore.add({
+                    // server creates id
+                    name: nameToUse,
+                    order: 0,
+                    elementId: element.id,
+                    materials: [],
+                  } as any);
+                  const created: any = (result as any)?.val || (result as any);
+                  const newId = created?.id || created?.value?.id || created?.data?.id || created?.ok?.id;
+                  if (!newId) {
+                    toast.error("Failed to promote component");
+                    return;
+                  }
+                  setValue("component", { id: newId, name: nameToUse }, { shouldValidate: true });
+                  toast.success("Promoted to global components");
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Failed to promote to global");
+                }
+              }}
+              title="Promote to global catalogue"
+            >
+              <Upload className="w-4 h-4" />
             </Button>
           </div>
 

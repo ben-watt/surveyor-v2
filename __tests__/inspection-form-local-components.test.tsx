@@ -133,7 +133,7 @@ describe('InspectionForm - Local Components', () => {
 
     // The survey data should contain the inspection persisted under the element
     const element = (global as any).__currentSurveyRef.sections[0].elementSections[0];
-    expect(element.components.some(c => c.name === 'Lintel' && String(c.id || '').startsWith('local_'))).toBe(true);
+    expect(element.components.some((c: any) => c.name === 'Lintel' && String(c.id || '').startsWith('local_'))).toBe(true);
   });
 
   test('creating a local condition persists immediately and is visible as selected', async () => {

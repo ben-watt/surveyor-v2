@@ -1,4 +1,4 @@
-import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus, SurveyImage } from "./BuildingSurveyReportSchema";
+import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus, SurveyImage, LocalComponentDef } from "./BuildingSurveyReportSchema";
 
 // Find or create a section
 function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
@@ -248,4 +248,43 @@ export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionS
       errors: [],
     };
   }
+}
+
+// Local Component Definitions helpers
+export function getLocalComponentDefs(
+  survey: BuildingSurveyFormData,
+  sectionId: string,
+  elementId: string
+): LocalComponentDef[] {
+  const es = getElementSection(survey, sectionId, elementId);
+  return es?.localComponentDefs || [];
+}
+
+export function addOrUpdateLocalComponentDef(
+  survey: BuildingSurveyFormData,
+  sectionId: string,
+  elementId: string,
+  def: LocalComponentDef
+): BuildingSurveyFormData {
+  const es = findOrCreateElementSection(survey, sectionId, elementId);
+  if (!es.localComponentDefs) es.localComponentDefs = [];
+  const idx = es.localComponentDefs.findIndex(d => d.id === def.id);
+  if (idx >= 0) {
+    es.localComponentDefs[idx] = { ...es.localComponentDefs[idx], ...def };
+  } else {
+    es.localComponentDefs.push(def);
+  }
+  return survey;
+}
+
+export function removeLocalComponentDef(
+  survey: BuildingSurveyFormData,
+  sectionId: string,
+  elementId: string,
+  defId: string
+): BuildingSurveyFormData {
+  const es = getElementSection(survey, sectionId, elementId);
+  if (!es || !es.localComponentDefs) return survey;
+  es.localComponentDefs = es.localComponentDefs.filter(d => d.id !== defId);
+  return survey;
 }
