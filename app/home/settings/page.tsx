@@ -23,7 +23,7 @@ import { getCurrentTenantId } from "../utils/tenant-utils";
 function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [localOnly, setLocalOnly] = useState(false);
+  const [localOnly, setLocalOnly] = useState(true);
   const [syncingEntities, setSyncingEntities] = useState<SyncingEntities>({
     elements: false,
     components: false,
