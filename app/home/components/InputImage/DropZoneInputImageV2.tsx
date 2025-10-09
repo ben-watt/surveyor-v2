@@ -282,18 +282,7 @@ export const DropZoneInputImageV2 = ({
     onDrop: async (acceptedFiles: FileWithPath[]) => {
       console.log("[DropZoneInputImageV2] Processing files");
 
-      // Get existing images for immediate duplicate detection
-      const [activeImages, archivedImages] = await Promise.all([
-        enhancedImageStore.getActiveImages(),
-        enhancedImageStore.getArchivedImages()
-      ]);
-
-      let allExistingImages: ImageMetadata[] = [];
-      if (activeImages.ok) allExistingImages.push(...activeImages.val);
-      if (archivedImages.ok) allExistingImages.push(...archivedImages.val);
-
-      // Filter to images in this path
-      const pathImages = allExistingImages.filter(img => img.imagePath.startsWith(path));
+      
 
       for (const originalFile of acceptedFiles) {
         try {
@@ -312,26 +301,6 @@ export const DropZoneInputImageV2 = ({
               toast(`Restored archived image: ${existingImage.fileName ?? existingImage.imagePath}`, { duration: 3000 });
             } else {
               toast(`Image already exists: ${existingImage.fileName ?? existingImage.imagePath}`, { duration: 3000 });
-            }
-            continue; // Skip this file
-          }
-
-          // Check for immediate duplicate
-          const existingImage = pathImages.find(img => img.contentHash === contentHash);
-          if (existingImage) {
-            if (existingImage.isArchived) {
-              // Unarchive existing image
-              await enhancedImageStore.unarchiveImage(existingImage.id);
-              toast(`Restored archived image: ${existingImage.fileName}`, {
-                icon: '📤',
-                duration: 3000,
-              });
-            } else {
-              // Skip duplicate active image
-              toast(`Image already exists: ${existingImage.fileName}`, {
-                icon: '📋',
-                duration: 3000,
-              });
             }
             continue; // Skip this file
           }
