@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Camera, RotateCcw, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { useCameraStream } from '@/app/home/hooks/useCameraStream';
 import { enhancedImageStore } from '@/app/home/clients/enhancedImageMetadataStore';
-import { join } from 'path';
+import { joinPath, sanitizeFileName } from '@/app/home/utils/path';
 import { resizeImage } from '@/app/home/utils/imageResizer';
 
 interface CameraModalProps {
@@ -276,7 +276,7 @@ export const CameraModal = ({
 
         // Resize image using existing pipeline
         const resizedFile = await resizeForUpload(originalFile);
-        const filePath = join(path, fileName);
+        const filePath = joinPath(path, sanitizeFileName(fileName));
 
         // Upload using enhanced image store
         await enhancedImageStore.uploadImage(

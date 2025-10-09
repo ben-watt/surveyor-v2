@@ -10,6 +10,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { surveyStore, componentStore, elementStore, phraseStore, sectionStore, imageMetadataStore } from "./clients/Database";
+import { enhancedImageStore } from "./clients/enhancedImageMetadataStore";
 import { OnlineStatus } from "./components/OnlineStatus";
 import { SyncStatus } from "./components/SyncStatus";
 import { TenantProvider } from "./utils/TenantContext";
@@ -29,6 +30,10 @@ export default function RootLayout({
       phraseStore.forceSync();
       sectionStore.forceSync();
       imageMetadataStore.forceSync();
+
+      // Resume any pending/failed image uploads
+      enhancedImageStore.syncPendingUploads();
+      enhancedImageStore.retryFailedUploads();
     };
 
     // Trigger initial sync on app load if online
@@ -43,6 +48,10 @@ export default function RootLayout({
           sectionStore.forceSync(),
           imageMetadataStore.forceSync(),
         ]);
+
+        // Also kick off image upload recovery and housekeeping
+        await enhancedImageStore.syncPendingUploads();
+        await enhancedImageStore.retryFailedUploads();
       }
     };
 
@@ -59,6 +68,11 @@ export default function RootLayout({
       imageMetadataStore.startPeriodicSync(300000),
     ];
 
+    // Periodic thumbnail cleanup (once a day)
+    const cleanupThumbsInterval = setInterval(() => {
+      enhancedImageStore.cleanupOldThumbnails(100);
+    }, 24 * 60 * 60 * 1000);
+
     window.addEventListener('online', handleOnline);
 
     return () => {
@@ -66,6 +80,7 @@ export default function RootLayout({
       window.removeEventListener('online', handleOnline);
       // Clean up periodic sync intervals
       cleanupFunctions.forEach(cleanup => cleanup());
+      clearInterval(cleanupThumbsInterval);
     };
   }, []);
 

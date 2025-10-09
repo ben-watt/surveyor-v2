@@ -14,6 +14,7 @@ jest.mock('@/app/home/clients/enhancedImageMetadataStore', () => ({
     archiveImage: jest.fn(),
     unarchiveImage: jest.fn(),
     useGet: jest.fn(),
+    findDuplicate: jest.fn(),
   },
 }));
 
@@ -60,6 +61,7 @@ describe('DropZoneInputImageV2 Core Functionality', () => {
     enhancedImageStore.getActiveImages.mockResolvedValue({ ok: true, val: [] });
     enhancedImageStore.getArchivedImages.mockResolvedValue({ ok: true, val: [] });
     enhancedImageStore.useGet.mockReturnValue([true, null]); // Hydrated
+    enhancedImageStore.findDuplicate.mockResolvedValue({ ok: true, val: null });
 
     // Mock utility functions
     resizeImage.mockResolvedValue(new File(['resized'], 'test.jpg', { type: 'image/jpeg' }));

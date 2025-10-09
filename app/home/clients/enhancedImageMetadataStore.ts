@@ -18,6 +18,11 @@ export interface UploadImageOptions {
   onProgress?: (progress: number) => void;
 }
 
+export interface FindDuplicateOptions {
+  contentHash: string;
+  pathPrefix: string;
+}
+
 /**
  * Enhanced image metadata store with upload, thumbnail generation, and archive management
  */
@@ -88,6 +93,28 @@ class EnhancedImageMetadataStore {
       return Ok(id);
     } catch (error) {
       console.error('Failed to upload image:', error);
+      return Err(error as Error);
+    }
+  }
+
+  /**
+   * Find an existing image by contentHash within a given path prefix for current tenant
+   */
+  async findDuplicate(options: FindDuplicateOptions): Promise<Result<ImageMetadata | null, Error>> {
+    try {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        return Err(new Error('No tenant ID available'));
+      }
+
+      const match = await db.table<ImageMetadata>('imageMetadata')
+        .where('tenantId')
+        .equals(tenantId)
+        .and(item => item.contentHash === options.contentHash && item.imagePath.startsWith(options.pathPrefix))
+        .first();
+
+      return Ok(match ?? null);
+    } catch (error) {
       return Err(error as Error);
     }
   }
@@ -419,4 +446,5 @@ export const enhancedImageStore = {
   retryFailedUploads: enhancedImageMetadataStore.retryFailedUploads.bind(enhancedImageMetadataStore),
   syncPendingUploads: enhancedImageMetadataStore.syncPendingUploads.bind(enhancedImageMetadataStore),
   cleanupOldThumbnails: enhancedImageMetadataStore.cleanupOldThumbnails.bind(enhancedImageMetadataStore),
+  findDuplicate: enhancedImageMetadataStore.findDuplicate.bind(enhancedImageMetadataStore),
 };

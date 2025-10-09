@@ -11,19 +11,22 @@ The image upload system provides offline-first, progressive image handling with 
 1. **DropZoneInputImageV2** (`app/home/components/InputImage/DropZoneInputImageV2.tsx`)
    - Content-based duplicate detection using SHA-256 hashes
    - Progressive upload with thumbnails
-   - Archive management
-   - Comprehensive error handling with exponential backoff retry
-   - Reuses existing `react-image-file-resizer` library
+   - Archive/metadata UI controls
+   - Uses `react-dropzone` for file capture and `react-image-file-resizer` for transforms
 
-2. **ImageMetadataStore** (`app/home/clients/Database.ts:394-435`)
-   - Base store using `CreateDexieHooks` for offline-first sync
-   - DynamoDB table `ImageMetadata` for metadata storage
-   - Tenant isolation with composite keys
-   - To be enhanced with thumbnail and upload features
+2. **Enhanced Image Store** (`app/home/clients/enhancedImageMetadataStore.ts`)
+   - Orchestrates background uploads via Amplify Storage `uploadData` (progress, cancel, retries)
+   - Generates and stores thumbnails + dimensions
+   - Persists local file data for offline-first resume
+   - Exposes helpers: `uploadImage`, `archiveImage`, `unarchiveImage`, `getFullImageUrl`, `retryFailedUploads`, `syncPendingUploads`, `cleanupOldThumbnails`
 
-3. **ImageUploadStore** (Legacy - to be deprecated)
-   - Simple S3 operations for backward compatibility
-   - Will be replaced by enhanced ImageMetadataStore
+3. **Image Metadata Store (base)** (`app/home/clients/Database.ts:~360+`)
+   - Base Dexie hooks (`CreateDexieHooks`) for CRUD + sync to DynamoDB `ImageMetadata`
+   - Removes local-only fields before server sync
+   - Tenant isolation and indexes managed in `app/home/clients/Dexie.ts`
+
+4. (Legacy) **ImageUploadStore**
+   - Removed in Dexie schema v23; legacy references exist only in older docs
 
 ### Data Flow
 
@@ -33,15 +36,14 @@ User Selects Image → Generate Thumbnail → Store in IndexedDB → Background 
                     Instant Preview        Offline Support      Progress Tracking
 ```
 
-## Planned Enhancements
+## Enhancements & Hardening
 
-### Direct Store Modification Approach
-
-Instead of creating new abstractions, we'll directly modify the existing `imageMetadataStore` to add:
-- Thumbnail generation and caching
-- Progressive upload tracking
-- Archive management
-- Better offline support
+We are keeping the Amplify + Dexie approach and hardening it with better lifecycle management and consistency:
+- Wire background helpers on app load and `online` events (`syncPendingUploads`, `retryFailedUploads`)
+- Add periodic `cleanupOldThumbnails()` to control IndexedDB usage
+- Centralize duplicate detection inside the enhanced store (hash + path/tenant)
+- Extract shared `joinPath()` and filename sanitization util
+- Optional: add a simple upload concurrency limiter in the enhanced store
 
 ### 1. Schema Updates
 
@@ -60,6 +62,7 @@ ImageMetadata: a.model({
   mimeType: a.string(),
   width: a.integer(),
   height: a.integer(),
+  contentHash: a.string(),            // SHA-256 for deduplication
   caption: a.string(),
   notes: a.string(),
   isArchived: a.boolean().default(false),
@@ -68,7 +71,7 @@ ImageMetadata: a.model({
 })
 ```
 
-#### Dexie Schema (`app/home/clients/Dexie.ts`)
+#### Dexie Schema (local model) (`app/home/clients/Database.ts`)
 ```typescript
 export interface ImageMetadata {
   id: string;
@@ -82,13 +85,15 @@ export interface ImageMetadata {
   mimeType?: string;
   width?: number;
   height?: number;
+  contentHash?: string;        // SHA-256 for deduplication
   caption?: string;
   notes?: string;
   isArchived?: boolean;
   uploadStatus?: 'pending' | 'uploaded' | 'failed';
-  localFile?: ArrayBuffer;  // Temporary storage for offline uploads
-  localFileType?: string;
-  localFileName?: string;
+  uploadProgress?: number;   // 0-100, local-only
+  localFileData?: ArrayBuffer;  // Local-only
+  localFileType?: string;       // Local-only
+  localFileName?: string;       // Local-only
   tenantId: string;
 }
 ```
@@ -101,160 +106,65 @@ Extract and reuse existing resize logic:
 // app/home/utils/imageResizer.ts
 import Resizer from 'react-image-file-resizer'
 
-export const generateThumbnail = (file: File): Promise<string> => {
-  return new Promise((resolve) => {
-    Resizer.imageFileResizer(
-      file,
-      200, // thumbnail size
-      200,
-      'JPEG',
-      80, // quality
-      0,
-      (uri) => resolve(uri as string), // Returns base64 data URL
-      'base64'
-    )
-  })
-}
-
-export const resizeImage = (file: File): Promise<File> => {
-  // Existing resize logic from DropZoneInputImage.tsx
-}
-
-export const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
-  // Get image dimensions for metadata
-}
+export const resizeImage = (file: File): Promise<File> => { /* ... */ }
+export const generateThumbnail = (file: File): Promise<string> => { /* ... */ }
+export const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => { /* ... */ }
+export const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => { /* ... */ }
+export const arrayBufferToFile = (buf: ArrayBuffer, name: string, type: string): File => { /* ... */ }
+export const estimateThumbnailSize = (base64DataUrl: string): number => { /* ... */ }
 ```
 
 ### 3. Enhanced Store Methods
 
-Add methods directly to the existing store:
+Use the enhanced store for uploads, thumbnails, and background processing:
 
 ```typescript
-// app/home/clients/Database.ts - Enhanced imageMetadataStore
-export const imageMetadataStore = {
-  ...baseImageMetadataStore,
+// app/home/clients/enhancedImageMetadataStore.ts (public surface via enhancedImageStore)
+const idResult = await enhancedImageStore.uploadImage(file, path, {
+  onProgress: (p) => console.debug('progress', p)
+});
 
-  async uploadImage(file: File, path: string, metadata?: Partial<ImageMetadata>) {
-    const id = metadata?.id || crypto.randomUUID()
-
-    // Generate thumbnail immediately
-    const thumbnailDataUrl = await generateThumbnail(file)
-    const dimensions = await getImageDimensions(file)
-
-    // Store with thumbnail AND file for offline support
-    await baseImageMetadataStore.add({
-      id,
-      imagePath: path,
-      thumbnailDataUrl, // Available immediately offline
-      fileName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-      width: dimensions.width,
-      height: dimensions.height,
-      isArchived: false,
-      uploadStatus: 'pending',
-      localFile: await file.arrayBuffer(),
-      localFileType: file.type,
-      localFileName: file.name
-    })
-
-    // Trigger sync (handles online/offline automatically)
-    baseImageMetadataStore.sync()
-    return id
-  },
-
-  async archiveImage(id: string) {
-    return baseImageMetadataStore.update(id, draft => {
-      draft.isArchived = true
-    })
-  },
-
-  async unarchiveImage(id: string) {
-    return baseImageMetadataStore.update(id, draft => {
-      draft.isArchived = false
-    })
-  },
-
-  async getFullImageUrl(imagePath: string): Promise<string> {
-    const result = await getUrl({ path: imagePath })
-    return result.url.href
-  }
+if (idResult.ok) {
+  // ID available immediately; background upload continues
 }
+
+// Later (e.g., on app boot or when online):
+await enhancedImageStore.syncPendingUploads();
+await enhancedImageStore.retryFailedUploads();
+await enhancedImageStore.cleanupOldThumbnails(100);
 ```
 
 ### 4. Progressive Image Component
 
 ```typescript
 // app/home/components/ProgressiveImage.tsx
-export function ProgressiveImage({ imageId }: { imageId: string }) {
-  const [imageUrl, setImageUrl] = useState<string>()
-  const [hydrated, image] = imageMetadataStore.useGet(imageId)
-
-  useEffect(() => {
-    if (image?.thumbnailDataUrl) {
-      // Show thumbnail immediately from IndexedDB
-      setImageUrl(image.thumbnailDataUrl)
-    }
-  }, [image?.thumbnailDataUrl])
-
-  const loadFullImage = async () => {
-    if (!image?.imagePath) return
-    const fullUrl = await imageMetadataStore.getFullImageUrl(image.imagePath)
-    setImageUrl(fullUrl)
-  }
-
-  return (
-    <div className="relative group">
-      {imageUrl && (
-        <img
-          src={imageUrl}
-          onClick={loadFullImage}
-          className="cursor-pointer w-full h-auto"
-          alt={image?.fileName}
-        />
-      )}
-
-      {image?.uploadStatus === 'pending' && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <div className="text-white">Uploading...</div>
-        </div>
-      )}
-
-      {image?.isArchived && (
-        <div className="absolute top-2 right-2 bg-gray-800/75 text-white px-2 py-1 rounded text-xs">
-          Archived
-        </div>
-      )}
-    </div>
-  )
-}
+// Uses enhancedImageStore under the hood; shows thumbnail immediately and loads full size on demand
 ```
 
-## Implementation Steps
+## Improvement Plan
 
-### Phase 1: Schema & Utilities (Day 1)
-1. Update `amplify/data/resource.ts` with new fields
-2. Create `app/home/utils/imageResizer.ts` extracting existing logic
-3. Update `app/home/clients/Dexie.ts` interface
-4. Run `npm run sandbox` to apply schema changes
+### Phase 1: Lifecycle wiring
+1. On app boot (after auth/tenant ready), call `syncPendingUploads()` and `retryFailedUploads()`
+2. Add `window.addEventListener('online', ...)` to trigger the same
+3. Add a daily/weekly schedule to `cleanupOldThumbnails(keepCount)`
 
-### Phase 2: Store Enhancement (Day 2)
-1. Modify `app/home/clients/Database.ts` imageMetadataStore
-2. Add upload, archive, and thumbnail methods
-3. Implement custom sync handler for S3 uploads
-4. Test basic upload and thumbnail generation
+### Phase 2: Duplicate detection centralization
+1. Add store method `findDuplicate({ contentHash, pathPrefix, tenantId })`
+2. Update `uploadImage()` to optionally check duplicates and short-circuit
+3. Simplify component: move duplicate checks from UI to store
 
-### Phase 3: Component Updates (Day 3)
-1. Create `ProgressiveImage` component
-2. Update `DropZoneInputImageV2` to use new store methods
-3. Replace `ImageUploadStore` usage
-4. Test archive/unarchive functionality
+### Phase 3: Path utils and sanitization
+1. Extract `joinPath()` to a shared util (avoid leading slashes)
+2. Add filename sanitization (spaces, unsafe chars) prior to upload
+3. Use util everywhere (components, store, camera)
 
-### Phase 4: Migration & Testing (Day 4-5)
-1. Create migration script from `ImageUploadStore`
-2. Test offline/online sync behavior
-3. Verify progressive loading
-4. Remove deprecated code
+### Phase 4: Concurrency controls (optional)
+1. Add N-parallel upload limit in enhanced store
+2. Expose queue length/position if useful to UI
+
+### Phase 5: Docs and tests
+1. Align docs (this file) with final field names and flows
+2. Add unit tests for `uploadImage()` progress/retry and duplicate detection
 
 ## Performance Benefits
 
@@ -299,6 +209,8 @@ async function migrateFromImageUploadStore() {
   }
 }
 ```
+
+Note: Dexie v23 removed `imageUploads`. Keep this migration only for users/devices that may still hold older local data.
 
 ## Cost Analysis
 

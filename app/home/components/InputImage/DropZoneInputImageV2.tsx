@@ -9,11 +9,9 @@ import { resizeImage } from "@/app/home/utils/imageResizer";
 import { generateImageHash } from "@/app/home/utils/imageHashUtils";
 import toast from "react-hot-toast";
 import { ProgressiveImage } from "../ProgressiveImage";
+import { joinPath, sanitizeFileName } from "@/app/home/utils/path";
 
-// Custom path join to avoid leading slashes for AWS Amplify
-const joinPath = (...parts: string[]) => {
-  return parts.filter(Boolean).join('/').replace(/^\/+/, '');
-};
+// Path helpers are provided by utils/path
 
 export interface DropZoneInputImageV2Props {
   path: string;
@@ -245,7 +243,8 @@ export const DropZoneInputImageV2 = ({
   }, [path]); // Intentionally exclude onChange to prevent loops
 
   const handleUpload = async (file: File, fileName: string) => {
-    const finalPath = joinPath(path, fileName);
+    const safeName = sanitizeFileName(fileName);
+    const finalPath = joinPath(path, safeName);
 
     setIsUploading(true);
     try {
@@ -304,6 +303,19 @@ export const DropZoneInputImageV2 = ({
           // Generate content hash for duplicate detection
           const contentHash = await generateImageHash(resizedFile);
 
+          // Centralized duplicate check via store
+          const dupResult = await enhancedImageStore.findDuplicate({ contentHash, pathPrefix: path });
+          if (dupResult.ok && dupResult.val) {
+            const existingImage = dupResult.val;
+            if (existingImage.isArchived) {
+              await enhancedImageStore.unarchiveImage(existingImage.id);
+              toast(`Restored archived image: ${existingImage.fileName ?? existingImage.imagePath}`, { duration: 3000 });
+            } else {
+              toast(`Image already exists: ${existingImage.fileName ?? existingImage.imagePath}`, { duration: 3000 });
+            }
+            continue; // Skip this file
+          }
+
           // Check for immediate duplicate
           const existingImage = pathImages.find(img => img.contentHash === contentHash);
           if (existingImage) {
@@ -327,7 +339,7 @@ export const DropZoneInputImageV2 = ({
           // Upload the new file with original filename
           const uploadResult = await enhancedImageStore.uploadImage(
             resizedFile,
-            joinPath(path, resizedFile.name),
+            joinPath(path, sanitizeFileName(resizedFile.name)),
             {
               onProgress: (progress) => {
                 console.debug(`Upload progress for ${resizedFile.name}: ${progress}%`);
