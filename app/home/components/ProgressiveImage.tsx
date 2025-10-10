@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { enhancedImageStore } from '../clients/enhancedImageMetadataStore';
 import { cn } from '@/lib/utils';
 
 interface ProgressiveImageProps {
   imageId: string;
-  className?: string;
+  className?: string; // wrapper classes (aspect ratio, rounding)
   alt?: string;
   onLoad?: () => void;
   onClick?: () => void;
@@ -100,36 +100,31 @@ export function ProgressiveImage({
   }
 
   return (
-    <div className="relative group">
-      {/* Main image */}
-      {imageUrl ? (
+    <div
+      className={cn('relative overflow-hidden group', className)}
+      onClick={() => {
+        if (!fullImageLoaded && image.uploadStatus === 'uploaded') {
+          loadFullImage();
+        }
+        onClick?.();
+      }}
+    >
+      {/* Main image (absolute-fill) */}
+      {imageUrl && (
         <img
           src={imageUrl}
           alt={alt || image.fileName || 'Image'}
-          className={cn(
-            "cursor-pointer transition-opacity duration-300",
-            className || "w-full h-auto",
-            isLoadingFull && "opacity-75"
-          )}
-          onClick={() => {
-            if (!fullImageLoaded && image.uploadStatus === 'uploaded') {
-              loadFullImage();
-            }
-            onClick?.();
-          }}
+          className={cn('inset-0 w-full h-full object-cover')}
+          loading="lazy"
+          decoding="async"
         />
-      ) : (
-        <div className={cn(
-          "flex items-center justify-center bg-gray-100",
-          className || "h-48 w-full"
-        )}>
+      )}
+      {!imageUrl && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           {image.uploadStatus === 'pending' ? (
             <div className="text-gray-500">Uploading...</div>
           ) : (
-            <button
-              onClick={loadFullImage}
-              className="text-blue-500 hover:text-blue-600"
-            >
+            <button onClick={loadFullImage} className="text-blue-500 hover:text-blue-600">
               Load Image
             </button>
           )}
@@ -194,13 +189,13 @@ export function ProgressiveImage({
         </div>
       )}
 
-      {/* Metadata overlay on hover */}
+      {/* Metadata overlay on hover (kept; wrapper is the hover group) */}
       <div className={cn(
-        "absolute bottom-0 left-0 right-0",
-        "bg-gradient-to-t from-black/60 to-transparent",
-        "opacity-0 group-hover:opacity-100",
-        "transition-opacity duration-200",
-        "p-2 text-white text-xs"
+        'absolute bottom-0 left-0 right-0',
+        'bg-gradient-to-t from-black/60 to-transparent',
+        'opacity-0 group-hover:opacity-100',
+        'transition-opacity duration-200',
+        'p-2 text-white text-xs'
       )}>
         {image.caption && <div className="font-medium">{image.caption}</div>}
         {image.fileName && <div className="opacity-75">{image.fileName}</div>}
@@ -219,11 +214,7 @@ export function ProgressiveImageGallery({ imageIds }: { imageIds: string[] }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {imageIds.map((id) => (
-        <ProgressiveImage
-          key={id}
-          imageId={id}
-          className="aspect-square object-cover rounded"
-        />
+        <ProgressiveImage key={id} imageId={id} className="aspect-square rounded" />
       ))}
     </div>
   );

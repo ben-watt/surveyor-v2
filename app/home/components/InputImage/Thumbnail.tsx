@@ -69,7 +69,7 @@ export const Thumbnail = ({
       <div>
         <ProgressiveImage
           imageId={imageId}
-          className="aspect-[3/2] object-cover"
+          className="aspect-[3/2]"
           alt={image.fileName || 'Image'}
         />
       </div>
@@ -123,4 +123,3 @@ export const Thumbnail = ({
     </div>
   );
 };
-
