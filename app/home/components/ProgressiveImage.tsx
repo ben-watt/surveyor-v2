@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { enhancedImageStore } from '../clients/enhancedImageMetadataStore';
 import { cn } from '@/lib/utils';
 
 interface ProgressiveImageProps {
   imageId: string;
-  className?: string; // wrapper classes (aspect ratio, rounding)
+  className?: string; // wrapper classes (rounding/size). Defaults applied if missing.
   alt?: string;
   onLoad?: () => void;
   onClick?: () => void;
@@ -24,12 +24,9 @@ export function ProgressiveImage({
   className,
   alt,
   onLoad,
-  onClick
+  onClick,
 }: ProgressiveImageProps) {
   const [imageUrl, setImageUrl] = useState<string>();
-  const [isLoadingFull, setIsLoadingFull] = useState(false);
-  const [error, setError] = useState<string>();
-  const [fullImageLoaded, setFullImageLoaded] = useState(false);
   const [hydrated, image] = enhancedImageStore.useGet(imageId);
 
   // Load thumbnail immediately when available. Also react to record updates.
@@ -40,44 +37,7 @@ export function ProgressiveImage({
     }
   }, [image?.thumbnailDataUrl, image?.updatedAt, imageId]);
 
-  // Load full image from S3
-  const loadFullImage = useCallback(async () => {
-    if (!image?.imagePath || isLoadingFull || fullImageLoaded) return;
-
-    setIsLoadingFull(true);
-    setError(undefined);
-
-    try {
-      const urlResult = await enhancedImageStore.getFullImageUrl(image.imagePath);
-
-      if (urlResult.ok) {
-        // Preload the image to ensure smooth transition
-        const img = new Image();
-        img.onload = () => {
-          setImageUrl(urlResult.val);
-          setFullImageLoaded(true);
-          onLoad?.();
-        };
-        img.onerror = () => {
-          setError('Failed to load full image');
-        };
-        img.src = urlResult.val;
-      } else {
-        setError(urlResult.val.message);
-      }
-    } catch (err) {
-      setError('Failed to load full image');
-    } finally {
-      setIsLoadingFull(false);
-    }
-  }, [image?.imagePath, isLoadingFull, fullImageLoaded, onLoad]);
-
-  // Auto-load full image if upload is complete
-  useEffect(() => {
-    if (image?.uploadStatus === 'uploaded' && !fullImageLoaded && !image.thumbnailDataUrl) {
-      loadFullImage();
-    }
-  }, [image?.uploadStatus, fullImageLoaded, image?.thumbnailDataUrl, loadFullImage]);
+  // No full-image loading here; this component shows thumbnail only
 
   if (!hydrated) {
     return (
@@ -99,36 +59,26 @@ export function ProgressiveImage({
     );
   }
 
+  // Default wrapper size if none provided to prevent layout jumping
+  const wrapperClass = className && className.trim().length > 0 ? className : 'h-48 w-full rounded';
+
   return (
     <div
-      className={cn('relative overflow-hidden group', className)}
-      onClick={() => {
-        if (!fullImageLoaded && image.uploadStatus === 'uploaded') {
-          loadFullImage();
-        }
-        onClick?.();
-      }}
+      className={cn('relative overflow-hidden group w-full', wrapperClass)}
+      onClick={() => onClick?.()}
     >
-      {/* Main image (absolute-fill) */}
+      {/* Main image (thumbnail) */}
       {imageUrl && (
         <img
           src={imageUrl}
           alt={alt || image.fileName || 'Image'}
-          className={cn('inset-0 w-full h-full object-cover')}
+          className={cn('block w-full h-full object-cover')}
           loading="lazy"
           decoding="async"
         />
       )}
       {!imageUrl && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          {image.uploadStatus === 'pending' ? (
-            <div className="text-gray-500">Uploading...</div>
-          ) : (
-            <button onClick={loadFullImage} className="text-blue-500 hover:text-blue-600">
-              Load Image
-            </button>
-          )}
-        </div>
+        <div className="absolute inset-0 animate-pulse bg-gray-200" />
       )}
 
       {/* Upload progress overlay */}
@@ -156,36 +106,10 @@ export function ProgressiveImage({
         </div>
       )}
 
-      {/* Archive status badge */}
+      {/* Archive status badge (optional, kept for context) */}
       {image.isArchived && (
         <div className="absolute top-2 right-2 bg-gray-800/75 text-white px-2 py-1 rounded text-xs">
           Archived
-        </div>
-      )}
-
-      {/* Load full image button (if not loaded) */}
-      {!fullImageLoaded && image.uploadStatus === 'uploaded' && imageUrl && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            loadFullImage();
-          }}
-          className={cn(
-            "absolute inset-0 flex items-center justify-center",
-            "bg-black/20 opacity-0 group-hover:opacity-100",
-            "transition-opacity duration-200"
-          )}
-        >
-          <span className="bg-white/90 px-3 py-2 rounded shadow-lg">
-            {isLoadingFull ? 'Loading...' : 'Load Full Image'}
-          </span>
-        </button>
-      )}
-
-      {/* Error message */}
-      {error && (
-        <div className="absolute bottom-2 left-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs">
-          {error}
         </div>
       )}
 

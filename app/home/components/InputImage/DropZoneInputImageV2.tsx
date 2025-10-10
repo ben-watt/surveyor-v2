@@ -65,6 +65,7 @@ export const DropZoneInputImageV2 = ({
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const activeCount = useMemo(() => files.filter(f => !f.isArchived).length, [files]);
+  const isSingle = maxFiles === 1;
 
 
   // Map of imagePath -> imageId for tracking
@@ -308,7 +309,12 @@ export const DropZoneInputImageV2 = ({
       touchAction: 'none',
     };
     return (
-      <li ref={setNodeRef} style={style} aria-roledescription="sortable-item">
+      <li
+        ref={setNodeRef}
+        style={style}
+        aria-roledescription="sortable-item"
+        className={isSingle ? 'w-full max-w-md' : undefined}
+      >
         <div
           aria-label={dragHandleAriaLabel}
           style={{ cursor: enableReorder ? 'grab' as const : 'default' }}
@@ -370,15 +376,15 @@ export const DropZoneInputImageV2 = ({
                       : "flex flex-wrap gap-2 justify-center"
                   }`}
                 >
-                  {activeFiles.map((file) => {
-                    const imageId = pathToIdMap.get(file.path);
-                    if (!imageId) return null;
-                    return <SortableThumb key={file.path} file={file} imageId={imageId} />;
-                  })}
-                </ul>
-              </SortableContext>
-            </DndContext>
-          ) : (
+              {activeFiles.map((file) => {
+                const imageId = pathToIdMap.get(file.path);
+                if (!imageId) return null;
+                return <SortableThumb key={file.path} file={file} imageId={imageId} />;
+              })}
+            </ul>
+          </SortableContext>
+        </DndContext>
+      ) : (
             <ul
               className={`${
                 maxFiles && maxFiles > 1
@@ -390,15 +396,16 @@ export const DropZoneInputImageV2 = ({
                 const imageId = pathToIdMap.get(file.path);
                 if (!imageId) return null;
                 return (
-                  <Thumbnail
-                    key={imageId}
-                    imageId={imageId}
-                    filePath={file.path}
-                    onDelete={handleDelete}
-                    onArchive={handleArchive}
-                    features={features}
-                    onMetadataChange={handleMetadataChange}
-                  />
+                  <div key={imageId} className={isSingle ? 'w-full max-w-md' : undefined}>
+                    <Thumbnail
+                      imageId={imageId}
+                      filePath={file.path}
+                      onDelete={handleDelete}
+                      onArchive={handleArchive}
+                      features={features}
+                      onMetadataChange={handleMetadataChange}
+                    />
+                  </div>
                 );
               })}
             </ul>
