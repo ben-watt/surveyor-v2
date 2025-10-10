@@ -366,30 +366,37 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
   },
 });
 
-export interface ImageMetadata {
-  id: string;
-  syncStatus: SyncStatus;
-  createdAt: string;
-  updatedAt: string;
-  imagePath: string;
-  thumbnailDataUrl?: string;  // Base64 thumbnail for instant display
-  fileName?: string;
-  fileSize?: number;
-  mimeType?: string;
-  width?: number;
-  height?: number;
-  contentHash?: string;  // SHA-256 hash for duplicate detection
-  caption?: string;
-  notes?: string;
-  isArchived?: boolean;  // Archive management
-  isDeleted?: boolean;   // Soft-delete flag
-  uploadStatus?: 'pending' | 'uploaded' | 'failed';  // Simple status tracking
+type ServerImageMetadata = Schema['ImageMetadata']['type'];
+
+type LocalOnlyImageFields = {
   uploadProgress?: number;  // Upload progress percentage (0-100)
   localFileData?: ArrayBuffer;  // Temporary storage for offline uploads (using ArrayBuffer instead of File)
   localFileType?: string;  // MIME type for reconstructing File from ArrayBuffer
   localFileName?: string;  // File name for reconstructing File from ArrayBuffer
-  tenantId: string;
-}
+};
+
+// Client ImageMetadata is the server type, but with a stronger SyncStatus type and extra local-only fields
+export type ImageMetadata = Omit<ServerImageMetadata, 'syncStatus'> & {
+  syncStatus: SyncStatus;
+} & LocalOnlyImageFields;
+
+// Fields that should never be sent to the server (local-only)
+export const IMAGE_METADATA_LOCAL_ONLY_FIELDS = [
+  'uploadProgress',
+  'localFileData',
+  'localFileType',
+  'localFileName',
+] as const;
+
+// Canonical set of server-synced fields for ImageMetadata.
+// Keep in sync with amplify/data/resource.ts -> ImageMetadata model.
+// Compile-time check: ensure client/server fields stay aligned (excluding local-only fields and syncStatus type)
+type NonLocalClientKeys = Exclude<keyof ImageMetadata, typeof IMAGE_METADATA_LOCAL_ONLY_FIELDS[number]>;
+type ServerKeys = keyof ServerImageMetadata;
+type ClientMissingFromServer = Exclude<NonLocalClientKeys, ServerKeys>;
+type ServerMissingFromClient = Exclude<ServerKeys, NonLocalClientKeys>;
+// If either is not never, TS will error here
+const _imageMetadataKeysTypeCheck: [ClientMissingFromServer, ServerMissingFromClient] = [undefined as never, undefined as never];
 
 // Helper to remove local-only fields before syncing to server
 const removeLocalOnlyFields = (data: any): any => {
@@ -434,7 +441,8 @@ const mapToImageMetadata = (data: any): ImageMetadata => ({
   tenantId: data.tenantId,
 });
 
-export type UpdateImageMetadata = Partial<ImageMetadata> & { id: string };
+// Use backend-provided update type for server calls
+export type UpdateImageMetadata = Schema['ImageMetadata']['updateType'];
 export type CreateImageMetadata = Schema['ImageMetadata']['createType'];
 
 export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMetadata, UpdateImageMetadata>(

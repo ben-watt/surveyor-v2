@@ -40,7 +40,6 @@ export const DropZoneInputImageV2 = ({
 }: DropZoneInputImageV2Props) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
   const activeCount = useMemo(() => files.filter(f => !f.isArchived).length, [files]);
 
 
@@ -289,16 +288,6 @@ export const DropZoneInputImageV2 = ({
           </div>
         )}
       </section>
-
-
-      {isUploading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
-            <p className="mt-4">Uploading images...</p>
-          </div>
-        </div>
-      )}
     </>
   );
 };

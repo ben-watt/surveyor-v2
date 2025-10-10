@@ -43,8 +43,8 @@ export const Thumbnail = ({
       title: 'Edit Image Metadata',
       content: (
         <SimpleImageMetadataDialog
-          initialCaption={image.caption}
-          initialNotes={image.notes}
+          initialCaption={image.caption || ''}
+          initialNotes={image.notes || ''}
           onSave={async (caption: string, notes: string) => {
             await enhancedImageStore.update(imageId, (draft) => {
               draft.caption = caption;
@@ -70,13 +70,13 @@ export const Thumbnail = ({
         <ProgressiveImage
           imageId={imageId}
           className="aspect-[3/2] object-cover"
-          alt={image.fileName}
+          alt={image.fileName || 'Image'}
         />
       </div>
       <aside className="absolute top-0 left-0 right-0 bottom-0 from-black/70 to-black/0 bg-gradient-to-b"></aside>
       <aside className="absolute top-0 left-9 right-9 text-white p-2 text-xs">
         <p className="truncate">{image.fileName}</p>
-        <p className="text-background/50 text-[0.6rem]">{formatFileSize(image.fileSize)}</p>
+        <p className="text-background/50 text-[0.6rem]">{formatFileSize(image.fileSize || 0)}</p>
       </aside>
       <aside className="absolute top-0 left-0">
         <button

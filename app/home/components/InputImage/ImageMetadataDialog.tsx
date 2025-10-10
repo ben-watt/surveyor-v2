@@ -28,8 +28,8 @@ export const ImageMetadataDialog = ({ file, path, onClose }: ImageMetadataDialog
         if (existingMetadata) {
           setMetadataId(existingMetadata.id);
           setMetadata({
-            caption: existingMetadata.caption,
-            notes: existingMetadata.notes,
+            caption: existingMetadata.caption || "",
+            notes: existingMetadata.notes || "",
           });
         }
       } catch (error) {
