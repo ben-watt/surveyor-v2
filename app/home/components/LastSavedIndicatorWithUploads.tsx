@@ -85,21 +85,22 @@ export function LastSavedIndicatorWithUploads({
   return (
     <div className={cn(
       'flex items-center gap-2 text-sm transition-all duration-300 ease-in-out',
+      'h-6 min-w-[160px] whitespace-nowrap',
       config.className,
       className
     )}>
       {showIcon && config.icon && (
-        <config.icon 
+        <config.icon
           className={cn(
-            'h-4 w-4 transition-all duration-300',
+            'h-4 w-4',
             (status === 'saving' || isUploading) && 'animate-spin',
             status === 'pending' && 'animate-pulse'
-          )} 
+          )}
         />
       )}
       
       <div className="flex flex-col">
-        <span className="transition-all duration-300">{config.text}</span>
+        <span className="transition-colors duration-200 leading-5">{config.text}</span>
         
         {showTimestamp && !isUploading && status !== 'saving' && status !== 'error' && status !== 'pending' && (
           <span className="text-xs opacity-75 transition-opacity duration-300">
