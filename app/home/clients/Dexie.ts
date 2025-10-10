@@ -578,4 +578,14 @@ db.version(23).stores({
   // imageUploads table removed in v23
 });
 
+// Version 24: Add isDeleted soft-delete flag and indexes
+db.version(24).stores({
+  surveys: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  imageMetadata: 'id, tenantId, imagePath, uploadStatus, isArchived, isDeleted, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived], [tenantId+isDeleted]'
+});
+
 export { db, CreateDexieHooks };

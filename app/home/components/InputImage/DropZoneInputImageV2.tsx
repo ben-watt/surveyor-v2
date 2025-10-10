@@ -207,7 +207,7 @@ export const DropZoneInputImageV2 = ({
 
         // Filter images for this specific path
         const pathImages = deduplicatedImages.filter(img =>
-          img.imagePath.startsWith(path)
+          img.imagePath.startsWith(path) && (img as any).isDeleted !== true
         );
 
         // Create path->id mapping and deduplicate files by path
@@ -296,9 +296,32 @@ export const DropZoneInputImageV2 = ({
           const dupResult = await enhancedImageStore.findDuplicate({ contentHash, pathPrefix: path });
           if (dupResult.ok && dupResult.val) {
             const existingImage = dupResult.val;
+            if ((existingImage as any).isDeleted) {
+              // Replace the deleted record with this upload (keeps same ID)
+              const replaceResult = await enhancedImageStore.replaceDeletedImage(
+                existingImage.id,
+                resizedFile,
+                joinPath(path, sanitizeFileName(resizedFile.name)),
+                {
+                  onProgress: (progress: number) => {
+                    console.debug(`Upload progress for ${resizedFile.name}: ${progress}%`);
+                  }
+                }
+              );
+              if (replaceResult.ok) {
+                toast.success(`Replaced deleted image: ${existingImage.fileName ?? existingImage.imagePath}`);
+              } else {
+                toast.error(`Failed to replace deleted image: ${replaceResult.val.message}`);
+              }
+              continue;
+            }
             if (existingImage.isArchived) {
-              await enhancedImageStore.unarchiveImage(existingImage.id);
-              toast(`Restored archived image: ${existingImage.fileName ?? existingImage.imagePath}`, { duration: 3000 });
+              const restoreResult = await enhancedImageStore.unarchiveImage(existingImage.id);
+              if (restoreResult.ok) {
+                toast(`Restored archived image: ${existingImage.fileName ?? existingImage.imagePath}`, { duration: 3000 });
+              } else {
+                toast.error(`Cannot restore image: ${restoreResult.val.message}`);
+              }
             } else {
               toast(`Image already exists: ${existingImage.fileName ?? existingImage.imagePath}`, { duration: 3000 });
             }
@@ -352,7 +375,7 @@ export const DropZoneInputImageV2 = ({
         }, [] as ImageMetadata[]);
 
         const pathImages = deduplicatedImages.filter(img =>
-          img.imagePath.startsWith(path)
+          img.imagePath.startsWith(path) && (img as any).isDeleted !== true
         );
 
         const newPathToIdMap = new Map<string, string>();
@@ -379,7 +402,7 @@ export const DropZoneInputImageV2 = ({
     try {
       const imageId = pathToIdMap.get(filePath);
       if (imageId) {
-        await enhancedImageStore.archiveImage(imageId);
+        await enhancedImageStore.markDeleted(imageId);
       }
 
       const updatedFiles = files.filter(f => f.path !== filePath);

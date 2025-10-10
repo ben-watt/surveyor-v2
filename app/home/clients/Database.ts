@@ -382,6 +382,7 @@ export interface ImageMetadata {
   caption?: string;
   notes?: string;
   isArchived?: boolean;  // Archive management
+  isDeleted?: boolean;   // Soft-delete flag
   uploadStatus?: 'pending' | 'uploaded' | 'failed';  // Simple status tracking
   uploadProgress?: number;  // Upload progress percentage (0-100)
   localFileData?: ArrayBuffer;  // Temporary storage for offline uploads (using ArrayBuffer instead of File)
@@ -428,6 +429,7 @@ const mapToImageMetadata = (data: any): ImageMetadata => ({
   caption: data.caption,
   notes: data.notes,
   isArchived: data.isArchived,
+  isDeleted: data.isDeleted,
   uploadStatus: data.uploadStatus,
   tenantId: data.tenantId,
 });

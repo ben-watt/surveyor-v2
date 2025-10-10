@@ -13,6 +13,8 @@ jest.mock('@/app/home/clients/enhancedImageMetadataStore', () => ({
     uploadImage: jest.fn(),
     archiveImage: jest.fn(),
     unarchiveImage: jest.fn(),
+    markDeleted: jest.fn(),
+    replaceDeletedImage: jest.fn(),
     useGet: jest.fn(),
     findDuplicate: jest.fn(),
   },

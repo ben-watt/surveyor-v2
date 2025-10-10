@@ -70,6 +70,7 @@ class EnhancedImageMetadataStore {
         height: dimensions.height,
         contentHash, // Store content hash for duplicate detection
         isArchived: false,
+        isDeleted: false,
         uploadStatus: 'pending',
         caption: options.caption,
         notes: options.notes,
@@ -93,6 +94,73 @@ class EnhancedImageMetadataStore {
       return Ok(id);
     } catch (error) {
       console.error('Failed to upload image:', error);
+      return Err(error as Error);
+    }
+  }
+
+  /**
+   * Replace an existing deleted image record with a newly uploaded file (keeps same ID)
+   */
+  async replaceDeletedImage(
+    id: string,
+    file: File,
+    path: string,
+    options: UploadImageOptions = {}
+  ): Promise<Result<string, Error>> {
+    try {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        return Err(new Error('No tenant ID available for upload'));
+      }
+
+      const existing = await db.table<ImageMetadata>('imageMetadata').get(id);
+      if (!existing) {
+        return Err(new Error('Image not found'));
+      }
+      if (existing.isDeleted !== true) {
+        return Err(new Error('Image is not deleted; use upload or update'));
+      }
+
+      // Prepare new derived data
+      const contentHash = await generateImageHash(file);
+      const [thumbnailDataUrl, dimensions, fileBuffer] = await Promise.all([
+        generateThumbnail(file),
+        getImageDimensions(file),
+        fileToArrayBuffer(file)
+      ]);
+
+      // Update existing record to revive and attach new file data
+      await db.table<ImageMetadata>('imageMetadata').update(id, {
+        imagePath: path,
+        thumbnailDataUrl,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        width: dimensions.width,
+        height: dimensions.height,
+        contentHash,
+        isArchived: false,
+        isDeleted: false,
+        uploadStatus: 'pending',
+        // Optional caption/notes overrides
+        caption: options.caption ?? existing.caption,
+        notes: options.notes ?? existing.notes,
+        // Local-only fields for offline support
+        localFileData: fileBuffer,
+        localFileType: file.type,
+        localFileName: file.name,
+        uploadProgress: 0,
+        tenantId,
+        syncStatus: SyncStatus.Queued,
+        updatedAt: new Date().toISOString(),
+      } as any);
+
+      // Start background upload
+      this.startBackgroundUpload(id, file, path, options.onProgress);
+
+      return Ok(id);
+    } catch (error) {
+      console.error('Failed to replace deleted image:', error);
       return Err(error as Error);
     }
   }
@@ -234,6 +302,10 @@ class EnhancedImageMetadataStore {
    */
   async unarchiveImage(id: string): Promise<Result<void, Error>> {
     try {
+      const item = await db.table<ImageMetadata>('imageMetadata').get(id);
+      if (item?.isDeleted) {
+        return Err(new Error('Cannot unarchive a deleted image'));
+      }
       await db.table<ImageMetadata>('imageMetadata').update(id, {
         isArchived: false,
         updatedAt: new Date().toISOString(),
@@ -241,6 +313,25 @@ class EnhancedImageMetadataStore {
       });
 
       // Trigger sync
+      imageMetadataStore.sync();
+
+      return Ok(undefined);
+    } catch (error) {
+      return Err(error as Error);
+    }
+  }
+
+  /**
+   * Mark an image as deleted (soft-delete)
+   */
+  async markDeleted(id: string): Promise<Result<void, Error>> {
+    try {
+      await db.table<ImageMetadata>('imageMetadata').update(id, {
+        isDeleted: true,
+        updatedAt: new Date().toISOString(),
+        syncStatus: SyncStatus.Queued,
+      });
+
       imageMetadataStore.sync();
 
       return Ok(undefined);
@@ -274,7 +365,7 @@ class EnhancedImageMetadataStore {
       const images = await db.table<ImageMetadata>('imageMetadata')
         .where('tenantId')
         .equals(tenantId)
-        .and(item => !item.isArchived && item.syncStatus !== SyncStatus.PendingDelete)
+        .and(item => !item.isArchived && item.isDeleted !== true && item.syncStatus !== SyncStatus.PendingDelete)
         .toArray();
 
       return Ok(images);
@@ -296,7 +387,7 @@ class EnhancedImageMetadataStore {
       const images = await db.table<ImageMetadata>('imageMetadata')
         .where('tenantId')
         .equals(tenantId)
-        .and(item => item.isArchived === true && item.syncStatus !== SyncStatus.PendingDelete)
+        .and(item => item.isArchived === true && item.isDeleted !== true && item.syncStatus !== SyncStatus.PendingDelete)
         .toArray();
 
       return Ok(images);
@@ -439,6 +530,7 @@ export const enhancedImageStore = {
   cancelUpload: enhancedImageMetadataStore.cancelUpload.bind(enhancedImageMetadataStore),
   archiveImage: enhancedImageMetadataStore.archiveImage.bind(enhancedImageMetadataStore),
   unarchiveImage: enhancedImageMetadataStore.unarchiveImage.bind(enhancedImageMetadataStore),
+  markDeleted: enhancedImageMetadataStore.markDeleted.bind(enhancedImageMetadataStore),
   getFullImageUrl: enhancedImageMetadataStore.getFullImageUrl.bind(enhancedImageMetadataStore),
   getImageByPath: enhancedImageMetadataStore.getImageByPath.bind(enhancedImageMetadataStore),
   getActiveImages: enhancedImageMetadataStore.getActiveImages.bind(enhancedImageMetadataStore),
@@ -447,4 +539,5 @@ export const enhancedImageStore = {
   syncPendingUploads: enhancedImageMetadataStore.syncPendingUploads.bind(enhancedImageMetadataStore),
   cleanupOldThumbnails: enhancedImageMetadataStore.cleanupOldThumbnails.bind(enhancedImageMetadataStore),
   findDuplicate: enhancedImageMetadataStore.findDuplicate.bind(enhancedImageMetadataStore),
+  replaceDeletedImage: enhancedImageMetadataStore.replaceDeletedImage.bind(enhancedImageMetadataStore),
 };

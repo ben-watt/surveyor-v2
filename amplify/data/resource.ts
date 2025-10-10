@@ -161,6 +161,7 @@ const schema = a.schema({
       caption: a.string(),
       notes: a.string(),
       isArchived: a.boolean().default(false),  // Archive management
+      isDeleted: a.boolean().default(false),   // Soft-delete flag
       uploadStatus: a.enum(['pending', 'uploaded', 'failed']),
       tenantId: a.string().required(),
     })

@@ -18,7 +18,7 @@ The image upload system provides offline-first, progressive image handling with 
    - Orchestrates background uploads via Amplify Storage `uploadData` (progress, cancel, retries)
    - Generates and stores thumbnails + dimensions
    - Persists local file data for offline-first resume
-   - Exposes helpers: `uploadImage`, `archiveImage`, `unarchiveImage`, `getFullImageUrl`, `retryFailedUploads`, `syncPendingUploads`, `cleanupOldThumbnails`
+   - Exposes helpers: `uploadImage`, `archiveImage`, `unarchiveImage`, `markDeleted`, `getFullImageUrl`, `retryFailedUploads`, `syncPendingUploads`, `cleanupOldThumbnails`
 
 3. **Image Metadata Store (base)** (`app/home/clients/Database.ts:~360+`)
    - Base Dexie hooks (`CreateDexieHooks`) for CRUD + sync to DynamoDB `ImageMetadata`
@@ -66,6 +66,7 @@ ImageMetadata: a.model({
   caption: a.string(),
   notes: a.string(),
   isArchived: a.boolean().default(false),
+  isDeleted: a.boolean().default(false),     // Soft-delete flag
   uploadStatus: a.enum(['pending', 'uploaded', 'failed']).default('pending'),
   tenantId: a.string().required(),
 })
@@ -89,6 +90,7 @@ export interface ImageMetadata {
   caption?: string;
   notes?: string;
   isArchived?: boolean;
+  isDeleted?: boolean;         // Soft-delete flag
   uploadStatus?: 'pending' | 'uploaded' | 'failed';
   uploadProgress?: number;   // 0-100, local-only
   localFileData?: ArrayBuffer;  // Local-only
@@ -165,6 +167,25 @@ await enhancedImageStore.cleanupOldThumbnails(100);
 ### Phase 5: Docs and tests
 1. Align docs (this file) with final field names and flows
 2. Add unit tests for `uploadImage()` progress/retry and duplicate detection
+
+## Deletion vs Archive
+
+- `archiveImage(id)`: hides an image from active views, can be restored with `unarchiveImage(id)`.
+- `markDeleted(id)`: marks an image as deleted (soft-delete). Deleted images:
+  - Do not appear in active or archived lists
+  - Cannot be restored via duplicate detection or `unarchiveImage`
+  - Are synced like other metadata fields
+
+Duplicate handling: when a newly added file matches an existing deleted image (by `contentHash` within the path), the system does not attempt to restore that image.
+
+### Re-uploading a Deleted Image
+
+- If a user re-uploads an image whose `contentHash` matches a previously deleted record in the same path scope, the system replaces the deleted record in-place using `replaceDeletedImage(id, file, path)`:
+  - Keeps the same `id` (preserves references)
+  - Clears `isDeleted` and `isArchived`
+  - Updates file fields (`imagePath`, `fileName`, `mimeType`, `width/height`, `thumbnailDataUrl`, `contentHash`)
+  - Sets `uploadStatus: 'pending'` and resumes background upload
+  - Triggers sync to DynamoDB
 
 ## Performance Benefits
 

@@ -32,12 +32,13 @@ export function ProgressiveImage({
   const [fullImageLoaded, setFullImageLoaded] = useState(false);
   const [hydrated, image] = enhancedImageStore.useGet(imageId);
 
-  // Load thumbnail immediately when available
+  // Load thumbnail immediately when available. Also react to record updates.
   useEffect(() => {
     if (image?.thumbnailDataUrl) {
-      setImageUrl(image.thumbnailDataUrl);
+      const cacheBusted = `${image.thumbnailDataUrl}#v=${encodeURIComponent(image.updatedAt || '')}`;
+      setImageUrl(cacheBusted);
     }
-  }, [image?.thumbnailDataUrl]);
+  }, [image?.thumbnailDataUrl, image?.updatedAt, imageId]);
 
   // Load full image from S3
   const loadFullImage = useCallback(async () => {
