@@ -8,6 +8,22 @@ import { generateImageHash } from "@/app/home/utils/imageHashUtils";
 import toast from "react-hot-toast";
 import { Thumbnail } from "./Thumbnail";
 import { joinPath, sanitizeFileName } from "@/app/home/utils/path";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // Path helpers are provided by utils/path
 
@@ -20,6 +36,10 @@ export interface DropZoneInputImageV2Props {
     archive?: boolean;
     metadata?: boolean;
   };
+  value?: DropZoneInputFile[];
+  onReorder?: (filePaths: DropZoneInputFile[]) => void;
+  enableReorder?: boolean;
+  dragHandleAriaLabel?: string;
 }
 
 export type DropZoneInputFile = {
@@ -36,7 +56,11 @@ export const DropZoneInputImageV2 = ({
   maxFiles,
   minFiles,
   onChange,
-  features = { archive: false, metadata: false }
+  features = { archive: false, metadata: false },
+  value,
+  onReorder,
+  enableReorder = true,
+  dragHandleAriaLabel = "Drag to reorder",
 }: DropZoneInputImageV2Props) => {
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,11 +110,15 @@ export const DropZoneInputImageV2 = ({
       const nextFiles = Array.from(filesByPath.values());
       setPathToIdMap(newPathToId);
       setFiles(nextFiles);
-      onChange?.(nextFiles.filter(f => !f.isArchived));
+      // If the component is uncontrolled (no value provided) or value is empty, seed parent
+      const nextActive = nextFiles.filter(f => !f.isArchived);
+      if (!value || value.length === 0) {
+        onChange?.(nextActive);
+      }
     } catch (error) {
       console.error("Error loading images:", error);
     }
-  }, [path, onChange]);
+  }, [path, onChange, value]);
 
   // Load existing images for this path
   useEffect(() => {
@@ -197,6 +225,10 @@ export const DropZoneInputImageV2 = ({
       }
       await refreshFiles();
       toast.success("Image deleted");
+      // Update parent value when controlled
+      const next = activeFilesOrdered.filter(f => f.path !== filePath);
+      onChange?.(next);
+      onReorder?.(next);
     } catch (error) {
       console.error("Error deleting image:", error);
       toast.error("Failed to delete image");
@@ -211,6 +243,10 @@ export const DropZoneInputImageV2 = ({
       }
       await refreshFiles();
       toast.success("Image archived");
+      // Update parent value when controlled (remove archived from active list)
+      const next = activeFilesOrdered.filter(f => f.path !== filePath);
+      onChange?.(next);
+      onReorder?.(next);
     } catch (error) {
       console.error("Error archiving image:", error);
       toast.error("Failed to archive image");
@@ -224,6 +260,74 @@ export const DropZoneInputImageV2 = ({
     ));
   };
 
+  // Compute active files ordering (controlled vs internal)
+  const activeFilesInternal = useMemo(() => files.filter(f => !f.isArchived), [files]);
+  const activeFilesOrdered = useMemo(() => {
+    if (value && Array.isArray(value)) {
+      const byPath = new Map(activeFilesInternal.map(f => [f.path, f] as const));
+      const ordered = value
+        .map(v => byPath.get(v.path))
+        .filter(Boolean) as DropZoneInputFile[];
+      const leftovers = activeFilesInternal.filter(f => !value.some(v => v.path === f.path));
+      return [...ordered, ...leftovers];
+    }
+    return activeFilesInternal;
+  }, [value, activeFilesInternal]);
+
+  // DnD setup
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const source = activeFilesOrdered;
+    const oldIndex = source.findIndex(f => f.path === active.id);
+    const newIndex = source.findIndex(f => f.path === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(source, oldIndex, newIndex);
+    // Keep internal order in sync for uncontrolled usage
+    setFiles(prev => {
+      const act = prev.filter(f => !f.isArchived);
+      const arc = prev.filter(f => f.isArchived);
+      const byPath = new Map(prev.map(f => [f.path, f] as const));
+      const reorderedActive = next.map(f => byPath.get(f.path) || f);
+      return [...reorderedActive, ...arc];
+    });
+    onReorder?.(next);
+    onChange?.(next);
+  };
+
+  const SortableThumb: React.FC<{ file: DropZoneInputFile; imageId: string }> = ({ file, imageId }) => {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: file.path });
+    const style: React.CSSProperties = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      touchAction: 'none',
+    };
+    return (
+      <li ref={setNodeRef} style={style} aria-roledescription="sortable-item">
+        <div
+          aria-label={dragHandleAriaLabel}
+          style={{ cursor: enableReorder ? 'grab' as const : 'default' }}
+          {...(enableReorder ? { ...attributes, ...listeners } : {})}
+        >
+          <Thumbnail
+            key={imageId}
+            imageId={imageId}
+            filePath={file.path}
+            onDelete={handleDelete}
+            onArchive={handleArchive}
+            features={features}
+            onMetadataChange={handleMetadataChange}
+          />
+        </div>
+      </li>
+    );
+  };
+
 
   if (isLoading) {
     return (
@@ -233,7 +337,7 @@ export const DropZoneInputImageV2 = ({
     );
   }
 
-  const activeFiles = files.filter((f) => !f.isArchived);
+  const activeFiles = activeFilesOrdered;
   const archivedFiles = files.filter((f) => f.isArchived);
 
   return (
@@ -256,30 +360,49 @@ export const DropZoneInputImageV2 = ({
         </div>
 
         <aside>
-          <ul
-            className={`${
-              maxFiles && maxFiles > 1
-                ? "grid grid-cols-2 gap-2"
-                : "flex flex-wrap gap-2 justify-center"
-            }`}
-          >
-            {activeFiles.map((file) => {
-              const imageId = pathToIdMap.get(file.path);
-              if (!imageId) return null;
-
-              return (
-                <Thumbnail
-                  key={imageId}
-                  imageId={imageId}
-                  filePath={file.path}
-                  onDelete={handleDelete}
-                  onArchive={handleArchive}
-                  features={features}
-                  onMetadataChange={handleMetadataChange}
-                />
-              );
-            })}
-          </ul>
+          {enableReorder ? (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={activeFiles.map(f => f.path)} strategy={rectSortingStrategy}>
+                <ul
+                  className={`${
+                    maxFiles && maxFiles > 1
+                      ? "grid grid-cols-2 gap-2"
+                      : "flex flex-wrap gap-2 justify-center"
+                  }`}
+                >
+                  {activeFiles.map((file) => {
+                    const imageId = pathToIdMap.get(file.path);
+                    if (!imageId) return null;
+                    return <SortableThumb key={file.path} file={file} imageId={imageId} />;
+                  })}
+                </ul>
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <ul
+              className={`${
+                maxFiles && maxFiles > 1
+                  ? "grid grid-cols-2 gap-2"
+                  : "flex flex-wrap gap-2 justify-center"
+              }`}
+            >
+              {activeFiles.map((file) => {
+                const imageId = pathToIdMap.get(file.path);
+                if (!imageId) return null;
+                return (
+                  <Thumbnail
+                    key={imageId}
+                    imageId={imageId}
+                    filePath={file.path}
+                    onDelete={handleDelete}
+                    onArchive={handleArchive}
+                    features={features}
+                    onMetadataChange={handleMetadataChange}
+                  />
+                );
+              })}
+            </ul>
+          )}
         </aside>
         {features?.archive && archivedFiles.length > 0 && (
           <div className="mt-4 flex items-center justify-start gap-2 text-gray-500">
