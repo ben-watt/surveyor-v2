@@ -1,14 +1,12 @@
-import { X, Archive, Pencil, Camera } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import { Archive } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
 import { ImageMetadata } from "@/app/home/clients/Database";
-import { SimpleImageMetadataDialog } from "./SimpleImageMetadataDialog";
-import { useDynamicDrawer } from "@/app/home/components/Drawer";
 import { resizeImage } from "@/app/home/utils/imageResizer";
 import { generateImageHash } from "@/app/home/utils/imageHashUtils";
 import toast from "react-hot-toast";
-import { ProgressiveImage } from "../ProgressiveImage";
+import { Thumbnail } from "./Thumbnail";
 import { joinPath, sanitizeFileName } from "@/app/home/utils/path";
 
 // Path helpers are provided by utils/path
@@ -31,138 +29,7 @@ export type DropZoneInputFile = {
   preview?: string;
 };
 
-interface ThumbnailProps {
-  imageId: string;
-  filePath: string;
-  onDelete: (filePath: string) => void;
-  onArchive: (filePath: string) => void;
-  features?: DropZoneInputImageV2Props['features'];
-  onMetadataChange: (filePath: string) => void;
-}
-
-const Thumbnail = ({
-  imageId,
-  filePath,
-  onDelete,
-  onArchive,
-  features,
-  onMetadataChange
-}: ThumbnailProps) => {
-  const { openDrawer, closeDrawer } = useDynamicDrawer();
-  const [hydrated, image] = enhancedImageStore.useGet(imageId);
-  const [hasMetadata, setHasMetadata] = useState(false);
-
-  useEffect(() => {
-    if (image?.caption || image?.notes) {
-      setHasMetadata(true);
-    }
-  }, [image]);
-
-  const toFileSize = useCallback((size: number): [number, string] => {
-    if (size < 1024) {
-      return [size, "B"];
-    } else if (size < 1024 * 1024) {
-      return [Math.round(size / 1024), "KB"];
-    } else if (size < 1024 * 1024 * 1024) {
-      return [Math.round(size / 1024 / 1024), "MB"];
-    } else {
-      return [Math.round(size / 1024 / 1024 / 1024), "GB"];
-    }
-  }, []);
-
-  const handleEdit = () => {
-    if (!image) return;
-
-    openDrawer({
-      id: 'image-metadata',
-      title: 'Edit Image Metadata',
-      content: <SimpleImageMetadataDialog
-        initialCaption={image.caption}
-        initialNotes={image.notes}
-        onSave={async (caption: string, notes: string) => {
-          await enhancedImageStore.update(imageId, (draft) => {
-            draft.caption = caption;
-            draft.notes = notes;
-          });
-          setHasMetadata(true);
-          onMetadataChange(filePath);
-          closeDrawer();
-        }}
-        onClose={closeDrawer}
-      />
-    });
-  };
-
-  if (!hydrated || !image) {
-    return (
-      <div className="animate-pulse bg-gray-200 rounded aspect-[3/2]" />
-    );
-  }
-
-  return (
-    <div className="relative rounded-md overflow-hidden" key={image.fileName}>
-      <div>
-        <ProgressiveImage
-          imageId={imageId}
-          className="aspect-[3/2] object-cover"
-          alt={image.fileName}
-        />
-      </div>
-      <aside className="absolute top-0 left-0 right-0 bottom-0 from-black/70 to-black/0 bg-gradient-to-b"></aside>
-      <aside className="absolute top-0 left-9 right-9 text-white p-2 text-xs">
-        <p className="truncate">{image.fileName}</p>
-        <p className="text-background/50 text-[0.6rem]">
-          {image.fileSize ? (() => {
-            const [size, unit] = toFileSize(image.fileSize);
-            return `${size} ${unit}`;
-          })() : 'Unknown size'}
-        </p>
-      </aside>
-      <aside className="absolute top-0 left-0">
-        <button
-          className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onDelete(filePath);
-          }}
-        >
-          <X />
-        </button>
-      </aside>
-      {features?.metadata && (
-        <aside className="absolute top-0 right-0">
-          <button
-            className={`p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
-              hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
-            }`}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              handleEdit();
-            }}
-          >
-            <Pencil size={16} />
-          </button>
-        </aside>
-      )}
-      {features?.archive && (
-        <aside className="absolute bottom-0 left-0">
-          <button
-            className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onArchive(filePath);
-            }}
-          >
-            <Archive size={16} />
-          </button>
-        </aside>
-      )}
-    </div>
-  );
-};
+ 
 
 export const DropZoneInputImageV2 = ({
   path,
@@ -174,105 +41,66 @@ export const DropZoneInputImageV2 = ({
   const [files, setFiles] = useState<DropZoneInputFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const activeCount = useMemo(() => files.filter(f => !f.isArchived).length, [files]);
 
 
   // Map of imagePath -> imageId for tracking
   const [pathToIdMap, setPathToIdMap] = useState<Map<string, string>>(new Map());
 
-  // Load existing images for this path
-  useEffect(() => {
-    const loadExistingImages = async () => {
-      try {
-        // Load both active and archived images
-        const [activeResult, archivedResult] = await Promise.all([
-          enhancedImageStore.getActiveImages(),
-          enhancedImageStore.getArchivedImages()
-        ]);
-
-        let allImages: ImageMetadata[] = [];
-        if (activeResult.ok) {
-          allImages = [...allImages, ...activeResult.val];
-        }
-        if (archivedResult.ok) {
-          allImages = [...allImages, ...archivedResult.val];
-        }
-
-        // Deduplicate by ID to avoid duplicate keys
-        const deduplicatedImages = allImages.reduce((unique, img) => {
-          if (!unique.find(existing => existing.id === img.id)) {
-            unique.push(img);
-          }
-          return unique;
-        }, [] as ImageMetadata[]);
-
-        // Filter images for this specific path
-        const pathImages = deduplicatedImages.filter(img =>
-          img.imagePath.startsWith(path) && (img as any).isDeleted !== true
-        );
-
-        // Create path->id mapping and deduplicate files by path
-        const newPathToIdMap = new Map<string, string>();
-        const filesByPath = new Map<string, DropZoneInputFile>();
-
-        pathImages.forEach(img => {
-          // Only keep the first occurrence of each path to avoid duplicates
-          if (!filesByPath.has(img.imagePath)) {
-            newPathToIdMap.set(img.imagePath, img.id);
-            filesByPath.set(img.imagePath, {
-              path: img.imagePath,
-              isArchived: img.isArchived || false,
-              hasMetadata: !!(img.caption || img.notes)
-            });
-          }
-        });
-
-        const existingFiles: DropZoneInputFile[] = Array.from(filesByPath.values());
-
-        setPathToIdMap(newPathToIdMap);
-        setFiles(existingFiles);
-        onChange?.(existingFiles.filter(f => !f.isArchived));
-      } catch (error) {
-        console.error("Error loading existing images:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadExistingImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path]); // Intentionally exclude onChange to prevent loops
-
-  const handleUpload = async (file: File, fileName: string) => {
-    const safeName = sanitizeFileName(fileName);
-    const finalPath = joinPath(path, safeName);
-
-    setIsUploading(true);
+  // Unified loader to populate files + mapping for the given path
+  const refreshFiles = useCallback(async (): Promise<void> => {
     try {
-      const uploadResult = await enhancedImageStore.uploadImage(
-        file,
-        finalPath,
-        {
-          onProgress: (progress) => {
-            console.debug(`Upload progress for ${fileName}: ${progress}%`);
-          }
-        }
+      const [activeResult, archivedResult] = await Promise.all([
+        enhancedImageStore.getActiveImages(),
+        enhancedImageStore.getArchivedImages()
+      ]);
+
+      let allImages: ImageMetadata[] = [];
+      if (activeResult.ok) allImages = allImages.concat(activeResult.val);
+      if (archivedResult.ok) allImages = allImages.concat(archivedResult.val);
+
+      // Deduplicate by id
+      const byId = new Map<string, ImageMetadata>();
+      for (const img of allImages) {
+        if (!byId.has(img.id)) byId.set(img.id, img);
+      }
+
+      // Filter to current path and exclude deleted
+      const pathImages = Array.from(byId.values()).filter(img =>
+        img.imagePath.startsWith(path) && (img as any).isDeleted !== true
       );
 
-      if (uploadResult.ok) {
-        // Don't update state immediately - let the reload logic handle UI updates
-        // This prevents duplicate keys from race conditions
-        return uploadResult.val;
-      } else {
-        throw uploadResult.val;
+      // Build path->id map and one DropZoneInputFile per path
+      const newPathToId = new Map<string, string>();
+      const filesByPath = new Map<string, DropZoneInputFile>();
+      for (const img of pathImages) {
+        if (!filesByPath.has(img.imagePath)) {
+          newPathToId.set(img.imagePath, img.id);
+          filesByPath.set(img.imagePath, {
+            path: img.imagePath,
+            isArchived: !!img.isArchived,
+            hasMetadata: !!(img.caption || img.notes),
+          });
+        }
       }
+
+      const nextFiles = Array.from(filesByPath.values());
+      setPathToIdMap(newPathToId);
+      setFiles(nextFiles);
+      onChange?.(nextFiles.filter(f => !f.isArchived));
     } catch (error) {
-      console.error("Upload failed:", error);
-      toast.error(`Failed to upload ${fileName}`);
-      return null;
-    } finally {
-      setIsUploading(false);
+      console.error("Error loading images:", error);
     }
-  };
+  }, [path, onChange]);
+
+  // Load existing images for this path
+  useEffect(() => {
+    (async () => {
+      await refreshFiles();
+      setIsLoading(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path]); // Intentionally exclude onChange to prevent loops
 
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles,
@@ -283,8 +111,14 @@ export const DropZoneInputImageV2 = ({
       console.log("[DropZoneInputImageV2] Processing files");
 
       
+      const remaining = typeof maxFiles === 'number' ? Math.max(0, maxFiles - activeCount) : acceptedFiles.length;
+      const queue = acceptedFiles.slice(0, remaining);
+      const skipped = acceptedFiles.length - queue.length;
+      if (skipped > 0) {
+        toast(`Skipped ${skipped} file(s): max ${maxFiles} images allowed.`);
+      }
 
-      for (const originalFile of acceptedFiles) {
+      for (const originalFile of queue) {
         try {
           // Resize the image first
           const resizedFile = await resizeImage(originalFile);
@@ -352,49 +186,7 @@ export const DropZoneInputImageV2 = ({
       }
 
       // Reload files after processing to ensure UI is updated
-      try {
-        const [activeResult, archivedResult] = await Promise.all([
-          enhancedImageStore.getActiveImages(),
-          enhancedImageStore.getArchivedImages()
-        ]);
-
-        let allImages: ImageMetadata[] = [];
-        if (activeResult.ok) {
-          allImages = [...allImages, ...activeResult.val];
-        }
-        if (archivedResult.ok) {
-          allImages = [...allImages, ...archivedResult.val];
-        }
-
-        // Deduplicate by ID to avoid duplicate keys
-        const deduplicatedImages = allImages.reduce((unique, img) => {
-          if (!unique.find(existing => existing.id === img.id)) {
-            unique.push(img);
-          }
-          return unique;
-        }, [] as ImageMetadata[]);
-
-        const pathImages = deduplicatedImages.filter(img =>
-          img.imagePath.startsWith(path) && (img as any).isDeleted !== true
-        );
-
-        const newPathToIdMap = new Map<string, string>();
-        const updatedFiles: DropZoneInputFile[] = pathImages.map(img => {
-          newPathToIdMap.set(img.imagePath, img.id);
-
-          return {
-            path: img.imagePath,
-            isArchived: img.isArchived || false,
-            hasMetadata: !!(img.caption || img.notes)
-          };
-        });
-
-        setPathToIdMap(newPathToIdMap);
-        setFiles(updatedFiles);
-        onChange?.(updatedFiles.filter(f => !f.isArchived));
-      } catch (error) {
-        console.error("Error reloading images after upload:", error);
-      }
+      await refreshFiles();
     },
   });
 
@@ -404,10 +196,7 @@ export const DropZoneInputImageV2 = ({
       if (imageId) {
         await enhancedImageStore.markDeleted(imageId);
       }
-
-      const updatedFiles = files.filter(f => f.path !== filePath);
-      setFiles(updatedFiles);
-      onChange?.(updatedFiles.filter(f => !f.isArchived));
+      await refreshFiles();
       toast.success("Image deleted");
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -421,10 +210,7 @@ export const DropZoneInputImageV2 = ({
       if (imageId) {
         await enhancedImageStore.archiveImage(imageId);
       }
-
-      const updatedFiles = files.filter(f => f.path !== filePath);
-      setFiles(updatedFiles);
-      onChange?.(updatedFiles);
+      await refreshFiles();
       toast.success("Image archived");
     } catch (error) {
       console.error("Error archiving image:", error);
