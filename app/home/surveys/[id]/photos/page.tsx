@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { surveyStore, elementStore, sectionStore } from "@/app/home/clients/Database";
 import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
-import { ArrowLeft, Archive, ImageOff } from "lucide-react";
+import { ArrowLeft, Archive, ImageOff, Loader2, Download } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ImageViewerModal } from "@/app/home/components/ImageViewerModal";
@@ -27,6 +27,7 @@ function PhotoGallery() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedSection, setSelectedSection] = useState<PhotoSection | null>(null);
   const [isLoadingPhotos, setIsLoadingPhotos] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const router = useRouter();
 
   // Ensure survey match by path segment, not substring
@@ -240,11 +241,12 @@ function PhotoGallery() {
             <Skeleton className="h-6 w-40 mb-2" />
             <Skeleton className="h-4 w-24" />
           </div>
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-6 w-36" />
-            <Skeleton className="h-8 w-24" />
-          </div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-8 w-24" />
         </div>
+      </div>
 
         <div className="space-y-6">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -261,6 +263,61 @@ function PhotoGallery() {
       </div>
     );
   }
+
+  const handleExportZip = async () => {
+    try {
+      setIsExporting(true);
+      // Build items array with server-friendly fields
+      const rawItems = photoSections.flatMap(section =>
+        section.photos.map(p => ({
+          imagePath: p.imagePath,
+          fileName: p.fileName,
+          isArchived: !!p.isArchived,
+          destFolder: section.name,
+          // Provide dataUrl fallback (thumbnail) only if we cannot obtain full URL
+          dataUrl: isValidImageSrc(p.url) && p.url.startsWith('data:') ? p.url : undefined,
+        }))
+      );
+
+      // Resolve full URLs on client to ensure full-resolution export
+      const items = await Promise.all(
+        rawItems.map(async (it) => {
+          try {
+            const urlRes = await enhancedImageStore.getFullImageUrl(it.imagePath);
+            if (urlRes.ok) {
+              return { ...it, fullUrl: urlRes.val };
+            }
+          } catch (_) {}
+          return it;
+        })
+      );
+
+      const res = await fetch(`/api/surveys/${encodeURIComponent(id)}/photos/export?includeArchived=${showArchived ? 'true' : 'false'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
+
+      if (!res.ok) {
+        console.error('[PhotoGallery] Export failed:', await res.text());
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `survey-${id}-photos.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[PhotoGallery] Export error:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -288,6 +345,23 @@ function PhotoGallery() {
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">Show Archived</span>
           </label>
+          <button
+            onClick={handleExportZip}
+            disabled={isExporting || photoSections.length === 0}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${isExporting ? 'bg-gray-200 dark:bg-gray-700 text-gray-500' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'}`}
+          >
+            {isExporting ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                <span>Exporting…</span>
+              </>
+            ) : (
+              <>
+                <Download size={18} />
+                <span>Export ZIP</span>
+              </>
+            )}
+          </button>
           <button
             onClick={() => router.back()}
             className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors"

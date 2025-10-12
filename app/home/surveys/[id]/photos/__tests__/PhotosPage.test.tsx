@@ -25,6 +25,7 @@ jest.mock('@/app/home/clients/enhancedImageMetadataStore', () => ({
     getArchivedImages: jest.fn().mockResolvedValue({ ok: true, val: [
       { id: 'img4', imagePath: 'report-images/survey-1/front-elevation/front.jpg', thumbnailDataUrl: 'data:image/jpeg;base64,AAA', isArchived: true, fileName: 'front.jpg' },
     ]}),
+    getFullImageUrl: jest.fn().mockResolvedValue({ ok: true, val: 'https://example.com/full.jpg' }),
   },
 }));
 
@@ -68,6 +69,7 @@ jest.mock('@/app/home/clients/Database', () => ({
 
 // Import after mocks
 import PhotosPage from '../page';
+import userEvent from '@testing-library/user-event';
 
 describe('PhotosPage grouping and naming', () => {
   it('groups element images by SectionName / ElementName', async () => {
@@ -92,4 +94,32 @@ describe('PhotosPage grouping and naming', () => {
   });
 
   // Archived toggle behavior is exercised indirectly: archived-only groups are hidden by default
+});
+
+describe('PhotosPage export', () => {
+  beforeEach(() => {
+    // @ts-ignore
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, blob: async () => new Blob(['zip']) });
+  });
+
+  it('renders Export ZIP and posts items to API', async () => {
+    render(<PhotosPage />);
+
+    const btn = await screen.findByRole('button', { name: /export zip/i });
+    expect(btn).toBeInTheDocument();
+
+    await userEvent.click(btn);
+
+    // @ts-ignore
+    const call = (global.fetch as jest.Mock).mock.calls[0];
+    expect(call[0]).toContain('/api/surveys/survey-1/photos/export?includeArchived=false');
+    const opts = call[1];
+    expect(opts.method).toBe('POST');
+    const body = JSON.parse(opts.body);
+    expect(Array.isArray(body.items)).toBe(true);
+    // 3 active + 1 archived items total supplied (server filters archived by query)
+    expect(body.items.length).toBeGreaterThanOrEqual(3);
+    // Ensure we include a fullUrl for full-resolution export
+    expect(body.items[0].fullUrl).toBe('https://example.com/full.jpg');
+  });
 });
