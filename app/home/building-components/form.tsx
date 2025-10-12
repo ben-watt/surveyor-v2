@@ -1,10 +1,8 @@
 "use client";
 
 import Input from "@/app/home/components/Input/InputText";
-import {
-  FormProvider,
-  useForm,
-} from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { componentStore, elementStore } from "@/app/home/clients/Database";
@@ -39,7 +37,8 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   const idRef = useRef(id ?? uuidv4());
   const methods = useForm<ComponentFormData>({ 
     defaultValues: { id: idRef.current, name: "", elementId: "", materials: [], ...defaultValues },
-    mode: 'onChange'
+    mode: 'onChange',
+    resolver: zodResolver(componentSchema)
   });
   const { register, handleSubmit, control, watch, getValues, trigger, formState: { errors } } = methods;
   const drawer = useDynamicDrawer();

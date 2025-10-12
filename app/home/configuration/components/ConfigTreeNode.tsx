@@ -192,6 +192,9 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              {node.invalid && (
+                <Badge variant="secondary" className="text-xs">Missing name</Badge>
+              )}
               <Badge variant="secondary" className="text-xs">
                 {elementCount} elements
               </Badge>
@@ -206,6 +209,9 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              {node.invalid && (
+                <Badge variant="secondary" className="text-xs">Missing name</Badge>
+              )}
               {componentCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {componentCount} components
@@ -226,6 +232,9 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              {node.invalid && (
+                <Badge variant="secondary" className="text-xs">Missing name</Badge>
+              )}
               {componentConditionCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {componentConditionCount} conditions
@@ -241,6 +250,9 @@ export function ConfigTreeNode({ node, onToggleExpand, level, lastEditedEntity, 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
             <span className="font-medium truncate">{node.name}</span>
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              {node.invalid && (
+                <Badge variant="secondary" className="text-xs">Missing name</Badge>
+              )}
               {condition.phraseLevel2 && (
                 <Badge variant="secondary" className="text-xs">
                   Level 2

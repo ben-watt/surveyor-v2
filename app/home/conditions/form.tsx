@@ -1,10 +1,8 @@
 "use client";
 
 import Input from "@/app/home/components/Input/InputText";
-import {
-  FormProvider,
-  useForm,
-} from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DynamicComboBox } from "@/app/home/components/Input";
@@ -50,7 +48,8 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
       associatedComponentIds: [],
       ...defaultValues
     },
-    mode: 'onChange'
+    mode: 'onChange',
+    resolver: zodResolver(conditionSchema)
   });
   const { register, control, watch, getValues, trigger, formState: { errors } } = methods;
   const [componentsHydrated, components] = componentStore.useList();

@@ -2,29 +2,15 @@
 
 import { FormSection } from "@/app/home/components/FormSection";
 import {
-  ElementSection,
   SurveySection,
 } from "../../building-survey-reports/BuildingSurveyReportSchema";
 import { surveyStore } from "@/app/home/clients/Database";
-import { Camera, CheckCircle2, CircleAlert, ClipboardList, MoreVertical, Search, Shapes } from "lucide-react";
+import { ClipboardList, Search } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { DynamicDrawer, useDynamicDrawer } from "@/app/home/components/Drawer";
 import InspectionForm from "./InspectionForm";
-import ElementForm from "./ElementForm";
-import { toggleElementSection } from "../../building-survey-reports/Survey";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getElementCompleteness } from "@/app/home/surveys/utils/elementCompleteness";
 import { ElementSectionComponent } from "./ElementSectionComponent";
 
 const ConditionPage = () => {
@@ -96,10 +82,12 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
   }
 
   const filteredSections = initValues
+    // Filter out sections with missing/empty names
+    .filter((section) => (section?.name ?? "").trim().length > 0)
     .map((section) => ({
       ...section,
       elementSections: section.elementSections.filter((element) =>
-        element.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (element.name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
       ),
     }))
 
@@ -121,14 +109,14 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
       </div>
       {filteredSections.map((section, sectionIndex) => (
         <FormSection
-          key={section.name}
-          title={section.name}
+          key={section.id}
+          title={section.name ?? "Untitled Section"}
           collapsable
           defaultCollapsed={!(searchTerm.length > 0)}
         >
           {section.elementSections.map((elementSection) => (
             <ElementSectionComponent
-              key={elementSection.name}
+              key={elementSection.id}
               elementSection={elementSection}
               sectionId={section.id}
               surveyId={id}

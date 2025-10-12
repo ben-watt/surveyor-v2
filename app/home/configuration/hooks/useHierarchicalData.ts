@@ -11,6 +11,7 @@ export interface TreeNode {
   isExpanded: boolean;
   parentId?: string;
   order?: number;
+  invalid?: boolean;
 }
 
 interface HierarchicalData {
@@ -56,61 +57,76 @@ function buildHierarchy(
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return sortedSections.map(section => {
+    const sectionInvalid = !section?.name || section.name.trim().length === 0;
+    const sectionName = sectionInvalid ? '(Untitled Section)' : section.name;
+
     const sectionElements = elements
       .filter(element => element.sectionId === section.id)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
     const elementNodes: TreeNode[] = sectionElements.map(element => {
+      const elementInvalid = !element?.name || element.name.trim().length === 0;
+      const elementName = elementInvalid ? '(Untitled Element)' : element.name;
       const elementComponents = components
         .filter(component => component.elementId === element.id)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
       const componentNodes: TreeNode[] = elementComponents.map(component => {
+        const componentInvalid = !component?.name || component.name.trim().length === 0;
+        const componentName = componentInvalid ? '(Untitled Component)' : component.name;
         const componentConditions = phrases
           .filter(phrase => phrase.associatedComponentIds.includes(component.id))
           .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        const conditionNodes: TreeNode[] = componentConditions.map(condition => ({
+        const conditionNodes: TreeNode[] = componentConditions.map(condition => {
+          const conditionInvalid = !condition?.name || condition.name.trim().length === 0;
+          const conditionName = conditionInvalid ? '(Untitled Condition)' : condition.name;
+          return ({
           id: `condition-${condition.id}`,
           type: 'condition' as const,
-          name: condition.name,
+          name: conditionName,
           data: condition,
           children: [],
           isExpanded: false,
           parentId: component.id,
-        }));
+          invalid: conditionInvalid,
+        });
+        });
 
         return {
           id: component.id,
           type: 'component' as const,
-          name: component.name,
+          name: componentName,
           data: component,
           children: conditionNodes,
           isExpanded: false,
           parentId: element.id,
+          invalid: componentInvalid,
         };
       });
 
       return {
         id: element.id,
         type: 'element' as const,
-        name: element.name,
+        name: elementName,
         data: element,
         children: [...componentNodes],
         isExpanded: false,
         parentId: section.id,
         order: element.order ?? undefined,
+        invalid: elementInvalid,
       };
     });
 
     return {
       id: section.id,
       type: 'section' as const,
-      name: section.name,
+      name: sectionName,
       data: section,
       children: elementNodes,
       isExpanded: false,
       order: section.order ?? undefined,
+      invalid: sectionInvalid,
     };
   });
 }
