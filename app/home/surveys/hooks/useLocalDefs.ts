@@ -1,7 +1,16 @@
 import { useMemo } from 'react';
 import { elementStore, surveyStore } from '@/app/home/clients/Database';
-import { BuildingSurveyFormData, LocalComponentDef, LocalConditionDef } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
-import { addOrUpdateLocalComponentDef, addOrUpdateLocalConditionDef, getLocalComponentDefs, getLocalConditionDefs } from '@/app/home/surveys/building-survey-reports/Survey';
+import {
+  BuildingSurveyFormData,
+  LocalComponentDef,
+  LocalConditionDef,
+} from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import {
+  addOrUpdateLocalComponentDef,
+  addOrUpdateLocalConditionDef,
+  getLocalComponentDefs,
+  getLocalConditionDefs,
+} from '@/app/home/surveys/building-survey-reports/Survey';
 import { ID_PREFIX } from '../constants/localIds';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,8 +18,17 @@ type UseLocalDefsResult = {
   sectionId?: string;
   componentDefs: LocalComponentDef[];
   conditionDefs: LocalConditionDef[];
-  addComponentDef: (surveyId: string, elementId: string, name: string) => Promise<LocalComponentDef | null>;
-  addConditionDef: (surveyId: string, elementId: string, name: string, text: string) => Promise<LocalConditionDef | null>;
+  addComponentDef: (
+    surveyId: string,
+    elementId: string,
+    name: string,
+  ) => Promise<LocalComponentDef | null>;
+  addConditionDef: (
+    surveyId: string,
+    elementId: string,
+    name: string,
+    text: string,
+  ) => Promise<LocalConditionDef | null>;
 };
 
 export function useLocalDefs(
@@ -22,7 +40,7 @@ export function useLocalDefs(
   const sectionId = useMemo(() => {
     if (surveySectionId) return surveySectionId;
     if (!elementId) return undefined;
-    const el = elements.find(e => e.id === elementId);
+    const el = elements.find((e) => e.id === elementId);
     return el?.sectionId;
   }, [surveySectionId, elements, elementId]);
 
@@ -37,20 +55,20 @@ export function useLocalDefs(
   }, [survey, sectionId, elementId]);
 
   async function addComponentDef(surveyId: string, elId: string, name: string) {
-    const secId = elements.find(e => e.id === elId)?.sectionId || sectionId;
+    const secId = elements.find((e) => e.id === elId)?.sectionId || sectionId;
     if (!secId) return null;
     const def: LocalComponentDef = { id: `${ID_PREFIX.compDef}${uuidv4()}`, name, elementId: elId };
-    await surveyStore.update(surveyId, draft => {
+    await surveyStore.update(surveyId, (draft) => {
       addOrUpdateLocalComponentDef(draft as any, secId, elId, def);
     });
     return def;
   }
 
   async function addConditionDef(surveyId: string, elId: string, name: string, text: string) {
-    const secId = elements.find(e => e.id === elId)?.sectionId || sectionId;
+    const secId = elements.find((e) => e.id === elId)?.sectionId || sectionId;
     if (!secId) return null;
     const def: LocalConditionDef = { id: `${ID_PREFIX.condDef}${uuidv4()}`, name, text };
-    await surveyStore.update(surveyId, draft => {
+    await surveyStore.update(surveyId, (draft) => {
       addOrUpdateLocalConditionDef(draft as any, secId, elId, def);
     });
     return def;
@@ -58,4 +76,3 @@ export function useLocalDefs(
 
   return { sectionId, componentDefs, conditionDefs, addComponentDef, addConditionDef };
 }
-

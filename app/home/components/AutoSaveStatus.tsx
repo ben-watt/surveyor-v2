@@ -13,11 +13,11 @@ interface AutoSaveStatusProps {
 /**
  * Component to display autosave status with appropriate styling and icons
  */
-export function AutoSaveStatusIndicator({ 
-  status, 
+export function AutoSaveStatusIndicator({
+  status,
   className,
   showIcon = true,
-  showText = true 
+  showText = true,
 }: AutoSaveStatusProps) {
   const getStatusConfig = () => {
     switch (status) {
@@ -25,56 +25,45 @@ export function AutoSaveStatusIndicator({
         return {
           icon: Loader2,
           text: 'Saving...',
-          className: 'text-blue-600'
+          className: 'text-blue-600',
         };
       case 'saved':
         return {
           icon: CheckCircle,
           text: 'All changes saved',
-          className: 'text-green-600'
+          className: 'text-green-600',
         };
       case 'autosaved':
         return {
           icon: Save,
           text: 'Auto-saved',
-          className: 'text-green-600'
+          className: 'text-green-600',
         };
       case 'error':
         return {
           icon: AlertCircle,
           text: 'Save failed',
-          className: 'text-red-600'
+          className: 'text-red-600',
         };
       default:
         return {
           icon: null,
           text: '',
-          className: 'text-gray-500'
+          className: 'text-gray-500',
         };
     }
   };
 
   const config = getStatusConfig();
-  
+
   if (status === 'idle') return null;
 
   return (
-    <div className={cn(
-      'flex items-center gap-2 text-sm',
-      config.className,
-      className
-    )}>
+    <div className={cn('flex items-center gap-2 text-sm', config.className, className)}>
       {showIcon && config.icon && (
-        <config.icon 
-          className={cn(
-            'h-4 w-4',
-            status === 'saving' && 'animate-spin'
-          )} 
-        />
+        <config.icon className={cn('h-4 w-4', status === 'saving' && 'animate-spin')} />
       )}
-      {showText && config.text && (
-        <span>{config.text}</span>
-      )}
+      {showText && config.text && <span>{config.text}</span>}
     </div>
   );
-} 
+}

@@ -104,24 +104,29 @@ describe('DocumentStore', () => {
         metadata: {
           checksum: 'test-checksum',
         },
-        versionHistory: [{
-          version: 1,
-          timestamp: '2024-01-01T00:00:00Z',
-          author: 'test-user',
-          changeType: 'create',
-          metadata: {
-            fileName: 'test.md',
-            fileType: 'markdown',
-            size: 100,
-            lastModified: '2024-01-01T00:00:00Z',
+        versionHistory: [
+          {
             version: 1,
-            checksum: 'test-checksum',
+            timestamp: '2024-01-01T00:00:00Z',
+            author: 'test-user',
+            changeType: 'create',
+            metadata: {
+              fileName: 'test.md',
+              fileType: 'markdown',
+              size: 100,
+              lastModified: '2024-01-01T00:00:00Z',
+              version: 1,
+              checksum: 'test-checksum',
+            },
           },
-        }],
+        ],
       };
-      
+
       // Mock the create method to return the expected structure
-      (client.models.DocumentRecord.create as jest.Mock).mockResolvedValue({ data: mockCreatedDoc, errors: null });
+      (client.models.DocumentRecord.create as jest.Mock).mockResolvedValue({
+        data: mockCreatedDoc,
+        errors: null,
+      });
 
       const result = await documentStore.create(mockDocument);
 
@@ -164,4 +169,4 @@ describe('DocumentStore', () => {
       expect(uploadData).not.toHaveBeenCalled();
     });
   });
-}); 
+});

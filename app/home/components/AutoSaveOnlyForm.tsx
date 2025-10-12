@@ -24,8 +24,8 @@ export function AutoSaveOnlyForm({ initialData, onSave }: AutoSaveOnlyFormProps)
     defaultValues: initialData || {
       title: '',
       description: '',
-      email: ''
-    }
+      email: '',
+    },
   });
 
   const { register, watch, getValues, trigger } = form;
@@ -48,53 +48,51 @@ export function AutoSaveOnlyForm({ initialData, onSave }: AutoSaveOnlyFormProps)
     {
       watchDelay: 500, // 0.5 second delay
       showToast: false,
-      enabled: true
-    }
+      enabled: true,
+    },
   );
 
   return (
     <FormProvider {...form}>
       <div className="space-y-6">
         {/* Form header with autosave status */}
-        <div className="flex justify-between items-center border-b pb-4">
+        <div className="flex items-center justify-between border-b pb-4">
           <h2 className="text-lg font-semibold">Auto-save Form Example</h2>
-          <LastSavedIndicator
-            status={saveStatus}
-            lastSavedAt={lastSavedAt}
-            className="text-sm"
-          />
+          <LastSavedIndicator status={saveStatus} lastSavedAt={lastSavedAt} className="text-sm" />
         </div>
 
         {/* Form fields */}
         <div className="space-y-4">
           <Input
             labelTitle="Title"
-            register={() => register("title", { required: "Title is required" })}
+            register={() => register('title', { required: 'Title is required' })}
             placeholder="Enter title"
           />
-          
+
           <Input
             labelTitle="Description"
-            register={() => register("description")}
+            register={() => register('description')}
             placeholder="Enter description"
           />
-          
+
           <Input
             labelTitle="Email"
             type="email"
-            register={() => register("email", { 
-              required: "Email is required",
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Invalid email address"
-              }
-            })}
+            register={() =>
+              register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Invalid email address',
+                },
+              })
+            }
             placeholder="Enter email"
           />
         </div>
 
         {/* Optional: Show current form state for debugging */}
-        <div className="text-xs text-gray-500 border-t pt-4">
+        <div className="border-t pt-4 text-xs text-gray-500">
           <p>Form automatically saves as you type (1.5s delay)</p>
           <p>Current status: {saveStatus}</p>
           {isSaving && <p>Saving in progress...</p>}
@@ -102,4 +100,4 @@ export function AutoSaveOnlyForm({ initialData, onSave }: AutoSaveOnlyFormProps)
       </div>
     </FormProvider>
   );
-} 
+}

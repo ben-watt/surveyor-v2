@@ -15,45 +15,50 @@ This design provides a functional, configuration-driven approach to implementing
 ## Entity Categories
 
 ### Configuration Entities (Templates)
+
 Reusable templates that define the structure and behavior of survey elements.
 
 ```typescript
 // Stored with SK pattern: CONFIG#<type>#<id>
-ComponentConfig   // Defines reusable component templates
-ElementConfig     // Defines element structures with component relationships
-SectionConfig     // Defines survey sections with element ordering
-PhraseConfig      // Defines reusable phrases for conditions/recommendations
-ValidationConfig  // Defines validation rules and requirements
+ComponentConfig; // Defines reusable component templates
+ElementConfig; // Defines element structures with component relationships
+SectionConfig; // Defines survey sections with element ordering
+PhraseConfig; // Defines reusable phrases for conditions/recommendations
+ValidationConfig; // Defines validation rules and requirements
 ```
 
 ### Instance Entities (Survey Data)
+
 Actual survey instances created from templates.
 
 ```typescript
 // Stored with SK pattern: <type>#<parentId>#<id>
-Survey           // Root survey entity
-SurveyElement    // Element instance within a survey
-SurveyComponent  // Component instance within an element
-PropertyDetails  // Normalized property information
-ConditionAssessment // Aggregated condition data
+Survey; // Root survey entity
+SurveyElement; // Element instance within a survey
+SurveyComponent; // Component instance within an element
+PropertyDetails; // Normalized property information
+ConditionAssessment; // Aggregated condition data
 ```
 
 ### System Entities
+
 Support entities for media and metadata.
 
 ```typescript
 // Stored with SK pattern: SYSTEM#<type>#<id>
-ImageMetadata    // Image upload tracking
-DocumentVersion  // Document versioning (already single-table)
-AuditLog        // Change tracking
+ImageMetadata; // Image upload tracking
+DocumentVersion; // Document versioning (already single-table)
+AuditLog; // Change tracking
 ```
 
 ## Migration Strategy
 
 ### Phase 1: Functional Store Foundation (Days 1-3)
+
 Create a functional, configuration-driven store system.
 
 #### 1.1 Entity Configuration System
+
 ```typescript
 // app/home/clients/config/entity-config.ts
 export interface EntityConfig<T> {
@@ -248,132 +253,126 @@ export const entityConfigs: Record<string, EntityConfig<any>> = {
 ```
 
 #### 1.2 Functional Store Factory
+
 ```typescript
 // app/home/clients/store-factory.ts
-export function createStore<T extends TableEntity>(
-  config: EntityConfig<T>
-): FunctionalStore<T> {
+export function createStore<T extends TableEntity>(config: EntityConfig<T>): FunctionalStore<T> {
   const table = db.table<T>(config.tableName);
-  
+
   // Create remote handlers using config
   const remoteHandlers = createRemoteHandlers(config);
-  
+
   // Compose store functions
   const store = {
     // Hooks
     useList: createUseList(table, config),
     useGet: createUseGet(table, config),
-    
+
     // CRUD operations
     add: createAdd(table, config, remoteHandlers),
     update: createUpdate(table, config, remoteHandlers),
     remove: createRemove(table, config, remoteHandlers),
-    
+
     // Sync operations
     sync: createSync(table, config, remoteHandlers),
-    
+
     // Relationship loading
     loadRelated: createRelationshipLoader(config),
   };
-  
+
   return store;
 }
 
 // Pure function creators
-const createAdd = <T>(
-  table: EntityTable<T>,
-  config: EntityConfig<T>,
-  remote: RemoteHandlers
-) => async (data: Omit<T, 'id' | 'syncStatus' | 'tenantId'>) => {
-  const tenantId = await getCurrentTenantId();
-  const entity = {
-    ...data,
-    id: generateId(),
-    tenantId,
-    syncStatus: SyncStatus.Queued,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  // Transform for Dexie
-  const dexieRecord = config.transforms.toDexie(entity);
-  await table.add(dexieRecord);
-  
-  // Queue for sync
-  syncQueue.add(() => remote.create(entity));
-};
+const createAdd =
+  <T>(table: EntityTable<T>, config: EntityConfig<T>, remote: RemoteHandlers) =>
+  async (data: Omit<T, 'id' | 'syncStatus' | 'tenantId'>) => {
+    const tenantId = await getCurrentTenantId();
+    const entity = {
+      ...data,
+      id: generateId(),
+      tenantId,
+      syncStatus: SyncStatus.Queued,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-const createUseList = <T>(
-  table: EntityTable<T>,
-  config: EntityConfig<T>
-) => (): [boolean, T[]] => {
-  const { tenantId, authReady } = useAuthAndTenant();
-  
-  const data = useLiveQuery(
-    async () => {
+    // Transform for Dexie
+    const dexieRecord = config.transforms.toDexie(entity);
+    await table.add(dexieRecord);
+
+    // Queue for sync
+    syncQueue.add(() => remote.create(entity));
+  };
+
+const createUseList =
+  <T>(table: EntityTable<T>, config: EntityConfig<T>) =>
+  (): [boolean, T[]] => {
+    const { tenantId, authReady } = useAuthAndTenant();
+
+    const data = useLiveQuery(async () => {
       if (!authReady || !tenantId) return [];
-      
-      const records = await table
-        .where('tenantId')
-        .equals(tenantId)
-        .toArray();
-      
+
+      const records = await table.where('tenantId').equals(tenantId).toArray();
+
       return records.map(config.transforms.fromDexie);
-    },
-    [tenantId, authReady]
-  );
-  
-  return [authReady && !!tenantId, data ?? []];
-};
+    }, [tenantId, authReady]);
+
+    return [authReady && !!tenantId, data ?? []];
+  };
 ```
 
 ### Phase 2: Single Table Implementation (Days 4-7)
+
 Direct migration to single-table design on DynamoDB.
 
 #### 2.1 New DynamoDB Table Structure
+
 ```typescript
 // amplify/data/resource.ts - Add to existing schema
-export const EntityRecord = a.model({
-  pk: a.string().required(),      // TENANT#tenantId
-  sk: a.string().required(),      // See key patterns below
-  type: a.string().required(),    // Entity type discriminator
-  gsi1pk: a.string(),             // GSI1 partition key
-  gsi1sk: a.string(),             // GSI1 sort key
-  gsi2pk: a.string(),             // GSI2 partition key
-  gsi2sk: a.string(),             // GSI2 sort key
-  
-  // Common fields
-  id: a.string().required(),
-  tenantId: a.string().required(),
-  owner: a.string(),
-  createdAt: a.datetime().required(),
-  updatedAt: a.datetime().required(),
-  createdBy: a.string(),
-  updatedBy: a.string(),
-  
-  // Flexible data storage
-  data: a.json().required(),      // Entity-specific data
-  metadata: a.json(),              // Additional metadata
-  
-  // Sync fields
-  syncStatus: a.string(),
-  syncError: a.string(),
-  version: a.integer(),
-})
-.identifier(['pk', 'sk'])
-.secondaryIndexes(index => [
-  index('gsi1pk').sortKeys(['gsi1sk']).name('byType'),
-  index('gsi2pk').sortKeys(['gsi2sk']).name('byStatus'),
-  index('tenantId').sortKeys(['type', 'updatedAt']).name('byTenant'),
-])
-.authorization((allow) => [
-  allow.owner().to(['create', 'read', 'update', 'delete']),
-  allow.groupDefinedIn('tenantId').to(['create', 'read', 'update', 'delete']),
-  allow.groups(['global-admin']).to(['create', 'read', 'update', 'delete']),
-]);
+export const EntityRecord = a
+  .model({
+    pk: a.string().required(), // TENANT#tenantId
+    sk: a.string().required(), // See key patterns below
+    type: a.string().required(), // Entity type discriminator
+    gsi1pk: a.string(), // GSI1 partition key
+    gsi1sk: a.string(), // GSI1 sort key
+    gsi2pk: a.string(), // GSI2 partition key
+    gsi2sk: a.string(), // GSI2 sort key
+
+    // Common fields
+    id: a.string().required(),
+    tenantId: a.string().required(),
+    owner: a.string(),
+    createdAt: a.datetime().required(),
+    updatedAt: a.datetime().required(),
+    createdBy: a.string(),
+    updatedBy: a.string(),
+
+    // Flexible data storage
+    data: a.json().required(), // Entity-specific data
+    metadata: a.json(), // Additional metadata
+
+    // Sync fields
+    syncStatus: a.string(),
+    syncError: a.string(),
+    version: a.integer(),
+  })
+  .identifier(['pk', 'sk'])
+  .secondaryIndexes((index) => [
+    index('gsi1pk').sortKeys(['gsi1sk']).name('byType'),
+    index('gsi2pk').sortKeys(['gsi2sk']).name('byStatus'),
+    index('tenantId').sortKeys(['type', 'updatedAt']).name('byTenant'),
+  ])
+  .authorization((allow) => [
+    allow.owner().to(['create', 'read', 'update', 'delete']),
+    allow.groupDefinedIn('tenantId').to(['create', 'read', 'update', 'delete']),
+    allow.groups(['global-admin']).to(['create', 'read', 'update', 'delete']),
+  ]);
 ```
 
 #### 2.2 Key Patterns and Access Patterns
+
 ```typescript
 // Key patterns for different entity types
 const keyPatterns = {
@@ -386,7 +385,7 @@ const keyPatterns = {
       sk: (updatedAt: string) => `UPDATED#${updatedAt}`,
     },
   },
-  
+
   elementConfig: {
     pk: (tenantId: string) => `TENANT#${tenantId}`,
     sk: (id: string) => `CONFIG#ELEMENT#${id}`,
@@ -395,7 +394,7 @@ const keyPatterns = {
       sk: (order: number) => `ORDER#${String(order).padStart(5, '0')}`,
     },
   },
-  
+
   sectionConfig: {
     pk: (tenantId: string) => `TENANT#${tenantId}`,
     sk: (id: string) => `CONFIG#SECTION#${id}`,
@@ -404,7 +403,7 @@ const keyPatterns = {
       sk: (order: number) => `ORDER#${String(order).padStart(5, '0')}`,
     },
   },
-  
+
   phraseConfig: {
     pk: (tenantId: string) => `TENANT#${tenantId}`,
     sk: (id: string) => `CONFIG#PHRASE#${id}`,
@@ -413,7 +412,7 @@ const keyPatterns = {
       sk: (name: string) => `NAME#${name}`,
     },
   },
-  
+
   // Instance entities
   survey: {
     pk: (tenantId: string) => `TENANT#${tenantId}`,
@@ -427,7 +426,7 @@ const keyPatterns = {
       sk: (date: string) => `DATE#${date}`,
     },
   },
-  
+
   surveyElement: {
     pk: (tenantId: string) => `TENANT#${tenantId}`,
     sk: (surveyId: string, id: string) => `SURVEY#${surveyId}#ELEMENT#${id}`,
@@ -436,10 +435,10 @@ const keyPatterns = {
       sk: (order: number) => `ELEMENT#${String(order).padStart(5, '0')}`,
     },
   },
-  
+
   surveyComponent: {
     pk: (tenantId: string) => `TENANT#${tenantId}`,
-    sk: (surveyId: string, elementId: string, id: string) => 
+    sk: (surveyId: string, elementId: string, id: string) =>
       `SURVEY#${surveyId}#ELEMENT#${elementId}#COMPONENT#${id}`,
     gsi1: {
       pk: (elementId: string) => `ELEMENT#${elementId}`,
@@ -455,19 +454,19 @@ const queryPatterns = {
     pk: `TENANT#${tenantId}`,
     sk: { beginsWith: `CONFIG#${configType}` },
   }),
-  
+
   // Get all elements for a survey
   getSurveyElements: (tenantId: string, surveyId: string) => ({
     pk: `TENANT#${tenantId}`,
     sk: { beginsWith: `SURVEY#${surveyId}#ELEMENT` },
   }),
-  
+
   // Get all surveys by status
   getSurveysByStatus: (status: string) => ({
     index: 'byType',
     pk: `STATUS#${status}`,
   }),
-  
+
   // Get survey hierarchy
   getSurveyHierarchy: (tenantId: string, surveyId: string) => ({
     pk: `TENANT#${tenantId}`,
@@ -477,34 +476,35 @@ const queryPatterns = {
 ```
 
 #### 2.3 Remote Handlers for Single Table
+
 ```typescript
 // app/home/clients/single-table-remote.ts
 export function createSingleTableRemoteHandlers<T>(
-  config: EntityConfig<T>
+  config: EntityConfig<T>,
 ): DexieRemoteHandlers<T, any, any> {
   return {
     list: async (): Promise<Result<T[], Error>> => {
       const tenantId = await getCurrentTenantId();
       if (!tenantId) return Err(new Error('No tenant ID'));
-      
+
       const response = await client.models.EntityRecord.list({
         filter: {
           pk: { eq: config.keyStrategy.pk(null, { tenantId }) },
           type: { eq: config.type },
         },
       });
-      
+
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(', ')));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
-      
+
       return Ok(response.data.map(config.transforms.fromDb));
     },
-    
+
     create: async (data: T): Promise<Result<T, Error>> => {
       const tenantId = await getCurrentTenantId();
       const context = { tenantId, userId: await getCurrentUserId() };
-      
+
       const record = {
         pk: config.keyStrategy.pk(data, context),
         sk: config.keyStrategy.sk(data, context),
@@ -515,60 +515,60 @@ export function createSingleTableRemoteHandlers<T>(
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      
+
       if (config.keyStrategy.gsi1) {
         record.gsi1pk = config.keyStrategy.gsi1.pk(data);
         record.gsi1sk = config.keyStrategy.gsi1.sk(data);
       }
-      
+
       const response = await client.models.EntityRecord.create(record);
-      
+
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(', ')));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
-      
+
       return Ok(config.transforms.fromDb(response.data));
     },
-    
+
     update: async (data: T): Promise<Result<T, Error>> => {
       const tenantId = await getCurrentTenantId();
       const context = { tenantId, userId: await getCurrentUserId() };
-      
+
       const updates = {
         ...config.transforms.toDb(data),
         updatedAt: new Date().toISOString(),
         version: (data.version || 0) + 1,
       };
-      
+
       const response = await client.models.EntityRecord.update({
         pk: config.keyStrategy.pk(data, context),
         sk: config.keyStrategy.sk(data, context),
         ...updates,
       });
-      
+
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(', ')));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
-      
+
       return Ok(config.transforms.fromDb(response.data));
     },
-    
+
     delete: async (id: string): Promise<Result<string, Error>> => {
       const tenantId = await getCurrentTenantId();
       const context = { tenantId, userId: await getCurrentUserId() };
-      
+
       // Need to construct the full key from the ID
       const entity = { id } as T;
-      
+
       const response = await client.models.EntityRecord.delete({
         pk: config.keyStrategy.pk(entity, context),
         sk: config.keyStrategy.sk(entity, context),
       });
-      
+
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(', ')));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
-      
+
       return Ok(id);
     },
   };
@@ -578,23 +578,24 @@ export function createSingleTableRemoteHandlers<T>(
 ### Phase 3: Template System for Configurations (Days 8-10)
 
 #### 3.1 Template Manager
+
 ```typescript
 // app/home/clients/templates/template-manager.ts
 export class TemplateManager {
   private configs = new Map<string, EntityConfig<any>>();
-  
+
   async instantiateFromTemplate<T>(
     templateType: string,
     templateId: string,
-    overrides: Partial<T>
+    overrides: Partial<T>,
   ): Promise<T> {
     const config = this.configs.get(templateType);
     if (!config) throw new Error(`Unknown template type: ${templateType}`);
-    
+
     // Load template
     const template = await stores[templateType].get(templateId);
     if (!template) throw new Error(`Template not found: ${templateId}`);
-    
+
     // Create instance with defaults from template
     const instance = {
       ...template,
@@ -604,64 +605,57 @@ export class TemplateManager {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     // Validate against template rules
     if (config.validation) {
       this.validate(instance, config.validation);
     }
-    
+
     return instance;
   }
-  
+
   async createSurveyFromTemplates(
     sectionTemplateIds: string[],
-    surveyData: Partial<Survey>
+    surveyData: Partial<Survey>,
   ): Promise<CompleteSurvey> {
     const survey = await stores.survey.add({
       ...surveyData,
       templateIds: sectionTemplateIds,
     });
-    
+
     // Load section templates
     const sections = await Promise.all(
-      sectionTemplateIds.map(id => stores.sectionConfig.get(id))
+      sectionTemplateIds.map((id) => stores.sectionConfig.get(id)),
     );
-    
+
     // Create elements from element configs
     const elements = [];
     for (const section of sections) {
       for (const elementConfigId of section.elementConfigIds) {
-        const element = await this.instantiateFromTemplate(
-          'surveyElement',
-          elementConfigId,
-          {
-            surveyId: survey.id,
-            sectionId: section.id,
-          }
-        );
+        const element = await this.instantiateFromTemplate('surveyElement', elementConfigId, {
+          surveyId: survey.id,
+          sectionId: section.id,
+        });
         elements.push(element);
-        
+
         // Create components from component configs
         const elementConfig = await stores.elementConfig.get(elementConfigId);
         for (const componentConfigId of elementConfig.componentConfigIds || []) {
-          await this.instantiateFromTemplate(
-            'surveyComponent',
-            componentConfigId,
-            {
-              surveyId: survey.id,
-              elementId: element.id,
-            }
-          );
+          await this.instantiateFromTemplate('surveyComponent', componentConfigId, {
+            surveyId: survey.id,
+            elementId: element.id,
+          });
         }
       }
     }
-    
+
     return { survey, elements };
   }
 }
 ```
 
 #### 3.2 Configuration Store Implementation
+
 ```typescript
 // app/home/clients/stores/config-stores.ts
 export const componentConfigStore = createStore({
@@ -670,16 +664,14 @@ export const componentConfigStore = createStore({
     // Find components by material
     findByMaterial: async (material: string) => {
       const configs = await componentConfigStore.useList();
-      return configs.filter(c => 
-        c.materials.some(m => m.name === material)
-      );
+      return configs.filter((c) => c.materials.some((m) => m.name === material));
     },
-    
+
     // Clone a configuration
     clone: async (id: string, newName: string) => {
       const original = await componentConfigStore.get(id);
       if (!original) throw new Error('Config not found');
-      
+
       return componentConfigStore.add({
         ...omit(original, ['id', 'createdAt', 'updatedAt']),
         name: newName,
@@ -695,8 +687,8 @@ export const phraseConfigStore = createStore({
     // Get phrases for a specific element/component
     getPhrasesFor: async (entityType: string, entityId: string) => {
       const phrases = await phraseConfigStore.useList();
-      
-      return phrases.filter(p => {
+
+      return phrases.filter((p) => {
         if (entityType === 'element') {
           return p.associatedElementIds?.includes(entityId);
         }
@@ -706,7 +698,7 @@ export const phraseConfigStore = createStore({
         return false;
       });
     },
-    
+
     // Generate phrase with variables
     generatePhrase: (phrase: PhraseConfig, variables: Record<string, string>) => {
       let text = phrase.phrase;
@@ -722,14 +714,15 @@ export const phraseConfigStore = createStore({
 ### Phase 4: Migration Scripts (Days 11-12)
 
 #### 4.1 Data Migration Script
+
 ```typescript
 // scripts/migrate-to-single-table.ts
 export async function migrateToSingleTable() {
   console.log('Starting migration to single table...');
-  
+
   const tenantId = await getCurrentTenantId();
   const migrationLog = [];
-  
+
   try {
     // Migrate Surveys
     const surveys = await client.models.Surveys.list();
@@ -751,11 +744,11 @@ export async function migrateToSingleTable() {
         createdAt: survey.createdAt,
         updatedAt: survey.updatedAt,
       };
-      
+
       await client.models.EntityRecord.create(record);
       migrationLog.push({ type: 'Survey', id: survey.id, status: 'migrated' });
     }
-    
+
     // Migrate Elements
     const elements = await client.models.Elements.list();
     for (const element of elements.data) {
@@ -774,13 +767,13 @@ export async function migrateToSingleTable() {
         createdAt: element.createdAt,
         updatedAt: element.updatedAt,
       };
-      
+
       await client.models.EntityRecord.create(record);
       migrationLog.push({ type: 'Element', id: element.id, status: 'migrated' });
     }
-    
+
     // Continue for other entity types...
-    
+
     console.log('Migration completed successfully');
     return { success: true, log: migrationLog };
   } catch (error) {
@@ -793,16 +786,19 @@ export async function migrateToSingleTable() {
 ## Implementation Benefits
 
 ### Immediate Wins
+
 1. **60% code reduction** - Single store factory replaces 6+ store implementations
 2. **Type safety** - Generic types ensure compile-time correctness
 3. **Consistent patterns** - All entities follow same CRUD patterns
 
 ### Performance Improvements
+
 1. **Optimized queries** - GSIs enable efficient access patterns
 2. **Batch operations** - Single table enables transactional writes
 3. **Reduced API calls** - Fetch entire hierarchies in one query
 
 ### Developer Experience
+
 1. **Declarative configuration** - Add new entities via config
 2. **Automatic relationship handling** - No manual join logic
 3. **Built-in validation** - Config-driven validation rules
@@ -814,36 +810,38 @@ export async function migrateToSingleTable() {
 // Get all surveys for a tenant
 const surveys = await db.query({
   pk: `TENANT#${tenantId}`,
-  sk: { beginsWith: 'SURVEY#' }
+  sk: { beginsWith: 'SURVEY#' },
 });
 
 // Get complete survey hierarchy
 const surveyData = await db.query({
   pk: `TENANT#${tenantId}`,
-  sk: { beginsWith: `SURVEY#${surveyId}` }
+  sk: { beginsWith: `SURVEY#${surveyId}` },
 });
 
 // Get surveys by status (using GSI)
 const draftSurveys = await db.query({
   index: 'byType',
   pk: 'STATUS#draft',
-  sk: { beginsWith: 'DATE#' }
+  sk: { beginsWith: 'DATE#' },
 });
 
 // Get all config templates
 const configs = await db.query({
   pk: `TENANT#${tenantId}`,
-  sk: { beginsWith: 'CONFIG#' }
+  sk: { beginsWith: 'CONFIG#' },
 });
 ```
 
 ## Migration Timeline
 
 ### Week 1
+
 - Day 1-3: Implement functional store foundation
 - Day 4-7: Deploy single table schema and remote handlers
 
-### Week 2  
+### Week 2
+
 - Day 8-10: Build template system for configurations
 - Day 11-12: Run migration scripts
 - Day 13-14: Testing and validation
@@ -858,6 +856,7 @@ const configs = await db.query({
 ## Conclusion
 
 This functional approach with configuration entities provides a clean migration path that:
+
 - Eliminates code duplication through configuration
 - Maintains offline-first architecture
 - Enables powerful query patterns with single table

@@ -16,11 +16,14 @@ export interface DragItem {
 }
 
 // Validation rules for each entity type
-const validationRules: Record<NodeType, {
-  allowedParents: NodeType[];
-  cannotBeChildOf: NodeType[];
-  canReorder: boolean;
-}> = {
+const validationRules: Record<
+  NodeType,
+  {
+    allowedParents: NodeType[];
+    cannotBeChildOf: NodeType[];
+    canReorder: boolean;
+  }
+> = {
   section: {
     allowedParents: [],
     cannotBeChildOf: ['section', 'element', 'component', 'condition'],
@@ -47,7 +50,7 @@ const validationRules: Record<NodeType, {
 export function canDrop(
   source: TreeNode,
   target: TreeNode,
-  position: DropPosition
+  position: DropPosition,
 ): ValidationResult {
   // Can't drop on itself
   if (source.id === target.id) {
@@ -77,7 +80,7 @@ export function canDrop(
     if (sourceType === 'section' && targetType !== 'section') {
       return { isValid: false, reason: 'Sections can only be reordered at root level' };
     }
-    
+
     if (sourceType !== 'section' && targetType === 'section') {
       return { isValid: false, reason: `${capitalize(sourceType)} cannot be placed at root level` };
     }
@@ -98,38 +101,32 @@ export function canDrop(
 function isAncestor(source: TreeNode, target: TreeNode): boolean {
   const checkChildren = (node: TreeNode): boolean => {
     if (node.id === target.id) return true;
-    return node.children.some(child => checkChildren(child));
+    return node.children.some((child) => checkChildren(child));
   };
-  
-  return source.children.some(child => checkChildren(child));
+
+  return source.children.some((child) => checkChildren(child));
 }
 
 // Get all valid drop targets for a given source node
-export function getValidDropTargets(
-  source: TreeNode,
-  allNodes: TreeNode[]
-): Set<string> {
+export function getValidDropTargets(source: TreeNode, allNodes: TreeNode[]): Set<string> {
   const validTargets = new Set<string>();
-  
+
   const checkNode = (node: TreeNode) => {
     // Check if can drop inside
     if (canDrop(source, node, 'inside').isValid) {
       validTargets.add(node.id);
     }
-    
+
     // Check children recursively
     node.children.forEach(checkNode);
   };
-  
+
   allNodes.forEach(checkNode);
   return validTargets;
 }
 
 // Calculate the new order value for an item being moved
-export function calculateNewOrder(
-  prevOrder: number | null,
-  nextOrder: number | null
-): number {
+export function calculateNewOrder(prevOrder: number | null, nextOrder: number | null): number {
   // Use gap-based ordering to minimize updates
   if (!prevOrder) return nextOrder ? nextOrder / 2 : 1000;
   if (!nextOrder) return prevOrder + 1000;
@@ -137,9 +134,7 @@ export function calculateNewOrder(
 }
 
 // Rebalance order values to prevent precision issues
-export function rebalanceOrders<T extends { order?: number }>(
-  entities: T[]
-): T[] {
+export function rebalanceOrders<T extends { order?: number }>(entities: T[]): T[] {
   return entities
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map((entity, index) => ({
@@ -157,7 +152,7 @@ function capitalize(str: string): string {
 export function getDropParentId(
   target: TreeNode,
   position: DropPosition,
-  targetParentId?: string
+  targetParentId?: string,
 ): string | undefined {
   if (position === 'inside') {
     // Dropping inside target makes target the parent
@@ -169,16 +164,12 @@ export function getDropParentId(
 }
 
 // Get siblings for reordering
-export function getSiblings(
-  node: TreeNode,
-  allNodes: TreeNode[],
-  parentId?: string
-): TreeNode[] {
+export function getSiblings(node: TreeNode, allNodes: TreeNode[], parentId?: string): TreeNode[] {
   if (!parentId) {
     // Root level - return all sections
-    return allNodes.filter(n => n.type === 'section');
+    return allNodes.filter((n) => n.type === 'section');
   }
-  
+
   // Find parent and return its children of the same type
   const findParent = (nodes: TreeNode[]): TreeNode | null => {
     for (const n of nodes) {
@@ -188,11 +179,11 @@ export function getSiblings(
     }
     return null;
   };
-  
+
   const parent = findParent(allNodes);
   if (!parent) return [];
-  
-  return parent.children.filter(child => child.type === node.type);
+
+  return parent.children.filter((child) => child.type === node.type);
 }
 
 // Calculate new order for all affected items after a drag operation
@@ -200,22 +191,27 @@ export function calculateReorderedItems<T extends { id: string; order?: number }
   items: T[],
   draggedId: string,
   targetId: string,
-  position: 'before' | 'after'
+  position: 'before' | 'after',
 ): Array<{ id: string; order: number }> {
   const sortedItems = [...items].sort((a, b) => (a.order || 0) - (b.order || 0));
-  const draggedIndex = sortedItems.findIndex(item => item.id === draggedId);
-  const targetIndex = sortedItems.findIndex(item => item.id === targetId);
-  
+  const draggedIndex = sortedItems.findIndex((item) => item.id === draggedId);
+  const targetIndex = sortedItems.findIndex((item) => item.id === targetId);
+
   if (draggedIndex === -1 || targetIndex === -1) return [];
-  
+
   // Remove dragged item and reinsert at new position
   const [draggedItem] = sortedItems.splice(draggedIndex, 1);
-  const newIndex = position === 'before' 
-    ? (draggedIndex < targetIndex ? targetIndex - 1 : targetIndex)
-    : (draggedIndex < targetIndex ? targetIndex : targetIndex + 1);
-  
+  const newIndex =
+    position === 'before'
+      ? draggedIndex < targetIndex
+        ? targetIndex - 1
+        : targetIndex
+      : draggedIndex < targetIndex
+        ? targetIndex
+        : targetIndex + 1;
+
   sortedItems.splice(newIndex, 0, draggedItem);
-  
+
   // Return items with new order values
   return sortedItems.map((item, index) => ({
     id: item.id,

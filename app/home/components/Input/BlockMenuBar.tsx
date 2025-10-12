@@ -1,8 +1,8 @@
-import { type Editor } from "@tiptap/react";
+import { type Editor } from '@tiptap/react';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-import MenuItem, { MenuItemProps } from "./BlockMenuItem";
+import MenuItem, { MenuItemProps } from './BlockMenuItem';
 import {
   Bold,
   Code,
@@ -37,7 +37,7 @@ import {
   Highlighter,
   Save,
   History,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -46,11 +46,11 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Level } from "@tiptap/extension-heading";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useLocalStorage } from "@uidotdev/usehooks";
+} from '@/components/ui/select';
+import { Level } from '@tiptap/extension-heading';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useLocalStorage } from '@uidotdev/usehooks';
 import { insertImageFromFile } from '../../editor/utils/imageUpload';
 
 interface MenuBarProps {
@@ -62,11 +62,16 @@ interface MenuBarProps {
   onOpenVersionHistory?: () => void;
 }
 
-const Divider = () => (
-  <span className="m-auto h-[1.5rem] bg-gray-300 pl-[1px]" />
-);
+const Divider = () => <span className="m-auto h-[1.5rem] bg-gray-300 pl-[1px]" />;
 
-export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus, onOpenVersionHistory }: MenuBarProps) {
+export default function MenuBar({
+  editor,
+  onPrint,
+  onSave,
+  isSaving,
+  saveStatus,
+  onOpenVersionHistory,
+}: MenuBarProps) {
   if (!editor) return null;
 
   const setImageAlignIfImageSelected = (align: 'left' | 'center' | 'right' | 'justify') => {
@@ -83,123 +88,126 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus,
   const items = [
     {
       icon: <Bold />,
-      title: "Bold",
+      title: 'Bold',
       action: () => editor.chain().focus().toggleBold().run(),
-      isActive: () => editor.isActive("bold"),
+      isActive: () => editor.isActive('bold'),
     },
     {
       icon: <Italic />,
-      title: "Italic",
+      title: 'Italic',
       action: () => editor.chain().focus().toggleItalic().run(),
-      isActive: () => editor.isActive("italic"),
+      isActive: () => editor.isActive('italic'),
     },
     {
       icon: <Strikethrough />,
-      title: "Strike",
+      title: 'Strike',
       action: () => editor.chain().focus().toggleStrike().run(),
-      isActive: () => editor.isActive("strike"),
+      isActive: () => editor.isActive('strike'),
     },
     {
       icon: <Code />,
-      title: "Code",
+      title: 'Code',
       action: () => editor.chain().focus().toggleCode().run(),
-      isActive: () => editor.isActive("code"),
+      isActive: () => editor.isActive('code'),
     },
     {
-      type: "highlight",
+      type: 'highlight',
       render: () => <HighlightColorPicker editor={editor} />,
     },
     {
       icon: <RemoveFormatting />,
-      title: "Clear Format",
+      title: 'Clear Format',
       action: () => editor.chain().focus().clearNodes().unsetAllMarks().run(),
     },
     {
-      type: "divider",
+      type: 'divider',
       render: () => <Divider />,
     },
     {
       icon: <AlignLeft />,
-      title: "Align Left",
+      title: 'Align Left',
       action: () => {
         if (!setImageAlignIfImageSelected('left')) {
-          editor.chain().focus().setTextAlign("left").run();
+          editor.chain().focus().setTextAlign('left').run();
         }
       },
-      isActive: () => editor.isActive({ textAlign: "left" }) || editor.isActive('image', { align: 'left' }),
+      isActive: () =>
+        editor.isActive({ textAlign: 'left' }) || editor.isActive('image', { align: 'left' }),
     },
     {
       icon: <AlignCenter />,
-      title: "Align Center",
+      title: 'Align Center',
       action: () => {
         if (!setImageAlignIfImageSelected('center')) {
-          editor.chain().focus().setTextAlign("center").run();
+          editor.chain().focus().setTextAlign('center').run();
         }
       },
-      isActive: () => editor.isActive({ textAlign: "center" }) || editor.isActive('image', { align: 'center' }),
+      isActive: () =>
+        editor.isActive({ textAlign: 'center' }) || editor.isActive('image', { align: 'center' }),
     },
     {
       icon: <AlignRight />,
-      title: "Align Right",
+      title: 'Align Right',
       action: () => {
         if (!setImageAlignIfImageSelected('right')) {
-          editor.chain().focus().setTextAlign("right").run();
+          editor.chain().focus().setTextAlign('right').run();
         }
       },
-      isActive: () => editor.isActive({ textAlign: "right" }) || editor.isActive('image', { align: 'right' }),
+      isActive: () =>
+        editor.isActive({ textAlign: 'right' }) || editor.isActive('image', { align: 'right' }),
     },
     {
       icon: <AlignJustify />,
-      title: "Align Justify",
+      title: 'Align Justify',
       action: () => {
         if (!setImageAlignIfImageSelected('justify')) {
-          editor.chain().focus().setTextAlign("justify").run();
+          editor.chain().focus().setTextAlign('justify').run();
         }
       },
-      isActive: () => editor.isActive({ textAlign: "justify" }) || editor.isActive('image', { align: 'justify' }),
+      isActive: () =>
+        editor.isActive({ textAlign: 'justify' }) || editor.isActive('image', { align: 'justify' }),
     },
     {
-      type: "divider",
+      type: 'divider',
       render: () => <Divider />,
     },
     {
-      type: "dropdown",
+      type: 'dropdown',
       render: () => <MenuHeadingDropdown editor={editor} />,
     },
     {
-      type: "font-size",
+      type: 'font-size',
       render: () => <MenuFontSize editor={editor} />,
     },
     {
-      type: "divider",
+      type: 'divider',
       render: () => <Divider />,
     },
     {
       icon: <List />,
-      title: "Bullet List",
+      title: 'Bullet List',
       action: () => editor.chain().focus().toggleBulletList().run(),
-      isActive: () => editor.isActive("bulletList"),
+      isActive: () => editor.isActive('bulletList'),
     },
     {
       icon: <ListOrdered />,
-      title: "Ordered List",
+      title: 'Ordered List',
       action: () => editor.chain().focus().toggleOrderedList().run(),
-      isActive: () => editor.isActive("orderedList"),
+      isActive: () => editor.isActive('orderedList'),
     },
     {
       icon: <Grid2x2Plus />,
-      title: "Add Table",
-      action: () =>
-        editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run(),
+      title: 'Add Table',
+      action: () => editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run(),
       isActive: () => false,
     },
     {
       icon: <ImagePlus />,
-      title: "Add Image",
+      title: 'Add Image',
       action: async () => {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = "image/*";
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
         fileInput.onchange = async (e) => {
           const file = (e.target as HTMLInputElement).files?.[0];
           if (file && editor) {
@@ -210,134 +218,130 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus,
       },
     },
     {
-      type: "divider",
+      type: 'divider',
       render: () => <Divider />,
     },
     {
       icon: <TextQuote />,
-      title: "Blockquote",
+      title: 'Blockquote',
       action: () => editor.chain().focus().toggleBlockquote().run(),
-      isActive: () => editor.isActive("blockquote"),
+      isActive: () => editor.isActive('blockquote'),
     },
     {
       icon: <Code2 />,
-      title: "Code Block",
+      title: 'Code Block',
       action: () => editor.chain().focus().toggleCodeBlock().run(),
-      isActive: () => editor.isActive("codeBlock"),
+      isActive: () => editor.isActive('codeBlock'),
     },
     {
-      type: "divider",
+      type: 'divider',
       render: () => <Divider />,
     },
     {
       icon: <SeparatorHorizontal />,
-      title: "Page Break",
+      title: 'Page Break',
       action: () => editor.chain().focus().setHorizontalRule().run(),
     },
     {
       icon: <WrapText />,
-      title: "Hard Break",
+      title: 'Hard Break',
       action: () => editor.chain().focus().setHardBreak().run(),
     },
     {
-      type: "divider",
+      type: 'divider',
       render: () => <Divider />,
     },
     {
       icon: <Undo />,
-      title: "Undo",
+      title: 'Undo',
       action: () => editor.chain().focus().undo().run(),
     },
     {
       icon: <Redo />,
-      title: "Redo",
+      title: 'Redo',
       action: () => editor.chain().focus().redo().run(),
     },
     {
-      type: "divider",
+      type: 'divider',
       render: () => <Divider />,
     },
     {
       icon: <History />,
-      title: "Version History",
+      title: 'Version History',
       action: () => onOpenVersionHistory && onOpenVersionHistory(),
     },
     {
       icon: isSaving ? (
-        <span className="animate-spin h-4 w-4 mr-1 border-2 border-gray-400 border-t-transparent rounded-full inline-block" />
+        <span className="mr-1 inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
       ) : (
         <Save />
       ),
-      title: "Save",
+      title: 'Save',
       action: () => onSave(),
       disabled: isSaving,
     },
     {
       icon: <Printer />,
-      title: "Print",
+      title: 'Print',
       action: async () => {
-          onPrint();
+        onPrint();
       },
     },
   ];
 
   const tableContextMenu = {
-    isActive: () => editor.isActive("table"),
+    isActive: () => editor.isActive('table'),
     items: [
       {
         icon: <BetweenHorizontalStart />,
-        title: "Add Row After",
+        title: 'Add Row After',
         action: () => editor.chain().focus().addRowAfter().run(),
       },
       {
         icon: <BetweenVerticalStart />,
-        title: "Add Column After",
+        title: 'Add Column After',
         action: () => editor.chain().focus().addColumnAfter().run(),
       },
       {
         icon: <TableCellsSplitIcon />,
-        title: "Split Cell",
+        title: 'Split Cell',
         action: () => editor.chain().focus().splitCell().run(),
       },
       {
         icon: <TableCellsMergeIcon />,
-        title: "Merge Cells",
+        title: 'Merge Cells',
         action: () => editor.chain().focus().mergeCells().run(),
       },
       {
         icon: <Grid2x2X className="text-red-700" />,
-        title: "Delete Table",
+        title: 'Delete Table',
         action: () => editor.chain().focus().deleteTable().run(),
         isActive: () => false,
       },
       {
         icon: <BetweenHorizontalStart className="text-red-700" />,
-        title: "Delete Row",
+        title: 'Delete Row',
         action: () => editor.chain().focus().deleteRow().run(),
       },
       {
         icon: <BetweenVerticalStart className="text-red-700" />,
-        title: "Delete Column",
+        title: 'Delete Column',
         action: () => editor.chain().focus().deleteColumn().run(),
       },
     ],
   };
 
   return (
-    <div className="editor__header sticky top-0 bg-white z-10 p-2 border-b border-l">
-      <div className="flex justify-between flex-shrink-1 no-scrollbar items-center">
+    <div className="editor__header sticky top-0 z-10 border-b border-l bg-white p-2">
+      <div className="flex-shrink-1 no-scrollbar flex items-center justify-between">
         <div className="flex">
           {items.map((item, index) => (
-            <div key={index} className="flex m-[1px]">
-              {item.render ? (
-                item.render()
-              ) : (
-                <MenuItem {...(item as MenuItemProps)} />
-              )}
+            <div key={index} className="m-[1px] flex">
+              {item.render ? item.render() : <MenuItem {...(item as MenuItemProps)} />}
             </div>
           ))}
         </div>
-        <div className="ml-4 min-w-[120px] text-xs text-gray-500 text-right h-6 flex items-center justify-end">
+        <div className="ml-4 flex h-6 min-w-[120px] items-center justify-end text-right text-xs text-gray-500">
           {saveStatus === 'saving' && 'Saving...'}
           {saveStatus === 'saved' && 'All changes saved'}
           {saveStatus === 'autosaved' && 'Auto-saved'}
@@ -345,9 +349,9 @@ export default function MenuBar({ editor, onPrint, onSave, isSaving, saveStatus,
         </div>
       </div>
       {tableContextMenu.isActive() && (
-        <div className="flex justify-left">
+        <div className="justify-left flex">
           {tableContextMenu.items.map((item, index) => (
-            <div key={index} className="flex m-[1px]">
+            <div key={index} className="m-[1px] flex">
               <MenuItem {...(item as MenuItemProps)} />
             </div>
           ))}
@@ -381,9 +385,9 @@ const MenuHeadingDropdown = ({ editor }: MenuHeadingDropdownProps) => {
 
   // When the user selects a heading then update the value in the dropdown
   useEffect(() => {
-    editor.on("selectionUpdate", () => {
-      if (editor.isActive("heading")) {
-        const level = editor.getAttributes("heading").level as number;
+    editor.on('selectionUpdate', () => {
+      if (editor.isActive('heading')) {
+        const level = editor.getAttributes('heading').level as number;
         setStateLevel(level);
       } else {
         setStateLevel(0);
@@ -393,10 +397,7 @@ const MenuHeadingDropdown = ({ editor }: MenuHeadingDropdownProps) => {
 
   return (
     <div className="ml-2 mr-2">
-      <Select
-        value={stateLevel.toString()}
-        onValueChange={(val) => toggleHeading(val)}
-      >
+      <Select value={stateLevel.toString()} onValueChange={(val) => toggleHeading(val)}>
         <SelectTrigger className="w-[8rem]">
           <SelectValue placeholder="Paragraph" />
         </SelectTrigger>
@@ -429,10 +430,10 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
   const fontSizeDropdown = [6, 10, 12, 14, 20, 26, 34, 97];
 
   useEffect(() => {
-    editor.on("selectionUpdate", () => {
+    editor.on('selectionUpdate', () => {
       const setFromNode = (nodeType: string) => {
         const fontSize = editor.getAttributes(nodeType).fontSize as string;
-        const size = parseInt(fontSize.replace("pt", ""));
+        const size = parseInt(fontSize.replace('pt', ''));
         if (size) {
           setFontSize(size);
         } else {
@@ -440,16 +441,16 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
         }
       };
 
-      if (editor.isActive("heading")) {
-        setFromNode("heading");
+      if (editor.isActive('heading')) {
+        setFromNode('heading');
       }
 
-      if (editor.isActive("paragraph")) {
-        setFromNode("paragraph");
+      if (editor.isActive('paragraph')) {
+        setFromNode('paragraph');
       }
 
-      if (editor.isActive("textStyle")) {
-        setFromNode("textStyle");
+      if (editor.isActive('textStyle')) {
+        setFromNode('textStyle');
       }
     });
   });
@@ -482,22 +483,17 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
         <Minus onClick={() => reduceFontSize()} />
       </button>
       <div className="ml-1 mr-1">
-        <Select
-          value={fontSize.toString()}
-          onValueChange={(v) => changeFontSize(v)}
-        >
+        <Select value={fontSize.toString()} onValueChange={(v) => changeFontSize(v)}>
           <SelectTrigger className="[&_svg]:hidden">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-11">
             <SelectGroup>
-              {Array.from(new Set(fontSizeDropdown.concat(fontSize))).map(
-                (size) => (
-                  <SelectItem key={size} value={size.toString()}>
-                    {size}
-                  </SelectItem>
-                )
-              )}
+              {Array.from(new Set(fontSizeDropdown.concat(fontSize))).map((size) => (
+                <SelectItem key={size} value={size.toString()}>
+                  {size}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -511,18 +507,18 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
 
 const HighlightColorPicker = ({ editor }: { editor: Editor }) => {
   const [selectedColour, setSelectedColour] = useLocalStorage<string>(
-    "HighlightColourPicker_selectedColour",
-    "#ff0000"
+    'HighlightColourPicker_selectedColour',
+    '#ff0000',
   );
   const [colourPickerOpen, setColourPickerOpen] = useState<boolean>(false);
   const colours = [
-    { name: "Red", value: "#ff0000" },
-    { name: "Yellow", value: "#ffff00" },
-    { name: "Light Green", value: "#90ee90" },
-    { name: "Dark Green", value: "#008000" },
-    { name: "Blue", value: "#0000ff" },
-    { name: "Pink", value: "#ffc0cb" },
-    { name: "Orange", value: "#ffa500" },
+    { name: 'Red', value: '#ff0000' },
+    { name: 'Yellow', value: '#ffff00' },
+    { name: 'Light Green', value: '#90ee90' },
+    { name: 'Dark Green', value: '#008000' },
+    { name: 'Blue', value: '#0000ff' },
+    { name: 'Pink', value: '#ffc0cb' },
+    { name: 'Orange', value: '#ffa500' },
   ];
 
   const toggleHighlight = (colour: string) => {
@@ -546,22 +542,19 @@ const HighlightColorPicker = ({ editor }: { editor: Editor }) => {
         size="sm"
         onClick={() => handleIconClick()}
         style={{ borderColor: selectedColour }}
-        className={cn(
-          "w-8 p-0 h-full",
-          editor.isActive("highlight") && "bg-muted"
-        )}
+        className={cn('h-full w-8 p-0', editor.isActive('highlight') && 'bg-muted')}
       >
         <HighlighterSvg nibColour={selectedColour} />
       </Button>
       {colourPickerOpen && (
-        <div className="grid grid-rows-1 gap-2 absolute top-0 left-0 bg-white border p-2 rounded-md">
+        <div className="absolute left-0 top-0 grid grid-rows-1 gap-2 rounded-md border bg-white p-2">
           {colours.map((colour) => (
             <button
               key={colour.value}
               className={cn(
-                "h-6 w-6 rounded-full border border-border",
+                'h-6 w-6 rounded-full border border-border',
                 selectedColour === colour.value &&
-                  "ring-2 ring-offset-2 ring-offset-background ring-ring"
+                  'ring-2 ring-ring ring-offset-2 ring-offset-background',
               )}
               style={{ backgroundColor: colour.value }}
               onClick={() => toggleHighlight(colour.value)}
@@ -589,7 +582,7 @@ const HighlighterSvg = ({ nibColour }: { nibColour: string }) => {
       className="lucide lucide-highlighter-icon lucide-highlighter"
     >
       <path style={{ fill: nibColour }} d="m9 11-6 6v3h9l3-3" />
-      <path  d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+      <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
     </svg>
   );
 };

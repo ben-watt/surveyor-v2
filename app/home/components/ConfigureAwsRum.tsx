@@ -1,20 +1,18 @@
-"use client";
+'use client';
 
-import { AwsRum, AwsRumConfig } from "aws-rum-web";
-import { useEffect } from "react";
+import { AwsRum, AwsRumConfig } from 'aws-rum-web';
+import { useEffect } from 'react';
 
 export const ConfigureAwsRum = () => {
-
   useEffect(() => {
     try {
-      
       const config: AwsRumConfig = {
         sessionSampleRate: 1,
         identityPoolId: process.env.NEXT_PUBLIC_CLOUDWATCH_RUM_IDENTITY_POOL_ID!,
-        endpoint: "https://dataplane.rum.eu-west-1.amazonaws.com",
-        telemetries: ["errors","http","performance"],
+        endpoint: 'https://dataplane.rum.eu-west-1.amazonaws.com',
+        telemetries: ['errors', 'http', 'performance'],
         allowCookies: true,
-        enableXRay: true
+        enableXRay: true,
       };
 
       const APPLICATION_ID: string = process.env.NEXT_PUBLIC_CLOUDWATCH_RUM_APPLICATOIN_ID!;
@@ -28,13 +26,12 @@ export const ConfigureAwsRum = () => {
       //   APPLICATION_REGION,
       //   config
       // );
-      
-      console.log("[AWS Rum] AWS RUM initialized successfully");
 
+      console.log('[AWS Rum] AWS RUM initialized successfully');
     } catch (error) {
-      console.error("[AWS Rum] Failed to initialize AWS RUM", error);
+      console.error('[AWS Rum] Failed to initialize AWS RUM', error);
     }
-  }, [])
+  }, []);
 
   return null;
 };

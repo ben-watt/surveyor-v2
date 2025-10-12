@@ -20,19 +20,44 @@ const makeEmptySurvey = () => ({
   owner: { id: 'o1', name: 'Owner', email: 'o@example.com', signaturePath: [] },
   status: 'draft',
   reportDetails: {
-    level: '2', reference: '',
+    level: '2',
+    reference: '',
     address: { formatted: '', line1: '', city: '', postcode: '', location: { lat: 0, lng: 0 } },
-    clientName: '', reportDate: new Date(), inspectionDate: new Date(), weather: '', orientation: '', situation: '',
-    moneyShot: [], frontElevationImagesUri: []
+    clientName: '',
+    reportDate: new Date(),
+    inspectionDate: new Date(),
+    weather: '',
+    orientation: '',
+    situation: '',
+    moneyShot: [],
+    frontElevationImagesUri: [],
   },
   propertyDescription: {
-    propertyType: '', constructionDetails: '', yearOfConstruction: '', grounds: '', services: '', energyRating: '',
-    numberOfBedrooms: 0, numberOfBathrooms: 0, tenure: ''
+    propertyType: '',
+    constructionDetails: '',
+    yearOfConstruction: '',
+    grounds: '',
+    services: '',
+    energyRating: '',
+    numberOfBedrooms: 0,
+    numberOfBathrooms: 0,
+    tenure: '',
   },
   sections: [
-    { id: 'sec1', name: 'Section 1', elementSections: [
-      { id: 'el1', name: 'Element 1', isPartOfSurvey: true, description: '', components: [], images: [] }
-    ]}
+    {
+      id: 'sec1',
+      name: 'Section 1',
+      elementSections: [
+        {
+          id: 'el1',
+          name: 'Element 1',
+          isPartOfSurvey: true,
+          description: '',
+          components: [],
+          images: [],
+        },
+      ],
+    },
   ],
   checklist: { items: [] },
 });
@@ -48,7 +73,10 @@ jest.mock('@/app/home/clients/Database', () => {
       useList: () => [true, (global as any).__componentsRef],
     },
     elementStore: {
-      useList: () => [true, [{ id: 'el1', name: 'Element 1', order: 0, sectionId: 'sec1', description: '' }]],
+      useList: () => [
+        true,
+        [{ id: 'el1', name: 'Element 1', order: 0, sectionId: 'sec1', description: '' }],
+      ],
     },
     phraseStore: {
       useList: () => [true, (global as any).__phrasesRef],
@@ -88,8 +116,8 @@ function renderForm(defaults?: Partial<any>) {
           costings: [],
           ...defaults,
         }}
-      />
-    )
+      />,
+    ),
   );
 }
 
@@ -104,8 +132,24 @@ describe('InspectionForm - Conditions', () => {
   test('local component shows all condition phrases (bypasses association)', async () => {
     // Provide two phrases, only one associated to a fake global id
     (global as any).__phrasesRef = [
-      { id: 'p1', name: 'Associated Phrase', type: 'Condition', order: 1, phrase: 'P3 text', phraseLevel2: 'P2 text', associatedComponentIds: ['comp1'] },
-      { id: 'p2', name: 'Unassociated Phrase', type: 'Condition', order: 2, phrase: 'P3 text', phraseLevel2: 'P2 text', associatedComponentIds: [] },
+      {
+        id: 'p1',
+        name: 'Associated Phrase',
+        type: 'Condition',
+        order: 1,
+        phrase: 'P3 text',
+        phraseLevel2: 'P2 text',
+        associatedComponentIds: ['comp1'],
+      },
+      {
+        id: 'p2',
+        name: 'Unassociated Phrase',
+        type: 'Condition',
+        order: 2,
+        phrase: 'P3 text',
+        phraseLevel2: 'P2 text',
+        associatedComponentIds: [],
+      },
     ];
 
     renderForm({ component: { id: 'local_abc', name: 'Local Comp' } });
@@ -122,12 +166,26 @@ describe('InspectionForm - Conditions', () => {
 
   test('global component filters phrases by association', async () => {
     // Setup a global component for the element
-    (global as any).__componentsRef = [
-      { id: 'comp1', name: 'Header', elementId: 'el1' }
-    ];
+    (global as any).__componentsRef = [{ id: 'comp1', name: 'Header', elementId: 'el1' }];
     (global as any).__phrasesRef = [
-      { id: 'p1', name: 'Associated Phrase', type: 'Condition', order: 1, phrase: 'P3 text', phraseLevel2: 'P2 text', associatedComponentIds: ['comp1'] },
-      { id: 'p2', name: 'Unassociated Phrase', type: 'Condition', order: 2, phrase: 'P3 text', phraseLevel2: 'P2 text', associatedComponentIds: [] },
+      {
+        id: 'p1',
+        name: 'Associated Phrase',
+        type: 'Condition',
+        order: 1,
+        phrase: 'P3 text',
+        phraseLevel2: 'P2 text',
+        associatedComponentIds: ['comp1'],
+      },
+      {
+        id: 'p2',
+        name: 'Unassociated Phrase',
+        type: 'Condition',
+        order: 2,
+        phrase: 'P3 text',
+        phraseLevel2: 'P2 text',
+        associatedComponentIds: [],
+      },
     ];
 
     renderForm({ component: { id: 'comp1', name: 'Header' } });
@@ -169,4 +227,3 @@ describe('InspectionForm - Conditions', () => {
     expect(matches.length).toBeGreaterThan(0);
   });
 });
-

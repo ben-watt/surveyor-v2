@@ -3,7 +3,11 @@ import { useDragDrop } from '@/app/home/configuration/hooks/useDragDrop';
 import { TreeNode } from '@/app/home/configuration/hooks/useHierarchicalData';
 import { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { canDrop } from '@/app/home/configuration/utils/dragValidation';
-import { createMockTreeNode, createDragStartEvent, createDragEndEvent } from '@/test-utils/drag-drop-utils';
+import {
+  createMockTreeNode,
+  createDragStartEvent,
+  createDragEndEvent,
+} from '@/test-utils/drag-drop-utils';
 
 // Mock toast to capture error messages
 jest.mock('react-hot-toast', () => ({
@@ -53,7 +57,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element-1
@@ -66,7 +70,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
         'element-1',
         'element-2',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        140 // After midpoint (125), should be 'after'
+        140, // After midpoint (125), should be 'after'
       );
 
       await act(async () => {
@@ -76,7 +80,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
       // The operation should succeed with the fix
       expect(mockOnReorder).toHaveBeenCalled();
       expect(mockOnMove).not.toHaveBeenCalled();
-      
+
       // No error should be thrown
       expect(toast.error).not.toHaveBeenCalled();
     });
@@ -87,7 +91,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element-2
@@ -100,7 +104,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
         'element-2',
         'element-1',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        120 // At midpoint (125) - 5, should be 'before'
+        120, // At midpoint (125) - 5, should be 'before'
       );
 
       await act(async () => {
@@ -117,7 +121,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element-2
@@ -130,7 +134,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
         'element-2',
         'element-1',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        110 // Less than midpoint (125), should be 'before'
+        110, // Less than midpoint (125), should be 'before'
       );
 
       await act(async () => {
@@ -149,7 +153,7 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging
@@ -161,13 +165,13 @@ describe('Drag and Drop - Element Reordering Issue Analysis', () => {
 
       // The issue is that for element-to-element dragging within the same parent,
       // we should use 'before' or 'after' positioning, not 'inside'
-      
+
       // This test demonstrates what SHOULD happen:
       // When dragging element-1 over element-2 (both children of section-1),
       // the system should recognize this as a sibling reorder operation
-      
+
       expect(result.current.dragState.activeNode?.type).toBe('element');
-      
+
       // Both elements should be recognized as valid drop targets for reordering
       expect(result.current.dragState.validDropTargets.has('element-2')).toBe(true);
     });

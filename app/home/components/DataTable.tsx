@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   useReactTable,
   InitialTableState,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 
 import {
   Table,
@@ -19,19 +19,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import React from "react";
-import { ArrowUpDown, PlusIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import React from 'react';
+import { ArrowUpDown, PlusIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type DataTableProps<TData> = {
   initialState?: InitialTableState;
@@ -51,12 +51,11 @@ export function DataTable<TData>({
   onCreate,
   onRowClick,
 }: DataTableProps<TData>) {
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(initialState?.columnVisibility ?? {});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
+    initialState?.columnVisibility ?? {},
   );
-  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState('');
 
   const table = useReactTable({
     initialState,
@@ -79,9 +78,9 @@ export function DataTable<TData>({
   return (
     <div>
       <div className="mb-3">
-        <div className="flex items-center py-4 space-x-2 justify-between">
+        <div className="flex items-center justify-between space-x-2 py-4">
           <DebouncedInput
-            value={globalFilter ?? ""}
+            value={globalFilter ?? ''}
             onChange={(value) => setGlobalFilter(String(value))}
             className="max-w-sm"
             placeholder="Filter..."
@@ -90,35 +89,31 @@ export function DataTable<TData>({
             {onCreate && (
               <Button variant="default" onClick={() => onCreate()}>
                 Create
-                <PlusIcon className="size-4"  />
+                <PlusIcon className="size-4" />
               </Button>
             )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                Columns
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Columns</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -129,13 +124,13 @@ export function DataTable<TData>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className={(header.column.columnDef.meta as any)?.tw.headerClassName}>
+                    <TableHead
+                      key={header.id}
+                      className={(header.column.columnDef.meta as any)?.tw.headerClassName}
+                    >
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   );
                 })}
@@ -147,13 +142,13 @@ export function DataTable<TData>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                   onClick={() => onRowClick?.(row.original)}
-                  className={onRowClick ? "cursor-pointer hover:bg-gray-100" : ""}
-                  role={onRowClick ? "button" : undefined}
+                  className={onRowClick ? 'cursor-pointer hover:bg-gray-100' : ''}
+                  role={onRowClick ? 'button' : undefined}
                   tabIndex={onRowClick ? 0 : undefined}
                   onKeyDown={(e) => {
-                    if (onRowClick && (e.key === "Enter" || e.key === " ")) {
+                    if (onRowClick && (e.key === 'Enter' || e.key === ' ')) {
                       e.preventDefault();
                       onRowClick(row.original);
                     }
@@ -164,20 +159,14 @@ export function DataTable<TData>({
                       key={cell.id}
                       className={(cell.column.columnDef.meta as any)?.tw.cellClassName}
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   {isLoading ? (
                     <div className="flex space-x-2">
                       {columns.map((c, i) => (
@@ -185,7 +174,7 @@ export function DataTable<TData>({
                       ))}
                     </div>
                   ) : (
-                    "Empty"
+                    'Empty'
                   )}
                 </TableCell>
               </TableRow>
@@ -220,10 +209,7 @@ type SortableHeaderProps<TData> = {
   header: string;
 };
 
-export function SortableHeader<TData>({
-  column,
-  header,
-}: SortableHeaderProps<TData>) {
+export function SortableHeader<TData>({ column, header }: SortableHeaderProps<TData>) {
   return (
     <Button variant="ghost" onClick={() => column.toggleSorting()}>
       {header}
@@ -241,7 +227,7 @@ function DebouncedInput({
   value: string | number;
   onChange: (value: string | number) => void;
   debounce?: number;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
   const [value, setValue] = React.useState(initialValue);
 
   React.useEffect(() => {
@@ -256,11 +242,5 @@ function DebouncedInput({
     return () => clearTimeout(timeout);
   }, [value, debounce, onChange]);
 
-  return (
-    <Input
-      {...props}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-    />
-  );
+  return <Input {...props} value={value} onChange={(e) => setValue(e.target.value)} />;
 }

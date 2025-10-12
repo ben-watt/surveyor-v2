@@ -29,10 +29,10 @@ export function querySelectorEscape(value: any, ...args: any[]): string;
  */
 export function defer(): object;
 export class defer {
-    resolve: ((value: any) => void) | null;
-    reject: ((reason?: any) => void) | null;
-    id: string;
-    promise: Promise<any>;
+  resolve: ((value: any) => void) | null;
+  reject: ((reason?: any) => void) | null;
+  id: string;
+  promise: Promise<any>;
 }
 export function CSSValueToString(obj: any): any;
 export const requestIdleCallback: any;

@@ -21,7 +21,7 @@ export function AutoSaveProgress({
   delay = 1000,
   onSaveNow,
   className,
-  showCountdown = false
+  showCountdown = false,
 }: AutoSaveProgressProps) {
   const [countdown, setCountdown] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -32,16 +32,16 @@ export function AutoSaveProgress({
     if (status === 'pending' && showCountdown) {
       setCountdown(delay);
       setProgress(0);
-      
+
       const startTime = Date.now();
       interval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, delay - elapsed);
         const progressPercent = (elapsed / delay) * 100;
-        
+
         setCountdown(remaining);
         setProgress(Math.min(100, progressPercent));
-        
+
         if (remaining <= 0) {
           clearInterval(interval);
         }
@@ -61,34 +61,29 @@ export function AutoSaveProgress({
   }
 
   return (
-    <div className={cn(
-      'flex items-center gap-2 text-sm',
-      className
-    )}>
+    <div className={cn('flex items-center gap-2 text-sm', className)}>
       {status === 'pending' && (
         <>
           <div className="relative">
-            <Circle className="h-4 w-4 text-yellow-600 animate-pulse" />
+            <Circle className="h-4 w-4 animate-pulse text-yellow-600" />
             {showCountdown && (
-              <div 
+              <div
                 className="absolute inset-0 rounded-full border-2 border-yellow-600 opacity-30"
                 style={{
-                  clipPath: `polygon(50% 50%, 50% 0%, ${50 + 50 * Math.sin((progress / 100) * 2 * Math.PI)}% ${50 - 50 * Math.cos((progress / 100) * 2 * Math.PI)}%)`
+                  clipPath: `polygon(50% 50%, 50% 0%, ${50 + 50 * Math.sin((progress / 100) * 2 * Math.PI)}% ${50 - 50 * Math.cos((progress / 100) * 2 * Math.PI)}%)`,
                 }}
               />
             )}
           </div>
-          
+
           {showCountdown && (
-            <span className="text-yellow-600 min-w-[3ch]">
-              {Math.ceil(countdown / 1000)}s
-            </span>
+            <span className="min-w-[3ch] text-yellow-600">{Math.ceil(countdown / 1000)}s</span>
           )}
-          
+
           {onSaveNow && (
             <button
               onClick={onSaveNow}
-              className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-md hover:bg-yellow-200 transition-colors"
+              className="inline-flex items-center gap-1 rounded-md bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700 transition-colors hover:bg-yellow-200"
               type="button"
             >
               <Save className="h-3 w-3" />

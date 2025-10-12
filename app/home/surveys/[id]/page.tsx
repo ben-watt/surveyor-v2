@@ -1,18 +1,16 @@
-"use client";
+'use client';
 
-import React, { Suspense, useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import BuildingSurveyForm from "../building-survey-reports/BuildingSurveyForm";
-import { surveyStore } from "@/app/home/clients/Database";
-import { enhancedImageStore } from "../../clients/enhancedImageMetadataStore";
-import { getAllSurveyImages } from "../building-survey-reports/Survey";
-import { SurveyDocuments } from "../../components/SurveyDocuments";
-import { CompactPhotoGrid } from "../components/CompactPhotoGrid";
-import { useParams } from "next/navigation";
-
-
+import React, { Suspense, useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import BuildingSurveyForm from '../building-survey-reports/BuildingSurveyForm';
+import { surveyStore } from '@/app/home/clients/Database';
+import { enhancedImageStore } from '../../clients/enhancedImageMetadataStore';
+import { getAllSurveyImages } from '../building-survey-reports/Survey';
+import { SurveyDocuments } from '../../components/SurveyDocuments';
+import { CompactPhotoGrid } from '../components/CompactPhotoGrid';
+import { useParams } from 'next/navigation';
 
 function FormSkeleton() {
   return (
@@ -35,32 +33,34 @@ function Home() {
     async function loadPhotos() {
       if (!survey) return [];
       const allPhotos = getAllSurveyImages(survey);
-      setPhotoCount(allPhotos.filter(x => !x.isArchived).length);
+      setPhotoCount(allPhotos.filter((x) => !x.isArchived).length);
 
       const photos = allPhotos.slice(0, 4);
 
-      const result = await Promise.all(photos.filter(Boolean).map(async x => {
-        const imageResult = await enhancedImageStore.getImageByPath(x.path);
-        return imageResult;
-      }));
+      const result = await Promise.all(
+        photos.filter(Boolean).map(async (x) => {
+          const imageResult = await enhancedImageStore.getImageByPath(x.path);
+          return imageResult;
+        }),
+      );
 
-      if(result.every(x => x.ok)) {
-        return result.map(x => x.val.href);
+      if (result.every((x) => x.ok)) {
+        return result.map((x) => x.val.href);
       }
       return [];
     }
 
-    loadPhotos().then(x => setPhotos(x));
+    loadPhotos().then((x) => setPhotos(x));
   }, [survey]);
 
   if (!isHydrated) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="mx-auto max-w-7xl p-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <FormSkeleton />
           </div>
-          <div className="lg:sticky lg:top-24 space-y-4">
+          <div className="space-y-4 lg:sticky lg:top-24">
             <Skeleton className="h-40 w-full rounded-xl" />
             <Skeleton className="h-40 w-full rounded-xl" />
           </div>
@@ -71,7 +71,7 @@ function Home() {
 
   if (!survey) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="mx-auto max-w-7xl p-6">
         <Alert>
           <AlertTitle>Survey not found</AlertTitle>
         </Alert>
@@ -80,15 +80,15 @@ function Home() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-2">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 order-1 lg:order-1">
+    <div className="mx-auto max-w-7xl p-2">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="order-1 lg:order-1 lg:col-span-2">
           <Suspense fallback={<FormSkeleton />}>
             <BuildingSurveyForm id={id} />
           </Suspense>
         </div>
 
-        <div className="order-2 lg:order-2 lg:sticky lg:top-24 space-y-4">
+        <div className="order-2 space-y-4 lg:sticky lg:top-24 lg:order-2">
           <CompactPhotoGrid
             previewPhotos={photos}
             totalPhotos={photoCount}

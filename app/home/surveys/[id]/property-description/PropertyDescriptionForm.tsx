@@ -1,19 +1,19 @@
-import { DynamicComboBox } from "@/app/home/components/Input";
-import Input from "@/app/home/components/Input/InputText";
-import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
-import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { surveyStore } from "@/app/home/clients/Database";
-import { memo } from "react";
-import { useRouter } from "next/navigation";
-import { useDynamicDrawer } from "@/app/home/components/Drawer";
-import { useAutoSaveForm } from "@/app/home/hooks/useAutoSaveForm";
-import { LastSavedIndicator } from "@/app/home/components/LastSavedIndicator";
-import { 
-  propertyDescriptionSchema, 
-  PropertyDescriptionInput
-} from "../../schemas/propertyDescription";
-import { updatePropertyDescriptionStatus } from "../../schemas";
+import { DynamicComboBox } from '@/app/home/components/Input';
+import Input from '@/app/home/components/Input/InputText';
+import TextAreaInput from '@/app/home/components/Input/TextAreaInput';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { surveyStore } from '@/app/home/clients/Database';
+import { memo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useDynamicDrawer } from '@/app/home/components/Drawer';
+import { useAutoSaveForm } from '@/app/home/hooks/useAutoSaveForm';
+import { LastSavedIndicator } from '@/app/home/components/LastSavedIndicator';
+import {
+  propertyDescriptionSchema,
+  PropertyDescriptionInput,
+} from '../../schemas/propertyDescription';
+import { updatePropertyDescriptionStatus } from '../../schemas';
 
 interface PropertyDescriptionFormProps {
   surveyId: string;
@@ -25,10 +25,10 @@ const TenureField = memo(({ control, errors }: any) => (
     <DynamicComboBox
       labelTitle="Tenure"
       data={[
-        { label: "Freehold", value: "Freehold" },
-        { label: "Leasehold", value: "Leasehold" },
-        { label: "Commonhold", value: "Commonhold" },
-        { label: "Unknown", value: "Unknown" },
+        { label: 'Freehold', value: 'Freehold' },
+        { label: 'Leasehold', value: 'Leasehold' },
+        { label: 'Commonhold', value: 'Commonhold' },
+        { label: 'Unknown', value: 'Unknown' },
       ]}
       name="tenure"
       control={control}
@@ -43,14 +43,14 @@ const EnergyRatingField = memo(({ control, errors }: any) => (
     <DynamicComboBox
       labelTitle="Energy Rating"
       data={[
-        { label: "A", value: "A" },
-        { label: "B", value: "B" },
-        { label: "C", value: "C" },
-        { label: "D", value: "D" },
-        { label: "E", value: "E" },
-        { label: "F", value: "F" },
-        { label: "G", value: "G" },
-        { label: "Unknown", value: "Unknown" },
+        { label: 'A', value: 'A' },
+        { label: 'B', value: 'B' },
+        { label: 'C', value: 'C' },
+        { label: 'D', value: 'D' },
+        { label: 'E', value: 'E' },
+        { label: 'F', value: 'F' },
+        { label: 'G', value: 'G' },
+        { label: 'Unknown', value: 'Unknown' },
       ]}
       name="energyRating"
       control={control}
@@ -60,11 +60,14 @@ const EnergyRatingField = memo(({ control, errors }: any) => (
 ));
 EnergyRatingField.displayName = 'EnergyRatingField';
 
-const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDescriptionFormProps) => {
+const PropertyDescriptionForm = ({
+  propertyDescription,
+  surveyId,
+}: PropertyDescriptionFormProps) => {
   const methods = useForm<PropertyDescriptionInput>({
     resolver: zodResolver(propertyDescriptionSchema),
     defaultValues: propertyDescription,
-    mode: 'onChange' // Enable validation on change
+    mode: 'onChange', // Enable validation on change
   });
   const {
     register,
@@ -74,21 +77,21 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
     getValues,
     trigger,
   } = methods;
-  
+
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
   const saveData = async (data: PropertyDescriptionInput, { auto = false } = {}) => {
     if (!surveyId) return;
 
-    console.log("[PropertyDescriptionForm] Save data", data);
+    console.log('[PropertyDescriptionForm] Save data', data);
 
     try {
       // Update form metadata with current validation status
       const updatedMeta = updatePropertyDescriptionStatus(data);
       const dataWithMeta = {
         ...data,
-        _meta: updatedMeta
+        _meta: updatedMeta,
       };
 
       await surveyStore.update(surveyId, (survey) => {
@@ -101,7 +104,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
         router.push(`/home/surveys/${surveyId}`);
       }
     } catch (error) {
-      console.error("[PropertyDescriptionForm] Save failed", error);
+      console.error('[PropertyDescriptionForm] Save failed', error);
       throw error; // Re-throw for autosave error handling
     }
   };
@@ -114,7 +117,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
     {
       enabled: !!surveyId,
       validateBeforeSave: false, // Allow saving partial/invalid data
-    }
+    },
   );
 
   return (
@@ -124,7 +127,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Property Type"
             placeholder="Detached, Semi-detached, Terraced, Flat, Bungalow, Maisonette, Other"
-            register={() => register("propertyType")}
+            register={() => register('propertyType')}
           />
         </div>
 
@@ -132,15 +135,15 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <TextAreaInput
             labelTitle="Construction Details"
             placeholder="Brick, Stone, Timber, Concrete, Steel, Glass, Other"
-            register={() => register("constructionDetails")}
+            register={() => register('constructionDetails')}
           />
         </div>
-        
+
         <div>
           <Input
             labelTitle="Year of Construction"
             placeholder="presumed 1990s - side extension"
-            register={() => register("yearOfConstruction")}
+            register={() => register('yearOfConstruction')}
           />
         </div>
 
@@ -148,7 +151,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Year of Extensions"
             placeholder="2012"
-            register={() => register("yearOfExtensions")}
+            register={() => register('yearOfExtensions')}
           />
         </div>
 
@@ -156,7 +159,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Year of Conversions"
             placeholder="2004"
-            register={() => register("yearOfConversions")}
+            register={() => register('yearOfConversions')}
           />
         </div>
 
@@ -164,7 +167,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <TextAreaInput
             labelTitle="Grounds"
             placeholder="Garden, Yard, Paved, Lawn, Other"
-            register={() => register("grounds")}
+            register={() => register('grounds')}
           />
         </div>
 
@@ -172,7 +175,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Services"
             placeholder="Electricity, Gas, Water, Drainage, Telephone, Broadband, Other"
-            register={() => register("services")}
+            register={() => register('services')}
           />
         </div>
 
@@ -180,7 +183,7 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
           <Input
             labelTitle="Other Services"
             placeholder="Cable TV, Satellite TV, Solar Panels, Other"
-            register={() => register("otherServices")}
+            register={() => register('otherServices')}
           />
         </div>
 
@@ -191,9 +194,11 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
             labelTitle="Number of Bedrooms"
             placeholder="Number of Bedrooms"
             type="number"
-            register={() => register("numberOfBedrooms", { 
-              valueAsNumber: true
-            })}
+            register={() =>
+              register('numberOfBedrooms', {
+                valueAsNumber: true,
+              })
+            }
           />
         </div>
 
@@ -202,18 +207,20 @@ const PropertyDescriptionForm = ({ propertyDescription, surveyId }: PropertyDesc
             labelTitle="Number of Bathrooms"
             placeholder="Number of Bathrooms"
             type="number"
-            register={() => register("numberOfBathrooms", { 
-              valueAsNumber: true
-            })}
+            register={() =>
+              register('numberOfBathrooms', {
+                valueAsNumber: true,
+              })
+            }
           />
         </div>
 
         <TenureField control={control} errors={errors} />
-        
+
         <LastSavedIndicator
           status={saveStatus}
           lastSavedAt={lastSavedAt}
-          className="text-sm justify-center"
+          className="justify-center text-sm"
         />
       </div>
     </FormProvider>

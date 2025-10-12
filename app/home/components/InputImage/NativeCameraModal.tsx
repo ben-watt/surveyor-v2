@@ -14,12 +14,12 @@ interface NativeCameraModalProps {
   maxPhotos?: number;
 }
 
-export const NativeCameraModal = ({ 
-  isOpen, 
-  onClose, 
-  path, 
+export const NativeCameraModal = ({
+  isOpen,
+  onClose,
+  path,
   onPhotoCaptured,
-  maxPhotos = 10 
+  maxPhotos = 10,
 }: NativeCameraModalProps) => {
   const {
     photos,
@@ -32,7 +32,7 @@ export const NativeCameraModal = ({
     removePhoto,
     clearPhotos,
     requestPermissions,
-    checkPermissions
+    checkPermissions,
   } = useNativeCamera({ maxPhotos, path });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -56,7 +56,7 @@ export const NativeCameraModal = ({
       clearPhotos();
       setUploadSuccess(false);
     }
-    
+
     return () => {
       document.body.style.overflow = '';
     };
@@ -99,12 +99,12 @@ export const NativeCameraModal = ({
       const total = photos.length;
       for (let index = 0; index < total; index++) {
         const photo = photos[index];
-        
+
         // Create file from blob
         const fileName = `native-camera-${photo.timestamp}.jpg`;
-        const originalFile = new File([photo.blob], fileName, { 
+        const originalFile = new File([photo.blob], fileName, {
           type: 'image/jpeg',
-          lastModified: photo.timestamp 
+          lastModified: photo.timestamp,
         });
 
         // Resize image using existing pipeline
@@ -112,20 +112,16 @@ export const NativeCameraModal = ({
         const filePath = join(path, fileName);
 
         // Upload using enhanced image store
-        await enhancedImageStore.uploadImage(
-          resizedFile,
-          filePath,
-          {
-            caption: `Native camera photo captured at ${new Date(photo.timestamp).toLocaleString()}`,
-            notes: JSON.stringify({
-              filename: fileName,
-              size: resizedFile.size.toString(),
-              type: resizedFile.type,
-              captureMethod: 'native-camera',
-              captureTime: new Date(photo.timestamp).toISOString(),
-            }),
-          }
-        );
+        await enhancedImageStore.uploadImage(resizedFile, filePath, {
+          caption: `Native camera photo captured at ${new Date(photo.timestamp).toLocaleString()}`,
+          notes: JSON.stringify({
+            filename: fileName,
+            size: resizedFile.size.toString(),
+            type: resizedFile.type,
+            captureMethod: 'native-camera',
+            captureTime: new Date(photo.timestamp).toISOString(),
+          }),
+        });
 
         // Notify parent component
         onPhotoCaptured?.(filePath);
@@ -141,7 +137,7 @@ export const NativeCameraModal = ({
       setUploadSuccess(true);
       setUploadingIndex(null);
       setUploadProgress(100);
-      
+
       // Auto-close if max photos reached, otherwise show success briefly
       if (photos.length >= maxPhotos) {
         setTimeout(() => {
@@ -158,13 +154,22 @@ export const NativeCameraModal = ({
       setUploadingIndex(null);
       setUploadProgress(0);
     }
-  }, [photos, isUploading, path, resizeForUpload, onPhotoCaptured, onClose, maxPhotos, clearPhotos]);
+  }, [
+    photos,
+    isUploading,
+    path,
+    resizeForUpload,
+    onPhotoCaptured,
+    onClose,
+    maxPhotos,
+    clearPhotos,
+  ]);
 
   if (!isOpen) return null;
 
   const modalContent = (
-    <div 
-      className="fixed inset-0 bg-black overflow-hidden z-[9999999]"
+    <div
+      className="fixed inset-0 z-[9999999] overflow-hidden bg-black"
       style={{
         position: 'fixed',
         top: 0,
@@ -173,40 +178,38 @@ export const NativeCameraModal = ({
         bottom: 0,
         width: '100vw',
         height: '100vh',
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
       }}
     >
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-black/50 backdrop-blur-md text-white border-b border-white/10">
+      <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/50 p-4 text-white backdrop-blur-md">
         <button
           onClick={onClose}
-          className="p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+          className="rounded-full bg-black/50 p-2 transition-colors hover:bg-black/70"
           disabled={isUploading}
         >
           <X size={24} />
         </button>
-        
         <div className="text-center">
           <p className="text-sm font-medium">Native Camera</p>
           <p className="text-xs text-gray-300">
             {photos.length}/{maxPhotos} photos
           </p>
         </div>
-
         <div className="w-10" /> {/* Spacer */}
       </div>
 
       {/* Main Content */}
-      <div className="relative w-full h-full flex items-center justify-center">
+      <div className="relative flex h-full w-full items-center justify-center">
         {cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10">
-            <div className="text-center text-white p-6 max-w-sm">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70">
+            <div className="max-w-sm p-6 text-center text-white">
               <AlertCircle className="mx-auto mb-4 text-red-400" size={48} />
-              <h3 className="text-lg font-medium mb-2">Camera Error</h3>
-              <p className="text-sm text-gray-300 mb-4">{cameraError}</p>
+              <h3 className="mb-2 text-lg font-medium">Camera Error</h3>
+              <p className="mb-4 text-sm text-gray-300">{cameraError}</p>
               <button
                 onClick={() => requestPermissions()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
               >
                 Grant Permission
               </button>
@@ -215,11 +218,11 @@ export const NativeCameraModal = ({
         )}
 
         {!canUseNative && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10">
-            <div className="text-center text-white p-6 max-w-sm">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70">
+            <div className="max-w-sm p-6 text-center text-white">
               <AlertCircle className="mx-auto mb-4 text-yellow-400" size={48} />
-              <h3 className="text-lg font-medium mb-2">Native Camera Unavailable</h3>
-              <p className="text-sm text-gray-300 mb-4">
+              <h3 className="mb-2 text-lg font-medium">Native Camera Unavailable</h3>
+              <p className="mb-4 text-sm text-gray-300">
                 Native camera is not available on this platform. Please use the web camera instead.
               </p>
             </div>
@@ -227,16 +230,16 @@ export const NativeCameraModal = ({
         )}
 
         {hasPermission === false && !cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-10">
-            <div className="text-center text-white p-6 max-w-sm">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70">
+            <div className="max-w-sm p-6 text-center text-white">
               <Camera className="mx-auto mb-4 text-blue-400" size={48} />
-              <h3 className="text-lg font-medium mb-2">Camera Permission Required</h3>
-              <p className="text-sm text-gray-300 mb-4">
+              <h3 className="mb-2 text-lg font-medium">Camera Permission Required</h3>
+              <p className="mb-4 text-sm text-gray-300">
                 This app needs camera permission to take photos.
               </p>
               <button
                 onClick={requestPermissions}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
               >
                 Grant Permission
               </button>
@@ -246,28 +249,28 @@ export const NativeCameraModal = ({
 
         {/* Success message overlay */}
         {canUseNative && hasPermission && !cameraError && (
-          <div className="text-center text-white p-8">
-            <div className="max-w-sm mx-auto">
+          <div className="p-8 text-center text-white">
+            <div className="mx-auto max-w-sm">
               <Camera className="mx-auto mb-6 text-white" size={64} />
-              <h3 className="text-xl font-medium mb-4">Ready to Capture</h3>
-              <p className="text-sm text-gray-300 mb-8">
+              <h3 className="mb-4 text-xl font-medium">Ready to Capture</h3>
+              <p className="mb-8 text-sm text-gray-300">
                 Use the camera button below to take photos or select from your gallery.
               </p>
-              
+
               {photos.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-sm text-gray-300 mb-4">Recently captured:</p>
-                  <div className="flex gap-2 justify-center flex-wrap">
+                  <p className="mb-4 text-sm text-gray-300">Recently captured:</p>
+                  <div className="flex flex-wrap justify-center gap-2">
                     {photos.slice(-5).map((photo) => (
                       <div key={photo.id} className="relative">
                         <img
                           src={photo.uri}
                           alt="Captured"
-                          className="w-16 h-16 object-cover rounded-lg border border-white/20"
+                          className="h-16 w-16 rounded-lg border border-white/20 object-cover"
                         />
                         <button
                           onClick={() => removePhoto(photo.id)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white"
                         >
                           ×
                         </button>
@@ -282,13 +285,13 @@ export const NativeCameraModal = ({
       </div>
 
       {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-6 bg-black/50 backdrop-blur-md rounded-t-2xl border-t border-white/10">
-        <div className="max-w-screen-lg mx-auto">
+      <div className="absolute bottom-0 left-0 right-0 z-10 rounded-t-2xl border-t border-white/10 bg-black/50 p-6 backdrop-blur-md">
+        <div className="mx-auto max-w-screen-lg">
           {/* Upload Section */}
           {photos.length > 0 && (
             <div className="mb-4">
               {uploadSuccess ? (
-                <div className="flex items-center justify-center gap-3 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-medium shadow-lg">
+                <div className="flex items-center justify-center gap-3 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 font-medium text-white shadow-lg">
                   <CheckCircle size={16} />
                   <span>Upload Complete</span>
                 </div>
@@ -296,7 +299,7 @@ export const NativeCameraModal = ({
                 <button
                   onClick={uploadPhotos}
                   disabled={isUploading}
-                  className="w-full px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
+                  className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3 font-medium text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <div className="flex items-center justify-center gap-2">
                     {isUploading ? (
@@ -305,11 +308,13 @@ export const NativeCameraModal = ({
                         <span>Uploading {uploadProgress}%</span>
                       </>
                     ) : (
-                      <span>Upload {photos.length} Photo{photos.length > 1 ? 's' : ''}</span>
+                      <span>
+                        Upload {photos.length} Photo{photos.length > 1 ? 's' : ''}
+                      </span>
                     )}
                   </div>
                   {isUploading && (
-                    <div className="mt-2 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
                       <div className="h-full bg-white/80" style={{ width: `${uploadProgress}%` }} />
                     </div>
                   )}
@@ -324,7 +329,7 @@ export const NativeCameraModal = ({
             <button
               onClick={handleGalleryPick}
               disabled={!canUseNative || hasPermission === false || photos.length >= maxPhotos}
-              className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+              className="flex h-16 w-16 transform items-center justify-center rounded-full bg-gray-600 transition-all duration-200 hover:scale-105 hover:bg-gray-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ImageIcon size={24} className="text-white" />
             </button>
@@ -332,8 +337,14 @@ export const NativeCameraModal = ({
             {/* Capture Button */}
             <button
               onClick={handleNativeCapture}
-              disabled={!canUseNative || hasPermission === false || isCapturing || photos.length >= maxPhotos || isUploading}
-              className="w-20 h-20 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+              disabled={
+                !canUseNative ||
+                hasPermission === false ||
+                isCapturing ||
+                photos.length >= maxPhotos ||
+                isUploading
+              }
+              className="flex h-20 w-20 transform items-center justify-center rounded-full bg-white transition-all duration-200 hover:scale-105 hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isCapturing ? (
                 <Loader2 className="animate-spin text-black" size={32} />
@@ -347,12 +358,11 @@ export const NativeCameraModal = ({
           </div>
 
           {/* Status Text */}
-          <div className="text-center mt-4">
+          <div className="mt-4 text-center">
             <p className="text-xs text-gray-400">
-              {photos.length >= maxPhotos 
+              {photos.length >= maxPhotos
                 ? `Maximum ${maxPhotos} photos reached`
-                : `${maxPhotos - photos.length} more photo${maxPhotos - photos.length !== 1 ? 's' : ''} allowed`
-              }
+                : `${maxPhotos - photos.length} more photo${maxPhotos - photos.length !== 1 ? 's' : ''} allowed`}
             </p>
           </div>
         </div>

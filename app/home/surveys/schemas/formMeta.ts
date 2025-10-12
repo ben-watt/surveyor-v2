@@ -35,18 +35,20 @@ export function createInitialFormMeta(): FormMeta {
  */
 export function updateFormMeta(
   currentData: unknown,
-  validationResult: { success: boolean; error?: { issues: Array<{ path: PropertyKey[]; message: string }> } },
-  previousMeta?: FormMeta
+  validationResult: {
+    success: boolean;
+    error?: { issues: Array<{ path: PropertyKey[]; message: string }> };
+  },
+  previousMeta?: FormMeta,
 ): FormMeta {
-  const hasData = currentData && 
-    typeof currentData === 'object' && 
-    Object.keys(currentData).length > 0;
+  const hasData =
+    currentData && typeof currentData === 'object' && Object.keys(currentData).length > 0;
 
-  const errors = validationResult.success 
-    ? [] 
-    : (validationResult.error?.issues.map(issue => 
-        `${issue.path.map(p => String(p)).join('.')}: ${issue.message}`
-      ) || []);
+  const errors = validationResult.success
+    ? []
+    : validationResult.error?.issues.map(
+        (issue) => `${issue.path.map((p) => String(p)).join('.')}: ${issue.message}`,
+      ) || [];
 
   let status: FormStatus;
   if (!hasData) {
@@ -77,7 +79,7 @@ export function getFormStatus(formData: { _meta?: FormMeta }): {
   errors: string[];
 } {
   const meta = formData._meta || createInitialFormMeta();
-  
+
   return {
     status: meta.status,
     isValid: meta.isValid,

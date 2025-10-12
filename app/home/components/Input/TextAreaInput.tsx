@@ -1,12 +1,8 @@
-import { Textarea } from "@/components/ui/textarea";
-import {
-  FieldErrors,
-  FieldValues,
-  UseFormRegisterReturn,
-} from "react-hook-form";
-import { Label } from "./Label";
-import { ErrorMessage } from "@hookform/error-message";
-import InputError from "../InputError";
+import { Textarea } from '@/components/ui/textarea';
+import { FieldErrors, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
+import { Label } from './Label';
+import { ErrorMessage } from '@hookform/error-message';
+import InputError from '../InputError';
 
 interface TextAreaInputProps {
   labelTitle?: string;
@@ -19,11 +15,11 @@ interface TextAreaInputProps {
 
 export default function TextAreaInput({
   register,
-  labelTitle = "",
-  defaultValue = "",
-  placeholder = "",
+  labelTitle = '',
+  defaultValue = '',
+  placeholder = '',
   errors,
-  className = "",
+  className = '',
 }: TextAreaInputProps) {
   const reg = register();
   return (

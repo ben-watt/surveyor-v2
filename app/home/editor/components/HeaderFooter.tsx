@@ -1,6 +1,9 @@
-import { BuildingSurveyFormData, mapAddress } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
-import { formatDateWithSuffix } from "../../utils/dateFormatters";
-import Image from "next/image";
+import {
+  BuildingSurveyFormData,
+  mapAddress,
+} from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import { formatDateWithSuffix } from '../../utils/dateFormatters';
+import Image from 'next/image';
 
 interface HeaderFooterHtmlProps {
   editorData: BuildingSurveyFormData | undefined;
@@ -15,7 +18,7 @@ export const Footer = ({ editorData }: HeaderFooterHtmlProps) => {
         alt="RICS Logo"
         width="100mm"
         height="30mm"
-        style={{ maxWidth: "200px", height: "auto" }}
+        style={{ maxWidth: '200px', height: 'auto' }}
       />
     </div>
   );
@@ -25,53 +28,47 @@ export const Header = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="header-container">
       <img
-        className="absolute top-0 headerImage object-contain"
+        className="headerImage absolute top-0 object-contain"
         src="/cwbc_header.jpg"
         alt="CWBC Header"
         width="550px"
       />
       <div className="headerAddress mt-2">
         <p className="text-xs text-gray-600">
-          {editorData
-            ? editorData.reportDetails.address.formatted
-            : "Unknown"}
+          {editorData ? editorData.reportDetails.address.formatted : 'Unknown'}
         </p>
-        <p>{editorData ? "Ref: " + editorData.reportDetails.reference : "Unknown"}</p>
+        <p>{editorData ? 'Ref: ' + editorData.reportDetails.reference : 'Unknown'}</p>
         <p>
           {editorData
-            ? formatDateWithSuffix(
-                new Date(editorData.reportDetails.reportDate)
-              )
-            : "Unknown"}
+            ? formatDateWithSuffix(new Date(editorData.reportDetails.reportDate))
+            : 'Unknown'}
         </p>
       </div>
-  </div>
-  )
-}
-
+    </div>
+  );
+};
 
 export const TitlePage = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="title-page relative">
       <Image src="/cwbc_cover_landscape.jpg" alt="Cover Page" width={1122} height={0} />
-      <div className="absolute text-white bottom-24 w-full">
-        <div className="flex justify-between px-16 w-full min-h-40">
+      <div className="absolute bottom-24 w-full text-white">
+        <div className="flex min-h-40 w-full justify-between px-16">
           <div>
             <p>Level {editorData?.reportDetails.level} Building Survey Report</p>
-            {editorData?.reportDetails.address && mapAddress(editorData?.reportDetails.address, (line) => <p key={line}>{line}</p>)}
+            {editorData?.reportDetails.address &&
+              mapAddress(editorData?.reportDetails.address, (line) => <p key={line}>{line}</p>)}
           </div>
           <div className="self-end text-right">
             <p>
-                {editorData
-                  ? formatDateWithSuffix(
-                      new Date(editorData.reportDetails.reportDate)
-                    )
-                  : "Unknown"}
+              {editorData
+                ? formatDateWithSuffix(new Date(editorData.reportDetails.reportDate))
+                : 'Unknown'}
             </p>
-            <p>{editorData ? "Ref:" + editorData.reportDetails.reference : "Unknown"}</p>
+            <p>{editorData ? 'Ref:' + editorData.reportDetails.reference : 'Unknown'}</p>
           </div>
         </div>
-      </div>   
-  </div>
-  )
-}
+      </div>
+    </div>
+  );
+};

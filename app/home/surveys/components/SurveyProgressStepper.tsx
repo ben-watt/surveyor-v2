@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { FormStatus } from "../building-survey-reports/BuildingSurveyReportSchema";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { FormStatus } from '../building-survey-reports/BuildingSurveyReportSchema';
 
 interface FormSection {
   title: string;
@@ -25,8 +25,8 @@ interface SurveyProgressStepperProps {
  */
 export function SurveyProgressStepper({ sections, className = '' }: SurveyProgressStepperProps) {
   const totalSections = sections.length;
-  const completedSections = sections.filter(s => s.status === FormStatus.Complete).length;
-  const errorSections = sections.filter(s => s.status === FormStatus.Error).length;
+  const completedSections = sections.filter((s) => s.status === FormStatus.Complete).length;
+  const errorSections = sections.filter((s) => s.status === FormStatus.Error).length;
   const progress = totalSections > 0 ? (completedSections / totalSections) * 100 : 0;
 
   const getProgressColor = () => {
@@ -38,18 +38,22 @@ export function SurveyProgressStepper({ sections, className = '' }: SurveyProgre
   return (
     <Card className={className}>
       <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold">Survey progress</h2>
           <div className="flex items-center gap-2">
             {errorSections > 0 && (
-              <Badge className="bg-red-100 text-red-800 border-red-200">{errorSections} issue{errorSections !== 1 ? 's' : ''}</Badge>
+              <Badge className="border-red-200 bg-red-100 text-red-800">
+                {errorSections} issue{errorSections !== 1 ? 's' : ''}
+              </Badge>
             )}
-            <Badge variant="outline">{completedSections} / {totalSections}</Badge>
+            <Badge variant="outline">
+              {completedSections} / {totalSections}
+            </Badge>
           </div>
         </div>
 
         <div
-          className="w-full bg-muted rounded-md h-2 mb-4 overflow-hidden"
+          className="mb-4 h-2 w-full overflow-hidden rounded-md bg-muted"
           role="progressbar"
           aria-label="Survey progress"
           aria-valuenow={Math.round(progress)}

@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { SurveyImage } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { z } from 'zod';
+import { SurveyImage } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 export const SurveyImageSchema = z.object({
   path: z.string(),
@@ -8,7 +8,7 @@ export const SurveyImageSchema = z.object({
 });
 
 export const ElementFormSchema = z.object({
-  description: z.string().default(""),
+  description: z.string().default(''),
   images: z.array(SurveyImageSchema).default([]),
 });
 

@@ -67,7 +67,10 @@ describe('DropZoneInputImageV2 Reordering', () => {
     enhancedImageStore.getActiveImages.mockResolvedValue({ ok: true, val: activeImages });
     enhancedImageStore.getArchivedImages.mockResolvedValue({ ok: true, val: [] });
     // Hydration for thumbnails
-    const metaById: Record<string, any> = Object.fromEntries(activeImages.map(img => [img.id, img])); enhancedImageStore.useGet.mockImplementation((id: string) => [true, metaById[id]]);
+    const metaById: Record<string, any> = Object.fromEntries(
+      activeImages.map((img) => [img.id, img]),
+    );
+    enhancedImageStore.useGet.mockImplementation((id: string) => [true, metaById[id]]);
 
     // Controlled order is [b, a]
     const controlledValue = [
@@ -82,7 +85,7 @@ describe('DropZoneInputImageV2 Reordering', () => {
         onChange={jest.fn()}
         onReorder={jest.fn()}
         features={{ metadata: true, archive: true }}
-      />
+      />,
     );
 
     // Wait for the list to be present
@@ -125,7 +128,9 @@ describe('DropZoneInputImageV2 Reordering', () => {
 
     enhancedImageStore.getActiveImages.mockResolvedValue({ ok: true, val: activeImages });
     enhancedImageStore.getArchivedImages.mockResolvedValue({ ok: true, val: [] });
-    const metaById: Record<string, any> = Object.fromEntries(activeImages.map(img => [img.id, img]));
+    const metaById: Record<string, any> = Object.fromEntries(
+      activeImages.map((img) => [img.id, img]),
+    );
     enhancedImageStore.useGet.mockImplementation((id: string) => [true, metaById[id]]);
 
     const controlledValue = [
@@ -140,7 +145,7 @@ describe('DropZoneInputImageV2 Reordering', () => {
         value={controlledValue}
         onChange={onChange}
         features={{}}
-      />
+      />,
     );
 
     // Wait for any async refresh to complete
@@ -149,4 +154,3 @@ describe('DropZoneInputImageV2 Reordering', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
-

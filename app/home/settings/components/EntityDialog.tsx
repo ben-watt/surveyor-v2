@@ -1,12 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { EntitiesToSync } from "../types";
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { EntitiesToSync } from '../types';
 
 interface EntityDialogProps {
   title: string;
@@ -16,7 +11,7 @@ interface EntityDialogProps {
   onEntitiesChange: (entities: EntitiesToSync) => void;
   onConfirm: () => void;
   confirmLabel: string;
-  confirmVariant?: "default" | "destructive";
+  confirmVariant?: 'default' | 'destructive';
   entityCounts: Record<keyof EntitiesToSync, number>;
   isLoading?: boolean;
   extraContent?: React.ReactNode;
@@ -30,7 +25,7 @@ export function EntityDialog({
   onEntitiesChange,
   onConfirm,
   confirmLabel,
-  confirmVariant = "default",
+  confirmVariant = 'default',
   entityCounts,
   isLoading,
   extraContent,
@@ -43,67 +38,74 @@ export function EntityDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="flex items-center space-x-2">
-            <Checkbox 
+            <Checkbox
               id="elements"
               checked={entities.elements}
               disabled={entityCounts.sections === 0}
-              onCheckedChange={(checked) => 
-                onEntitiesChange({ ...entities, elements: !!checked })
-              }
+              onCheckedChange={(checked) => onEntitiesChange({ ...entities, elements: !!checked })}
             />
-            <label htmlFor="elements" className={`text-sm font-medium leading-none ${entityCounts.elements === 0 ? 'text-gray-400' : ''}`}>
+            <label
+              htmlFor="elements"
+              className={`text-sm font-medium leading-none ${entityCounts.elements === 0 ? 'text-gray-400' : ''}`}
+            >
               Elements ({entityCounts.elements})
             </label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
+            <Checkbox
               id="components"
               checked={entities.components}
               disabled={entityCounts.elements === 0}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 onEntitiesChange({ ...entities, components: !!checked })
               }
             />
-            <label htmlFor="components" className={`text-sm font-medium leading-none ${entityCounts.components === 0 ? 'text-gray-400' : ''}`}>
+            <label
+              htmlFor="components"
+              className={`text-sm font-medium leading-none ${entityCounts.components === 0 ? 'text-gray-400' : ''}`}
+            >
               Components ({entityCounts.components})
             </label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
+            <Checkbox
               id="phrases"
               checked={entities.phrases}
               disabled={entityCounts.components === 0}
-              onCheckedChange={(checked) => 
-                onEntitiesChange({ ...entities, phrases: !!checked })
-              }
+              onCheckedChange={(checked) => onEntitiesChange({ ...entities, phrases: !!checked })}
             />
-            <label htmlFor="phrases" className={`text-sm font-medium leading-none ${entityCounts.phrases === 0 ? 'text-gray-400' : ''}`}>
+            <label
+              htmlFor="phrases"
+              className={`text-sm font-medium leading-none ${entityCounts.phrases === 0 ? 'text-gray-400' : ''}`}
+            >
               Phrases ({entityCounts.phrases})
             </label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
+            <Checkbox
               id="sections"
               checked={entities.sections}
               disabled={false}
-              onCheckedChange={(checked) => 
-                onEntitiesChange({ ...entities, sections: !!checked })
-              }
+              onCheckedChange={(checked) => onEntitiesChange({ ...entities, sections: !!checked })}
             />
-            <label htmlFor="sections" className={`text-sm font-medium leading-none ${entityCounts.sections === 0 ? 'text-gray-400' : ''}`}>
+            <label
+              htmlFor="sections"
+              className={`text-sm font-medium leading-none ${entityCounts.sections === 0 ? 'text-gray-400' : ''}`}
+            >
               Sections ({entityCounts.sections})
             </label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
+            <Checkbox
               id="surveys"
               checked={entities.surveys}
               disabled={entityCounts.phrases === 0}
-              onCheckedChange={(checked) => 
-                onEntitiesChange({ ...entities, surveys: !!checked })
-              }
+              onCheckedChange={(checked) => onEntitiesChange({ ...entities, surveys: !!checked })}
             />
-            <label htmlFor="surveys" className={`text-sm font-medium leading-none ${entityCounts.surveys === 0 ? 'text-gray-400' : ''}`}>
+            <label
+              htmlFor="surveys"
+              className={`text-sm font-medium leading-none ${entityCounts.surveys === 0 ? 'text-gray-400' : ''}`}
+            >
               Surveys ({entityCounts.surveys})
             </label>
           </div>
@@ -113,7 +115,7 @@ export function EntityDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
+          <Button
             variant={confirmVariant}
             onClick={onConfirm}
             disabled={!Object.values(entities).some(Boolean) || isLoading}
@@ -124,4 +126,4 @@ export function EntityDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

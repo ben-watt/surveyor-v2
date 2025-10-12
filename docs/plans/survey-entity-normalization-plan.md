@@ -1,9 +1,11 @@
 # Survey Entity Normalization Plan
 
 ## Overview
+
 This plan outlines the migration from storing survey data as a single JSON blob to a normalized table structure. This change will improve query performance, enable granular updates, and support better offline sync capabilities.
 
 ## Current State
+
 - Survey data stored as JSON in `content` field of Surveys table
 - All survey operations require loading/saving entire JSON structure
 - Forms use deep object updates with Immer
@@ -12,6 +14,7 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ## Proposed Table Structure
 
 ### 1. surveys - Core Survey Metadata
+
 ```typescript
 {
   id: string,
@@ -29,6 +32,7 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ```
 
 ### 2. surveyReportDetails - Report Information
+
 ```typescript
 {
   id: string,
@@ -61,6 +65,7 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ```
 
 ### 3. surveyPropertyDescriptions - Property Details
+
 ```typescript
 {
   id: string,
@@ -84,6 +89,7 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ```
 
 ### 4. surveySections - Top-level Survey Sections
+
 ```typescript
 {
   id: string,
@@ -97,6 +103,7 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ```
 
 ### 5. surveyElements - Elements within Sections
+
 ```typescript
 {
   id: string,
@@ -114,6 +121,7 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ```
 
 ### 6. surveyInspections - Inspection Data
+
 ```typescript
 {
   id: string,
@@ -137,6 +145,7 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ```
 
 ### 7. surveyChecklists - Checklist Items
+
 ```typescript
 {
   id: string,
@@ -151,32 +160,37 @@ This plan outlines the migration from storing survey data as a single JSON blob 
 ## Dexie Schema Updates
 
 ```javascript
-db.version(3).stores({
-  // Survey tables
-  surveys: 'id, tenantId, status, [tenantId+updatedAt], [tenantId+status]',
-  surveyReportDetails: 'id, surveyId, [tenantId+surveyId], [tenantId+updatedAt]',
-  surveyPropertyDescriptions: 'id, surveyId, [tenantId+surveyId], [tenantId+updatedAt]',
-  surveySections: 'id, surveyId, [tenantId+surveyId], [tenantId+updatedAt]',
-  surveyElements: 'id, surveySectionId, surveyId, [tenantId+surveyId], [tenantId+surveySectionId]',
-  surveyInspections: 'id, surveyElementId, surveySectionId, surveyId, [tenantId+surveyId], [tenantId+surveyElementId]',
-  surveyChecklists: 'id, surveyId, [tenantId+surveyId]',
-  
-  // Existing library tables remain unchanged
-  components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
-  elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
-  phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
-  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
-  imageUploads: 'id, tenantId, path, updatedAt, syncStatus, [tenantId+updatedAt]',
-  imageMetadata: 'id, tenantId, imagePath, updatedAt, syncStatus, [tenantId+updatedAt]'
-}).upgrade(tx => {
-  // Clear old survey data (not in production)
-  return tx.table('surveys').clear();
-});
+db.version(3)
+  .stores({
+    // Survey tables
+    surveys: 'id, tenantId, status, [tenantId+updatedAt], [tenantId+status]',
+    surveyReportDetails: 'id, surveyId, [tenantId+surveyId], [tenantId+updatedAt]',
+    surveyPropertyDescriptions: 'id, surveyId, [tenantId+surveyId], [tenantId+updatedAt]',
+    surveySections: 'id, surveyId, [tenantId+surveyId], [tenantId+updatedAt]',
+    surveyElements:
+      'id, surveySectionId, surveyId, [tenantId+surveyId], [tenantId+surveySectionId]',
+    surveyInspections:
+      'id, surveyElementId, surveySectionId, surveyId, [tenantId+surveyId], [tenantId+surveyElementId]',
+    surveyChecklists: 'id, surveyId, [tenantId+surveyId]',
+
+    // Existing library tables remain unchanged
+    components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+    elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+    phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+    sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+    imageUploads: 'id, tenantId, path, updatedAt, syncStatus, [tenantId+updatedAt]',
+    imageMetadata: 'id, tenantId, imagePath, updatedAt, syncStatus, [tenantId+updatedAt]',
+  })
+  .upgrade((tx) => {
+    // Clear old survey data (not in production)
+    return tx.table('surveys').clear();
+  });
 ```
 
 ## Store Implementation
 
 ### File Structure
+
 ```
 app/home/clients/survey/
 ├── SurveyStoreV2.ts       # Main store implementation
@@ -191,32 +205,37 @@ app/home/clients/survey/
 ```typescript
 export class SurveyStoreV2 {
   // Full survey operations
-  async createSurvey(data: Partial<BuildingSurveyFormData>): Promise<string>
-  async getSurvey(id: string): Promise<BuildingSurveyFormData | null>
-  async deleteSurvey(id: string): Promise<void>
-  
+  async createSurvey(data: Partial<BuildingSurveyFormData>): Promise<string>;
+  async getSurvey(id: string): Promise<BuildingSurveyFormData | null>;
+  async deleteSurvey(id: string): Promise<void>;
+
   // Granular updates for forms
-  async updateReportDetails(surveyId: string, data: Partial<ReportDetails>): Promise<void>
-  async updatePropertyDescription(surveyId: string, data: Partial<PropertyDescription>): Promise<void>
-  async updateSection(sectionId: string, data: Partial<SurveySection>): Promise<void>
-  async updateElement(elementId: string, data: Partial<ElementSection>): Promise<void>
-  async updateInspection(inspectionId: string, data: Partial<Inspection>): Promise<void>
-  async updateChecklist(surveyId: string, items: Input<boolean>[]): Promise<void>
-  
+  async updateReportDetails(surveyId: string, data: Partial<ReportDetails>): Promise<void>;
+  async updatePropertyDescription(
+    surveyId: string,
+    data: Partial<PropertyDescription>,
+  ): Promise<void>;
+  async updateSection(sectionId: string, data: Partial<SurveySection>): Promise<void>;
+  async updateElement(elementId: string, data: Partial<ElementSection>): Promise<void>;
+  async updateInspection(inspectionId: string, data: Partial<Inspection>): Promise<void>;
+  async updateChecklist(surveyId: string, items: Input<boolean>[]): Promise<void>;
+
   // Optimized list operations
-  async listSurveys(): Promise<SurveyListItem[]>
-  
+  async listSurveys(): Promise<SurveyListItem[]>;
+
   // React hooks
-  useList(): [boolean, SurveyListItem[]]
-  useGet(id: string): [boolean, BuildingSurveyFormData | null]
-  useSectionList(surveyId: string): [boolean, SurveySection[]]
+  useList(): [boolean, SurveyListItem[]];
+  useGet(id: string): [boolean, BuildingSurveyFormData | null];
+  useSectionList(surveyId: string): [boolean, SurveySection[]];
 }
 ```
 
 ## Form Migration
 
 ### ReportDetailsForm
+
 **Before:**
+
 ```typescript
 await surveyStore.update(surveyId, (survey) => {
   survey.reportDetails = data;
@@ -224,12 +243,15 @@ await surveyStore.update(surveyId, (survey) => {
 ```
 
 **After:**
+
 ```typescript
 await surveyStoreV2.updateReportDetails(surveyId, data);
 ```
 
 ### PropertyDescriptionForm
+
 **Before:**
+
 ```typescript
 await surveyStore.update(surveyId, (survey) => {
   survey.propertyDescription = data;
@@ -237,24 +259,23 @@ await surveyStore.update(surveyId, (survey) => {
 ```
 
 **After:**
+
 ```typescript
 await surveyStoreV2.updatePropertyDescription(surveyId, data);
 ```
 
 ### InspectionForm
+
 **Before:**
+
 ```typescript
 await surveyStore.update(surveyId, (survey) => {
-  addOrUpdateComponent(
-    survey,
-    surveySectionId,
-    elementId,
-    componentData
-  );
+  addOrUpdateComponent(survey, surveySectionId, elementId, componentData);
 });
 ```
 
 **After:**
+
 ```typescript
 await surveyStoreV2.updateInspection(inspectionId, {
   ragStatus: data.ragStatus,
@@ -262,17 +283,20 @@ await surveyStoreV2.updateInspection(inspectionId, {
   costings: data.costings,
   location: data.location,
   additionalDescription: data.additionalDescription,
-  images: data.images
+  images: data.images,
 });
 ```
 
 ### Survey List Page
+
 **Before:**
+
 ```typescript
 const [isHydrated, data] = surveyStore.useList(); // Loads full surveys
 ```
 
 **After:**
+
 ```typescript
 const [isHydrated, data] = surveyStoreV2.useList(); // Only loads list data
 ```
@@ -299,12 +323,14 @@ SurveyReportDetails: a.model({
 ## Implementation Steps
 
 ### Phase 1: Database & Store Setup
+
 1. Create new Dexie schema with version 3
 2. Implement SurveyStoreV2 class with basic CRUD operations
 3. Create assembler functions to convert between normalized and denormalized data
 4. Add React hooks for new store
 
 ### Phase 2: Form Migration
+
 1. Update ReportDetailsForm to use new store method
 2. Update PropertyDescriptionForm to use new store method
 3. Update InspectionForm to use new store method (most complex)
@@ -312,18 +338,21 @@ SurveyReportDetails: a.model({
 5. Update all auto-save hooks to work with new methods
 
 ### Phase 3: List & Navigation Updates
+
 1. Update survey list page to use optimized list method
 2. Update survey detail page to assemble full survey from tables
 3. Update navigation and breadcrumbs
 4. Update sync status indicators
 
 ### Phase 4: Sync Implementation
+
 1. Create sync handlers for each new table
 2. Update Amplify backend to handle new models
 3. Implement conflict resolution for concurrent edits
 4. Add retry logic for failed syncs
 
 ### Phase 5: Cleanup
+
 1. Remove old survey content field
 2. Remove old store methods
 3. Update tests for new structure
@@ -332,16 +361,19 @@ SurveyReportDetails: a.model({
 ## Benefits
 
 1. **Performance**
+
    - List view loads 10x faster (no inspection data loaded)
    - Forms only update their specific data
    - Reduced memory usage for large surveys
 
 2. **Sync Efficiency**
+
    - Only changed sections sync to server
    - Smaller payload sizes
    - Better conflict resolution
 
 3. **Developer Experience**
+
    - Cleaner separation of concerns
    - Each form works with its own data model
    - Easier to test individual components
@@ -353,26 +385,29 @@ SurveyReportDetails: a.model({
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| Data loss during migration | Not in production, can clear and restart |
-| Complex joins affect performance | Use parallel fetches, cache assembled surveys |
-| Form refactoring introduces bugs | Comprehensive test suite, phased rollout |
-| Sync conflicts | Implement proper conflict resolution per table |
+| Risk                             | Mitigation                                     |
+| -------------------------------- | ---------------------------------------------- |
+| Data loss during migration       | Not in production, can clear and restart       |
+| Complex joins affect performance | Use parallel fetches, cache assembled surveys  |
+| Form refactoring introduces bugs | Comprehensive test suite, phased rollout       |
+| Sync conflicts                   | Implement proper conflict resolution per table |
 
 ## Testing Strategy
 
 1. **Unit Tests**
+
    - Each store method tested individually
    - Assembler functions tested with various data shapes
    - Sync handlers tested with mock data
 
 2. **Integration Tests**
+
    - Form save operations
    - Full survey CRUD operations
    - List and filter operations
 
 3. **Performance Tests**
+
    - Load time for survey list (target: <100ms for 100 surveys)
    - Form save time (target: <50ms)
    - Full survey load time (target: <200ms)

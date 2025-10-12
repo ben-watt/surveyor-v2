@@ -9,4 +9,4 @@ export interface TableColumnMeta extends ColumnMeta<any, any> {
 
 export type TableColumnDef<TData> = ColumnDef<TData, any> & {
   meta?: TableColumnMeta;
-}; 
+};

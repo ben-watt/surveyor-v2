@@ -1,13 +1,9 @@
-import { Input as ShadInput } from "@/components/ui/input";
-import {
-  FieldErrors,
-  FieldValues,
-  UseFormRegisterReturn,
-} from "react-hook-form";
-import { Label } from "./Label";
-import { ErrorMessage } from "@hookform/error-message";
-import InputError from "../InputError";
-import { cn } from "@/lib/utils";
+import { Input as ShadInput } from '@/components/ui/input';
+import { FieldErrors, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
+import { Label } from './Label';
+import { ErrorMessage } from '@hookform/error-message';
+import InputError from '../InputError';
+import { cn } from '@/lib/utils';
 
 interface InputTextProps {
   labelTitle?: string;
@@ -25,8 +21,8 @@ function Input({
   labelTitle,
   defaultValue,
   placeholder,
-  type = "text",
-  className = "",
+  type = 'text',
+  className = '',
   disabled = false,
   register,
   errors,
@@ -34,15 +30,15 @@ function Input({
 }: InputTextProps) {
   let reg = null;
   if (register) {
-      reg = register();
+    reg = register();
   }
 
   return (
-    <div className={cn(hidden && "hidden")}>
+    <div className={cn(hidden && 'hidden')}>
       {labelTitle && <Label text={labelTitle} htmlFor={reg?.name} />}
       <ShadInput
         id={reg?.name}
-        className={cn("focus:ring-0 focus:border-none", className)}
+        className={cn('focus:border-none focus:ring-0', className)}
         type={type}
         defaultValue={defaultValue}
         placeholder={placeholder}

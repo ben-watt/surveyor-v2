@@ -19,9 +19,7 @@ export function appendZeroToHierarchyText(text: string): string {
   return text + '.0';
 }
 
-export function parseDataHierarchy(
-  data: TocDataItem[]
-): TableOfContentsDataItemWithHierarchy[] {
+export function parseDataHierarchy(data: TocDataItem[]): TableOfContentsDataItemWithHierarchy[] {
   const stack: number[] = [];
   return data.map((item, index, array) => {
     const previousItem = array[index - 1];
@@ -56,5 +54,3 @@ export function parseDataHierarchy(
     };
   });
 }
-
-

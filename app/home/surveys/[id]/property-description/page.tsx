@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { Suspense, useEffect, useState, useCallback } from "react";
-import { surveyStore } from "@/app/home/clients/Database";
-import { DynamicDrawer } from "@/app/home/components/Drawer";
-import { useParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import { Suspense, useEffect, useState, useCallback } from 'react';
+import { surveyStore } from '@/app/home/clients/Database';
+import { DynamicDrawer } from '@/app/home/components/Drawer';
+import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
 // Dynamically import the form component
-const PropertyDescriptionForm = dynamic(() => import("./PropertyDescriptionForm"), {
+const PropertyDescriptionForm = dynamic(() => import('./PropertyDescriptionForm'), {
   loading: () => <div>Loading form...</div>,
 });
 
@@ -40,21 +40,17 @@ const PropertyDescriptionPage = () => {
 
   return (
     <DynamicDrawer
-      id={id + "/property-description"}
+      id={id + '/property-description'}
       isOpen={isOpen}
       handleClose={handleClose}
       title="Property Description"
       content={
         <Suspense fallback={<div>Loading form...</div>}>
-          <PropertyDescriptionForm 
-            surveyId={id} 
-            propertyDescription={survey.propertyDescription} 
-          />
+          <PropertyDescriptionForm surveyId={id} propertyDescription={survey.propertyDescription} />
         </Suspense>
       }
     />
   );
 };
-
 
 export default PropertyDescriptionPage;

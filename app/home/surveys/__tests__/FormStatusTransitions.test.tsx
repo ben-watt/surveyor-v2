@@ -2,7 +2,6 @@ import { FormStatus } from '../building-survey-reports/BuildingSurveyReportSchem
 
 describe('Form Status Transitions', () => {
   describe('Status Logic Validation', () => {
-    
     // Helper function to simulate the status determination logic
     const determineStatus = (isValid: boolean, hasExistingData: boolean): FormStatus => {
       if (isValid) {
@@ -45,8 +44,8 @@ describe('Form Status Transitions', () => {
     describe('ChecklistForm Status Logic', () => {
       // Helper to simulate checklist status logic
       const determineChecklistStatus = (
-        allRequiredChecked: boolean, 
-        anyItemChecked: boolean
+        allRequiredChecked: boolean,
+        anyItemChecked: boolean,
       ): FormStatus => {
         if (allRequiredChecked) {
           return FormStatus.Complete;
@@ -85,11 +84,8 @@ describe('Form Status Transitions', () => {
     });
 
     describe('ReportDetailsForm Status Logic', () => {
-      // Helper to simulate report details status logic  
-      const determineReportStatus = (
-        isValid: boolean,
-        hasExistingData: boolean
-      ): FormStatus => {
+      // Helper to simulate report details status logic
+      const determineReportStatus = (isValid: boolean, hasExistingData: boolean): FormStatus => {
         if (isValid) {
           return FormStatus.Complete;
         } else if (hasExistingData) {
@@ -104,7 +100,7 @@ describe('Form Status Transitions', () => {
         let status = determineReportStatus(false, false);
         expect(status).toBe(FormStatus.Incomplete);
 
-        // Incomplete  
+        // Incomplete
         status = determineReportStatus(false, true);
         expect(status).toBe(FormStatus.InProgress);
 
@@ -118,7 +114,7 @@ describe('Form Status Transitions', () => {
         const hasImages = true;
         const hasTextData = false;
         const hasAnyData = hasImages || hasTextData;
-        
+
         const status = determineReportStatus(false, hasAnyData);
         expect(status).toBe(FormStatus.InProgress);
       });
@@ -158,8 +154,14 @@ describe('Form Status Transitions', () => {
       };
 
       expect(getStatusStyling(FormStatus.Complete)).toEqual({ color: 'green', text: 'Complete' });
-      expect(getStatusStyling(FormStatus.InProgress)).toEqual({ color: 'blue', text: 'Incomplete' });
-      expect(getStatusStyling(FormStatus.Incomplete)).toEqual({ color: 'gray', text: 'Not Started' });
+      expect(getStatusStyling(FormStatus.InProgress)).toEqual({
+        color: 'blue',
+        text: 'Incomplete',
+      });
+      expect(getStatusStyling(FormStatus.Incomplete)).toEqual({
+        color: 'gray',
+        text: 'Not Started',
+      });
     });
   });
 
@@ -187,7 +189,7 @@ describe('Form Status Transitions', () => {
       let propertyDesc = {
         propertyType: { value: '', type: 'text' },
         bedrooms: { value: '', type: 'number' },
-        status: { status: 'incomplete', errors: [] }
+        status: { status: 'incomplete', errors: [] },
       };
       expect(checkHasData(propertyDesc)).toBe(false);
 
@@ -195,15 +197,15 @@ describe('Form Status Transitions', () => {
       propertyDesc = {
         propertyType: { value: 'House', type: 'text' },
         bedrooms: { value: '', type: 'number' },
-        status: { status: 'incomplete', errors: [] }
+        status: { status: 'incomplete', errors: [] },
       };
       expect(checkHasData(propertyDesc)).toBe(true);
 
-      // Array data  
+      // Array data
       propertyDesc = {
         propertyType: { value: '', type: 'text' },
         bedrooms: { value: 'test', type: 'text' }, // Use string value
-        status: { status: 'incomplete', errors: [] }
+        status: { status: 'incomplete', errors: [] },
       };
       expect(checkHasData(propertyDesc)).toBe(true);
     });
@@ -217,8 +219,8 @@ describe('Form Status Transitions', () => {
       let checklist = {
         items: [
           { id: '1', value: false, required: true },
-          { id: '2', value: false, required: false }
-        ]
+          { id: '2', value: false, required: false },
+        ],
       };
       expect(checkChecklistHasData(checklist)).toBe(false);
 
@@ -226,8 +228,8 @@ describe('Form Status Transitions', () => {
       checklist = {
         items: [
           { id: '1', value: true, required: true },
-          { id: '2', value: false, required: false }
-        ]
+          { id: '2', value: false, required: false },
+        ],
       };
       expect(checkChecklistHasData(checklist)).toBe(true);
     });
@@ -245,7 +247,8 @@ describe('Form Status Transitions', () => {
           reportDetails.inspectionDate ||
           reportDetails.reportDate ||
           (reportDetails.moneyShot && reportDetails.moneyShot.length > 0) ||
-          (reportDetails.frontElevationImagesUri && reportDetails.frontElevationImagesUri.length > 0)
+          (reportDetails.frontElevationImagesUri &&
+            reportDetails.frontElevationImagesUri.length > 0)
         );
       };
 
@@ -261,7 +264,7 @@ describe('Form Status Transitions', () => {
         inspectionDate: null,
         reportDate: null,
         moneyShot: [],
-        frontElevationImagesUri: []
+        frontElevationImagesUri: [],
       };
       expect(checkReportHasData(reportDetails)).toBe(false);
 

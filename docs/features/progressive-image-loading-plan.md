@@ -9,11 +9,13 @@
 ## Approach
 
 - Stable layout
+
   - Make ProgressiveImage’s wrapper control layout (aspect ratio, rounding, overflow).
   - Force the img to absolute-fill the wrapper (`object-cover`) to avoid intrinsic-size shifts.
   - Keep skeletons inside the same wrapper footprint.
 
 - Blur-up placeholder
+
   - Use existing `thumbnailDataUrl` as a blurred, slightly scaled placeholder until the full image is decoded.
   - Fade and un-blur on swap.
 
@@ -29,9 +31,8 @@
 
 ## TODOs
 
-1) Implement blur-up + stable layout in `ProgressiveImage` (first pass)
-2) Adjust `Thumbnail` to pass only aspect/box classes to the wrapper
-3) Type check + spot check existing tests
-4) (Optional) Add avg-color placeholder util and wire it
-5) (Optional) Add IO-based eager loading for near-viewport images
-
+1. Implement blur-up + stable layout in `ProgressiveImage` (first pass)
+2. Adjust `Thumbnail` to pass only aspect/box classes to the wrapper
+3. Type check + spot check existing tests
+4. (Optional) Add avg-color placeholder util and wire it
+5. (Optional) Add IO-based eager loading for near-viewport images

@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { Suspense, useEffect, useState, useCallback } from "react";
-import { surveyStore } from "@/app/home/clients/Database";
-import { DynamicDrawer } from "@/app/home/components/Drawer";
-import { useParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import { Suspense, useEffect, useState, useCallback } from 'react';
+import { surveyStore } from '@/app/home/clients/Database';
+import { DynamicDrawer } from '@/app/home/components/Drawer';
+import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 
 // Dynamically import the form component
-const ReportDetailsForm = dynamic(() => import("./ReportDetailsForm"), {
+const ReportDetailsForm = dynamic(() => import('./ReportDetailsForm'), {
   loading: () => <div>Loading form...</div>,
 });
 
@@ -40,16 +40,13 @@ const ReportDetailFormPage = () => {
 
   return (
     <DynamicDrawer
-      id={id + "/report-details"}
+      id={id + '/report-details'}
       isOpen={isOpen}
       handleClose={handleClose}
       title="Report Details"
       content={
         <Suspense fallback={<div>Loading form...</div>}>
-          <ReportDetailsForm 
-            surveyId={id} 
-            reportDetails={survey.reportDetails} 
-          />
+          <ReportDetailsForm surveyId={id} reportDetails={survey.reportDetails} />
         </Suspense>
       }
     />

@@ -17,11 +17,7 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should prioritize upload status over save status', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="saved"
-        isUploading={true}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="saved" isUploading={true} lastSavedAt={mockDate} />,
     );
 
     expect(screen.getByText('Uploading images...')).toBeInTheDocument();
@@ -30,11 +26,7 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should show save status when not uploading', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="saved"
-        isUploading={false}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="saved" isUploading={false} lastSavedAt={mockDate} />,
     );
 
     expect(screen.getByText('All changes saved')).toBeInTheDocument();
@@ -43,15 +35,11 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should render pending status with yellow color when not uploading', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="pending"
-        isUploading={false}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="pending" isUploading={false} lastSavedAt={mockDate} />,
     );
 
     expect(screen.getByText('Changes pending...')).toBeInTheDocument();
-    
+
     const container = screen.getByText('Changes pending...').closest('.text-yellow-600');
     expect(container).toBeInTheDocument();
     expect(container).toHaveClass('text-yellow-600');
@@ -59,15 +47,11 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should render uploading status with blue color', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="idle"
-        isUploading={true}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="idle" isUploading={true} lastSavedAt={mockDate} />,
     );
 
     expect(screen.getByText('Uploading images...')).toBeInTheDocument();
-    
+
     const container = screen.getByText('Uploading images...').closest('.text-blue-600');
     expect(container).toBeInTheDocument();
     expect(container).toHaveClass('text-blue-600');
@@ -75,15 +59,11 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should render saving status when not uploading', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="saving"
-        isUploading={false}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="saving" isUploading={false} lastSavedAt={mockDate} />,
     );
 
     expect(screen.getByText('Saving...')).toBeInTheDocument();
-    
+
     const container = screen.getByText('Saving...').closest('.text-blue-600');
     expect(container).toBeInTheDocument();
     expect(container).toHaveClass('text-blue-600');
@@ -91,15 +71,11 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should render error status when not uploading', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="error"
-        isUploading={false}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="error" isUploading={false} lastSavedAt={mockDate} />,
     );
 
     expect(screen.getByText('Save failed')).toBeInTheDocument();
-    
+
     const container = screen.getByText('Save failed').closest('.text-red-600');
     expect(container).toBeInTheDocument();
     expect(container).toHaveClass('text-red-600');
@@ -111,11 +87,11 @@ describe('LastSavedIndicatorWithUploads', () => {
         status="autosaved"
         isUploading={false}
         lastSavedAt={mockDate}
-      />
+      />,
     );
 
     expect(screen.getByText('Auto-saved')).toBeInTheDocument();
-    
+
     // The text-green-600 class is on the outer container, not the inner div
     const container = screen.getByText('Auto-saved').closest('.text-green-600');
     expect(container).toBeInTheDocument();
@@ -124,13 +100,9 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should not show timestamp when uploading', () => {
     const lastSavedAt = new Date('2023-01-01T11:30:00Z');
-    
+
     render(
-      <LastSavedIndicatorWithUploads
-        status="saved"
-        isUploading={true}
-        lastSavedAt={lastSavedAt}
-      />
+      <LastSavedIndicatorWithUploads status="saved" isUploading={true} lastSavedAt={lastSavedAt} />,
     );
 
     expect(screen.getByText('Uploading images...')).toBeInTheDocument();
@@ -139,13 +111,13 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should show timestamp when not uploading and status allows it', () => {
     const lastSavedAt = new Date('2023-01-01T11:30:00Z');
-    
+
     render(
       <LastSavedIndicatorWithUploads
         status="saved"
         isUploading={false}
         lastSavedAt={lastSavedAt}
-      />
+      />,
     );
 
     expect(screen.getByText('All changes saved')).toBeInTheDocument();
@@ -154,13 +126,13 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should not show timestamp for pending status', () => {
     const lastSavedAt = new Date('2023-01-01T11:30:00Z');
-    
+
     render(
       <LastSavedIndicatorWithUploads
         status="pending"
         isUploading={false}
         lastSavedAt={lastSavedAt}
-      />
+      />,
     );
 
     expect(screen.getByText('Changes pending...')).toBeInTheDocument();
@@ -169,13 +141,13 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should not show timestamp for saving status', () => {
     const lastSavedAt = new Date('2023-01-01T11:30:00Z');
-    
+
     render(
       <LastSavedIndicatorWithUploads
         status="saving"
         isUploading={false}
         lastSavedAt={lastSavedAt}
-      />
+      />,
     );
 
     expect(screen.getByText('Saving...')).toBeInTheDocument();
@@ -184,13 +156,13 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should not show timestamp for error status', () => {
     const lastSavedAt = new Date('2023-01-01T11:30:00Z');
-    
+
     render(
       <LastSavedIndicatorWithUploads
         status="error"
         isUploading={false}
         lastSavedAt={lastSavedAt}
-      />
+      />,
     );
 
     expect(screen.getByText('Save failed')).toBeInTheDocument();
@@ -200,14 +172,14 @@ describe('LastSavedIndicatorWithUploads', () => {
   it('should prioritize lastSavedAt over entityUpdatedAt', () => {
     const lastSavedAt = new Date('2023-01-01T11:55:00Z');
     const entityUpdatedAt = '2023-01-01T11:30:00Z';
-    
+
     render(
       <LastSavedIndicatorWithUploads
         status="saved"
         isUploading={false}
         lastSavedAt={lastSavedAt}
         entityUpdatedAt={entityUpdatedAt}
-      />
+      />,
     );
 
     expect(screen.getByText('5 minutes ago')).toBeInTheDocument();
@@ -215,13 +187,13 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should fall back to entityUpdatedAt when no lastSavedAt', () => {
     const entityUpdatedAt = '2023-01-01T11:30:00Z';
-    
+
     render(
       <LastSavedIndicatorWithUploads
         status="idle"
         isUploading={false}
         entityUpdatedAt={entityUpdatedAt}
-      />
+      />,
     );
 
     expect(screen.getByText('30 minutes ago')).toBeInTheDocument();
@@ -229,11 +201,7 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should include transition animation classes', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="saved"
-        isUploading={false}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="saved" isUploading={false} lastSavedAt={mockDate} />,
     );
 
     const container = screen.getByText('All changes saved').closest('.ease-in-out');
@@ -248,7 +216,7 @@ describe('LastSavedIndicatorWithUploads', () => {
         isUploading={false}
         lastSavedAt={mockDate}
         className="custom-class"
-      />
+      />,
     );
 
     const container = screen.getByText('All changes saved').closest('.custom-class');
@@ -263,7 +231,7 @@ describe('LastSavedIndicatorWithUploads', () => {
         isUploading={false}
         lastSavedAt={mockDate}
         showIcon={false}
-      />
+      />,
     );
 
     expect(screen.getByText('All changes saved')).toBeInTheDocument();
@@ -277,7 +245,7 @@ describe('LastSavedIndicatorWithUploads', () => {
         isUploading={false}
         lastSavedAt={mockDate}
         showTimestamp={false}
-      />
+      />,
     );
 
     expect(screen.getByText('All changes saved')).toBeInTheDocument();
@@ -286,11 +254,7 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should show spinning animation for uploading status', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="idle"
-        isUploading={true}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="idle" isUploading={true} lastSavedAt={mockDate} />,
     );
 
     const icon = document.querySelector('svg');
@@ -299,11 +263,7 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should show spinning animation for saving status', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="saving"
-        isUploading={false}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="saving" isUploading={false} lastSavedAt={mockDate} />,
     );
 
     const icon = document.querySelector('svg');
@@ -312,11 +272,7 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should show pulse animation for pending status', () => {
     render(
-      <LastSavedIndicatorWithUploads
-        status="pending"
-        isUploading={false}
-        lastSavedAt={mockDate}
-      />
+      <LastSavedIndicatorWithUploads status="pending" isUploading={false} lastSavedAt={mockDate} />,
     );
 
     const icon = document.querySelector('svg');
@@ -325,17 +281,17 @@ describe('LastSavedIndicatorWithUploads', () => {
 
   it('should handle uploadProgress prop', () => {
     const uploadProgress = {
-      'path1': true,
-      'path2': false
+      path1: true,
+      path2: false,
     };
-    
+
     render(
       <LastSavedIndicatorWithUploads
         status="saved"
         isUploading={true}
         lastSavedAt={mockDate}
         uploadProgress={uploadProgress}
-      />
+      />,
     );
 
     // Component should still prioritize isUploading status

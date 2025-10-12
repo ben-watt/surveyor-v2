@@ -10,13 +10,17 @@ import { Editor } from '@tiptap/react';
 export async function insertImageFromFile(editor: Editor, file: File, pos?: number) {
   const tempId = uuidv4();
   const blobUrl = URL.createObjectURL(file);
-  editor.chain().focus().insertContentAt(pos ?? editor.state.selection.anchor, {
-    type: 'image',
-    attrs: {
-      src: blobUrl,
-      alt: file.name,
-      'data-s3-path': '',
-      'data-uploading-id': tempId,
-    },
-  }).run();
-} 
+  editor
+    .chain()
+    .focus()
+    .insertContentAt(pos ?? editor.state.selection.anchor, {
+      type: 'image',
+      attrs: {
+        src: blobUrl,
+        alt: file.name,
+        'data-s3-path': '',
+        'data-uploading-id': tempId,
+      },
+    })
+    .run();
+}

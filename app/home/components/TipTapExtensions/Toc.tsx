@@ -1,12 +1,12 @@
-import { Editor, Node, NodePos } from "@tiptap/core";
+import { Editor, Node, NodePos } from '@tiptap/core';
 import {
   mergeAttributes,
   NodeViewProps,
   NodeViewWrapper,
   ReactNodeViewRenderer,
-} from "@tiptap/react";
-import { createContext, useCallback, useEffect, useState, useRef } from "react";
-import { renderReactToDomSpec } from "./Helper";
+} from '@tiptap/react';
+import { createContext, useCallback, useEffect, useState, useRef } from 'react';
+import { renderReactToDomSpec } from './Helper';
 import { parseDataHierarchy, TableOfContentsDataItemWithHierarchy } from './tocUtils';
 
 interface TocDataItem {
@@ -29,14 +29,14 @@ export const TocContext = createContext<TocContext | undefined>({
 });
 
 export const TocNode = Node.create({
-  name: "table-of-contents",
-  group: "block",
+  name: 'table-of-contents',
+  group: 'block',
   atom: true,
 
   addOptions() {
     return {
       repo: null as TocRepo | null,
-    }
+    };
   },
 
   addAttributes() {
@@ -60,29 +60,25 @@ export const TocNode = Node.create({
     const data = options.repo.getParsed();
     const domSpec = renderReactToDomSpec(<Toc data={data} />);
 
-    return [
-      "div",
-      mergeAttributes(HTMLAttributes, { "data-type": "table-of-contents"}),
-      domSpec,
-    ];
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'table-of-contents' }), domSpec];
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(TocNodeView, { attrs: { id: "toc" } });
+    return ReactNodeViewRenderer(TocNodeView, { attrs: { id: 'toc' } });
   },
 
   addGlobalAttributes() {
     return [
       {
-        types: ["paragraph", "heading"],
+        types: ['paragraph', 'heading'],
         attributes: {
           id: {},
-          "data-toc-text": {
+          'data-toc-text': {
             isRequired: false,
             keepOnSplit: false,
           },
-          "data-toc-id-selector": {},
-          "data-add-toc-here-id": {},
+          'data-toc-id-selector': {},
+          'data-add-toc-here-id': {},
         },
       },
     ];
@@ -99,7 +95,7 @@ interface TocProps {
 const Toc = ({ maxDepth = 1, data }: TocProps) => {
   return (
     <section>
-      <p style={{ fontSize: "14pt", marginBottom: "8mm" }}>Table of Contents</p>
+      <p style={{ fontSize: '14pt', marginBottom: '8mm' }}>Table of Contents</p>
       <ul>
         {data
           .filter((d) => d.item.originalLevel <= maxDepth)
@@ -110,12 +106,9 @@ const Toc = ({ maxDepth = 1, data }: TocProps) => {
             selector: `#${CSS.escape(d.item.id)}`,
           }))
           .map((d) => (
-            <li className="dots"
-              key={d.itemId} >
-              <p
-                data-toc-id-selector={d.selector}
-              >
-                {d.hierarchyText}  {d.textContent}
+            <li className="dots" key={d.itemId}>
+              <p data-toc-id-selector={d.selector}>
+                {d.hierarchyText} {d.textContent}
               </p>
             </li>
           ))}
@@ -123,7 +116,6 @@ const Toc = ({ maxDepth = 1, data }: TocProps) => {
     </section>
   );
 };
-
 
 // parseDataHierarchy moved to tocUtils.ts
 
@@ -184,7 +176,7 @@ export const createTocRepo = (key: string): TocRepo => {
         valid
           .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
           .slice(maxEntries)
-          .forEach(entry => localStorage.removeItem(entry.key));
+          .forEach((entry) => localStorage.removeItem(entry.key));
       }
     } catch {
       // no-op: best effort cleanup
@@ -196,13 +188,16 @@ export const createTocRepo = (key: string): TocRepo => {
 
   if (localStorage.getItem(key) == null) {
     const now = Date.now();
-    localStorage.setItem(key, JSON.stringify({ data: [], isCreate: true, createdAt: now, updatedAt: now }));
+    localStorage.setItem(
+      key,
+      JSON.stringify({ data: [], isCreate: true, createdAt: now, updatedAt: now }),
+    );
   }
 
   const getParsed = (): TableOfContentsDataItemWithHierarchy[] => {
     const { data } = get();
     return parseDataHierarchy(data);
-  }
+  };
 
   const get = (): TocContext => {
     const raw = localStorage.getItem(key);
@@ -213,18 +208,18 @@ export const createTocRepo = (key: string): TocRepo => {
       }
     }
     return { data: [], isCreate: false };
-  }
+  };
 
   const set = (data: TocDataItem[], isCreate: boolean) => {
     const now = Date.now();
     const existing = safeParse(localStorage.getItem(key));
     const createdAt = existing?.createdAt ?? now;
     localStorage.setItem(key, JSON.stringify({ data, isCreate, createdAt, updatedAt: now }));
-  }
+  };
 
   const clear = () => {
     localStorage.removeItem(key);
-  }
+  };
 
   return {
     key: key,
@@ -232,8 +227,8 @@ export const createTocRepo = (key: string): TocRepo => {
     get,
     set,
     clear,
-  }
-}
+  };
+};
 
 export const cleanupTocStorage = (options?: { ttlMs?: number; maxEntries?: number }) => {
   const TTL_MS = options?.ttlMs ?? 1000 * 60 * 60 * 24 * 7;
@@ -263,27 +258,27 @@ export const cleanupTocStorage = (options?: { ttlMs?: number; maxEntries?: numbe
       valid
         .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
         .slice(MAX)
-        .forEach(entry => localStorage.removeItem(entry.key));
+        .forEach((entry) => localStorage.removeItem(entry.key));
     }
   } catch {
     // ignore
   }
-}
+};
 
 const replaceNode = (
   editor: Editor,
   nodeType: string,
   nodePos: NodePos,
-  attributes: Record<string, any>
+  attributes: Record<string, any>,
 ) => {
-  console.log("[replaceNode]", nodeType, nodePos, attributes);
+  console.log('[replaceNode]', nodeType, nodePos, attributes);
   editor.commands.deleteRange(nodePos.range);
 
   const newContent = nodePos.textContent
     ? [
         {
-          type: "text",
-          text: nodePos.textContent
+          type: 'text',
+          text: nodePos.textContent,
         },
       ]
     : [];
@@ -299,52 +294,50 @@ const replaceNode = (
 };
 
 export const TocNodeView = ({ editor }: NodeViewProps) => {
-  const [currentToc, setCurrentToc] = useState<
-    TableOfContentsDataItemWithHierarchy[]
-  >();
+  const [currentToc, setCurrentToc] = useState<TableOfContentsDataItemWithHierarchy[]>();
 
-  const updateToc = useCallback(
-    () => {
-      const repo = (editor.extensionManager.extensions.find(ext => ext.name === 'table-of-contents')?.options as any).repo as TocRepo;
-      if (!repo) {
-        console.error('TocNode: No repository configured');
+  const updateToc = useCallback(() => {
+    const repo = (
+      editor.extensionManager.extensions.find((ext) => ext.name === 'table-of-contents')
+        ?.options as any
+    ).repo as TocRepo;
+    if (!repo) {
+      console.error('TocNode: No repository configured');
+      return;
+    }
+
+    const { data } = repo.get();
+    console.log('[updateToc]', data);
+    const tocData = parseDataHierarchy(data);
+    tocData.map((d) => {
+      const $header = editor.$node('heading', { id: d.item.id });
+
+      if ($header?.attributes['data-add-toc-here-id'] != null) {
+        const addHereId = $header.attributes['data-add-toc-here-id'];
+        const $addToThisNode = editor.$node('paragraph', { id: addHereId });
+        if (!$addToThisNode) {
+          console.error('Add here node not found', addHereId);
+          return;
+        }
+
+        replaceNode(editor, 'paragraph', $addToThisNode, {
+          'data-toc-text': d.hierarchyText,
+        });
         return;
       }
 
-      const { data } = repo.get();
-      console.log("[updateToc]", data);
-      const tocData = parseDataHierarchy(data);
-      tocData.map((d) => {
-        const $header = editor.$node("heading", { id: d.item.id });
+      if (!$header) {
+        console.error('Header not found for TOC', d.item.id);
+        return;
+      }
 
-        if ($header?.attributes["data-add-toc-here-id"] != null) {
-          const addHereId = $header.attributes["data-add-toc-here-id"];
-          const $addToThisNode = editor.$node("paragraph", { id: addHereId });
-          if (!$addToThisNode) {
-            console.error("Add here node not found", addHereId);
-            return;
-          }
-
-          replaceNode(editor,"paragraph", $addToThisNode, {
-            "data-toc-text": d.hierarchyText,
-          });
-          return;
-        }
-
-        if (!$header) {
-          console.error("Header not found for TOC", d.item.id);
-          return;
-        }
-
-        replaceNode(editor,"heading", $header, {
-          "data-toc-text": d.hierarchyText,
-        });
+      replaceNode(editor, 'heading', $header, {
+        'data-toc-text': d.hierarchyText,
       });
+    });
 
-      setCurrentToc(tocData);
-    },
-    [editor]
-  );
+    setCurrentToc(tocData);
+  }, [editor]);
 
   useEffect(() => {
     const handleCreate = () => {
@@ -360,9 +353,9 @@ export const TocNodeView = ({ editor }: NodeViewProps) => {
   }, [editor, updateToc]);
 
   return (
-    <NodeViewWrapper className="hover:bg-slate-100 bg-slate-50 border border-violet-950 rounded-sm relative cursor-pointer p-2 overflow-hidden">
+    <NodeViewWrapper className="relative cursor-pointer overflow-hidden rounded-sm border border-violet-950 bg-slate-50 p-2 hover:bg-slate-100">
       <p
-        className="bg-violet-950 hover:bg-violet-900 rounded-bl-lg p-1 px-2 text-white ml-auto absolute right-0 top-0 hover:cursor-pointer"
+        className="absolute right-0 top-0 ml-auto rounded-bl-lg bg-violet-950 p-1 px-2 text-white hover:cursor-pointer hover:bg-violet-900"
         onClick={() => updateToc()}
       >
         Update Toc

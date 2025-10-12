@@ -51,46 +51,46 @@ function buildHierarchy(
   sections: Section[],
   elements: Element[],
   components: Component[],
-  phrases: Phrase[]
+  phrases: Phrase[],
 ): TreeNode[] {
   // Sort sections by order first
   const sortedSections = sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  return sortedSections.map(section => {
+  return sortedSections.map((section) => {
     const sectionInvalid = !section?.name || section.name.trim().length === 0;
     const sectionName = sectionInvalid ? '(Untitled Section)' : section.name;
 
     const sectionElements = elements
-      .filter(element => element.sectionId === section.id)
+      .filter((element) => element.sectionId === section.id)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    const elementNodes: TreeNode[] = sectionElements.map(element => {
+    const elementNodes: TreeNode[] = sectionElements.map((element) => {
       const elementInvalid = !element?.name || element.name.trim().length === 0;
       const elementName = elementInvalid ? '(Untitled Element)' : element.name;
       const elementComponents = components
-        .filter(component => component.elementId === element.id)
+        .filter((component) => component.elementId === element.id)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-      const componentNodes: TreeNode[] = elementComponents.map(component => {
+      const componentNodes: TreeNode[] = elementComponents.map((component) => {
         const componentInvalid = !component?.name || component.name.trim().length === 0;
         const componentName = componentInvalid ? '(Untitled Component)' : component.name;
         const componentConditions = phrases
-          .filter(phrase => phrase.associatedComponentIds.includes(component.id))
+          .filter((phrase) => phrase.associatedComponentIds.includes(component.id))
           .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        const conditionNodes: TreeNode[] = componentConditions.map(condition => {
+        const conditionNodes: TreeNode[] = componentConditions.map((condition) => {
           const conditionInvalid = !condition?.name || condition.name.trim().length === 0;
           const conditionName = conditionInvalid ? '(Untitled Condition)' : condition.name;
-          return ({
-          id: `condition-${condition.id}`,
-          type: 'condition' as const,
-          name: conditionName,
-          data: condition,
-          children: [],
-          isExpanded: false,
-          parentId: component.id,
-          invalid: conditionInvalid,
-        });
+          return {
+            id: `condition-${condition.id}`,
+            type: 'condition' as const,
+            name: conditionName,
+            data: condition,
+            children: [],
+            isExpanded: false,
+            parentId: component.id,
+            invalid: conditionInvalid,
+          };
         });
 
         return {

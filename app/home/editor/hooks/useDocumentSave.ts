@@ -19,7 +19,9 @@ export function useDocumentSave({
   getMetadata?: (content: string) => any;
 }) {
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'autosaved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'autosaved'>(
+    'idle',
+  );
 
   const save = async (content: string, { auto = false }: { auto?: boolean } = {}) => {
     try {
@@ -58,4 +60,4 @@ export function useDocumentSave({
   };
 
   return { save, isSaving, saveStatus };
-} 
+}

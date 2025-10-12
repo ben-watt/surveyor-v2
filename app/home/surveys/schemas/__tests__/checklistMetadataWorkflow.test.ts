@@ -1,8 +1,4 @@
-import { 
-  updateChecklistStatus,
-  zodChecklistStatus,
-  createInitialFormMeta
-} from '../index';
+import { updateChecklistStatus, zodChecklistStatus, createInitialFormMeta } from '../index';
 import { FormStatus } from '../../building-survey-reports/BuildingSurveyReportSchema';
 
 describe('Checklist Metadata-Based Workflow', () => {
@@ -10,7 +6,7 @@ describe('Checklist Metadata-Based Workflow', () => {
     it('should demonstrate the complete metadata workflow', () => {
       // 1. Start with empty checklist data
       const emptyData = { items: [] };
-      
+
       // Status lookup without metadata (fallback to validation)
       const emptyStatus = zodChecklistStatus(emptyData);
       expect(emptyStatus.status).toBe(FormStatus.InProgress); // Empty array has data but fails validation
@@ -20,17 +16,38 @@ describe('Checklist Metadata-Based Workflow', () => {
       // 2. Add some partial data (some required items not checked)
       const partialData = {
         items: [
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 1', placeholder: '', order: 1 },
-          { value: false, required: true, type: 'checkbox', label: 'Required Item 2', placeholder: '', order: 2 },
-          { value: true, required: false, type: 'checkbox', label: 'Optional Item', placeholder: '', order: 3 }
-        ]
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 1',
+            placeholder: '',
+            order: 1,
+          },
+          {
+            value: false,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 2',
+            placeholder: '',
+            order: 2,
+          },
+          {
+            value: true,
+            required: false,
+            type: 'checkbox',
+            label: 'Optional Item',
+            placeholder: '',
+            order: 3,
+          },
+        ],
       };
 
       // Generate metadata for partial data
       const partialMeta = updateChecklistStatus(partialData);
       const partialWithMeta = {
         ...partialData,
-        _meta: partialMeta
+        _meta: partialMeta,
       };
 
       // Status lookup now uses stored metadata (instant!)
@@ -43,17 +60,38 @@ describe('Checklist Metadata-Based Workflow', () => {
       // 3. Complete all required items
       const completeData = {
         items: [
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 1', placeholder: '', order: 1 },
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 2', placeholder: '', order: 2 },
-          { value: false, required: false, type: 'checkbox', label: 'Optional Item', placeholder: '', order: 3 }
-        ]
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 1',
+            placeholder: '',
+            order: 1,
+          },
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 2',
+            placeholder: '',
+            order: 2,
+          },
+          {
+            value: false,
+            required: false,
+            type: 'checkbox',
+            label: 'Optional Item',
+            placeholder: '',
+            order: 3,
+          },
+        ],
       };
 
       // Generate metadata for complete data
       const completeMeta = updateChecklistStatus(completeData);
       const completeWithMeta = {
         ...completeData,
-        _meta: completeMeta
+        _meta: completeMeta,
       };
 
       // Status lookup uses metadata - should be complete now
@@ -76,7 +114,7 @@ describe('Checklist Metadata-Based Workflow', () => {
   describe('Checklist Specific Validation', () => {
     it('should handle empty checklist correctly', () => {
       const emptyChecklist = { items: [] };
-      
+
       const meta = updateChecklistStatus(emptyChecklist);
       const dataWithMeta = { ...emptyChecklist, _meta: meta };
 
@@ -89,10 +127,17 @@ describe('Checklist Metadata-Based Workflow', () => {
     it('should identify data when at least one item exists', () => {
       const checklistWithItems = {
         items: [
-          { value: false, required: false, type: 'checkbox', label: 'Optional Item', placeholder: '', order: 1 }
-        ]
+          {
+            value: false,
+            required: false,
+            type: 'checkbox',
+            label: 'Optional Item',
+            placeholder: '',
+            order: 1,
+          },
+        ],
       };
-      
+
       const meta = updateChecklistStatus(checklistWithItems);
       const dataWithMeta = { ...checklistWithItems, _meta: meta };
 
@@ -104,12 +149,33 @@ describe('Checklist Metadata-Based Workflow', () => {
     it('should require all required items to be checked for completion', () => {
       const mixedChecklist = {
         items: [
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 1', placeholder: '', order: 1 },
-          { value: false, required: true, type: 'checkbox', label: 'Required Item 2', placeholder: '', order: 2 },
-          { value: true, required: false, type: 'checkbox', label: 'Optional Item', placeholder: '', order: 3 }
-        ]
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 1',
+            placeholder: '',
+            order: 1,
+          },
+          {
+            value: false,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 2',
+            placeholder: '',
+            order: 2,
+          },
+          {
+            value: true,
+            required: false,
+            type: 'checkbox',
+            label: 'Optional Item',
+            placeholder: '',
+            order: 3,
+          },
+        ],
       };
-      
+
       const meta = updateChecklistStatus(mixedChecklist);
       const dataWithMeta = { ...mixedChecklist, _meta: meta };
 
@@ -122,13 +188,41 @@ describe('Checklist Metadata-Based Workflow', () => {
     it('should allow optional items to remain unchecked', () => {
       const checklistWithOptionals = {
         items: [
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 1', placeholder: '', order: 1 },
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 2', placeholder: '', order: 2 },
-          { value: false, required: false, type: 'checkbox', label: 'Optional Item 1', placeholder: '', order: 3 },
-          { value: false, required: false, type: 'checkbox', label: 'Optional Item 2', placeholder: '', order: 4 }
-        ]
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 1',
+            placeholder: '',
+            order: 1,
+          },
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 2',
+            placeholder: '',
+            order: 2,
+          },
+          {
+            value: false,
+            required: false,
+            type: 'checkbox',
+            label: 'Optional Item 1',
+            placeholder: '',
+            order: 3,
+          },
+          {
+            value: false,
+            required: false,
+            type: 'checkbox',
+            label: 'Optional Item 2',
+            placeholder: '',
+            order: 4,
+          },
+        ],
       };
-      
+
       const meta = updateChecklistStatus(checklistWithOptionals);
       const dataWithMeta = { ...checklistWithOptionals, _meta: meta };
 
@@ -143,9 +237,23 @@ describe('Checklist Metadata-Based Workflow', () => {
     it('should show instant metadata lookup vs validation computation', () => {
       const completeData = {
         items: [
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 1', placeholder: '', order: 1 },
-          { value: true, required: true, type: 'checkbox', label: 'Required Item 2', placeholder: '', order: 2 }
-        ]
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 1',
+            placeholder: '',
+            order: 1,
+          },
+          {
+            value: true,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item 2',
+            placeholder: '',
+            order: 2,
+          },
+        ],
       };
 
       // Method 1: Without metadata (fallback - runs full validation)
@@ -156,7 +264,7 @@ describe('Checklist Metadata-Based Workflow', () => {
       // Method 2: With metadata (instant lookup)
       const meta = updateChecklistStatus(completeData);
       const dataWithMeta = { ...completeData, _meta: meta };
-      
+
       const start2 = performance.now();
       const statusWithMeta = zodChecklistStatus(dataWithMeta);
       const end2 = performance.now();
@@ -168,7 +276,7 @@ describe('Checklist Metadata-Based Workflow', () => {
       // Metadata lookup should be faster (though both are very fast in tests)
       console.log(`Without metadata: ${end1 - start1}ms`);
       console.log(`With metadata: ${end2 - start2}ms`);
-      
+
       // In real applications, the metadata approach scales much better
       // as form complexity increases, while validation time stays constant
     });
@@ -178,8 +286,15 @@ describe('Checklist Metadata-Based Workflow', () => {
     it('should handle checklists without metadata gracefully', () => {
       const oldFormatData = {
         items: [
-          { value: false, required: true, type: 'checkbox', label: 'Required Item', placeholder: '', order: 1 }
-        ]
+          {
+            value: false,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item',
+            placeholder: '',
+            order: 1,
+          },
+        ],
       };
 
       // Should work without metadata (backward compatibility)
@@ -193,8 +308,15 @@ describe('Checklist Metadata-Based Workflow', () => {
       // Create data that would normally validate as incomplete
       const data = {
         items: [
-          { value: false, required: true, type: 'checkbox', label: 'Required Item', placeholder: '', order: 1 }
-        ]
+          {
+            value: false,
+            required: true,
+            type: 'checkbox',
+            label: 'Required Item',
+            placeholder: '',
+            order: 1,
+          },
+        ],
       };
 
       // But add metadata that shows it's complete (maybe from business logic override)
@@ -203,7 +325,7 @@ describe('Checklist Metadata-Based Workflow', () => {
         status: FormStatus.Complete,
         isValid: true,
         hasData: true,
-        errors: []
+        errors: [],
       };
 
       const dataWithMeta = { ...data, _meta: overriddenMeta };

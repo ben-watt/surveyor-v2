@@ -29,10 +29,7 @@ export const setupRouterMock = (overrides = {}) => {
 };
 
 // Custom render function for tests
-export const customRender = (
-  ui: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => {
+export const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) => {
   return render(ui, options);
 };
 
@@ -85,12 +82,12 @@ export const mockLocation = (overrides = {}) => {
     hash: '',
     ...overrides,
   };
-  
+
   Object.defineProperty(window, 'location', {
     value: location,
     writable: true,
   });
-  
+
   return location;
 };
 

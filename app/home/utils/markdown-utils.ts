@@ -20,4 +20,4 @@ export function validateMarkdown(content: string): Result<void, Error> {
   }
 
   return Ok(undefined);
-} 
+}

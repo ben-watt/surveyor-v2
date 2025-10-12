@@ -9,18 +9,21 @@ This document outlines the migration from the current multi-table DynamoDB schem
 ### Recommendation: Single-Table BEFORE Replicache
 
 **Rationale:**
+
 1. **Simpler Replicache Implementation** - Push/pull endpoints are easier with single table
 2. **One Migration Instead of Two** - Avoid migrating Replicache code later
 3. **Better Performance from Start** - Replicache benefits from optimized queries
 4. **Reduced Complexity** - Single source of truth simplifies sync logic
 
 **Timeline Impact:**
+
 - Single-table first: 4 weeks + 7-9 weeks (Replicache) = 11-13 weeks total
 - Replicache first: 7-9 weeks + 6 weeks (harder migration) = 13-15 weeks total
 
 ## Current Multi-Table Analysis
 
 ### Existing Tables (7 total)
+
 1. **Tenants** - Tenant metadata
 2. **Surveys** - Building survey forms (large JSON)
 3. **Sections** - Survey sections
@@ -31,6 +34,7 @@ This document outlines the migration from the current multi-table DynamoDB schem
 8. **DocumentRecord** - Already single-table design!
 
 ### Current Pain Points
+
 - Multiple queries for related data
 - Complex transactions across tables
 - Higher costs (multiple table throughput)
@@ -84,12 +88,14 @@ Sort Key (SK): String
 ```
 
 **Note**: We maintain separation between:
+
 - **Survey-specific data** (SURVEY#id#SECTION#id) - Actual survey content with user inputs
 - **Library/Template data** (SECTION#id) - Reusable configuration templates
 
 ### Global Secondary Indexes (GSIs)
 
 #### GSI1: By Entity Type
+
 ```
 GSI1PK: EntityType
 GSI1SK: TENANT#<tenantId>#<entityId>
@@ -101,6 +107,7 @@ Use cases:
 ```
 
 #### GSI2: By Parent Relationship
+
 ```
 GSI2PK: ParentId
 GSI2SK: SK
@@ -112,6 +119,7 @@ Use cases:
 ```
 
 #### GSI3: By Sync Status
+
 ```
 GSI3PK: TENANT#<tenantId>#STATUS#<status>
 GSI3SK: UpdatedAt
@@ -123,6 +131,7 @@ Use cases:
 ```
 
 #### GSI4: By Update Time
+
 ```
 GSI4PK: TENANT#<tenantId>
 GSI4SK: UpdatedAt
@@ -134,6 +143,7 @@ Use cases:
 ```
 
 #### GSI5: By Owner
+
 ```
 GSI5PK: Owner
 GSI5SK: TENANT#<tenantId>#<entityId>
@@ -153,16 +163,16 @@ interface BaseEntity {
   PK: string;
   SK: string;
   Type: string;
-  
+
   // Common fields
   id: string;
   tenantId: string;
   createdAt: string;
   updatedAt: string;
   version: number;
-  syncStatus: "synced" | "pending" | "failed";
+  syncStatus: 'synced' | 'pending' | 'failed';
   syncError?: string | null;
-  
+
   // GSI projections
   GSI1PK?: string;
   GSI1SK?: string;
@@ -178,13 +188,13 @@ interface BaseEntity {
 
 // Entity-specific interfaces
 interface SurveyMetaEntity extends BaseEntity {
-  Type: "SurveyMeta";
+  Type: 'SurveyMeta';
   survey: {
     title: string;
     address: string;
     clientName: string;
     surveyDate: string;
-    status: "draft" | "published" | "archived";
+    status: 'draft' | 'published' | 'archived';
     currentConfigVersion: string;
     sectionCount: number;
     completedSections: number;
@@ -196,13 +206,13 @@ interface SurveyMetaEntity extends BaseEntity {
 }
 
 interface SurveySectionEntity extends BaseEntity {
-  Type: "SurveySection";
+  Type: 'SurveySection';
   surveyId: string;
   section: {
     name: string;
     order: number;
     notes: string;
-    condition: "Good" | "Fair" | "Poor";
+    condition: 'Good' | 'Fair' | 'Poor';
     photos: string[];
     completedAt?: string;
     completedBy?: string;
@@ -210,13 +220,13 @@ interface SurveySectionEntity extends BaseEntity {
 }
 
 interface SurveyElementEntity extends BaseEntity {
-  Type: "SurveyElement";
+  Type: 'SurveyElement';
   surveyId: string;
   sectionId: string;
   element: {
     name: string;
     order: number;
-    condition: "Good" | "Fair" | "Poor" | "N/A";
+    condition: 'Good' | 'Fair' | 'Poor' | 'N/A';
     defects: string[];
     notes: string;
     photos: string[];
@@ -229,13 +239,13 @@ interface SurveyElementEntity extends BaseEntity {
 }
 
 interface SurveyComponentEntity extends BaseEntity {
-  Type: "SurveyComponent";
+  Type: 'SurveyComponent';
   surveyId: string;
   elementId: string;
   component: {
     name: string;
     material: string;
-    condition: "Good" | "Fair" | "Poor";
+    condition: 'Good' | 'Fair' | 'Poor';
     age?: string;
     lastMaintenance?: string;
     defects: string[];
@@ -245,8 +255,8 @@ interface SurveyComponentEntity extends BaseEntity {
 }
 
 interface LibrarySectionEntity extends BaseEntity {
-  Type: "Section";
-  EntityType: "Section";
+  Type: 'Section';
+  EntityType: 'Section';
   section: {
     name: string;
     order: number;
@@ -256,8 +266,8 @@ interface LibrarySectionEntity extends BaseEntity {
 }
 
 interface LibraryElementEntity extends BaseEntity {
-  Type: "Element";
-  EntityType: "Element";
+  Type: 'Element';
+  EntityType: 'Element';
   sectionId: string;
   element: {
     name: string;
@@ -267,8 +277,8 @@ interface LibraryElementEntity extends BaseEntity {
 }
 
 interface LibraryComponentEntity extends BaseEntity {
-  Type: "Component";
-  EntityType: "Component";
+  Type: 'Component';
+  EntityType: 'Component';
   elementId: string;
   component: {
     name: string;
@@ -277,11 +287,11 @@ interface LibraryComponentEntity extends BaseEntity {
 }
 
 interface PhraseEntity extends BaseEntity {
-  Type: "Phrase";
-  EntityType: "Phrase";
+  Type: 'Phrase';
+  EntityType: 'Phrase';
   phrase: {
     name: string;
-    type: "Defect" | "Condition";
+    type: 'Defect' | 'Condition';
     text: string;
     level2?: string;
     associatedMaterialIds: string[];
@@ -291,7 +301,7 @@ interface PhraseEntity extends BaseEntity {
 }
 
 // Union type for all entities
-type TableEntity = 
+type TableEntity =
   | SurveyMetaEntity
   | SurveySectionEntity
   | SurveyElementEntity
@@ -303,15 +313,15 @@ type TableEntity =
 
 // Type guards
 function isSurveyMeta(entity: TableEntity): entity is SurveyMetaEntity {
-  return entity.Type === "SurveyMeta";
+  return entity.Type === 'SurveyMeta';
 }
 
 function isSurveySection(entity: TableEntity): entity is SurveySectionEntity {
-  return entity.Type === "SurveySection";
+  return entity.Type === 'SurveySection';
 }
 
 function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
-  return entity.Type === "Section";
+  return entity.Type === 'Section';
 }
 ```
 
@@ -323,7 +333,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   PK: "TENANT#<tenantId>",
   SK: "SURVEY#<surveyId>",
   Type: "SurveyMeta",
-  
+
   // Common fields
   id: "surveyId",
   tenantId: "tenantId",
@@ -332,7 +342,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   survey: {
     title: "Building Survey - 123 Main St",
@@ -344,13 +354,13 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
     sectionCount: 12,
     completedSections: 5
   },
-  
+
   // Access control (kept flat for queries)
   owner: "userId",
   editors: ["userId1", "userId2"],
   viewers: ["userId3"],
   lastMutationId: 0,
-  
+
   // GSI projections
   GSI1PK: "Survey",
   GSI1SK: "TENANT#<tenantId>#SURVEY#<surveyId>",
@@ -367,7 +377,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   PK: "TENANT#<tenantId>",
   SK: "SURVEY#<surveyId>#SECTION#<sectionId>",
   Type: "SurveySection",
-  
+
   // Common fields
   id: "sectionId",
   tenantId: "tenantId",
@@ -377,7 +387,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   section: {
     name: "Roof",
@@ -388,7 +398,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
     completedAt: "2024-01-01T10:30:00Z",
     completedBy: "userId"
   },
-  
+
   // GSI projections for efficient queries
   GSI2PK: "SURVEY#<surveyId>",
   GSI2SK: "SECTION#1",  // Uses order for sorting
@@ -401,7 +411,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   PK: "TENANT#<tenantId>",
   SK: "SURVEY#<surveyId>#ELEMENT#<elementId>",
   Type: "SurveyElement",
-  
+
   // Common fields
   id: "elementId",
   tenantId: "tenantId",
@@ -412,7 +422,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   element: {
     name: "Roof Covering",
@@ -426,7 +436,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
       pitch: "30 degrees"
     }
   },
-  
+
   // GSI projections
   GSI2PK: "SURVEY#<surveyId>#SECTION#<sectionId>",
   GSI2SK: "ELEMENT#1",  // Uses order for sorting
@@ -439,7 +449,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   PK: "TENANT#<tenantId>",
   SK: "SURVEY#<surveyId>#COMPONENT#<componentId>",
   Type: "SurveyComponent",
-  
+
   // Common fields
   id: "componentId",
   tenantId: "tenantId",
@@ -450,7 +460,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   component: {
     name: "Roof Tiles",
@@ -462,7 +472,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
     notes: "Original tiles, well maintained",
     photos: ["imageId5"]
   },
-  
+
   // GSI projections
   GSI2PK: "SURVEY#<surveyId>#ELEMENT#<elementId>",
   GSI2SK: "COMPONENT#<componentId>",
@@ -475,7 +485,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   PK: "TENANT#<tenantId>",
   SK: "SURVEY#<surveyId>#CONFIG#<timestamp>",
   Type: "SurveyConfig",
-  
+
   // Snapshot of all related config
   timestamp: "2024-01-01T00:00:00Z",
   sections: [
@@ -503,7 +513,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
     defects: [...],
     conditions: [...]
   },
-  
+
   // For GSI2 - parent relationship
   GSI2PK: "SURVEY#<surveyId>",
   GSI2SK: "CONFIG#<timestamp>"
@@ -518,7 +528,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   SK: "SECTION#<sectionId>",
   Type: "Section",
   EntityType: "Section",
-  
+
   // Common fields
   id: "sectionId",
   tenantId: "tenantId",
@@ -527,17 +537,17 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   section: {
     name: "Roof",
     order: 1,
     description: "Roof and roof structures"
   },
-  
+
   // Additional metadata
   createdBy: "userId",
-  
+
   // GSI projections
   GSI1PK: "Section",
   GSI1SK: "TENANT#<tenantId>#SECTION#<sectionId>",
@@ -554,7 +564,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   SK: "ELEMENT#<elementId>",
   Type: "Element",
   EntityType: "Element",
-  
+
   // Common fields
   id: "elementId",
   tenantId: "tenantId",
@@ -564,14 +574,14 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   element: {
     name: "Roof Covering",
     order: 1,
     description: "External roof covering materials"
   },
-  
+
   // GSI projections
   GSI1PK: "Element",
   GSI1SK: "TENANT#<tenantId>#ELEMENT#<elementId>",
@@ -590,7 +600,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   SK: "COMPONENT#<componentId>",
   Type: "Component",
   EntityType: "Component",
-  
+
   // Common fields
   id: "componentId",
   tenantId: "tenantId",
@@ -600,7 +610,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   component: {
     name: "Roof Tiles",
@@ -610,7 +620,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
       { name: "Slate" }
     ]
   },
-  
+
   // GSI projections
   GSI1PK: "Component",
   GSI1SK: "TENANT#<tenantId>#COMPONENT#<componentId>",
@@ -629,7 +639,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   SK: "PHRASE#<type>#<phraseId>",
   Type: "Phrase",
   EntityType: "Phrase",
-  
+
   // Common fields
   id: "phraseId",
   tenantId: "tenantId",
@@ -638,7 +648,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
   version: 1,
   syncStatus: "synced",
   syncError: null,
-  
+
   // Entity-specific nested object
   phrase: {
     name: "Cracked tiles",
@@ -649,7 +659,7 @@ function isLibrarySection(entity: TableEntity): entity is LibrarySectionEntity {
     associatedElementIds: ["elementId"],
     associatedComponentIds: ["componentId"]
   },
-  
+
   // GSI projections
   GSI1PK: "Phrase#Defect",
   GSI1SK: "TENANT#<tenantId>#PHRASE#<phraseId>",
@@ -667,8 +677,8 @@ const params = {
   TableName: 'SurveyorData',
   KeyConditionExpression: 'PK = :pk',
   ExpressionAttributeValues: {
-    ':pk': `TENANT#${tenantId}`
-  }
+    ':pk': `TENANT#${tenantId}`,
+  },
 };
 ```
 
@@ -681,8 +691,8 @@ const params = {
   KeyConditionExpression: 'PK = :pk AND begins_with(SK, :surveyPrefix)',
   ExpressionAttributeValues: {
     ':pk': `TENANT#${tenantId}`,
-    ':surveyPrefix': `SURVEY#${surveyId}#`
-  }
+    ':surveyPrefix': `SURVEY#${surveyId}#`,
+  },
 };
 
 // Results include:
@@ -692,23 +702,26 @@ const params = {
 // - SURVEY#id#COMPONENT#* (all components)
 
 // Then organize in memory:
-const result = response.Items.reduce((acc, item) => {
-  switch(item.Type) {
-    case 'SurveyMeta':
-      acc.metadata = item;
-      break;
-    case 'SurveySection':
-      acc.sections.push(item);
-      break;
-    case 'SurveyElement':
-      acc.elements.push(item);
-      break;
-    case 'SurveyComponent':
-      acc.components.push(item);
-      break;
-  }
-  return acc;
-}, { metadata: null, sections: [], elements: [], components: [] });
+const result = response.Items.reduce(
+  (acc, item) => {
+    switch (item.Type) {
+      case 'SurveyMeta':
+        acc.metadata = item;
+        break;
+      case 'SurveySection':
+        acc.sections.push(item);
+        break;
+      case 'SurveyElement':
+        acc.elements.push(item);
+        break;
+      case 'SurveyComponent':
+        acc.components.push(item);
+        break;
+    }
+    return acc;
+  },
+  { metadata: null, sections: [], elements: [], components: [] },
+);
 ```
 
 ### 3. Get all sections with elements and components
@@ -720,8 +733,8 @@ const params = {
   KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
   ExpressionAttributeValues: {
     ':pk': `TENANT#${tenantId}`,
-    ':prefix': 'SECTION#'  // Then 'ELEMENT#', then 'COMPONENT#'
-  }
+    ':prefix': 'SECTION#', // Then 'ELEMENT#', then 'COMPONENT#'
+  },
 };
 
 // Or use GSI1 for type-specific queries
@@ -731,8 +744,8 @@ const params = {
   KeyConditionExpression: 'GSI1PK = :type AND begins_with(GSI1SK, :tenant)',
   ExpressionAttributeValues: {
     ':type': 'Section',
-    ':tenant': `TENANT#${tenantId}`
-  }
+    ':tenant': `TENANT#${tenantId}`,
+  },
 };
 ```
 
@@ -744,9 +757,9 @@ const params = {
   IndexName: 'GSI3',
   KeyConditionExpression: 'GSI3PK = :pk',
   ExpressionAttributeValues: {
-    ':pk': `TENANT#${tenantId}#STATUS#pending`
+    ':pk': `TENANT#${tenantId}#STATUS#pending`,
   },
-  ScanIndexForward: true  // Oldest first
+  ScanIndexForward: true, // Oldest first
 };
 ```
 
@@ -759,8 +772,8 @@ const params = {
   KeyConditionExpression: 'GSI4PK = :pk AND GSI4SK > :since',
   ExpressionAttributeValues: {
     ':pk': `TENANT#${tenantId}`,
-    ':since': lastSyncTimestamp
-  }
+    ':since': lastSyncTimestamp,
+  },
 };
 ```
 
@@ -777,7 +790,7 @@ const schema = a.schema({
       sk: a.string().required(),
       type: a.string().required(),
       entityType: a.string(),
-      
+
       // Common fields
       id: a.string(),
       tenantId: a.string(),
@@ -786,13 +799,13 @@ const schema = a.schema({
       updatedAt: a.datetime(),
       version: a.integer(),
       syncStatus: a.string(),
-      
+
       // Survey fields
       title: a.string(),
       address: a.string(),
       status: a.string(),
-      content: a.json(),  // Large JSON
-      
+      content: a.json(), // Large JSON
+
       // Section/Element/Component fields
       name: a.string(),
       order: a.float(),
@@ -800,7 +813,7 @@ const schema = a.schema({
       sectionId: a.string(),
       elementId: a.string(),
       materials: a.json(),
-      
+
       // Phrase fields
       phrase: a.string(),
       phraseLevel2: a.string(),
@@ -808,11 +821,11 @@ const schema = a.schema({
       associatedMaterialIds: a.string().array(),
       associatedElementIds: a.string().array(),
       associatedComponentIds: a.string().array(),
-      
+
       // Image fields
       imagePath: a.string(),
       caption: a.string(),
-      
+
       // GSI fields
       gsi1pk: a.string(),
       gsi1sk: a.string(),
@@ -826,13 +839,13 @@ const schema = a.schema({
       gsi5sk: a.string(),
     })
     .identifier(['pk', 'sk'])
-    .secondaryIndexes(index => [
+    .secondaryIndexes((index) => [
       index('gsi1pk').sortKeys(['gsi1sk']).name('GSI1'),
       index('gsi2pk').sortKeys(['gsi2sk']).name('GSI2'),
       index('gsi3pk').sortKeys(['gsi3sk']).name('GSI3'),
       index('gsi4pk').sortKeys(['gsi4sk']).name('GSI4'),
       index('gsi5pk').sortKeys(['gsi5sk']).name('GSI5'),
-    ])
+    ]),
 });
 ```
 
@@ -842,16 +855,16 @@ const schema = a.schema({
 // amplify/functions/migrate-to-single-table/handler.ts
 export const handler = async (event: any) => {
   const dynamodb = new DynamoDBClient({ region: process.env.AWS_REGION });
-  
+
   // Migrate in batches to avoid throttling
   const BATCH_SIZE = 25;
-  
+
   // 1. Migrate Surveys (split into granular components)
   const surveys = await scanTable('Surveys');
   for (const survey of surveys) {
     const batch = [];
     const surveyContent = JSON.parse(survey.content);
-    
+
     // Survey metadata with nested structure
     batch.push({
       PutRequest: {
@@ -859,7 +872,7 @@ export const handler = async (event: any) => {
           pk: `TENANT#${survey.tenantId}`,
           sk: `SURVEY#${survey.id}`,
           type: 'SurveyMeta',
-          
+
           // Common fields
           id: survey.id,
           tenantId: survey.tenantId,
@@ -868,7 +881,7 @@ export const handler = async (event: any) => {
           version: 1,
           syncStatus: survey.syncStatus,
           syncError: survey.syncError,
-          
+
           // Entity-specific nested object
           survey: {
             title: surveyContent?.title || 'Untitled',
@@ -878,15 +891,15 @@ export const handler = async (event: any) => {
             status: surveyContent?.status || 'draft',
             currentConfigVersion: new Date().toISOString(),
             sectionCount: surveyContent?.sections?.length || 0,
-            completedSections: 0
+            completedSections: 0,
           },
-          
+
           // Access control
           owner: survey.owner,
           editors: survey.editors || [],
           viewers: survey.viewers || [],
           lastMutationId: 0,
-          
+
           // GSI projections
           gsi1pk: 'Survey',
           gsi1sk: `TENANT#${survey.tenantId}#SURVEY#${survey.id}`,
@@ -895,11 +908,11 @@ export const handler = async (event: any) => {
           gsi4pk: `TENANT#${survey.tenantId}`,
           gsi4sk: survey.updatedAt,
           gsi5pk: `USER#${survey.owner}`,
-          gsi5sk: `TENANT#${survey.tenantId}#SURVEY#${survey.id}`
-        })
-      }
+          gsi5sk: `TENANT#${survey.tenantId}#SURVEY#${survey.id}`,
+        }),
+      },
     });
-    
+
     // Extract and migrate survey sections
     if (surveyContent.sections) {
       for (const section of surveyContent.sections) {
@@ -909,7 +922,7 @@ export const handler = async (event: any) => {
               pk: `TENANT#${survey.tenantId}`,
               sk: `SURVEY#${survey.id}#SECTION#${section.id}`,
               type: 'SurveySection',
-              
+
               // Common fields
               id: section.id,
               tenantId: survey.tenantId,
@@ -919,7 +932,7 @@ export const handler = async (event: any) => {
               version: 1,
               syncStatus: 'synced',
               syncError: null,
-              
+
               // Entity-specific nested object
               section: {
                 name: section.name,
@@ -928,18 +941,18 @@ export const handler = async (event: any) => {
                 condition: section.condition || 'N/A',
                 photos: section.photos || [],
                 completedAt: section.completedAt,
-                completedBy: section.completedBy
+                completedBy: section.completedBy,
               },
-              
+
               // GSI projections
               gsi2pk: `SURVEY#${survey.id}`,
               gsi2sk: `SECTION#${section.order || 0}`,
               gsi4pk: `TENANT#${survey.tenantId}`,
               gsi4sk: survey.updatedAt,
-            })
-          }
+            }),
+          },
         });
-        
+
         // Extract and migrate elements for this section
         if (section.elements) {
           for (const element of section.elements) {
@@ -949,7 +962,7 @@ export const handler = async (event: any) => {
                   pk: `TENANT#${survey.tenantId}`,
                   sk: `SURVEY#${survey.id}#ELEMENT#${element.id}`,
                   type: 'SurveyElement',
-                  
+
                   // Common fields
                   id: element.id,
                   tenantId: survey.tenantId,
@@ -960,7 +973,7 @@ export const handler = async (event: any) => {
                   version: 1,
                   syncStatus: 'synced',
                   syncError: null,
-                  
+
                   // Entity-specific nested object
                   element: {
                     name: element.name,
@@ -970,18 +983,18 @@ export const handler = async (event: any) => {
                     notes: element.notes || '',
                     photos: element.photos || [],
                     measurements: element.measurements || {},
-                    materials: element.materials || []
+                    materials: element.materials || [],
                   },
-                  
+
                   // GSI projections
                   gsi2pk: `SURVEY#${survey.id}#SECTION#${section.id}`,
                   gsi2sk: `ELEMENT#${element.order || 0}`,
                   gsi4pk: `TENANT#${survey.tenantId}`,
                   gsi4sk: survey.updatedAt,
-                })
-              }
+                }),
+              },
             });
-            
+
             // Extract and migrate components for this element
             if (element.components) {
               for (const component of element.components) {
@@ -991,7 +1004,7 @@ export const handler = async (event: any) => {
                       pk: `TENANT#${survey.tenantId}`,
                       sk: `SURVEY#${survey.id}#COMPONENT#${component.id}`,
                       type: 'SurveyComponent',
-                      
+
                       // Common fields
                       id: component.id,
                       tenantId: survey.tenantId,
@@ -1002,7 +1015,7 @@ export const handler = async (event: any) => {
                       version: 1,
                       syncStatus: 'synced',
                       syncError: null,
-                      
+
                       // Entity-specific nested object
                       component: {
                         name: component.name,
@@ -1013,22 +1026,22 @@ export const handler = async (event: any) => {
                         defects: component.defects || [],
                         notes: component.notes || '',
                         photos: component.photos || [],
-                        specifications: component.specifications || {}
+                        specifications: component.specifications || {},
                       },
-                      
+
                       // GSI projections
                       gsi2pk: `SURVEY#${survey.id}#ELEMENT#${element.id}`,
                       gsi2sk: `COMPONENT#${component.id}`,
                       gsi4pk: `TENANT#${survey.tenantId}`,
                       gsi4sk: survey.updatedAt,
-                    })
-                  }
+                    }),
+                  },
                 });
               }
             }
           }
         }
-        
+
         // Write batch when it reaches size limit
         if (batch.length >= BATCH_SIZE) {
           await writeBatch(dynamodb, 'SurveyorData', batch);
@@ -1036,67 +1049,71 @@ export const handler = async (event: any) => {
         }
       }
     }
-    
+
     // Write any remaining items
     if (batch.length > 0) {
       await writeBatch(dynamodb, 'SurveyorData', batch);
     }
   }
-  
+
   // 2. Migrate Library Sections
   const sections = await scanTable('Sections');
   for (const section of sections) {
-    await dynamodb.send(new PutItemCommand({
-      TableName: 'SurveyorData',
-      Item: marshall({
-        pk: `TENANT#${section.tenantId}`,
-        sk: `SECTION#${section.id}`,
-        type: 'Section',
-        
-        // Common fields
-        id: section.id,
-        tenantId: section.tenantId,
-        createdAt: section.createdAt,
-        updatedAt: section.updatedAt,
-        version: 1,
-        syncStatus: 'synced',
-        syncError: null,
-        
-        // Entity-specific nested object
-        section: {
-          name: section.name,
-          description: section.description || '',
-          order: section.order || 0,
-          isActive: section.isActive !== false,
-          category: section.category || 'General',
-          tags: section.tags || []
-        },
-        
-        // GSI projections
-        gsi1pk: 'Section',
-        gsi1sk: `TENANT#${section.tenantId}#SECTION#${section.id}`,
-        gsi4pk: `TENANT#${section.tenantId}`,
-        gsi4sk: section.updatedAt,
-      })
-    }));
+    await dynamodb.send(
+      new PutItemCommand({
+        TableName: 'SurveyorData',
+        Item: marshall({
+          pk: `TENANT#${section.tenantId}`,
+          sk: `SECTION#${section.id}`,
+          type: 'Section',
+
+          // Common fields
+          id: section.id,
+          tenantId: section.tenantId,
+          createdAt: section.createdAt,
+          updatedAt: section.updatedAt,
+          version: 1,
+          syncStatus: 'synced',
+          syncError: null,
+
+          // Entity-specific nested object
+          section: {
+            name: section.name,
+            description: section.description || '',
+            order: section.order || 0,
+            isActive: section.isActive !== false,
+            category: section.category || 'General',
+            tags: section.tags || [],
+          },
+
+          // GSI projections
+          gsi1pk: 'Section',
+          gsi1sk: `TENANT#${section.tenantId}#SECTION#${section.id}`,
+          gsi4pk: `TENANT#${section.tenantId}`,
+          gsi4sk: section.updatedAt,
+        }),
+      }),
+    );
   }
-  
+
   // 3. Create config snapshots for existing surveys
   for (const survey of surveys) {
     const config = await buildConfigSnapshot(survey.tenantId, survey.id);
-    await dynamodb.send(new PutItemCommand({
-      TableName: 'SurveyorData',
-      Item: marshall({
-        pk: `TENANT#${survey.tenantId}`,
-        sk: `SURVEY#${survey.id}#CONFIG#${new Date().toISOString()}`,
-        type: 'SurveyConfig',
-        ...config,
-        gsi2pk: `SURVEY#${survey.id}`,
-        gsi2sk: `CONFIG#${new Date().toISOString()}`,
-      })
-    }));
+    await dynamodb.send(
+      new PutItemCommand({
+        TableName: 'SurveyorData',
+        Item: marshall({
+          pk: `TENANT#${survey.tenantId}`,
+          sk: `SURVEY#${survey.id}#CONFIG#${new Date().toISOString()}`,
+          type: 'SurveyConfig',
+          ...config,
+          gsi2pk: `SURVEY#${survey.id}`,
+          gsi2sk: `CONFIG#${new Date().toISOString()}`,
+        }),
+      }),
+    );
   }
-  
+
   // Continue for Elements, Components, Phrases, Images...
 };
 
@@ -1106,25 +1123,25 @@ async function buildConfigSnapshot(tenantId: string, surveyId: string) {
   const elements = await queryByTenant('Elements', tenantId);
   const components = await queryByTenant('Components', tenantId);
   const phrases = await queryByTenant('Phrases', tenantId);
-  
+
   // Build hierarchical structure
   const config = {
     timestamp: new Date().toISOString(),
-    sections: sections.map(section => ({
+    sections: sections.map((section) => ({
       ...section,
       elements: elements
-        .filter(e => e.sectionId === section.id)
-        .map(element => ({
+        .filter((e) => e.sectionId === section.id)
+        .map((element) => ({
           ...element,
-          components: components.filter(c => c.elementId === element.id)
-        }))
+          components: components.filter((c) => c.elementId === element.id),
+        })),
     })),
     phrases: {
-      defects: phrases.filter(p => p.type === 'Defect'),
-      conditions: phrases.filter(p => p.type === 'Condition')
-    }
+      defects: phrases.filter((p) => p.type === 'Defect'),
+      conditions: phrases.filter((p) => p.type === 'Condition'),
+    },
   };
-  
+
   return config;
 }
 ```
@@ -1133,60 +1150,68 @@ async function buildConfigSnapshot(tenantId: string, surveyId: string) {
 
 ```typescript
 // app/home/clients/SingleTableStore.ts
-import { DynamoDBClient, QueryCommand, GetItemCommand, UpdateItemCommand, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBClient,
+  QueryCommand,
+  GetItemCommand,
+  UpdateItemCommand,
+  TransactWriteItemsCommand,
+} from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
-import type { 
-  TableEntity, 
-  SurveyMetaEntity, 
+import type {
+  TableEntity,
+  SurveyMetaEntity,
   SurveySectionEntity,
   SurveyElementEntity,
-  SurveyComponentEntity 
+  SurveyComponentEntity,
 } from './types';
 
 export class SingleTableStore {
   private client: DynamoDBClient;
   private tableName = 'SurveyorData';
-  
+
   constructor() {
     this.client = new DynamoDBClient({ region: process.env.AWS_REGION });
   }
-  
+
   // Type guards for runtime type checking
   private isSurveyMeta(entity: any): entity is SurveyMetaEntity {
     return entity.type === 'SurveyMeta';
   }
-  
+
   private isSurveySection(entity: any): entity is SurveySectionEntity {
     return entity.type === 'SurveySection';
   }
-  
+
   private isSurveyElement(entity: any): entity is SurveyElementEntity {
     return entity.type === 'SurveyElement';
   }
-  
+
   private isSurveyComponent(entity: any): entity is SurveyComponentEntity {
     return entity.type === 'SurveyComponent';
   }
-  
+
   async getCompleteSurvey(tenantId: string, surveyId: string) {
     // Single query gets all survey components
-    const response = await this.client.send(new QueryCommand({
-      TableName: this.tableName,
-      KeyConditionExpression: 'pk = :pk AND begins_with(sk, :surveyPrefix)',
-      ExpressionAttributeValues: marshall({
-        ':pk': `TENANT#${tenantId}`,
-        ':surveyPrefix': `SURVEY#${surveyId}`
-      })
-    }));
-    
+    const response = await this.client.send(
+      new QueryCommand({
+        TableName: this.tableName,
+        KeyConditionExpression: 'pk = :pk AND begins_with(sk, :surveyPrefix)',
+        ExpressionAttributeValues: marshall({
+          ':pk': `TENANT#${tenantId}`,
+          ':surveyPrefix': `SURVEY#${surveyId}`,
+        }),
+      }),
+    );
+
     const items = response.Items?.map(unmarshall) || [];
-    
+
     // Organize into typed structure
     let metadata: SurveyMetaEntity | null = null;
     const sections: SurveySectionEntity[] = [];
     const elements: SurveyElementEntity[] = [];
     const components: SurveyComponentEntity[] = [];
-    
+
     for (const item of items) {
       if (this.isSurveyMeta(item)) {
         metadata = item;
@@ -1198,46 +1223,45 @@ export class SingleTableStore {
         components.push(item);
       }
     }
-    
-    
+
     if (!metadata) {
       throw new Error(`Survey ${surveyId} not found`);
     }
-    
+
     // Build hierarchical structure with proper typing
     const sectionMap = new Map(
-      sections.map(s => [
-        s.id, 
-        { 
+      sections.map((s) => [
+        s.id,
+        {
           ...s.section,
           id: s.id,
-          elements: [] as any[]
-        }
-      ])
+          elements: [] as any[],
+        },
+      ]),
     );
-    
+
     const elementMap = new Map(
-      elements.map(e => [
+      elements.map((e) => [
         e.id,
         {
           ...e.element,
           id: e.id,
-          components: [] as any[]
-        }
-      ])
+          components: [] as any[],
+        },
+      ]),
     );
-    
+
     // Attach components to elements
     for (const component of components) {
       const element = elementMap.get(component.elementId);
       if (element) {
         element.components.push({
           ...component.component,
-          id: component.id
+          id: component.id,
         });
       }
     }
-    
+
     // Attach elements to sections
     for (const element of elements) {
       const section = sectionMap.get(element.sectionId);
@@ -1245,266 +1269,281 @@ export class SingleTableStore {
         section.elements.push(elementMap.get(element.id));
       }
     }
-    
+
     // Return properly typed structure
     return {
       id: metadata.id,
       ...metadata.survey,
       owner: metadata.owner,
-      sections: Array.from(sectionMap.values()).sort((a, b) => a.order - b.order)
+      sections: Array.from(sectionMap.values()).sort((a, b) => a.order - b.order),
     };
   }
-  
+
   async updateSurveyMetadata(
-    tenantId: string, 
-    surveyId: string, 
-    updates: Partial<SurveyMetaEntity['survey']>
+    tenantId: string,
+    surveyId: string,
+    updates: Partial<SurveyMetaEntity['survey']>,
   ) {
     // Update nested survey object fields
     const updateExpression = Object.keys(updates)
-      .map(key => `survey.#${key} = :${key}`)
+      .map((key) => `survey.#${key} = :${key}`)
       .join(', ');
-    
+
     const expressionAttributeNames = Object.keys(updates).reduce(
       (acc, key) => ({ ...acc, [`#${key}`]: key }),
-      { '#updatedAt': 'updatedAt', '#version': 'version' }
+      { '#updatedAt': 'updatedAt', '#version': 'version' },
     );
-    
+
     const expressionAttributeValues = Object.entries(updates).reduce(
       (acc, [key, value]) => ({ ...acc, [`:${key}`]: value }),
-      { ':now': new Date().toISOString(), ':inc': 1 }
+      { ':now': new Date().toISOString(), ':inc': 1 },
     );
-    
-    await this.client.send(new UpdateItemCommand({
-      TableName: this.tableName,
-      Key: marshall({
-        pk: `TENANT#${tenantId}`,
-        sk: `SURVEY#${surveyId}`
+
+    await this.client.send(
+      new UpdateItemCommand({
+        TableName: this.tableName,
+        Key: marshall({
+          pk: `TENANT#${tenantId}`,
+          sk: `SURVEY#${surveyId}`,
+        }),
+        UpdateExpression: `SET ${updateExpression}, #updatedAt = :now, #version = #version + :inc`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: marshall(expressionAttributeValues),
       }),
-      UpdateExpression: `SET ${updateExpression}, #updatedAt = :now, #version = #version + :inc`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: marshall(expressionAttributeValues)
-    }));
+    );
   }
-  
+
   async updateSurveySection(
-    tenantId: string, 
-    surveyId: string, 
-    sectionId: string, 
-    updates: Partial<SurveySectionEntity['section']>
+    tenantId: string,
+    surveyId: string,
+    sectionId: string,
+    updates: Partial<SurveySectionEntity['section']>,
   ) {
     // Update nested section object fields
-    const updateExpressions = Object.keys(updates).map(key => `section.#${key} = :${key}`);
+    const updateExpressions = Object.keys(updates).map((key) => `section.#${key} = :${key}`);
     updateExpressions.push('#updatedAt = :now', '#version = #version + :inc');
-    
+
     const expressionAttributeNames = Object.keys(updates).reduce(
       (acc, key) => ({ ...acc, [`#${key}`]: key }),
-      { '#updatedAt': 'updatedAt', '#version': 'version' }
+      { '#updatedAt': 'updatedAt', '#version': 'version' },
     );
-    
+
     const expressionAttributeValues = Object.entries(updates).reduce(
       (acc, [key, value]) => ({ ...acc, [`:${key}`]: value }),
-      { ':now': new Date().toISOString(), ':inc': 1 }
+      { ':now': new Date().toISOString(), ':inc': 1 },
     );
-    
-    await this.client.send(new UpdateItemCommand({
-      TableName: this.tableName,
-      Key: marshall({
-        pk: `TENANT#${tenantId}`,
-        sk: `SURVEY#${surveyId}#SECTION#${sectionId}`
+
+    await this.client.send(
+      new UpdateItemCommand({
+        TableName: this.tableName,
+        Key: marshall({
+          pk: `TENANT#${tenantId}`,
+          sk: `SURVEY#${surveyId}#SECTION#${sectionId}`,
+        }),
+        UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: marshall(expressionAttributeValues),
+        ConditionExpression: 'attribute_exists(pk)', // Ensure item exists
       }),
-      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: marshall(expressionAttributeValues),
-      ConditionExpression: 'attribute_exists(pk)'  // Ensure item exists
-    }));
+    );
   }
-  
+
   async updateSurveyElement(
-    tenantId: string, 
-    surveyId: string, 
-    elementId: string, 
-    updates: Partial<SurveyElementEntity['element']>
+    tenantId: string,
+    surveyId: string,
+    elementId: string,
+    updates: Partial<SurveyElementEntity['element']>,
   ) {
     // Update nested element object fields
-    const updateExpressions = Object.keys(updates).map(key => `element.#${key} = :${key}`);
+    const updateExpressions = Object.keys(updates).map((key) => `element.#${key} = :${key}`);
     updateExpressions.push('#updatedAt = :now', '#version = #version + :inc');
-    
+
     const expressionAttributeNames = Object.keys(updates).reduce(
       (acc, key) => ({ ...acc, [`#${key}`]: key }),
-      { '#updatedAt': 'updatedAt', '#version': 'version' }
+      { '#updatedAt': 'updatedAt', '#version': 'version' },
     );
-    
+
     const expressionAttributeValues = Object.entries(updates).reduce(
       (acc, [key, value]) => ({ ...acc, [`:${key}`]: value }),
-      { ':now': new Date().toISOString(), ':inc': 1 }
+      { ':now': new Date().toISOString(), ':inc': 1 },
     );
-    
-    await this.client.send(new UpdateItemCommand({
-      TableName: this.tableName,
-      Key: marshall({
-        pk: `TENANT#${tenantId}`,
-        sk: `SURVEY#${surveyId}#ELEMENT#${elementId}`
+
+    await this.client.send(
+      new UpdateItemCommand({
+        TableName: this.tableName,
+        Key: marshall({
+          pk: `TENANT#${tenantId}`,
+          sk: `SURVEY#${surveyId}#ELEMENT#${elementId}`,
+        }),
+        UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: marshall(expressionAttributeValues),
+        ConditionExpression: 'attribute_exists(pk)', // Ensure item exists
       }),
-      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: marshall(expressionAttributeValues),
-      ConditionExpression: 'attribute_exists(pk)'  // Ensure item exists
-    }));
+    );
   }
-  
+
   // Batch update multiple items in a transaction
-  async batchUpdateSurvey(tenantId: string, surveyId: string, updates: {
-    sections?: Array<{ id: string; updates: Partial<SurveySectionEntity['section']> }>;
-    elements?: Array<{ id: string; updates: Partial<SurveyElementEntity['element']> }>;
-    components?: Array<{ id: string; updates: Partial<SurveyComponentEntity['component']> }>;
-  }) {
+  async batchUpdateSurvey(
+    tenantId: string,
+    surveyId: string,
+    updates: {
+      sections?: Array<{ id: string; updates: Partial<SurveySectionEntity['section']> }>;
+      elements?: Array<{ id: string; updates: Partial<SurveyElementEntity['element']> }>;
+      components?: Array<{ id: string; updates: Partial<SurveyComponentEntity['component']> }>;
+    },
+  ) {
     const transactItems = [];
     const now = new Date().toISOString();
-    
+
     // Update survey metadata timestamp
     transactItems.push({
       Update: {
         TableName: this.tableName,
         Key: marshall({
           pk: `TENANT#${tenantId}`,
-          sk: `SURVEY#${surveyId}`
+          sk: `SURVEY#${surveyId}`,
         }),
         UpdateExpression: 'SET #updatedAt = :now',
         ExpressionAttributeNames: { '#updatedAt': 'updatedAt' },
-        ExpressionAttributeValues: marshall({ ':now': now })
-      }
+        ExpressionAttributeValues: marshall({ ':now': now }),
+      },
     });
-    
+
     // Add section updates
     if (updates.sections) {
       for (const section of updates.sections) {
-        const updateFields = Object.keys(section.updates)
-          .map(key => `section.#${key} = :${key}`);
+        const updateFields = Object.keys(section.updates).map((key) => `section.#${key} = :${key}`);
         updateFields.push('#updatedAt = :now');
-        
+
         const attributeNames = Object.keys(section.updates).reduce(
           (acc, key) => ({ ...acc, [`#${key}`]: key }),
-          { '#updatedAt': 'updatedAt' }
+          { '#updatedAt': 'updatedAt' },
         );
-        
+
         const attributeValues = Object.entries(section.updates).reduce(
           (acc, [key, value]) => ({ ...acc, [`:${key}`]: value }),
-          { ':now': now }
+          { ':now': now },
         );
-        
+
         transactItems.push({
           Update: {
             TableName: this.tableName,
             Key: marshall({
               pk: `TENANT#${tenantId}`,
-              sk: `SURVEY#${surveyId}#SECTION#${section.id}`
+              sk: `SURVEY#${surveyId}#SECTION#${section.id}`,
             }),
             UpdateExpression: `SET ${updateFields.join(', ')}`,
             ExpressionAttributeNames: attributeNames,
-            ExpressionAttributeValues: marshall(attributeValues)
-          }
+            ExpressionAttributeValues: marshall(attributeValues),
+          },
         });
       }
     }
-    
+
     // Add element updates
     if (updates.elements) {
       for (const element of updates.elements) {
-        const updateFields = Object.keys(element.updates)
-          .map(key => `element.#${key} = :${key}`);
+        const updateFields = Object.keys(element.updates).map((key) => `element.#${key} = :${key}`);
         updateFields.push('#updatedAt = :now');
-        
+
         const attributeNames = Object.keys(element.updates).reduce(
           (acc, key) => ({ ...acc, [`#${key}`]: key }),
-          { '#updatedAt': 'updatedAt' }
+          { '#updatedAt': 'updatedAt' },
         );
-        
+
         const attributeValues = Object.entries(element.updates).reduce(
           (acc, [key, value]) => ({ ...acc, [`:${key}`]: value }),
-          { ':now': now }
+          { ':now': now },
         );
-        
+
         transactItems.push({
           Update: {
             TableName: this.tableName,
             Key: marshall({
               pk: `TENANT#${tenantId}`,
-              sk: `SURVEY#${surveyId}#ELEMENT#${element.id}`
+              sk: `SURVEY#${surveyId}#ELEMENT#${element.id}`,
             }),
             UpdateExpression: `SET ${updateFields.join(', ')}`,
             ExpressionAttributeNames: attributeNames,
-            ExpressionAttributeValues: marshall(attributeValues)
-          }
+            ExpressionAttributeValues: marshall(attributeValues),
+          },
         });
       }
     }
-    
+
     // Add component updates
     if (updates.components) {
       for (const component of updates.components) {
-        const updateFields = Object.keys(component.updates)
-          .map(key => `component.#${key} = :${key}`);
+        const updateFields = Object.keys(component.updates).map(
+          (key) => `component.#${key} = :${key}`,
+        );
         updateFields.push('#updatedAt = :now');
-        
+
         const attributeNames = Object.keys(component.updates).reduce(
           (acc, key) => ({ ...acc, [`#${key}`]: key }),
-          { '#updatedAt': 'updatedAt' }
+          { '#updatedAt': 'updatedAt' },
         );
-        
+
         const attributeValues = Object.entries(component.updates).reduce(
           (acc, [key, value]) => ({ ...acc, [`:${key}`]: value }),
-          { ':now': now }
+          { ':now': now },
         );
-        
+
         transactItems.push({
           Update: {
             TableName: this.tableName,
             Key: marshall({
               pk: `TENANT#${tenantId}`,
-              sk: `SURVEY#${surveyId}#COMPONENT#${component.id}`
+              sk: `SURVEY#${surveyId}#COMPONENT#${component.id}`,
             }),
             UpdateExpression: `SET ${updateFields.join(', ')}`,
             ExpressionAttributeNames: attributeNames,
-            ExpressionAttributeValues: marshall(attributeValues)
-          }
+            ExpressionAttributeValues: marshall(attributeValues),
+          },
         });
       }
     }
-    
+
     // Execute transaction (max 100 items)
     if (transactItems.length > 0) {
-      await this.client.send(new TransactWriteItemsCommand({
-        TransactItems: transactItems
-      }));
+      await this.client.send(
+        new TransactWriteItemsCommand({
+          TransactItems: transactItems,
+        }),
+      );
     }
   }
-  
+
   async getRecentChanges(tenantId: string, since: string) {
-    const response = await this.client.send(new QueryCommand({
-      TableName: this.tableName,
-      IndexName: 'GSI4',
-      KeyConditionExpression: 'gsi4pk = :pk AND gsi4sk > :since',
-      ExpressionAttributeValues: marshall({
-        ':pk': `TENANT#${tenantId}`,
-        ':since': since
-      })
-    }));
-    
+    const response = await this.client.send(
+      new QueryCommand({
+        TableName: this.tableName,
+        IndexName: 'GSI4',
+        KeyConditionExpression: 'gsi4pk = :pk AND gsi4sk > :since',
+        ExpressionAttributeValues: marshall({
+          ':pk': `TENANT#${tenantId}`,
+          ':since': since,
+        }),
+      }),
+    );
+
     return response.Items?.map(unmarshall) || [];
   }
-  
+
   async getSyncQueue(tenantId: string) {
-    const response = await this.client.send(new QueryCommand({
-      TableName: this.tableName,
-      IndexName: 'GSI3',
-      KeyConditionExpression: 'gsi3pk = :pk',
-      ExpressionAttributeValues: marshall({
-        ':pk': `TENANT#${tenantId}#STATUS#pending`
+    const response = await this.client.send(
+      new QueryCommand({
+        TableName: this.tableName,
+        IndexName: 'GSI3',
+        KeyConditionExpression: 'gsi3pk = :pk',
+        ExpressionAttributeValues: marshall({
+          ':pk': `TENANT#${tenantId}#STATUS#pending`,
+        }),
+        ScanIndexForward: true, // Process oldest first
       }),
-      ScanIndexForward: true  // Process oldest first
-    }));
-    
+    );
+
     return response.Items?.map(unmarshall) || [];
   }
 }
@@ -1518,28 +1557,33 @@ export class SingleTableStore {
 
 This approach follows DynamoDB best practices by:
 
-1. **Avoiding Large Items** 
+1. **Avoiding Large Items**
+
    - DynamoDB has a 400KB item limit
    - Large JSON blobs can hit this limit
    - Granular items stay well under limits
 
 2. **Enabling Partial Updates**
+
    - Update a single section without fetching entire survey
    - Reduces write costs (only charge for updated item)
    - Better for concurrent editing (less conflict potential)
 
 3. **Optimizing for Replicache**
+
    - Each item syncs independently
    - Only changed items need syncing
    - Smaller payload sizes
    - More efficient conflict resolution
 
 4. **Supporting Real-time Collaboration**
+
    - User A edits Section 1
    - User B edits Section 2
    - No conflicts!
 
 5. **Improving Query Performance**
+
    - Can fetch specific sections/elements
    - Parallel processing possible
    - Better caching at item level
@@ -1552,24 +1596,28 @@ This approach follows DynamoDB best practices by:
 ## Benefits of Single-Table Design
 
 ### 1. Performance Improvements
+
 - **Single query** for related data (vs. multiple queries)
 - **Atomic transactions** across entity types
 - **Better caching** - single table cache key
 - **Reduced latency** - fewer round trips
 
 ### 2. Cost Optimization
+
 - **Single table throughput** to manage (vs. 7 tables)
 - **Fewer GSIs** total (5 vs. potentially 15+)
 - **More efficient queries** - less data transfer
 - **Better auto-scaling** - single table metrics
 
 ### 3. Consistency Benefits
+
 - **ACID transactions** across all entities
 - **Atomic config snapshots**
 - **Simpler backup/restore**
 - **Point-in-time recovery** for all data
 
 ### 4. Developer Experience
+
 - **Single data model** to understand
 - **Consistent query patterns**
 - **Easier debugging** - all data in one place
@@ -1578,6 +1626,7 @@ This approach follows DynamoDB best practices by:
 ## Comparison with Current DocumentRecord Pattern
 
 Your existing `DocumentRecord` table already uses single-table design successfully:
+
 - PK: `tenantId#documentId`
 - SK: `#LATEST` or version numbers
 - This pattern works well!
@@ -1589,6 +1638,7 @@ The new design extends this pattern to all entities, learning from what works.
 ### Why Single-Table First is Better
 
 1. **Simpler Push/Pull Implementation**
+
 ```typescript
 // With single table - one query
 const changes = await db.query({
@@ -1604,35 +1654,51 @@ const elements = await db.query('Elements', ...);
 ```
 
 2. **Atomic Mutations**
+
 ```typescript
 // Single transaction for related changes
 await db.transactWrite({
   TransactItems: [
-    { Update: { /* survey */ } },
-    { Update: { /* section */ } },
-    { Put: { /* new element */ } }
-  ]
+    {
+      Update: {
+        /* survey */
+      },
+    },
+    {
+      Update: {
+        /* section */
+      },
+    },
+    {
+      Put: {
+        /* new element */
+      },
+    },
+  ],
 });
 ```
 
 3. **Efficient Sync Status Tracking**
+
 ```typescript
 // All pending items in one query
 const pending = await db.query({
   IndexName: 'GSI3',
-  KeyCondition: 'gsi3pk = :tenantStatus'
+  KeyCondition: 'gsi3pk = :tenantStatus',
 });
 ```
 
 ## Risk Mitigation
 
 ### Rollback Strategy
+
 1. Keep old tables for 30 days
 2. Dual-write during transition
 3. Feature flag for table selection
 4. Data comparison tools
 
 ### Testing Strategy
+
 1. Load test with production-like data
 2. Query performance benchmarks
 3. Cost analysis comparison
@@ -1641,24 +1707,28 @@ const pending = await db.query({
 ## Implementation Checklist
 
 ### Week 1: Design & Setup
+
 - [ ] Finalize single-table schema
 - [ ] Create new DynamoDB table
 - [ ] Configure GSIs
 - [ ] Set up auto-scaling
 
 ### Week 2: Migration Tools
+
 - [ ] Write migration Lambda
 - [ ] Create verification scripts
 - [ ] Build rollback tools
 - [ ] Test with sample data
 
 ### Week 3: Application Updates
+
 - [ ] Update data access layer
 - [ ] Modify GraphQL resolvers
 - [ ] Update sync logic
 - [ ] Feature flag implementation
 
 ### Week 4: Testing & Cutover
+
 - [ ] Performance testing
 - [ ] Data integrity verification
 - [ ] Gradual rollout (10%, 50%, 100%)
@@ -1675,16 +1745,19 @@ Migrating to single-table design with **granular split** BEFORE Replicache is th
 ### Benefits of Granular Split Approach
 
 1. **Perfect for Replicache Sync**
+
    - Each section/element/component syncs independently
    - Only modified items transfer over network
    - Natural conflict boundaries (user edits different sections)
 
 2. **Optimal DynamoDB Usage**
+
    - Items stay under 400KB limit
    - Update costs only for changed items
    - Better hot partition avoidance
 
 3. **Superior User Experience**
+
    - Instant saves (update one section, not entire survey)
    - Real-time collaboration without conflicts
    - Faster page loads (progressive loading possible)
@@ -1704,6 +1777,7 @@ Migrating to single-table design with **granular split** BEFORE Replicache is th
 ### Expected Outcomes
 
 The granular single-table design will:
+
 - **Reduce costs by ~40-50%** (more efficient than blob storage)
 - **Improve write performance by ~70%** (partial updates)
 - **Improve query performance by ~50%** (single query for all data)
@@ -1747,41 +1821,43 @@ class ResilientSingleTableStore extends SingleTableStore {
   async executeWithRetry<T>(
     operation: () => Promise<T>,
     maxRetries = 3,
-    backoffMs = 100
+    backoffMs = 100,
   ): Promise<T> {
     let lastError;
-    
+
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await operation();
       } catch (error: any) {
         lastError = error;
-        
+
         // Don't retry validation errors
         if (error.name === 'ValidationException') {
           throw error;
         }
-        
+
         // Exponential backoff for throttling
-        if (error.name === 'ProvisionedThroughputExceededException' || 
-            error.name === 'RequestLimitExceeded') {
+        if (
+          error.name === 'ProvisionedThroughputExceededException' ||
+          error.name === 'RequestLimitExceeded'
+        ) {
           const delay = backoffMs * Math.pow(2, i) + Math.random() * 100;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
-        
+
         // Don't retry item not found
         if (error.name === 'ResourceNotFoundException') {
           throw error;
         }
-        
+
         // Retry other transient errors
         if (i < maxRetries - 1) {
-          await new Promise(resolve => setTimeout(resolve, backoffMs * (i + 1)));
+          await new Promise((resolve) => setTimeout(resolve, backoffMs * (i + 1)));
         }
       }
     }
-    
+
     throw lastError;
   }
 }
@@ -1801,40 +1877,44 @@ class SingleTableStore {
     tenantId: string,
     surveyId: string,
     limit: number = 100,
-    nextToken?: string
+    nextToken?: string,
   ): Promise<PaginatedResult<TableEntity>> {
-    const response = await this.client.send(new QueryCommand({
-      TableName: this.tableName,
-      KeyConditionExpression: 'pk = :pk AND begins_with(sk, :surveyPrefix)',
-      ExpressionAttributeValues: marshall({
-        ':pk': `TENANT#${tenantId}`,
-        ':surveyPrefix': `SURVEY#${surveyId}`
+    const response = await this.client.send(
+      new QueryCommand({
+        TableName: this.tableName,
+        KeyConditionExpression: 'pk = :pk AND begins_with(sk, :surveyPrefix)',
+        ExpressionAttributeValues: marshall({
+          ':pk': `TENANT#${tenantId}`,
+          ':surveyPrefix': `SURVEY#${surveyId}`,
+        }),
+        Limit: limit,
+        ExclusiveStartKey: nextToken
+          ? JSON.parse(Buffer.from(nextToken, 'base64').toString())
+          : undefined,
       }),
-      Limit: limit,
-      ExclusiveStartKey: nextToken ? JSON.parse(Buffer.from(nextToken, 'base64').toString()) : undefined
-    }));
-    
+    );
+
     const items = response.Items?.map(unmarshall) || [];
-    
+
     return {
       items,
-      nextToken: response.LastEvaluatedKey 
+      nextToken: response.LastEvaluatedKey
         ? Buffer.from(JSON.stringify(response.LastEvaluatedKey)).toString('base64')
         : undefined,
-      hasMore: !!response.LastEvaluatedKey
+      hasMore: !!response.LastEvaluatedKey,
     };
   }
-  
+
   async *iterateAllSurveys(tenantId: string, batchSize: number = 25) {
     let nextToken: string | undefined;
-    
+
     do {
       const result = await this.getSurveysPaginated(tenantId, batchSize, nextToken);
-      
+
       for (const item of result.items) {
         yield item;
       }
-      
+
       nextToken = result.nextToken;
     } while (nextToken);
   }
@@ -1850,37 +1930,39 @@ class SingleTableStore {
     surveyId: string,
     sectionId: string,
     updates: Partial<SurveySectionEntity['section']>,
-    expectedVersion: number
+    expectedVersion: number,
   ) {
-    const updateExpressions = Object.keys(updates).map(key => `section.#${key} = :${key}`);
+    const updateExpressions = Object.keys(updates).map((key) => `section.#${key} = :${key}`);
     updateExpressions.push('#updatedAt = :now', '#version = :newVersion');
-    
+
     const expressionAttributeNames = Object.keys(updates).reduce(
       (acc, key) => ({ ...acc, [`#${key}`]: key }),
-      { '#updatedAt': 'updatedAt', '#version': 'version' }
+      { '#updatedAt': 'updatedAt', '#version': 'version' },
     );
-    
+
     const expressionAttributeValues = Object.entries(updates).reduce(
       (acc, [key, value]) => ({ ...acc, [`:${key}`]: value }),
-      { 
-        ':now': new Date().toISOString(), 
+      {
+        ':now': new Date().toISOString(),
         ':expectedVersion': expectedVersion,
-        ':newVersion': expectedVersion + 1
-      }
+        ':newVersion': expectedVersion + 1,
+      },
     );
-    
+
     try {
-      await this.client.send(new UpdateItemCommand({
-        TableName: this.tableName,
-        Key: marshall({
-          pk: `TENANT#${tenantId}`,
-          sk: `SURVEY#${surveyId}#SECTION#${sectionId}`
+      await this.client.send(
+        new UpdateItemCommand({
+          TableName: this.tableName,
+          Key: marshall({
+            pk: `TENANT#${tenantId}`,
+            sk: `SURVEY#${surveyId}#SECTION#${sectionId}`,
+          }),
+          UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+          ConditionExpression: '#version = :expectedVersion',
+          ExpressionAttributeNames: expressionAttributeNames,
+          ExpressionAttributeValues: marshall(expressionAttributeValues),
         }),
-        UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-        ConditionExpression: '#version = :expectedVersion',
-        ExpressionAttributeNames: expressionAttributeNames,
-        ExpressionAttributeValues: marshall(expressionAttributeValues)
-      }));
+      );
     } catch (error: any) {
       if (error.name === 'ConditionalCheckFailedException') {
         throw new Error('Version conflict: Item has been modified by another user');
@@ -1901,47 +1983,58 @@ class SingleTableStore {
     for (let i = 0; i < keys.length; i += 100) {
       chunks.push(keys.slice(i, i + 100));
     }
-    
+
     const results = [];
-    
+
     for (const chunk of chunks) {
-      const response = await this.client.send(new BatchGetItemCommand({
-        RequestItems: {
-          [this.tableName]: {
-            Keys: chunk.map(key => marshall({
-              pk: `TENANT#${key.tenantId}`,
-              sk: this.buildSortKey(key.entityType, key.entityId)
-            }))
-          }
-        }
-      }));
-      
+      const response = await this.client.send(
+        new BatchGetItemCommand({
+          RequestItems: {
+            [this.tableName]: {
+              Keys: chunk.map((key) =>
+                marshall({
+                  pk: `TENANT#${key.tenantId}`,
+                  sk: this.buildSortKey(key.entityType, key.entityId),
+                }),
+              ),
+            },
+          },
+        }),
+      );
+
       const items = response.Responses?.[this.tableName]?.map(unmarshall) || [];
       results.push(...items);
-      
+
       // Handle unprocessed keys
       if (response.UnprocessedKeys?.[this.tableName]) {
         // Retry with exponential backoff
         await this.executeWithRetry(async () => {
-          const retryResponse = await this.client.send(new BatchGetItemCommand({
-            RequestItems: response.UnprocessedKeys
-          }));
+          const retryResponse = await this.client.send(
+            new BatchGetItemCommand({
+              RequestItems: response.UnprocessedKeys,
+            }),
+          );
           const retryItems = retryResponse.Responses?.[this.tableName]?.map(unmarshall) || [];
           results.push(...retryItems);
         });
       }
     }
-    
+
     return results;
   }
-  
+
   private buildSortKey(entityType: string, entityId: string): string {
     switch (entityType) {
-      case 'Survey': return `SURVEY#${entityId}`;
-      case 'Section': return `SECTION#${entityId}`;
-      case 'Element': return `ELEMENT#${entityId}`;
-      case 'Component': return `COMPONENT#${entityId}`;
-      default: throw new Error(`Unknown entity type: ${entityType}`);
+      case 'Survey':
+        return `SURVEY#${entityId}`;
+      case 'Section':
+        return `SECTION#${entityId}`;
+      case 'Element':
+        return `ELEMENT#${entityId}`;
+      case 'Component':
+        return `COMPONENT#${entityId}`;
+      default:
+        throw new Error(`Unknown entity type: ${entityType}`);
     }
   }
 }
@@ -1971,13 +2064,13 @@ const SectionSchema = z.object({
 
 class ValidatedSingleTableStore extends SingleTableStore {
   async updateSurveyMetadata(
-    tenantId: string, 
-    surveyId: string, 
-    updates: Partial<SurveyMetaEntity['survey']>
+    tenantId: string,
+    surveyId: string,
+    updates: Partial<SurveyMetaEntity['survey']>,
   ) {
     // Validate input
     const validated = SurveyMetaSchema.partial().parse(updates);
-    
+
     // Sanitize strings to prevent injection
     const sanitized = Object.entries(validated).reduce((acc, [key, value]) => {
       if (typeof value === 'string') {
@@ -1988,7 +2081,7 @@ class ValidatedSingleTableStore extends SingleTableStore {
       }
       return acc;
     }, {} as any);
-    
+
     return super.updateSurveyMetadata(tenantId, surveyId, sanitized);
   }
 }
@@ -2007,19 +2100,21 @@ interface TempDataEntity extends BaseEntity {
 // Usage example: Store temporary sync status
 class SingleTableStore {
   async createTempSyncStatus(tenantId: string, syncId: string, data: any) {
-    const ttl = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // Expire in 24 hours
-    
-    await this.client.send(new PutItemCommand({
-      TableName: this.tableName,
-      Item: marshall({
-        pk: `TENANT#${tenantId}`,
-        sk: `TEMP#SYNC#${syncId}`,
-        type: 'TempData',
-        ttl,
-        data,
-        createdAt: new Date().toISOString()
-      })
-    }));
+    const ttl = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // Expire in 24 hours
+
+    await this.client.send(
+      new PutItemCommand({
+        TableName: this.tableName,
+        Item: marshall({
+          pk: `TENANT#${tenantId}`,
+          sk: `TEMP#SYNC#${syncId}`,
+          type: 'TempData',
+          ttl,
+          data,
+          createdAt: new Date().toISOString(),
+        }),
+      }),
+    );
   }
 }
 
@@ -2035,12 +2130,12 @@ import { CloudWatch } from '@aws-sdk/client-cloudwatch';
 class MonitoredSingleTableStore extends SingleTableStore {
   private cloudwatch: CloudWatch;
   private namespace = 'SurveyorApp/DynamoDB';
-  
+
   constructor() {
     super();
     this.cloudwatch = new CloudWatch({ region: process.env.AWS_REGION });
   }
-  
+
   async trackOperation(operation: string, duration: number, success: boolean) {
     await this.cloudwatch.putMetricData({
       Namespace: this.namespace,
@@ -2049,22 +2144,22 @@ class MonitoredSingleTableStore extends SingleTableStore {
           MetricName: `${operation}Duration`,
           Value: duration,
           Unit: 'Milliseconds',
-          Timestamp: new Date()
+          Timestamp: new Date(),
         },
         {
           MetricName: `${operation}${success ? 'Success' : 'Failure'}`,
           Value: 1,
           Unit: 'Count',
-          Timestamp: new Date()
-        }
-      ]
+          Timestamp: new Date(),
+        },
+      ],
     });
   }
-  
+
   async getCompleteSurvey(tenantId: string, surveyId: string) {
     const start = Date.now();
     let success = true;
-    
+
     try {
       return await super.getCompleteSurvey(tenantId, surveyId);
     } catch (error) {
@@ -2082,37 +2177,37 @@ class MonitoredSingleTableStore extends SingleTableStore {
 ```typescript
 /**
  * Access Patterns for Single-Table Design
- * 
+ *
  * Pattern 1: Get all surveys for a tenant
  * - Index: Main table
  * - PK: TENANT#<tenantId>
  * - SK: begins_with(SURVEY#)
- * 
+ *
  * Pattern 2: Get survey with all components
  * - Index: Main table
  * - PK: TENANT#<tenantId>
  * - SK: begins_with(SURVEY#<surveyId>#)
- * 
+ *
  * Pattern 3: Get all sections for library
  * - Index: GSI1
  * - GSI1PK: Section
  * - GSI1SK: begins_with(TENANT#<tenantId>#)
- * 
+ *
  * Pattern 4: Get pending sync items
  * - Index: GSI3
  * - GSI3PK: TENANT#<tenantId>#STATUS#pending
  * - GSI3SK: all
- * 
+ *
  * Pattern 5: Get recent changes
  * - Index: GSI4
  * - GSI4PK: TENANT#<tenantId>
  * - GSI4SK: > <timestamp>
- * 
+ *
  * Pattern 6: Get user's surveys
  * - Index: GSI5
  * - GSI5PK: USER#<userId>
  * - GSI5SK: begins_with(TENANT#<tenantId>#SURVEY#)
- * 
+ *
  * Pattern 7: Get survey config history
  * - Index: GSI2
  * - GSI2PK: SURVEY#<surveyId>

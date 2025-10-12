@@ -1,18 +1,22 @@
 # Local Survey-Scoped Components — Technical Design (Final)
 
 ## Overview
+
 When users click “Create new” in the Component combobox on the Inspection form, the app currently opens the global Component form and writes to the global catalogue. We want these on-the-fly creations to exist only within the active survey, avoiding global pollution and preserving per-survey intent.
 
 ## Current Behavior
+
 - Inspection form component selector pulls options from the global `componentStore` and filters by selected element.
 - The survey content stores inspection instances under `sections[].elementSections[].components[]` via helpers in `app/home/surveys/building-survey-reports/Survey.ts`.
 
 ## Goal
+
 - Create and use “local components” that are scoped to the current survey only.
 - Keep the global components library intact and available.
 - Show both global and local options in the Component combobox.
 
 ## Non‑Goals
+
 - Removing or changing the global component management pages.
 - Adding new survey schema collections for local component definitions.
 - Large‑scale entity refactors (handled in separate docs).
@@ -28,22 +32,22 @@ We introduced explicit, survey‑scoped definition lists per element to make loc
 
 ```ts
 type LocalComponentDef = {
-  id: string;          // localdef_<uuid>
+  id: string; // localdef_<uuid>
   name: string;
   elementId: string;
   materials?: { name: string }[];
   associatedPhraseIds?: string[]; // optional, not enforced yet
   createdAt?: string;
   updatedAt?: string;
-}
+};
 
 type LocalConditionDef = {
-  id: string;          // locond_<uuid>
+  id: string; // locond_<uuid>
   name: string;
   text: string;
   createdAt?: string;
   updatedAt?: string;
-}
+};
 ```
 
 No Amplify schema changes are required — these defs live inside the survey JSON (`Surveys.content`).
@@ -97,15 +101,27 @@ function MyElementPanel({ survey, elements, sectionId, elementId }: any) {
     <div>
       <h3>Local Components</h3>
       <ul>
-        {componentDefs.map(d => <li key={d.id}>{d.name}</li>)}
+        {componentDefs.map((d) => (
+          <li key={d.id}>{d.name}</li>
+        ))}
       </ul>
-      <button onClick={() => addComponentDef(survey.id, elementId, 'Custom Item')}>Add Local Component</button>
+      <button onClick={() => addComponentDef(survey.id, elementId, 'Custom Item')}>
+        Add Local Component
+      </button>
 
       <h3 className="mt-4">Local Conditions</h3>
       <ul>
-        {conditionDefs.map(d => <li key={d.id}>{d.name}</li>)}
+        {conditionDefs.map((d) => (
+          <li key={d.id}>{d.name}</li>
+        ))}
       </ul>
-      <button onClick={() => addConditionDef(survey.id, elementId, 'Spalled brick', 'Brick spalling noted...')}>Add Local Condition</button>
+      <button
+        onClick={() =>
+          addConditionDef(survey.id, elementId, 'Spalled brick', 'Brick spalling noted...')
+        }
+      >
+        Add Local Condition
+      </button>
     </div>
   );
 }
@@ -127,25 +143,29 @@ function MyElementPanel({ survey, elements, sectionId, elementId }: any) {
   - local defs appear for the element even when `surveySection.id` isn’t set (section fallback)
 
 Files:
+
 - `__tests__/inspection-form-local-components.test.tsx`
 - `__tests__/inspection-form-local-conditions.test.tsx`
 - `__tests__/inspection-form-local-component-defs.test.tsx`
 
 ### Phrases Association Consideration
+
 Current phrase options are filtered by `phrase.associatedComponentIds.includes(component.id)`. For local ids, this typically returns none.
+
 - Recommended fallback when selected component is local:
   - Show all Condition phrases (or a broader sensible subset), sorted by order/popularity.
   - Optionally persist a local association on the inspection if needed later.
 
 ## Implementation Summary
 
-1) Schema: added `localComponentDefs` and `localConditionDefs` arrays to `ElementSection`
-2) Helpers: added get/addOrUpdate/remove for both defs
-3) UI: merged defs into comboboxes; create/select instantly persists
-4) Fallbacks: derive sectionId from the element when needed
-5) Tests: added focused tests for local defs discovery and create flows
+1. Schema: added `localComponentDefs` and `localConditionDefs` arrays to `ElementSection`
+2. Helpers: added get/addOrUpdate/remove for both defs
+3. UI: merged defs into comboboxes; create/select instantly persists
+4. Fallbacks: derive sectionId from the element when needed
+5. Tests: added focused tests for local defs discovery and create flows
 
 ## Validation & Testing
+
 - Verify merged combobox options display correctly and identify local items.
 - Create‑new local → component set in form → autosave persists an inspection in `ElementSection.components`.
 - Editing local component name reflects in the form and persists.
@@ -153,11 +173,13 @@ Current phrase options are filtered by `phrase.associatedComponentIds.includes(c
 - Phrase options remain usable for local selections with fallback logic.
 
 ## Rollout
+
 - No Amplify changes; defs live in survey JSON
 - Backward compatible; existing surveys remain valid
 - Optional feature flag if you want to gate the UI
 
 ## Acceptance Criteria
+
 - “Create new” (Component) creates a `localdef_*` entry and a `local_*` instance, selected and labeled “(survey only)”
 - Selecting a local component def creates a new instance and selects it
 - Condition “Create new” creates a `locond_*` def and appends an instance

@@ -40,15 +40,15 @@ const pond = FilePond.create({
     const updatedMetadata = {
       ...currentMetadata,
       title: prompt('Enter title', currentMetadata.title || ''),
-      description: prompt('Enter description', currentMetadata.description || '')
+      description: prompt('Enter description', currentMetadata.description || ''),
     };
-    
+
     // Save the updated metadata (or null to cancel)
     save(updatedMetadata);
-    
+
     // Alternatively, use a modern UI library for a better experience
     // Example: openMetadataModal(file, currentMetadata, save);
-  }
+  },
 });
 ```
 
@@ -70,7 +70,7 @@ function App() {
   const [currentFile, setCurrentFile] = useState(null);
   const [currentMetadata, setCurrentMetadata] = useState({});
   const [saveCallback, setSaveCallback] = useState(null);
-  
+
   // Metadata editor handler
   const metadataEditorCallback = (file, existingMetadata, save) => {
     setCurrentFile(file);
@@ -78,19 +78,19 @@ function App() {
     setSaveCallback(() => save);
     setShowMetadataModal(true);
   };
-  
+
   // Handle metadata save
   const handleSaveMetadata = (updatedMetadata) => {
     saveCallback(updatedMetadata);
     setShowMetadataModal(false);
   };
-  
+
   // Handle metadata edit cancel
   const handleCancelMetadata = () => {
     saveCallback(null); // Cancel the edit
     setShowMetadataModal(false);
   };
-  
+
   return (
     <div className="App">
       <FilePond
@@ -100,7 +100,7 @@ function App() {
         allowMetadataEdit={true}
         metadataEditorCallback={metadataEditorCallback}
       />
-      
+
       {/* Simple metadata editor modal */}
       {showMetadataModal && (
         <div className="metadata-modal">
@@ -110,10 +110,10 @@ function App() {
             <input
               type="text"
               value={currentMetadata.title || ''}
-              onChange={(e) => 
+              onChange={(e) =>
                 setCurrentMetadata({
                   ...currentMetadata,
-                  title: e.target.value
+                  title: e.target.value,
                 })
               }
             />
@@ -122,10 +122,10 @@ function App() {
             <label>Description</label>
             <textarea
               value={currentMetadata.description || ''}
-              onChange={(e) => 
+              onChange={(e) =>
                 setCurrentMetadata({
                   ...currentMetadata,
-                  description: e.target.value
+                  description: e.target.value,
                 })
               }
             />
@@ -147,12 +147,12 @@ export default App;
 
 The plugin can be configured with the following options:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `allowMetadataEdit` | Boolean | `true` | Enable or disable metadata editing |
-| `metadataEditorCallback` | Function | `null` | The function that handles metadata editing (required) |
-| `styleMetadataEditButtonPosition` | String | `'bottom center'` | Position of the metadata edit button (options: 'top left', 'top center', 'top right', 'bottom left', 'bottom center', 'bottom right') |
-| `metadataEditIcon` | String | (SVG icon) | Custom icon for the metadata edit button |
+| Option                            | Type     | Default           | Description                                                                                                                           |
+| --------------------------------- | -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `allowMetadataEdit`               | Boolean  | `true`            | Enable or disable metadata editing                                                                                                    |
+| `metadataEditorCallback`          | Function | `null`            | The function that handles metadata editing (required)                                                                                 |
+| `styleMetadataEditButtonPosition` | String   | `'bottom center'` | Position of the metadata edit button (options: 'top left', 'top center', 'top right', 'bottom left', 'bottom center', 'bottom right') |
+| `metadataEditIcon`                | String   | (SVG icon)        | Custom icon for the metadata edit button                                                                                              |
 
 ## Using the Metadata
 

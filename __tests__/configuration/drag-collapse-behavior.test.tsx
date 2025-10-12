@@ -60,7 +60,7 @@ describe('DraggableTreeNode collapse behavior during drag', () => {
         searchQuery=""
         isDragEnabled={true}
         dragState={{ ...baseDragState, activeId: 'element-1', overId: 'section-1' }}
-      />
+      />,
     );
 
     // The child should still be visible because the parent remains expanded
@@ -81,7 +81,7 @@ describe('DraggableTreeNode collapse behavior during drag', () => {
         searchQuery=""
         isDragEnabled={true}
         dragState={{ ...baseDragState, activeId: 'element-1' }}
-      />
+      />,
     );
 
     // Header should be visible
@@ -90,5 +90,3 @@ describe('DraggableTreeNode collapse behavior during drag', () => {
     expect(screen.queryByText('Comp 1')).not.toBeInTheDocument();
   });
 });
-
-

@@ -1,4 +1,4 @@
-import { UseFormRegisterReturn } from "react-hook-form";
+import { UseFormRegisterReturn } from 'react-hook-form';
 
 interface SelectBoxProps extends React.PropsWithChildren<any> {
   labelTitle: string;
@@ -9,12 +9,11 @@ interface SelectBoxProps extends React.PropsWithChildren<any> {
 
 function SelectBox({
   labelTitle,
-  defaultValue = "Select option...",
-  placeholder = "Select option...",
+  defaultValue = 'Select option...',
+  placeholder = 'Select option...',
   register,
   children,
 }: SelectBoxProps) {
-  
   const props = register();
 
   return (
@@ -22,10 +21,7 @@ function SelectBox({
       <label htmlFor={props.name} className="sr-only">
         <span>{labelTitle}</span>
       </label>
-      <select
-        className="rounded-md border-gray-300 text-sm"
-        {...props}
-      >
+      <select className="rounded-md border-gray-300 text-sm" {...props}>
         <option>{defaultValue}</option>
         {children}
       </select>

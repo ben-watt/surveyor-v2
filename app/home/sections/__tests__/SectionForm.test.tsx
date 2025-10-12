@@ -26,15 +26,20 @@ jest.mock('../../clients/Database', () => ({
   sectionStore: {
     add: (...args: any[]) => mockAdd(...args),
     update: (...args: any[]) => mockUpdate(...args),
-    useGet: (_id: string) => [true, createdRef.value ? {
-      id: _id,
-      name: 'Existing',
-      order: 0,
-      createdAt: '',
-      updatedAt: '',
-      syncStatus: 'synced',
-      tenantId: 't1'
-    } : undefined],
+    useGet: (_id: string) => [
+      true,
+      createdRef.value
+        ? {
+            id: _id,
+            name: 'Existing',
+            order: 0,
+            createdAt: '',
+            updatedAt: '',
+            syncStatus: 'synced',
+            tenantId: 't1',
+          }
+        : undefined,
+    ],
   },
 }));
 
@@ -62,7 +67,7 @@ describe('SectionForm autosave on create', () => {
 
     // Wait for autosave flow: watchDelay (300ms) + autosave delay (1000ms)
     await act(async () => {
-      await new Promise(res => setTimeout(res, 1600));
+      await new Promise((res) => setTimeout(res, 1600));
     });
 
     await waitFor(() => {
@@ -82,7 +87,7 @@ describe('SectionForm autosave on create', () => {
 
     // First autosave -> add (300 + 1000)
     await act(async () => {
-      await new Promise(res => setTimeout(res, 1600));
+      await new Promise((res) => setTimeout(res, 1600));
     });
 
     // Next change
@@ -91,7 +96,7 @@ describe('SectionForm autosave on create', () => {
 
     // Second autosave -> update (300 + 1000)
     await act(async () => {
-      await new Promise(res => setTimeout(res, 1600));
+      await new Promise((res) => setTimeout(res, 1600));
     });
 
     await waitFor(() => {
@@ -100,5 +105,3 @@ describe('SectionForm autosave on create', () => {
     });
   });
 });
-
-

@@ -17,18 +17,23 @@ interface TestFormProps {
   onReset?: () => void;
 }
 
-function TestForm({ 
+function TestForm({
   initialData = { name: '', description: '', value: 0 },
   updatedData,
   useKeepDirtyValues = true,
-  onReset
+  onReset,
 }: TestFormProps) {
   const methods = useForm<TestFormData>({
     defaultValues: initialData,
-    mode: 'onChange'
+    mode: 'onChange',
   });
 
-  const { register, reset, watch, formState: { dirtyFields } } = methods;
+  const {
+    register,
+    reset,
+    watch,
+    formState: { dirtyFields },
+  } = methods;
   const watchedValues = watch();
 
   useEffect(() => {
@@ -45,28 +50,15 @@ function TestForm({
   return (
     <FormProvider {...methods}>
       <form>
-        <input 
-          {...register('name')} 
-          placeholder="Name"
-          data-testid="name-input"
-        />
-        <input 
-          {...register('description')} 
+        <input {...register('name')} placeholder="Name" data-testid="name-input" />
+        <input
+          {...register('description')}
           placeholder="Description"
           data-testid="description-input"
         />
-        <input 
-          {...register('value')} 
-          type="number"
-          placeholder="Value"
-          data-testid="value-input"
-        />
-        <div data-testid="dirty-fields">
-          {Object.keys(dirtyFields).join(',')}
-        </div>
-        <div data-testid="current-values">
-          {JSON.stringify(watchedValues)}
-        </div>
+        <input {...register('value')} type="number" placeholder="Value" data-testid="value-input" />
+        <div data-testid="dirty-fields">{Object.keys(dirtyFields).join(',')}</div>
+        <div data-testid="current-values">{JSON.stringify(watchedValues)}</div>
       </form>
     </FormProvider>
   );
@@ -76,13 +68,13 @@ describe('Form Reset with keepDirtyValues', () => {
   it('should preserve user input when reset is called with keepDirtyValues: true', async () => {
     const user = userEvent.setup();
     const onReset = jest.fn();
-    
+
     const { rerender } = render(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         useKeepDirtyValues={true}
         onReset={onReset}
-      />
+      />,
     );
 
     // User modifies only the name field
@@ -99,22 +91,25 @@ describe('Form Reset with keepDirtyValues', () => {
 
     // Simulate backend data update
     rerender(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         updatedData={{ name: 'Backend Update', description: 'New Desc', value: 200 }}
         useKeepDirtyValues={true}
         onReset={onReset}
-      />
+      />,
     );
 
     // Wait for reset to complete
-    await waitFor(() => {
-      expect(onReset).toHaveBeenCalled();
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        expect(onReset).toHaveBeenCalled();
+      },
+      { timeout: 500 },
+    );
 
     // User input should be preserved for dirty field (name)
     expect(nameInput).toHaveValue('User Input');
-    
+
     // Non-dirty fields should be updated from backend
     expect(screen.getByTestId('description-input')).toHaveValue('New Desc');
     expect(screen.getByTestId('value-input')).toHaveValue(200);
@@ -122,12 +117,12 @@ describe('Form Reset with keepDirtyValues', () => {
 
   it('should overwrite all fields when reset is called without keepDirtyValues', async () => {
     const user = userEvent.setup();
-    
+
     const { rerender } = render(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         useKeepDirtyValues={false}
-      />
+      />,
     );
 
     // User modifies the name field
@@ -142,18 +137,21 @@ describe('Form Reset with keepDirtyValues', () => {
 
     // Simulate backend data update
     rerender(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         updatedData={{ name: 'Backend Update', description: 'New Desc', value: 200 }}
         useKeepDirtyValues={false}
-      />
+      />,
     );
 
     // Wait for reset to occur
-    await waitFor(() => {
-      const values = screen.getByTestId('current-values');
-      expect(values.textContent).toContain('Backend Update');
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        const values = screen.getByTestId('current-values');
+        expect(values.textContent).toContain('Backend Update');
+      },
+      { timeout: 500 },
+    );
 
     // All fields should be updated from backend, user input is lost
     expect(nameInput).toHaveValue('Backend Update');
@@ -164,19 +162,19 @@ describe('Form Reset with keepDirtyValues', () => {
   it('should track dirty fields correctly with keepDirtyValues', async () => {
     const user = userEvent.setup();
     const onReset = jest.fn();
-    
+
     const { rerender } = render(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         useKeepDirtyValues={true}
         onReset={onReset}
-      />
+      />,
     );
 
     // Modify name and value fields
     const nameInput = screen.getByTestId('name-input');
     const valueInput = screen.getByTestId('value-input');
-    
+
     await user.clear(nameInput);
     await user.type(nameInput, 'Modified');
     await user.clear(valueInput);
@@ -191,12 +189,12 @@ describe('Form Reset with keepDirtyValues', () => {
 
     // Simulate backend update
     rerender(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         updatedData={{ name: 'Backend', description: 'Backend Desc', value: 500 }}
         useKeepDirtyValues={true}
         onReset={onReset}
-      />
+      />,
     );
 
     await waitFor(() => {
@@ -207,19 +205,19 @@ describe('Form Reset with keepDirtyValues', () => {
     const dirtyFields = screen.getByTestId('dirty-fields');
     expect(dirtyFields.textContent).toContain('name');
     expect(dirtyFields.textContent).toContain('value');
-    
+
     // Description should not be dirty as user didn't modify it
     expect(dirtyFields.textContent).not.toContain('description');
   });
 
   it('should handle multiple rapid resets with keepDirtyValues', async () => {
     const user = userEvent.setup();
-    
+
     const { rerender } = render(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         useKeepDirtyValues={true}
-      />
+      />,
     );
 
     // User modifies fields
@@ -229,32 +227,38 @@ describe('Form Reset with keepDirtyValues', () => {
 
     // First backend update
     rerender(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         updatedData={{ name: 'Backend1', description: 'Desc1', value: 200 }}
         useKeepDirtyValues={true}
-      />
+      />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('description-input')).toHaveValue('Desc1');
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('description-input')).toHaveValue('Desc1');
+      },
+      { timeout: 500 },
+    );
 
     // User input should still be preserved
     expect(nameInput).toHaveValue('User Input');
 
     // Second backend update
     rerender(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         updatedData={{ name: 'Backend2', description: 'Desc2', value: 300 }}
         useKeepDirtyValues={true}
-      />
+      />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByTestId('description-input')).toHaveValue('Desc2');
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('description-input')).toHaveValue('Desc2');
+      },
+      { timeout: 500 },
+    );
 
     // User input should still be preserved through multiple resets
     expect(nameInput).toHaveValue('User Input');
@@ -263,19 +267,19 @@ describe('Form Reset with keepDirtyValues', () => {
 
   it('should handle partial updates with keepDirtyValues', async () => {
     const user = userEvent.setup();
-    
+
     const { rerender } = render(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         useKeepDirtyValues={true}
-      />
+      />,
     );
 
     // User modifies all fields
     const nameInput = screen.getByTestId('name-input');
     const descInput = screen.getByTestId('description-input');
     const valueInput = screen.getByTestId('value-input');
-    
+
     await user.clear(nameInput);
     await user.type(nameInput, 'User Name');
     await user.clear(descInput);
@@ -285,17 +289,20 @@ describe('Form Reset with keepDirtyValues', () => {
 
     // Backend update with partial data
     rerender(
-      <TestForm 
+      <TestForm
         initialData={{ name: 'Initial', description: 'Initial Desc', value: 100 }}
         updatedData={{ name: 'Backend', description: 'Initial Desc', value: 100 }}
         useKeepDirtyValues={true}
-      />
+      />,
     );
 
-    await waitFor(() => {
-      const values = screen.getByTestId('current-values');
-      expect(values.textContent).toContain('User Name');
-    }, { timeout: 500 });
+    await waitFor(
+      () => {
+        const values = screen.getByTestId('current-values');
+        expect(values.textContent).toContain('User Name');
+      },
+      { timeout: 500 },
+    );
 
     // All user inputs should be preserved
     expect(nameInput).toHaveValue('User Name');
@@ -309,18 +316,21 @@ describe('Form behavior patterns matching production forms', () => {
     const ElementFormMock = ({ survey }: { survey: any }) => {
       const methods = useForm<TestFormData>({
         defaultValues: { name: '', description: '', value: 0 },
-        mode: 'onChange'
+        mode: 'onChange',
       });
 
       const { reset, register } = methods;
 
       useEffect(() => {
         if (survey) {
-          reset({
-            name: survey.name || '',
-            description: survey.description || '',
-            value: survey.value || 0
-          }, { keepDirtyValues: true });
+          reset(
+            {
+              name: survey.name || '',
+              description: survey.description || '',
+              value: survey.value || 0,
+            },
+            { keepDirtyValues: true },
+          );
         }
       }, [survey, reset]);
 
@@ -364,18 +374,21 @@ describe('Form behavior patterns matching production forms', () => {
       const [hasInitialReset, setHasInitialReset] = React.useState(false);
       const methods = useForm<TestFormData>({
         defaultValues: { name: '', description: '', value: 0 },
-        mode: 'onChange'
+        mode: 'onChange',
       });
 
       const { reset, register } = methods;
 
       useEffect(() => {
         if (data && !hasInitialReset) {
-          reset({
-            name: data.name || '',
-            description: data.description || '',
-            value: data.value || 0
-          }, { keepDirtyValues: true });
+          reset(
+            {
+              name: data.name || '',
+              description: data.description || '',
+              value: data.value || 0,
+            },
+            { keepDirtyValues: true },
+          );
           setHasInitialReset(true);
         }
       }, [data, hasInitialReset, reset]);
@@ -391,7 +404,7 @@ describe('Form behavior patterns matching production forms', () => {
     };
 
     const { rerender } = render(<FormWithInitialReset data={null} />);
-    
+
     expect(screen.getByTestId('has-reset')).toHaveTextContent('false');
 
     // First data load
@@ -403,7 +416,9 @@ describe('Form behavior patterns matching production forms', () => {
     });
 
     // Subsequent data updates should not trigger reset
-    rerender(<FormWithInitialReset data={{ name: 'Updated', description: 'New Desc', value: 2 }} />);
+    rerender(
+      <FormWithInitialReset data={{ name: 'Updated', description: 'New Desc', value: 2 }} />,
+    );
 
     // Value should not change because hasInitialReset prevents further resets
     await waitFor(() => {

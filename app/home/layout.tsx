@@ -1,25 +1,28 @@
-"use client";
+'use client';
 
-import { Toaster } from "react-hot-toast";
-import { Suspense, useEffect } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { DynamicDrawerProvider } from "./components/Drawer";
-import Error from "./error";
-import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { Breadcrumbs } from "@/components/breadcrumbs";
-import { surveyStore, componentStore, elementStore, phraseStore, sectionStore, imageMetadataStore } from "./clients/Database";
-import { enhancedImageStore } from "./clients/enhancedImageMetadataStore";
-import { OnlineStatus } from "./components/OnlineStatus";
-import { SyncStatus } from "./components/SyncStatus";
-import { TenantProvider } from "./utils/TenantContext";
+import { Toaster } from 'react-hot-toast';
+import { Suspense, useEffect } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { DynamicDrawerProvider } from './components/Drawer';
+import Error from './error';
+import { TooltipProvider } from '@radix-ui/react-tooltip';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
+import { Breadcrumbs } from '@/components/breadcrumbs';
+import {
+  surveyStore,
+  componentStore,
+  elementStore,
+  phraseStore,
+  sectionStore,
+  imageMetadataStore,
+} from './clients/Database';
+import { enhancedImageStore } from './clients/enhancedImageMetadataStore';
+import { OnlineStatus } from './components/OnlineStatus';
+import { SyncStatus } from './components/SyncStatus';
+import { TenantProvider } from './utils/TenantContext';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Setup online/offline handlers
     const handleOnline = () => {
@@ -39,7 +42,7 @@ export default function RootLayout({
     // Trigger initial sync on app load if online
     const triggerInitialSync = async () => {
       if (navigator.onLine) {
-        console.log("[Layout] Triggering initial sync on app load");
+        console.log('[Layout] Triggering initial sync on app load');
         await Promise.all([
           surveyStore.forceSync(),
           componentStore.forceSync(),
@@ -69,9 +72,12 @@ export default function RootLayout({
     ];
 
     // Periodic thumbnail cleanup (once a day)
-    const cleanupThumbsInterval = setInterval(() => {
-      enhancedImageStore.cleanupOldThumbnails(100);
-    }, 24 * 60 * 60 * 1000);
+    const cleanupThumbsInterval = setInterval(
+      () => {
+        enhancedImageStore.cleanupOldThumbnails(100);
+      },
+      24 * 60 * 60 * 1000,
+    );
 
     window.addEventListener('online', handleOnline);
 
@@ -79,7 +85,7 @@ export default function RootLayout({
       clearTimeout(initialSyncTimeout);
       window.removeEventListener('online', handleOnline);
       // Clean up periodic sync intervals
-      cleanupFunctions.forEach(cleanup => cleanup());
+      cleanupFunctions.forEach((cleanup) => cleanup());
       clearInterval(cleanupThumbsInterval);
     };
   }, []);
@@ -90,9 +96,9 @@ export default function RootLayout({
         <TenantProvider>
           <SidebarProvider>
             <AppSidebar className="print:!hidden" />
-            <SidebarInset className="print:!w-0 print:!m-0 print:!p-0">
-              <header className="print:!hidden flex h-16 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex items-center gap-2 px-4 w-full">
+            <SidebarInset className="print:!m-0 print:!w-0 print:!p-0">
+              <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 print:!hidden">
+                <div className="flex w-full items-center gap-2 px-4">
                   <SidebarTrigger className="-ml-1" />
                   <Breadcrumbs />
                 </div>
@@ -104,16 +110,11 @@ export default function RootLayout({
               <div className="flex flex-1 flex-col gap-4">
                 <ErrorBoundary
                   fallbackRender={(props) => (
-                    <Error
-                      error={props.error}
-                      reset={props.resetErrorBoundary}
-                    />
+                    <Error error={props.error} reset={props.resetErrorBoundary} />
                   )}
                 >
                   <Suspense fallback={<div>Loading...</div>}>
-                    <div className="p-2 md:mx-10">
-                      {children}
-                    </div>
+                    <div className="p-2 md:mx-10">{children}</div>
                   </Suspense>
                 </ErrorBoundary>
               </div>

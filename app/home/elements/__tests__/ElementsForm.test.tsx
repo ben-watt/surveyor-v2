@@ -21,22 +21,38 @@ jest.mock('../../clients/Database', () => ({
     add: (...args: any[]) => mockAdd(...args),
     update: (...args: any[]) => mockUpdate(...args),
     get: jest.fn(),
-    useGet: (id: string) => [true, createdRef.value ? {
-      id,
-      name: 'Existing',
-      order: 0,
-      sectionId: 's1',
-      description: '',
-      createdAt: '',
-      updatedAt: '',
-      syncStatus: 'synced',
-      tenantId: 't1'
-    } : undefined],
+    useGet: (id: string) => [
+      true,
+      createdRef.value
+        ? {
+            id,
+            name: 'Existing',
+            order: 0,
+            sectionId: 's1',
+            description: '',
+            createdAt: '',
+            updatedAt: '',
+            syncStatus: 'synced',
+            tenantId: 't1',
+          }
+        : undefined,
+    ],
   },
   sectionStore: {
-    useList: () => [true, [
-      { id: 's1', name: 'Section 1', order: 0, createdAt: '', updatedAt: '', syncStatus: 'synced', tenantId: 't1' },
-    ]],
+    useList: () => [
+      true,
+      [
+        {
+          id: 's1',
+          name: 'Section 1',
+          order: 0,
+          createdAt: '',
+          updatedAt: '',
+          syncStatus: 'synced',
+          tenantId: 't1',
+        },
+      ],
+    ],
   },
 }));
 
@@ -73,5 +89,3 @@ describe('Element DataForm autosave on create', () => {
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
   });
 });
-
-

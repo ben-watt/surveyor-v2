@@ -3,10 +3,14 @@
 function getDaySuffix(day: number): string {
   if (day > 3 && day < 21) return 'th';
   switch (day % 10) {
-    case 1: return 'st';
-    case 2: return 'nd';
-    case 3: return 'rd';
-    default: return 'th';
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
   }
 }
 
@@ -30,7 +34,7 @@ export function formatDateTime(date: Date | string): string {
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 }
 
@@ -40,11 +44,13 @@ export function formatDateTime(date: Date | string): string {
  */
 export function formatDateWithSuffix(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }).replace(/(\d+)/, '$1' + getDaySuffix(dateObj.getDate()));
+  return dateObj
+    .toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+    .replace(/(\d+)/, '$1' + getDaySuffix(dateObj.getDate()));
 }
 
 /**

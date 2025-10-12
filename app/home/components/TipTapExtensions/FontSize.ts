@@ -30,8 +30,8 @@ export const FontSize = Extension.create<FontSizeOptions>({
       types: ['textStyle', 'heading', 'paragraph'],
       defaultSize: '10pt',
       getStyle: (fontSize: string) => {
-        return `font-size: ${fontSize}`
-      }
+        return `font-size: ${fontSize}`;
+      },
     };
   },
 
@@ -42,16 +42,16 @@ export const FontSize = Extension.create<FontSizeOptions>({
         attributes: {
           fontSize: {
             default: this.options.defaultSize,
-            parseHTML: element => element.style.fontSize.replace(/['"]+/g, ''),
-            renderHTML: attributes => {
+            parseHTML: (element) => element.style.fontSize.replace(/['"]+/g, ''),
+            renderHTML: (attributes) => {
               if (!attributes.fontSize) {
                 return {
-                  style: this.options.getStyle(this.options.defaultSize)
+                  style: this.options.getStyle(this.options.defaultSize),
                 };
               }
 
               return {
-                style: this.options.getStyle(attributes.fontSize)
+                style: this.options.getStyle(attributes.fontSize),
               };
             },
           },
@@ -62,17 +62,16 @@ export const FontSize = Extension.create<FontSizeOptions>({
 
   addCommands() {
     return {
-      setFontSize: fontSize => ({ chain }) => {
-        return chain()
-          .setMark('textStyle', { fontSize })
-          .run();
-      },
-      unsetFontSize: () => ({ chain }) => {
-        return chain()
-          .setMark('textStyle', { fontSize: null })
-          .removeEmptyTextStyle()
-          .run();
-      },
+      setFontSize:
+        (fontSize) =>
+        ({ chain }) => {
+          return chain().setMark('textStyle', { fontSize }).run();
+        },
+      unsetFontSize:
+        () =>
+        ({ chain }) => {
+          return chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run();
+        },
     };
   },
 });

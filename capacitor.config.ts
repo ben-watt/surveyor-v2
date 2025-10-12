@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     url: 'http://192.168.1.238:3000', // For development - point to Next.js dev server
-    cleartext: true
+    cleartext: true,
   },
   plugins: {
     Camera: {
@@ -14,12 +14,12 @@ const config: CapacitorConfig = {
       quality: 90,
       allowEditing: false,
       resultType: 'uri',
-      saveToGallery: false
+      saveToGallery: false,
     },
     Filesystem: {
-      requestPermissions: true
-    }
-  }
+      requestPermissions: true,
+    },
+  },
 };
 
 export default config;

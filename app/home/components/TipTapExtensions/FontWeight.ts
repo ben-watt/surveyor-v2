@@ -30,8 +30,8 @@ export const FontWeight = Extension.create<FontWeightOptions>({
       types: ['textStyle', 'heading', 'paragraph'],
       defaultWeight: 'normal',
       getStyle: (fontWeight: string) => {
-        return `font-weight: ${fontWeight}`
-      }
+        return `font-weight: ${fontWeight}`;
+      },
     };
   },
 
@@ -42,16 +42,16 @@ export const FontWeight = Extension.create<FontWeightOptions>({
         attributes: {
           fontWeight: {
             default: this.options.defaultWeight,
-            parseHTML: element => element.style.fontWeight.replace(/['"]+/g, ''),
-            renderHTML: attributes => {
+            parseHTML: (element) => element.style.fontWeight.replace(/['"]+/g, ''),
+            renderHTML: (attributes) => {
               if (!attributes.fontWeight) {
                 return {
-                  style: this.options.getStyle(this.options.defaultWeight)
+                  style: this.options.getStyle(this.options.defaultWeight),
                 };
               }
 
               return {
-                style: this.options.getStyle(attributes.fontWeight)
+                style: this.options.getStyle(attributes.fontWeight),
               };
             },
           },
@@ -62,17 +62,16 @@ export const FontWeight = Extension.create<FontWeightOptions>({
 
   addCommands() {
     return {
-      setFontWeight: fontWeight => ({ chain }) => {
-        return chain()
-          .setMark('textStyle', { fontWeight })
-          .run();
-      },
-      unsetFontWeight: () => ({ chain }) => {
-        return chain()
-          .setMark('textStyle', { fontWeight: null })
-          .removeEmptyTextStyle()
-          .run();
-      },
+      setFontWeight:
+        (fontWeight) =>
+        ({ chain }) => {
+          return chain().setMark('textStyle', { fontWeight }).run();
+        },
+      unsetFontWeight:
+        () =>
+        ({ chain }) => {
+          return chain().setMark('textStyle', { fontWeight: null }).removeEmptyTextStyle().run();
+        },
     };
   },
 });

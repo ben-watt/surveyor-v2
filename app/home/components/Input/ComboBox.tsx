@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { CheckIcon, ArrowDownNarrowWide, ChevronRight, ArrowLeft, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import { CheckIcon, ArrowDownNarrowWide, ChevronRight, ArrowLeft, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -12,16 +12,12 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Control, FieldErrors, RegisterOptions, useController } from "react-hook-form";
-import { Label } from "./Label";
-import { ErrorMessage } from "@hookform/error-message";
-import InputError from "../InputError";
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Control, FieldErrors, RegisterOptions, useController } from 'react-hook-form';
+import { Label } from './Label';
+import { ErrorMessage } from '@hookform/error-message';
+import InputError from '../InputError';
 
 export interface ComboboxDataItem {
   value: any;
@@ -60,10 +56,10 @@ export function Combobox({
     name,
     control,
     rules,
-    defaultValue: isMulti ? [] : ""
+    defaultValue: isMulti ? [] : '',
   });
   const [open, setOpen] = React.useState(false);
-  const [search, setSearch] = React.useState("");
+  const [search, setSearch] = React.useState('');
   const [navigationStack, setNavigationStack] = React.useState<ComboboxDataItem[][]>([data]);
   const [breadcrumbs, setBreadcrumbs] = React.useState<string[]>([]);
 
@@ -74,27 +70,37 @@ export function Combobox({
   }, [data]);
 
   // Flatten the nested data structure for searching
-  const flattenData = React.useCallback((items: ComboboxDataItem[], parentLabel = ""): { value: any; label: string; fullLabel: string }[] => {
-    return items.reduce((acc, item) => {
-      const fullLabel = showParentLabels && parentLabel ? `${parentLabel} > ${item.label}` : item.label;
-      const result = [{ value: item.value, label: item.label, fullLabel }];
-      
-      if (item.children) {
-        result.push(...flattenData(item.children, fullLabel));
-      }
-      
-      return [...acc, ...result];
-    }, [] as { value: any; label: string; fullLabel: string }[]);
-  }, [showParentLabels]);
+  const flattenData = React.useCallback(
+    (
+      items: ComboboxDataItem[],
+      parentLabel = '',
+    ): { value: any; label: string; fullLabel: string }[] => {
+      return items.reduce(
+        (acc, item) => {
+          const fullLabel =
+            showParentLabels && parentLabel ? `${parentLabel} > ${item.label}` : item.label;
+          const result = [{ value: item.value, label: item.label, fullLabel }];
+
+          if (item.children) {
+            result.push(...flattenData(item.children, fullLabel));
+          }
+
+          return [...acc, ...result];
+        },
+        [] as { value: any; label: string; fullLabel: string }[],
+      );
+    },
+    [showParentLabels],
+  );
 
   const flatData = React.useMemo(() => flattenData(data), [data, flattenData]);
 
   const filteredData = React.useMemo(() => {
     if (!search) return flatData;
     return flatData.filter(
-      item => 
+      (item) =>
         item.label.toLowerCase().includes(search.toLowerCase()) ||
-        item.fullLabel.toLowerCase().includes(search.toLowerCase())
+        item.fullLabel.toLowerCase().includes(search.toLowerCase()),
     );
   }, [flatData, search]);
 
@@ -104,94 +110,105 @@ export function Combobox({
     return idx >= 0 ? val.substring(0, idx) : val;
   }, []);
 
-  const valuesEqual = React.useCallback((a: any, b: any) => {
-    // Direct equality for primitives
-    if (
-      (typeof a !== 'object' || a === null) &&
-      (typeof b !== 'object' || b === null)
-    ) {
-      if (a === b) return true;
-      if (typeof a === 'string' && typeof b === 'string') {
-        return stripTenantSuffix(a) === stripTenantSuffix(b);
+  const valuesEqual = React.useCallback(
+    (a: any, b: any) => {
+      // Direct equality for primitives
+      if ((typeof a !== 'object' || a === null) && (typeof b !== 'object' || b === null)) {
+        if (a === b) return true;
+        if (typeof a === 'string' && typeof b === 'string') {
+          return stripTenantSuffix(a) === stripTenantSuffix(b);
+        }
+        return false;
+      }
+
+      // Object comparison by id when available
+      const aId = a && typeof a === 'object' ? (a.id ?? JSON.stringify(a)) : a;
+      const bId = b && typeof b === 'object' ? (b.id ?? JSON.stringify(b)) : b;
+      if (aId === bId) return true;
+      if (typeof aId === 'string' && typeof bId === 'string') {
+        return stripTenantSuffix(aId) === stripTenantSuffix(bId);
       }
       return false;
-    }
+    },
+    [stripTenantSuffix],
+  );
 
-    // Object comparison by id when available
-    const aId = a && typeof a === 'object' ? (a.id ?? JSON.stringify(a)) : a;
-    const bId = b && typeof b === 'object' ? (b.id ?? JSON.stringify(b)) : b;
-    if (aId === bId) return true;
-    if (typeof aId === 'string' && typeof bId === 'string') {
-      return stripTenantSuffix(aId) === stripTenantSuffix(bId);
-    }
-    return false;
-  }, [stripTenantSuffix]);
-
-  const handleSelect = React.useCallback((label: string, item?: ComboboxDataItem) => {
-    if (item?.children && item.children.length > 0) {
-      setNavigationStack(prev => [...prev, item.children!]);
-      setBreadcrumbs(prev => [...prev, item.label]);
-      return;
-    }
-
-    const selectedItem = flatData.find(i => i.label === label);
-    if (!selectedItem) return;
-
-    if (isMulti) {
-      const currentValues = Array.isArray(field.value) ? field.value : [];
-      const valueExists = currentValues.some(v => valuesEqual(v, selectedItem.value));
-
-      field.onChange(valueExists 
-        ? currentValues.filter(v => !valuesEqual(v, selectedItem.value))
-        : [...currentValues, selectedItem.value]
-      );
-    } else {
-      const valueMatches = valuesEqual(field.value, selectedItem.value);
-
-      field.onChange(valueMatches ? "" : selectedItem.value);
-      setOpen(false);
-      if (inDrawer && onClose) {
-        onClose();
+  const handleSelect = React.useCallback(
+    (label: string, item?: ComboboxDataItem) => {
+      if (item?.children && item.children.length > 0) {
+        setNavigationStack((prev) => [...prev, item.children!]);
+        setBreadcrumbs((prev) => [...prev, item.label]);
+        return;
       }
-    }
 
-    if (!isMulti) {
-      setNavigationStack([data]);
-      setBreadcrumbs([]);
-    }
-  }, [data, field, isMulti, flatData, inDrawer, onClose, valuesEqual]);
+      const selectedItem = flatData.find((i) => i.label === label);
+      if (!selectedItem) return;
+
+      if (isMulti) {
+        const currentValues = Array.isArray(field.value) ? field.value : [];
+        const valueExists = currentValues.some((v) => valuesEqual(v, selectedItem.value));
+
+        field.onChange(
+          valueExists
+            ? currentValues.filter((v) => !valuesEqual(v, selectedItem.value))
+            : [...currentValues, selectedItem.value],
+        );
+      } else {
+        const valueMatches = valuesEqual(field.value, selectedItem.value);
+
+        field.onChange(valueMatches ? '' : selectedItem.value);
+        setOpen(false);
+        if (inDrawer && onClose) {
+          onClose();
+        }
+      }
+
+      if (!isMulti) {
+        setNavigationStack([data]);
+        setBreadcrumbs([]);
+      }
+    },
+    [data, field, isMulti, flatData, inDrawer, onClose, valuesEqual],
+  );
 
   const handleBack = React.useCallback(() => {
     if (navigationStack.length > 1) {
-      setNavigationStack(prev => prev.slice(0, -1));
-      setBreadcrumbs(prev => prev.slice(0, -1));
+      setNavigationStack((prev) => prev.slice(0, -1));
+      setBreadcrumbs((prev) => prev.slice(0, -1));
     }
   }, [navigationStack.length]);
 
   const currentLevel = navigationStack[navigationStack.length - 1];
   const selectedItems = React.useMemo(() => {
     if (!field.value) return [];
-    
+
     if (isMulti && Array.isArray(field.value)) {
-      return field.value.map(value => flatData.find(item => valuesEqual(value, item.value)));
+      return field.value.map((value) => flatData.find((item) => valuesEqual(value, item.value)));
     }
-    
-    const item = flatData.find(item => valuesEqual(field.value, item.value));
-    
+
+    const item = flatData.find((item) => valuesEqual(field.value, item.value));
+
     return item ? [item] : [];
   }, [field.value, flatData, isMulti, valuesEqual]);
 
-  const selectedLabels = React.useMemo(() => 
-    selectedItems.filter(Boolean).map(item => item?.fullLabel).join(", "),
-    [selectedItems]
+  const selectedLabels = React.useMemo(
+    () =>
+      selectedItems
+        .filter(Boolean)
+        .map((item) => item?.fullLabel)
+        .join(', '),
+    [selectedItems],
   );
 
-  const isItemSelected = React.useCallback((itemValue: any) => {
-    if (isMulti && Array.isArray(field.value)) {
-      return field.value.some(v => valuesEqual(v, itemValue));
-    }
-    return valuesEqual(field.value, itemValue);
-  }, [field.value, isMulti, valuesEqual]);
+  const isItemSelected = React.useCallback(
+    (itemValue: any) => {
+      if (isMulti && Array.isArray(field.value)) {
+        return field.value.some((v) => valuesEqual(v, itemValue));
+      }
+      return valuesEqual(field.value, itemValue);
+    },
+    [field.value, isMulti, valuesEqual],
+  );
 
   // When in drawer mode, we don't need the trigger button and popover wrapper
   if (inDrawer) {
@@ -203,15 +220,15 @@ export function Combobox({
               {selectedItems.filter(Boolean).map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-1 bg-secondary text-secondary-foreground rounded-md px-2 py-1 text-sm"
+                  className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm text-secondary-foreground"
                 >
                   <span>{item?.label}</span>
                   <button
                     type="button"
-                    className="h-4 w-4 hover:bg-secondary-foreground/20 rounded-sm"
+                    className="h-4 w-4 rounded-sm hover:bg-secondary-foreground/20"
                     onClick={(e) => {
                       e.preventDefault();
-                      handleSelect(item?.label || "");
+                      handleSelect(item?.label || '');
                     }}
                   >
                     <X className="h-3 w-3" />
@@ -241,8 +258,8 @@ export function Combobox({
                   {item.fullLabel}
                   <CheckIcon
                     className={cn(
-                      "ml-auto h-4 w-4",
-                      isItemSelected(item.value) ? "opacity-100" : "opacity-0"
+                      'ml-auto h-4 w-4',
+                      isItemSelected(item.value) ? 'opacity-100' : 'opacity-0',
                     )}
                   />
                 </CommandItem>
@@ -254,10 +271,10 @@ export function Combobox({
                     <CommandItem
                       value="back"
                       onSelect={handleBack}
-                      className="font-medium text-muted-foreground py-3"
+                      className="py-3 font-medium text-muted-foreground"
                     >
                       <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back to {breadcrumbs[breadcrumbs.length - 2] || "Start"}
+                      Back to {breadcrumbs[breadcrumbs.length - 2] || 'Start'}
                     </CommandItem>
                     <CommandSeparator />
                   </>
@@ -275,8 +292,8 @@ export function Combobox({
                     ) : (
                       <CheckIcon
                         className={cn(
-                          "ml-auto h-4 w-4",
-                          isItemSelected(item.value) ? "opacity-100" : "opacity-0"
+                          'ml-auto h-4 w-4',
+                          isItemSelected(item.value) ? 'opacity-100' : 'opacity-0',
                         )}
                       />
                     )}
@@ -305,26 +322,35 @@ export function Combobox({
       <div className="flex items-center space-x-2">
         <Label text={labelTitle} />
       </div>
-      <Popover open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen && !isMulti) {
-          setNavigationStack([data]);
-          setBreadcrumbs([]);
-          setSearch("");
-        }
-      }}>
+      <Popover
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen && !isMulti) {
+            setNavigationStack([data]);
+            setBreadcrumbs([]);
+            setSearch('');
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="justify-between w-full text-ellipsis overflow-hidden whitespace-nowrap"
+            className="w-full justify-between overflow-hidden text-ellipsis whitespace-nowrap"
           >
-            <div className="flex justify-between items-center w-full min-w-0">
-              <span className="flex-1 text-start truncate min-w-0 max-w-72">{selectedLabels || "Select..."}</span>
+            <div className="flex w-full min-w-0 items-center justify-between">
+              <span className="min-w-0 max-w-72 flex-1 truncate text-start">
+                {selectedLabels || 'Select...'}
+              </span>
               <div className="flex items-center">
-                {isMulti && selectedItems.length > 0 && <span className="text-xs text-muted-foreground bg-secondary rounded-md px-2 py-1">{selectedItems.length}</span>}
-                <ArrowDownNarrowWide className="flex-none ml-2 h-4 w-4 opacity-50 shrink-0" />
+                {isMulti && selectedItems.length > 0 && (
+                  <span className="rounded-md bg-secondary px-2 py-1 text-xs text-muted-foreground">
+                    {selectedItems.length}
+                  </span>
+                )}
+                <ArrowDownNarrowWide className="ml-2 h-4 w-4 flex-none shrink-0 opacity-50" />
               </div>
             </div>
           </Button>
@@ -337,15 +363,15 @@ export function Combobox({
                   {selectedItems.filter(Boolean).map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-1 bg-secondary text-secondary-foreground rounded-md px-2 py-1 text-sm"
+                      className="flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-sm text-secondary-foreground"
                     >
                       <span>{item?.label}</span>
                       <button
                         type="button"
-                        className="h-4 w-4 hover:bg-secondary-foreground/20 rounded-sm"
+                        className="h-4 w-4 rounded-sm hover:bg-secondary-foreground/20"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleSelect(item?.label || "");
+                          handleSelect(item?.label || '');
                         }}
                       >
                         <X className="h-3 w-3" />
@@ -375,8 +401,8 @@ export function Combobox({
                       {item.fullLabel}
                       <CheckIcon
                         className={cn(
-                          "ml-auto h-4 w-4",
-                          isItemSelected(item.value) ? "opacity-100" : "opacity-0"
+                          'ml-auto h-4 w-4',
+                          isItemSelected(item.value) ? 'opacity-100' : 'opacity-0',
                         )}
                       />
                     </CommandItem>
@@ -391,7 +417,7 @@ export function Combobox({
                           className="font-medium text-muted-foreground"
                         >
                           <ArrowLeft className="mr-2 h-4 w-4" />
-                          Back to {breadcrumbs[breadcrumbs.length - 2] || "Start"}
+                          Back to {breadcrumbs[breadcrumbs.length - 2] || 'Start'}
                         </CommandItem>
                         <CommandSeparator />
                       </>
@@ -409,8 +435,8 @@ export function Combobox({
                         ) : (
                           <CheckIcon
                             className={cn(
-                              "ml-auto h-4 w-4",
-                              isItemSelected(item.value) ? "opacity-100" : "opacity-0"
+                              'ml-auto h-4 w-4',
+                              isItemSelected(item.value) ? 'opacity-100' : 'opacity-0',
                             )}
                           />
                         )}
@@ -434,7 +460,8 @@ export function Combobox({
       <ErrorMessage
         name={field.name}
         errors={errors}
-        render={({ message }) => InputError({ message })} />
+        render={({ message }) => InputError({ message })}
+      />
     </div>
   );
 }

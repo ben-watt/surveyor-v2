@@ -1,29 +1,33 @@
-"use client";
+'use client';
 
-import Input from "@/app/home/components/Input/InputText";
-import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { componentStore, elementStore } from "@/app/home/clients/Database";
-import type { Component } from "@/app/home/clients/Dexie";
-import { DynamicComboBox } from "@/app/home/components/Input";
-import toast from "react-hot-toast";
-import { useDynamicDrawer } from "../components/Drawer";
-import { v4 as uuidv4 } from "uuid";
-import { useRouter } from "next/navigation";
-import { useAutoSaveForm } from "../hooks/useAutoSaveForm";
-import { getAutoSaveTimings } from "../utils/autosaveTimings";
-import { LastSavedIndicator } from "../components/LastSavedIndicator";
+import Input from '@/app/home/components/Input/InputText';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { componentStore, elementStore } from '@/app/home/clients/Database';
+import type { Component } from '@/app/home/clients/Dexie';
+import { DynamicComboBox } from '@/app/home/components/Input';
+import toast from 'react-hot-toast';
+import { useDynamicDrawer } from '../components/Drawer';
+import { v4 as uuidv4 } from 'uuid';
+import { useRouter } from 'next/navigation';
+import { useAutoSaveForm } from '../hooks/useAutoSaveForm';
+import { getAutoSaveTimings } from '../utils/autosaveTimings';
+import { LastSavedIndicator } from '../components/LastSavedIndicator';
 
 // Zod schema for component validation
 const componentSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, "Name is required"),
-  elementId: z.string().min(1, "Element is required"),
-  materials: z.array(z.object({
-    name: z.string().min(1, "Material name is required")
-  })).transform(val => val || [])
+  name: z.string().min(1, 'Name is required'),
+  elementId: z.string().min(1, 'Element is required'),
+  materials: z
+    .array(
+      z.object({
+        name: z.string().min(1, 'Material name is required'),
+      }),
+    )
+    .transform((val) => val || []),
 });
 
 type ComponentFormData = z.infer<typeof componentSchema>;
@@ -35,12 +39,20 @@ interface DataFormProps {
 
 export function DataForm({ id, defaultValues }: DataFormProps) {
   const idRef = useRef(id ?? uuidv4());
-  const methods = useForm<ComponentFormData>({ 
-    defaultValues: { id: idRef.current, name: "", elementId: "", materials: [], ...defaultValues },
+  const methods = useForm<ComponentFormData>({
+    defaultValues: { id: idRef.current, name: '', elementId: '', materials: [], ...defaultValues },
     mode: 'onChange',
-    resolver: zodResolver(componentSchema)
+    resolver: zodResolver(componentSchema),
   });
-  const { register, handleSubmit, control, watch, getValues, trigger, formState: { errors } } = methods;
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    getValues,
+    trigger,
+    formState: { errors },
+  } = methods;
   const drawer = useDynamicDrawer();
   const router = useRouter();
 
@@ -54,7 +66,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
     async (data: ComponentFormData, { auto = false }: { auto?: boolean } = {}) => {
       try {
         if (componentHydrated && component) {
-          await componentStore.update(idRef.current, draft => {
+          await componentStore.update(idRef.current, (draft) => {
             draft.name = data.name;
             draft.elementId = data.elementId;
             draft.materials = data.materials;
@@ -70,20 +82,20 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
         }
 
         if (!auto) {
-          toast.success("Saved");
+          toast.success('Saved');
           if (drawer.isOpen) {
             drawer.closeDrawer();
           } else {
-            router.push("/home/building-components");
+            router.push('/home/building-components');
           }
         }
       } catch (error) {
-        console.error("Failed to save data", error);
-        if (!auto) toast.error("Error unable to save data.");
+        console.error('Failed to save data', error);
+        if (!auto) toast.error('Error unable to save data.');
         throw error; // Re-throw for autosave error handling
       }
     },
-    [componentHydrated, component, drawer, router]
+    [componentHydrated, component, drawer, router],
   );
 
   const timings = getAutoSaveTimings();
@@ -97,8 +109,8 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
       watchDelay: timings.watchDelay,
       showToast: false, // Don't show toast for autosave
       enabled: componentHydrated,
-      validateBeforeSave: true // Enable validation before auto-save
-    }
+      validateBeforeSave: true, // Enable validation before auto-save
+    },
   );
 
   useEffect(() => {
@@ -106,16 +118,18 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
       // Skip the next autosave trigger since we're about to reset
       skipNextChange();
       // Only reset on initial load, not on subsequent updates from autosave
-      methods.reset({
-        id: component.id,
-        name: component.name ?? '',
-        elementId: component.elementId ?? '',
-        materials: component.materials ?? []
-      } as any, { keepDirtyValues: true });
+      methods.reset(
+        {
+          id: component.id,
+          name: component.name ?? '',
+          elementId: component.elementId ?? '',
+          materials: component.materials ?? [],
+        } as any,
+        { keepDirtyValues: true },
+      );
       setHasInitialReset(true);
     }
   }, [methods, componentHydrated, component, hasInitialReset, skipNextChange]);
-
 
   if (!componentHydrated || !elementsHydrateds) {
     return <div>Loading...</div>;
@@ -124,11 +138,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
   return (
     <FormProvider {...methods}>
       <div className="grid gap-4">
-        <Input
-          labelTitle="Name"
-          register={() => register("name")}
-          errors={errors}
-        />
+        <Input labelTitle="Name" register={() => register('name')} errors={errors} />
         <DynamicComboBox
           labelTitle="Element"
           name="elementId"
@@ -141,7 +151,7 @@ export function DataForm({ id, defaultValues }: DataFormProps) {
           status={saveStatus}
           lastSavedAt={lastSavedAt || undefined}
           entityUpdatedAt={component?.updatedAt}
-          className="text-sm justify-center"
+          className="justify-center text-sm"
         />
       </div>
     </FormProvider>

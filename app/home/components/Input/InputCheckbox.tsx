@@ -1,21 +1,14 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import { ErrorMessage } from "@hookform/error-message";
-import {
-  FieldValues,
-  useController,
-  UseControllerProps,
-} from "react-hook-form";
-import InputError from "../InputError";
+import { Checkbox } from '@/components/ui/checkbox';
+import { ErrorMessage } from '@hookform/error-message';
+import { FieldValues, useController, UseControllerProps } from 'react-hook-form';
+import InputError from '../InputError';
 
 interface InputCheckboxProps {
   labelText?: string;
   rhfProps: UseControllerProps<FieldValues>;
 }
 
-export function InputCheckbox({
-  labelText,
-  rhfProps: controllerProps,
-}: InputCheckboxProps) {
+export function InputCheckbox({ labelText, rhfProps: controllerProps }: InputCheckboxProps) {
   const { field, formState } = useController(controllerProps);
 
   return (

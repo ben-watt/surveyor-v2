@@ -1,8 +1,22 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
-import { listUserTenants, getPreferredTenant, setPreferredTenant, clearTenantCaches, Tenant } from "../utils/tenant-utils";
-import { useRouter } from "next/navigation";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+  useMemo,
+} from 'react';
+import {
+  listUserTenants,
+  getPreferredTenant,
+  setPreferredTenant,
+  clearTenantCaches,
+  Tenant,
+} from '../utils/tenant-utils';
+import { useRouter } from 'next/navigation';
 
 interface TenantContextType {
   currentTenant: Tenant | null;
@@ -35,9 +49,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setIsServingStaleData(false);
 
       const userTenants = await listUserTenants(forceRefresh);
-      setTenants(prevTenants => {
+      setTenants((prevTenants) => {
         // Check if data might be stale (same as before)
-        if (!forceRefresh && prevTenants.length > 0 && JSON.stringify(prevTenants) === JSON.stringify(userTenants)) {
+        if (
+          !forceRefresh &&
+          prevTenants.length > 0 &&
+          JSON.stringify(prevTenants) === JSON.stringify(userTenants)
+        ) {
           setIsServingStaleData(true);
           console.debug('[TenantProvider] Serving potentially stale tenant data');
         }
@@ -48,18 +66,23 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         const preferredTenantName = await getPreferredTenant();
 
         if (preferredTenantName) {
-          const preferredTenant = userTenants.find(t => t.name === preferredTenantName) || null;
-          setCurrentTenantState(prev => (prev?.name === preferredTenant?.name ? prev : preferredTenant));
+          const preferredTenant = userTenants.find((t) => t.name === preferredTenantName) || null;
+          setCurrentTenantState((prev) =>
+            prev?.name === preferredTenant?.name ? prev : preferredTenant,
+          );
         } else {
-          setCurrentTenantState(prev => (prev === null ? prev : null));
+          setCurrentTenantState((prev) => (prev === null ? prev : null));
         }
       } else {
-        setCurrentTenantState(prev => (prev === null ? prev : null));
+        setCurrentTenantState((prev) => (prev === null ? prev : null));
       }
     } catch (err) {
-      console.error("Error loading tenants:", err);
-      setTenants(prevTenants => {
-        setError("Failed to load organizations. " + (prevTenants.length > 0 ? "Showing cached data." : "Please check your connection."));
+      console.error('Error loading tenants:', err);
+      setTenants((prevTenants) => {
+        setError(
+          'Failed to load organizations. ' +
+            (prevTenants.length > 0 ? 'Showing cached data.' : 'Please check your connection.'),
+        );
         setIsServingStaleData(prevTenants.length > 0);
         return prevTenants; // Keep existing tenants on error
       });
@@ -69,16 +92,19 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }, []); // Remove tenants dependency to prevent infinite loop
 
   // Set the current tenant and save it as preferred
-  const setCurrentTenant = useCallback(async (tenant: Tenant | null) => {
-    try {
-      setCurrentTenantState(prev => (prev?.name === tenant?.name ? prev : tenant));
-      await setPreferredTenant(tenant ? tenant.name : "personal");
-      router.push("/home");
-    } catch (err) {
-      console.error("Error setting preferred tenant:", err);
-      setError("Failed to set preferred tenant");
-    }
-  }, [router]);
+  const setCurrentTenant = useCallback(
+    async (tenant: Tenant | null) => {
+      try {
+        setCurrentTenantState((prev) => (prev?.name === tenant?.name ? prev : tenant));
+        await setPreferredTenant(tenant ? tenant.name : 'personal');
+        router.push('/home');
+      } catch (err) {
+        console.error('Error setting preferred tenant:', err);
+        setError('Failed to set preferred tenant');
+      }
+    },
+    [router],
+  );
 
   // Refresh the tenant list - force fresh data
   const refreshTenants = useCallback(async () => {
@@ -95,8 +121,10 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   // Load tenants on initial render
   useEffect(() => {
     try {
-      const storedTenantsRaw = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_TENANTS_KEY) : null;
-      const storedCurrentName = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_CURRENT_TENANT_NAME_KEY) : null;
+      const storedTenantsRaw =
+        typeof window !== 'undefined' ? localStorage.getItem(LOCAL_TENANTS_KEY) : null;
+      const storedCurrentName =
+        typeof window !== 'undefined' ? localStorage.getItem(LOCAL_CURRENT_TENANT_NAME_KEY) : null;
 
       if (storedTenantsRaw) {
         const parsed = JSON.parse(storedTenantsRaw) as unknown;
@@ -105,7 +133,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           setTenants(storedTenants);
 
           if (storedCurrentName) {
-            const matched = storedTenants.find(t => t.name === storedCurrentName) || null;
+            const matched = storedTenants.find((t) => t.name === storedCurrentName) || null;
             setCurrentTenantState(matched);
           } else {
             setCurrentTenantState(null);
@@ -147,20 +175,16 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setCurrentTenant,
       refreshTenants,
     }),
-    [currentTenant, tenants, loading, error, isServingStaleData, setCurrentTenant, refreshTenants]
+    [currentTenant, tenants, loading, error, isServingStaleData, setCurrentTenant, refreshTenants],
   );
 
-  return (
-    <TenantContext.Provider value={value}>
-      {children}
-    </TenantContext.Provider>
-  );
+  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 }
 
 export function useTenant() {
   const context = useContext(TenantContext);
   if (context === undefined) {
-    throw new Error("useTenant must be used within a TenantProvider");
+    throw new Error('useTenant must be used within a TenantProvider');
   }
   return context;
-} 
+}

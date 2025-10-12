@@ -1,39 +1,35 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from 'react';
 
 import {
   Input as InputT,
   BuildingSurveyFormData as BuildingSurveyForm,
   FormStatus,
   SurveySection,
-} from "./BuildingSurveyReportSchema";
+} from './BuildingSurveyReportSchema';
 
-import { useForm, FormProvider } from "react-hook-form";
-import InputError from "@/app/home/components/InputError";
-import { useRouter } from "next/navigation";
-import {
-  surveyStore,
-  sectionStore,
-  elementStore,
-} from "@/app/home/clients/Database";
-import { Section, Element } from "@/app/home/clients/Dexie";
-import { Ok, Result } from "ts-results";
+import { useForm, FormProvider } from 'react-hook-form';
+import InputError from '@/app/home/components/InputError';
+import { useRouter } from 'next/navigation';
+import { surveyStore, sectionStore, elementStore } from '@/app/home/clients/Database';
+import { Section, Element } from '@/app/home/clients/Dexie';
+import { Ok, Result } from 'ts-results';
 
-import { useAsyncError } from "@/app/home/hooks/useAsyncError";
-import toast from "react-hot-toast";
-import { v4 as uuidv4 } from "uuid";
-import { useUserAttributes } from "../../utils/useUser";
-import { SurveyHeader } from "../components/SurveyHeader";
-import { SurveyProgressStepper } from "../components/SurveyProgressStepper";
-import { EnhancedFormSection } from "../components/EnhancedFormSection";
-import { getSectionStatusesFromSurvey } from "../utils/progress";
+import { useAsyncError } from '@/app/home/hooks/useAsyncError';
+import toast from 'react-hot-toast';
+import { v4 as uuidv4 } from 'uuid';
+import { useUserAttributes } from '../../utils/useUser';
+import { SurveyHeader } from '../components/SurveyHeader';
+import { SurveyProgressStepper } from '../components/SurveyProgressStepper';
+import { EnhancedFormSection } from '../components/EnhancedFormSection';
+import { getSectionStatusesFromSurvey } from '../utils/progress';
 
 interface BuildingSurveyFormProps {
   id: string;
 }
 
 const shouldBeTrueCheckBox = (label: string): InputT<boolean> => ({
-  type: "checkbox",
-  placeholder: "",
+  type: 'checkbox',
+  placeholder: '',
   value: false,
   label: label,
   required: true,
@@ -44,17 +40,13 @@ const createDefaultFormValues = (
   id: string,
   dbSections: Section[],
   dbElements: Element[],
-  user: { sub?: string; name?: string; email?: string; picture?: string }
+  user: { sub?: string; name?: string; email?: string; picture?: string },
 ): Result<BuildingSurveyForm, Error> => {
   // Sort sections by order
-  const orderedSections = [...dbSections].sort(
-    (a, b) => (a.order || 0) - (b.order || 0)
-  );
+  const orderedSections = [...dbSections].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   // Sort elements by order
-  const orderedElements = [...dbElements].sort(
-    (a, b) => (a.order || 0) - (b.order || 0)
-  );
+  const orderedElements = [...dbElements].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   // Create sections array with pre-populated elements
   const formSections: SurveySection[] = orderedSections.map((section) => ({
@@ -66,7 +58,7 @@ const createDefaultFormValues = (
         id: element.id,
         name: element.name,
         isPartOfSurvey: true,
-        description: element.description || "",
+        description: element.description || '',
         components: [],
         images: [],
       })),
@@ -74,77 +66,71 @@ const createDefaultFormValues = (
 
   return Ok<BuildingSurveyForm>({
     id: id,
-    status: "draft",
+    status: 'draft',
     owner: {
-      id: user.sub || "",
-      name: user.name || "",
-      email: user.email || "",
+      id: user.sub || '',
+      name: user.name || '',
+      email: user.email || '',
       signaturePath: user.picture ? [user.picture] : [],
     },
     reportDetails: {
-      level: "2",
-      reference: "",
+      level: '2',
+      reference: '',
       address: {
-        formatted: "",
-        line1: "",
-        line2: "",
-        line3: "",
-        city: "",
-        county: "",
-        postcode: "",
+        formatted: '',
+        line1: '',
+        line2: '',
+        line3: '',
+        city: '',
+        county: '',
+        postcode: '',
         location: {
           lat: 0,
           lng: 0,
         },
       },
-      clientName: "",
+      clientName: '',
       reportDate: new Date(),
       inspectionDate: new Date(),
-      weather: "",
-      orientation: "",
-      
-      situation: "",
+      weather: '',
+      orientation: '',
+
+      situation: '',
       moneyShot: [],
       frontElevationImagesUri: [],
     },
     propertyDescription: {
-      propertyType: "",
-      constructionDetails: "",
-      yearOfConstruction: "",
-      yearOfExtensions: "",
-      yearOfConversions: "",
-      grounds: "",
-      services: "",
-      otherServices: "",
-      energyRating: "",
+      propertyType: '',
+      constructionDetails: '',
+      yearOfConstruction: '',
+      yearOfExtensions: '',
+      yearOfConversions: '',
+      grounds: '',
+      services: '',
+      otherServices: '',
+      energyRating: '',
       numberOfBedrooms: 0,
       numberOfBathrooms: 0,
-      tenure: "Unknown",
+      tenure: 'Unknown',
     },
     sections: formSections,
     checklist: {
       items: [
-        shouldBeTrueCheckBox("Have you checked for asbestos?"),
-        shouldBeTrueCheckBox("Have you lifted manhole covers to drains?"),
-        shouldBeTrueCheckBox("Have you checked for Japanese Knotweed?"),
+        shouldBeTrueCheckBox('Have you checked for asbestos?'),
+        shouldBeTrueCheckBox('Have you lifted manhole covers to drains?'),
+        shouldBeTrueCheckBox('Have you checked for Japanese Knotweed?'),
         shouldBeTrueCheckBox(
-          "Have you checked external ground levels in relation to DPCs / Air Vents?"
+          'Have you checked external ground levels in relation to DPCs / Air Vents?',
+        ),
+        shouldBeTrueCheckBox('Have you located services, elecs, gas, water, etc...?'),
+        shouldBeTrueCheckBox('Have you checked if chimney breasts been removed internally?'),
+        shouldBeTrueCheckBox(
+          'Have you checked the locations and severity of all cracks been logged?',
         ),
         shouldBeTrueCheckBox(
-          "Have you located services, elecs, gas, water, etc...?"
+          'Have you checked if there are any mature trees in close proximity to the building?',
         ),
-        shouldBeTrueCheckBox(
-          "Have you checked if chimney breasts been removed internally?"
-        ),
-        shouldBeTrueCheckBox(
-          "Have you checked the locations and severity of all cracks been logged?"
-        ),
-        shouldBeTrueCheckBox(
-          "Have you checked if there are any mature trees in close proximity to the building?"
-        ),
-        shouldBeTrueCheckBox(
-          "I confirm that the information provided is accurate"
-        ),
+        shouldBeTrueCheckBox('I confirm that the information provided is accurate'),
       ],
     },
   });
@@ -160,36 +146,31 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
 
   useEffect(() => {
     async function createNewForm() {
-      console.log("[ReportWrapper] createNewForm");
+      console.log('[ReportWrapper] createNewForm');
       const newId = uuidv4();
 
       try {
         if (!sectionsHydrated || !elementsHydrated) {
-          console.log("[ReportWrapper] waiting for data to hydrate");
+          console.log('[ReportWrapper] waiting for data to hydrate');
           return;
         }
 
         if (!isUserHydrated || !user) {
-          console.log("[ReportWrapper] waiting for user to hydrate");
+          console.log('[ReportWrapper] waiting for user to hydrate');
           return;
         }
 
-        console.debug("[ReportWrapper] user", user);
+        console.debug('[ReportWrapper] user', user);
 
         if (!user.sub || !user.name || !user.email || !user.picture) {
           toast(
-            "Your profile is missing some information. Please check you've added all your profile information before creating a survey."
+            "Your profile is missing some information. Please check you've added all your profile information before creating a survey.",
           );
-          router.push("/home/profile");
+          router.push('/home/profile');
           return;
         }
 
-        const formResult = createDefaultFormValues(
-          newId,
-          dbSections,
-          dbElements,
-          user
-        );
+        const formResult = createDefaultFormValues(newId, dbSections, dbElements, user);
 
         if (formResult.ok) {
           await surveyStore.add({
@@ -202,15 +183,13 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
           throwError(formResult.val);
         }
       } catch (error) {
-        throwError(
-          error instanceof Error ? error : new Error("Unknown error occurred")
-        );
+        throwError(error instanceof Error ? error : new Error('Unknown error occurred'));
       }
     }
 
-    console.log("[ReportWrapper] isHydrated", isHydrated);
-    console.log("[ReportWrapper] report", report);
-    if (isHydrated && !report && id === "create") {
+    console.log('[ReportWrapper] isHydrated', isHydrated);
+    console.log('[ReportWrapper] report', report);
+    if (isHydrated && !report && id === 'create') {
       createNewForm();
     }
   }, [
@@ -231,9 +210,7 @@ export default function ReportWrapper({ id }: BuildingSurveyFormProps) {
     return <div>Loading sections and elements...</div>;
   }
 
-  return (
-    <>{report ? <Report initFormValues={report} /> : <div>Loading...</div>}</>
-  );
+  return <>{report ? <Report initFormValues={report} /> : <div>Loading...</div>}</>;
 }
 
 interface ReportProps {
@@ -243,7 +220,7 @@ interface ReportProps {
 function Report({ initFormValues }: ReportProps) {
   const methods = useForm<BuildingSurveyForm>({
     defaultValues: initFormValues,
-    mode: 'onChange' // Enable validation on change
+    mode: 'onChange', // Enable validation on change
   });
 
   const { handleSubmit, formState, watch, getValues, trigger } = methods;
@@ -251,8 +228,8 @@ function Report({ initFormValues }: ReportProps) {
   const router = useRouter();
 
   const saveData = async (data: BuildingSurveyForm, { auto = false } = {}) => {
-    console.log("[BuildingSurveyForm] saveData", { data, auto });
-    
+    console.log('[BuildingSurveyForm] saveData', { data, auto });
+
     try {
       await surveyStore.update(initFormValues.id, (survey) => {
         // Persist any changes already made elsewhere; no forced status mutation
@@ -260,24 +237,23 @@ function Report({ initFormValues }: ReportProps) {
       });
 
       if (!auto) {
-        toast.success("Saved");
+        toast.success('Saved');
       }
     } catch (error) {
-      console.error("[BuildingSurveyForm] Save failed", error);
-      
+      console.error('[BuildingSurveyForm] Save failed', error);
+
       if (!auto) {
-        toast.error("Failed to save");
+        toast.error('Failed to save');
       }
-      
+
       throw error; // Re-throw for autosave error handling
     }
   };
 
-
   const saveAsDraft = async () => {
-    console.log("[BuildingSurveyForm] saveAsDraft", methods.getValues());
-    toast.success("Saved As Draft");
-    router.push("/home/surveys");
+    console.log('[BuildingSurveyForm] saveAsDraft', methods.getValues());
+    toast.success('Saved As Draft');
+    router.push('/home/surveys');
     router.refresh();
   };
 
@@ -291,7 +267,7 @@ function Report({ initFormValues }: ReportProps) {
   };
 
   const onSubmit = async () => {
-    console.log("[BuildingSurveyForm] onSubmit", methods.getValues());
+    console.log('[BuildingSurveyForm] onSubmit', methods.getValues());
     const currentData = getValues();
     await saveData(currentData, { auto: false });
   };
@@ -303,7 +279,7 @@ function Report({ initFormValues }: ReportProps) {
   // Compute section statuses via shared helper
   const sectionStatuses = useMemo(
     () => getSectionStatusesFromSurvey(initFormValues),
-    [initFormValues]
+    [initFormValues],
   );
 
   const getSectionStatus = (sectionTitle: string): FormStatus => {
@@ -313,24 +289,24 @@ function Report({ initFormValues }: ReportProps) {
 
   const formSections = [
     {
-      title: "Report Details",
+      title: 'Report Details',
       href: `/home/surveys/${initFormValues.id}/report-details`,
-      status: getSectionStatus("Report Details"),
+      status: getSectionStatus('Report Details'),
     },
     {
-      title: "Property Description",
+      title: 'Property Description',
       href: `/home/surveys/${initFormValues.id}/property-description`,
-      status: getSectionStatus("Property Description"),
+      status: getSectionStatus('Property Description'),
     },
     {
-      title: "Property Condition",
+      title: 'Property Condition',
       href: `/home/surveys/${initFormValues.id}/condition`,
-      status: getSectionStatus("Property Condition"),
+      status: getSectionStatus('Property Condition'),
     },
     {
-      title: "Checklist",
+      title: 'Checklist',
       href: `/home/surveys/${initFormValues.id}/checklist`,
-      status: getSectionStatus("Checklist"),
+      status: getSectionStatus('Checklist'),
     },
   ];
 
@@ -338,14 +314,10 @@ function Report({ initFormValues }: ReportProps) {
     <div className="space-y-6">
       <FormProvider {...methods}>
         {/* Survey Header */}
-        <SurveyHeader 
-          survey={initFormValues}
-        />
+        <SurveyHeader survey={initFormValues} />
 
         {/* Progress Stepper */}
-        <SurveyProgressStepper 
-          sections={formSections}
-        />
+        <SurveyProgressStepper sections={formSections} />
 
         {/* Form Sections */}
         <div className="space-y-4">

@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from 'react';
 import {
   NotebookPen,
   Settings2,
@@ -7,11 +7,11 @@ import {
   FileText,
   Settings,
   RefreshCw,
-} from "lucide-react"
-import { AppIcon } from "@/app/home/components/AppIcon"
+} from 'lucide-react';
+import { AppIcon } from '@/app/home/components/AppIcon';
 
-import { NavSection } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavSection } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -21,9 +21,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import Link from "next/link"
-import { useTenant } from "@/app/home/utils/TenantContext"
+} from '@/components/ui/sidebar';
+import Link from 'next/link';
+import { useTenant } from '@/app/home/utils/TenantContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,57 +31,65 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Tenant } from "@/app/home/utils/tenant-utils"
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tenant } from '@/app/home/utils/tenant-utils';
 
 const applicationNavData = {
   items: [
     {
-      title: "Surveys",
-      url: "/home/surveys",
+      title: 'Surveys',
+      url: '/home/surveys',
       icon: NotebookPen,
       isActive: true,
     },
     {
-      title: "Editor",
-      url: "/home/editor",
+      title: 'Editor',
+      url: '/home/editor',
       icon: FileText,
       isActive: true,
-    }
-  ]
-}
+    },
+  ],
+};
 
 const configurationNavData = {
   items: [
     {
-      title: "Configuration",
-      url: "/home/configuration",
+      title: 'Configuration',
+      url: '/home/configuration',
       icon: Settings,
     },
     {
-      title: "Settings",
-      url: "/home/settings",
+      title: 'Settings',
+      url: '/home/settings',
       icon: Settings2,
       items: [
         {
-          title: "Data Management",
-          url: "/home/settings",
-        }
+          title: 'Data Management',
+          url: '/home/settings',
+        },
       ],
     },
-  ]
-}
+  ],
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { currentTenant, tenants, loading, setCurrentTenant, refreshTenants, isServingStaleData, error } = useTenant();
+  const {
+    currentTenant,
+    tenants,
+    loading,
+    setCurrentTenant,
+    refreshTenants,
+    isServingStaleData,
+    error,
+  } = useTenant();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const tenantsData = tenants.map((tenant: Tenant) => ({
     name: tenant.name,
     logo: Building2,
     createdAt: tenant.createdAt,
-    createdBy: tenant.createdBy
+    createdBy: tenant.createdBy,
   }));
 
   const handleRefreshTenants = async () => {
@@ -103,12 +111,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg">
-                  <div className="p-2 flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-900 to-purple-800 text-white shadow-sm">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-gray-900 to-purple-800 p-2 text-white shadow-sm">
                     <AppIcon color="white" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold bg-gradient-to-r from-gray-900 to-blue-800 bg-clip-text text-transparent">
-                      Survii - {loading ? <Skeleton className="h-4 w-24" /> : currentTenant?.name || "Personal"}
+                    <span className="truncate bg-gradient-to-r from-gray-900 to-blue-800 bg-clip-text font-semibold text-transparent">
+                      Survii -{' '}
+                      {loading ? (
+                        <Skeleton className="h-4 w-24" />
+                      ) : (
+                        currentTenant?.name || 'Personal'
+                      )}
                     </span>
                     <span className="truncate text-xs">{process.env.NEXT_PUBLIC_APP_VERSION}</span>
                   </div>
@@ -124,25 +137,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <button
                     onClick={handleRefreshTenants}
                     disabled={isRefreshing || loading}
-                    className="p-1 rounded-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                    className="rounded-sm p-1 hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
                     title="Refresh organizations"
                   >
                     <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
                   </button>
                 </DropdownMenuLabel>
                 {(isServingStaleData || error) && (
-                  <div className="px-2 py-1 text-xs text-muted-foreground border-b">
-                    {error ? error : "Showing cached data"}
+                  <div className="border-b px-2 py-1 text-xs text-muted-foreground">
+                    {error ? error : 'Showing cached data'}
                   </div>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className={!currentTenant ? "bg-accent text-accent-foreground" : ""}
+                  className={!currentTenant ? 'bg-accent text-accent-foreground' : ''}
                   onClick={() => setCurrentTenant(null)}
                 >
-                  <div className="flex items-center gap-2">
-                    Personal Account
-                  </div>
+                  <div className="flex items-center gap-2">Personal Account</div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Teams</DropdownMenuLabel>
@@ -150,9 +161,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <DropdownMenuItem
                     key={tenant.name}
                     className={
-                      currentTenant?.name === tenant.name
-                        ? "bg-accent text-accent-foreground"
-                        : ""
+                      currentTenant?.name === tenant.name ? 'bg-accent text-accent-foreground' : ''
                     }
                     onClick={() => setCurrentTenant(tenant)}
                   >
@@ -164,7 +173,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ))}
                 {tenants.length === 0 && !loading && (
                   <DropdownMenuItem disabled>
-                    {error ? "Unable to load teams" : "No teams available"}
+                    {error ? 'Unable to load teams' : 'No teams available'}
                   </DropdownMenuItem>
                 )}
                 {loading && (
@@ -194,5 +203,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

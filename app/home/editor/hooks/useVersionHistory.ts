@@ -19,8 +19,9 @@ export function useVersionHistory(id: string) {
 
   const fetchVersions = useCallback(() => {
     setIsLoading(true);
-    documentStore.listVersions(id)
-      .then(result => {
+    documentStore
+      .listVersions(id)
+      .then((result) => {
         if (result.ok) setVersions(result.val as Version[]);
         else setVersions([]);
       })
@@ -28,4 +29,4 @@ export function useVersionHistory(id: string) {
   }, [id]);
 
   return { versions, isLoading, fetchVersions };
-} 
+}

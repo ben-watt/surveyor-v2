@@ -40,19 +40,12 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
   expandedNodes,
   onCreateChild,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-    isOver,
-  } = useSortable({
-    id: node.id,
-    disabled: !isDragEnabled,
-    animateLayoutChanges: ({ isSorting, isDragging }) => !(isSorting || isDragging),
-  });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
+    useSortable({
+      id: node.id,
+      disabled: !isDragEnabled,
+      animateLayoutChanges: ({ isSorting, isDragging }) => !(isSorting || isDragging),
+    });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -61,7 +54,8 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
   } as React.CSSProperties;
 
   // Virtually collapse only the active dragged node (not parents) during drag
-  const effectiveExpanded = isExpanded && !(dragState?.isDragging && dragState.activeId === node.id);
+  const effectiveExpanded =
+    isExpanded && !(dragState?.isDragging && dragState.activeId === node.id);
 
   return (
     <div
@@ -69,17 +63,17 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
       style={style}
       className={cn(
         'relative transition-[background,box-shadow,opacity] duration-150',
-        isDragging && 'opacity-90 shadow-lg'
+        isDragging && 'opacity-90 shadow-lg',
       )}
     >
       {/* Drop indicator line */}
       {isDropping && dropPosition === 'before' && (
-        <div className="absolute -top-0.5 left-2 right-2 h-0.5 bg-blue-500 rounded-full z-10" />
+        <div className="absolute -top-0.5 left-2 right-2 z-10 h-0.5 rounded-full bg-blue-500" />
       )}
-      
+
       <div className="relative">
         {/* Node header - only the header row, not children */}
-        <div className="relative group">
+        <div className="group relative">
           {/* Node header content - render just the header without expanded children */}
           <div className={cn('relative')}>
             <ConfigTreeNode
@@ -95,7 +89,7 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
             />
           </div>
         </div>
-        
+
         {/* Render children separately, outside of the draggable container */}
         {effectiveExpanded && (
           <div className="ml-4">
@@ -109,19 +103,19 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                   parentType={node.type}
                   parentId={node.id}
                   isActive={Boolean(
-                    dragState?.isDragging && 
-                    dragState?.activeNode &&
-                    (
-                      (node.type === 'section' && dragState.activeNode.type === 'element') ||
-                      (node.type === 'element' && dragState.activeNode.type === 'component')
-                    )
+                    dragState?.isDragging &&
+                      dragState?.activeNode &&
+                      ((node.type === 'section' && dragState.activeNode.type === 'element') ||
+                        (node.type === 'element' && dragState.activeNode.type === 'component')),
                   )}
                 />
 
                 {/* Sortable list for immediate children at this level */}
                 <SortableContext
                   items={node.children
-                    .filter((c) => (node.type === 'section' ? c.type === 'element' : c.type === 'component'))
+                    .filter((c) =>
+                      node.type === 'section' ? c.type === 'element' : c.type === 'component',
+                    )
                     .map((c) => c.id)}
                   strategy={verticalListSortingStrategy}
                 >
@@ -172,12 +166,10 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                   parentType={node.type}
                   parentId={node.id}
                   isActive={Boolean(
-                    dragState?.isDragging && 
-                    dragState?.activeNode &&
-                    (
-                      (node.type === 'section' && dragState.activeNode.type === 'element') ||
-                      (node.type === 'element' && dragState.activeNode.type === 'component')
-                    )
+                    dragState?.isDragging &&
+                      dragState?.activeNode &&
+                      ((node.type === 'section' && dragState.activeNode.type === 'element') ||
+                        (node.type === 'element' && dragState.activeNode.type === 'component')),
                   )}
                 />
               </>
@@ -193,8 +185,8 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                   parentId={node.id}
                   isActive={Boolean(
                     dragState?.isDragging &&
-                    dragState?.activeNode &&
-                    dragState.activeNode.type === 'condition'
+                      dragState?.activeNode &&
+                      dragState.activeNode.type === 'condition',
                   )}
                 />
                 {node.children.length > 0 ? (
@@ -228,8 +220,8 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
                   parentId={node.id}
                   isActive={Boolean(
                     dragState?.isDragging &&
-                    dragState?.activeNode &&
-                    dragState.activeNode.type === 'condition'
+                      dragState?.activeNode &&
+                      dragState.activeNode.type === 'condition',
                   )}
                 />
               </>
@@ -237,12 +229,11 @@ const DraggableTreeNode: React.FC<DraggableTreeNodeProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Drop indicator line */}
       {isDropping && dropPosition === 'after' && (
-        <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 bg-blue-500 rounded-full z-10" />
+        <div className="absolute -bottom-0.5 left-2 right-2 z-10 h-0.5 rounded-full bg-blue-500" />
       )}
-      
     </div>
   );
 };

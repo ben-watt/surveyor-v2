@@ -1,9 +1,5 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@radix-ui/react-tooltip";
-import { ReactElement } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@radix-ui/react-tooltip';
+import { ReactElement } from 'react';
 
 export interface MenuItemProps {
   icon?: ReactElement<any>;
@@ -12,24 +8,19 @@ export interface MenuItemProps {
   isActive?: (() => boolean) | null;
 }
 
-export default function MenuItem({
-  icon,
-  title,
-  action,
-  isActive = null,
-}: MenuItemProps) {
+export default function MenuItem({ icon, title, action, isActive = null }: MenuItemProps) {
   return (
     <Tooltip delayDuration={300}>
       <TooltipTrigger
-        className={`p-2 rounded-sm hover:bg-gray-200 ${
-          isActive && isActive() ? "bg-gray-200" : ""
+        className={`rounded-sm p-2 hover:bg-gray-200 ${
+          isActive && isActive() ? 'bg-gray-200' : ''
         }`}
         onClick={action}
       >
         {icon}
       </TooltipTrigger>
       <TooltipContent>
-        <div className="bg-black text-white rounded text-xs p-1">{title}</div>
+        <div className="rounded bg-black p-1 text-xs text-white">{title}</div>
       </TooltipContent>
     </Tooltip>
   );

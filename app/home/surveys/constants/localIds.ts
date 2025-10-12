@@ -15,4 +15,3 @@ export function isLocalComponentDefId(id?: string): boolean {
 export function isLocalConditionDefId(id?: string): boolean {
   return !!id && id.startsWith(ID_PREFIX.condDef);
 }
-

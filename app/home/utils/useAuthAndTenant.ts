@@ -7,10 +7,10 @@ export const useAuthAndTenant = () => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
-  
+
   useEffect(() => {
     let mounted = true;
-    
+
     const initialize = async () => {
       try {
         await getCurrentUser();
@@ -27,13 +27,13 @@ export const useAuthAndTenant = () => {
         }
       }
     };
-    
+
     const timeout = setTimeout(initialize, 200);
     return () => {
       mounted = false;
       clearTimeout(timeout);
     };
   }, []);
-  
+
   return { tenantId, authReady, authSuccess };
 };

@@ -1,42 +1,40 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { BuildingSurveyFormData, SurveyStatus } from "../building-survey-reports/BuildingSurveyReportSchema";
-import { getSurveyStatusBadgeClass, getSurveyStatusLabel, getSurveyStatusShortLabel, SURVEY_STATUSES } from "../utils/status";
-import { AddressDisplay } from "@/app/home/components/Address/AddressDisplay";
-import { CalendarDays, CalendarFold, MapPin, Check } from "lucide-react";
+} from '@/components/ui/dropdown-menu';
 import {
-  formatDateTime,
-  formatShortDate,
-} from "@/app/home/utils/dateFormatters";
-import TimeAgo from "../../components/TimeAgo";
+  BuildingSurveyFormData,
+  SurveyStatus,
+} from '../building-survey-reports/BuildingSurveyReportSchema';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  getSurveyStatusBadgeClass,
+  getSurveyStatusLabel,
+  getSurveyStatusShortLabel,
+  SURVEY_STATUSES,
+} from '../utils/status';
+import { AddressDisplay } from '@/app/home/components/Address/AddressDisplay';
+import { CalendarDays, CalendarFold, MapPin, Check } from 'lucide-react';
+import { formatDateTime, formatShortDate } from '@/app/home/utils/dateFormatters';
+import TimeAgo from '../../components/TimeAgo';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   getOwnerDisplayName as computeOwnerDisplayName,
   useUserAttributes,
-} from "@/app/home/utils/useUser";
-import { surveyStore } from "@/app/home/clients/Database";
-import { UserAvatar } from "../../components/UserAvatar";
+} from '@/app/home/utils/useUser';
+import { surveyStore } from '@/app/home/clients/Database';
+import { UserAvatar } from '../../components/UserAvatar';
 
 interface SurveyHeaderProps {
   survey: BuildingSurveyFormData;
 }
 
-export function SurveyHeader({
-  survey,
-}: SurveyHeaderProps) {
+export function SurveyHeader({ survey }: SurveyHeaderProps) {
   const [isUserHydrated, user] = useUserAttributes();
 
   const ownerDisplayName = computeOwnerDisplayName(survey.owner, {
@@ -45,9 +43,7 @@ export function SurveyHeader({
   });
 
   const [isRawHydrated, rawList] = surveyStore.useRawList();
-  const createdAt = isRawHydrated
-    ? rawList.find((s) => s.id === survey.id)?.createdAt
-    : undefined;
+  const createdAt = isRawHydrated ? rawList.find((s) => s.id === survey.id)?.createdAt : undefined;
   const createdAtDate = createdAt ? new Date(createdAt) : undefined;
 
   const getStatusColor = (status: SurveyStatus) => getSurveyStatusBadgeClass(status);
@@ -57,18 +53,15 @@ export function SurveyHeader({
       <CardContent className="p-6">
         <div className="flex flex-col gap-4 overflow-hidden">
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="mb-2 flex items-center gap-3">
               <h1 className="text-2xl font-bold">Building Survey Report</h1>
             </div>
 
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
+                <MapPin className="h-4 w-4" />
                 {survey.reportDetails.address.line1 ? (
-                  <AddressDisplay
-                    address={survey.reportDetails.address}
-                    maxLength={60}
-                  />
+                  <AddressDisplay address={survey.reportDetails.address} maxLength={60} />
                 ) : (
                   <span className="text-amber-600">No address specified</span>
                 )}
@@ -79,10 +72,7 @@ export function SurveyHeader({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div
-                          className="flex items-center gap-2"
-                          aria-label="Survey owner"
-                        >
+                        <div className="flex items-center gap-2" aria-label="Survey owner">
                           <UserAvatar
                             name={ownerDisplayName}
                             imageUrl={survey.owner?.signaturePath?.[0]}
@@ -97,7 +87,7 @@ export function SurveyHeader({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Badge
-                      className={`${getStatusColor(survey.status)} cursor-pointer px-2 py-0.5 text-xs whitespace-nowrap`}
+                      className={`${getStatusColor(survey.status)} cursor-pointer whitespace-nowrap px-2 py-0.5 text-xs`}
                       variant="outline"
                       role="button"
                       aria-label="Survey status"
@@ -119,9 +109,9 @@ export function SurveyHeader({
                       >
                         <div className="flex items-center gap-2">
                           {survey.status === s.value ? (
-                            <Check className="w-4 h-4" />
+                            <Check className="h-4 w-4" />
                           ) : (
-                            <span className="w-4 h-4" />
+                            <span className="h-4 w-4" />
                           )}
                           <span>{s.label}</span>
                         </div>
@@ -131,22 +121,19 @@ export function SurveyHeader({
                 </DropdownMenu>
                 <Badge
                   variant="outline"
-                  className="bg-gray-50 text-gray-700 border-gray-200 font-medium"
+                  className="border-gray-200 bg-gray-50 font-medium text-gray-700"
                 >
-                  🏢 Level {survey.reportDetails?.level ?? "—"}
+                  🏢 Level {survey.reportDetails?.level ?? '—'}
                 </Badge>
               </div>
               <div className="flex flex-col gap-2">
                 {createdAtDate && (
                   <div className="flex items-center gap-2">
-                    <CalendarFold className="w-4 h-4" />
+                    <CalendarFold className="h-4 w-4" />
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span
-                            className="underline decoration-dotted"
-                            aria-label="Created date"
-                          >
+                          <span className="underline decoration-dotted" aria-label="Created date">
                             <TimeAgo date={createdAtDate} />
                           </span>
                         </TooltipTrigger>
@@ -157,15 +144,12 @@ export function SurveyHeader({
                 )}
 
                 <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4" />
+                  <CalendarDays className="h-4 w-4" />
                   {survey.reportDetails.reportDate ? (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span
-                            className="underline decoration-dotted"
-                            aria-label="Report date"
-                          >
+                          <span className="underline decoration-dotted" aria-label="Report date">
                             <TimeAgo date={survey.reportDetails.reportDate} />
                           </span>
                         </TooltipTrigger>

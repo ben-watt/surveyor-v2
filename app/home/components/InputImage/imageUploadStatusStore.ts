@@ -38,7 +38,7 @@ class ImageUploadStatusStore {
    */
   subscribe(callback: UploadStatusCallback): () => void {
     this.subscribers.add(callback);
-    
+
     return () => {
       this.subscribers.delete(callback);
     };
@@ -49,10 +49,10 @@ class ImageUploadStatusStore {
    */
   private notifySubscribers(path: string): void {
     const isUploading = this.isUploading(path);
-    this.subscribers.forEach(callback => {
+    this.subscribers.forEach((callback) => {
       callback(isUploading, path);
     });
   }
 }
 
-export const imageUploadStatusStore = new ImageUploadStatusStore(); 
+export const imageUploadStatusStore = new ImageUploadStatusStore();

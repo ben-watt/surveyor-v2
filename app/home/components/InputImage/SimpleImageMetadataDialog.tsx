@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { useState } from 'react';
 
 interface SimpleImageMetadataDialogProps {
   initialCaption?: string;
@@ -14,7 +14,7 @@ export const SimpleImageMetadataDialog = ({
   initialCaption = '',
   initialNotes = '',
   onSave,
-  onClose
+  onClose,
 }: SimpleImageMetadataDialogProps) => {
   const [caption, setCaption] = useState(initialCaption);
   const [notes, setNotes] = useState(initialNotes);
@@ -26,9 +26,7 @@ export const SimpleImageMetadataDialog = ({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">
-          Caption
-        </label>
+        <label className="mb-2 block text-sm font-medium">Caption</label>
         <Input
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
@@ -37,9 +35,7 @@ export const SimpleImageMetadataDialog = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">
-          Notes
-        </label>
+        <label className="mb-2 block text-sm font-medium">Notes</label>
         <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -52,9 +48,7 @@ export const SimpleImageMetadataDialog = ({
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSave}>
-          Save
-        </Button>
+        <Button onClick={handleSave}>Save</Button>
       </div>
     </div>
   );

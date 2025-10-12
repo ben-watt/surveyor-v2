@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
-import { Control, useController } from "react-hook-form";
-import { Label } from "./Label";
-import { Input as ShadInput } from "@/components/ui/input";
-import InputError from "../InputError";
-import { useEffect, useState } from "react";
+import { cn } from '@/lib/utils';
+import { Control, useController } from 'react-hook-form';
+import { Label } from './Label';
+import { Input as ShadInput } from '@/components/ui/input';
+import InputError from '../InputError';
+import { useEffect, useState } from 'react';
 
 interface InputMoneyProps {
   labelTitle?: string;
@@ -16,18 +16,18 @@ interface InputMoneyProps {
   rules?: Record<string, any>;
 }
 
-const moneyFormatter = Intl.NumberFormat("en-GB", {
-  currency: "GBP",
-  currencyDisplay: "symbol",
-  currencySign: "standard",
-  style: "currency",
+const moneyFormatter = Intl.NumberFormat('en-GB', {
+  currency: 'GBP',
+  currencyDisplay: 'symbol',
+  currencySign: 'standard',
+  style: 'currency',
   minimumFractionDigits: 2,
-  maximumFractionDigits: 2
+  maximumFractionDigits: 2,
 });
 
 const formatValue = (value: string): string => {
-    return value ? moneyFormatter.format(Number(value)) : "£0.00";
-}
+  return value ? moneyFormatter.format(Number(value)) : '£0.00';
+};
 
 const InputMoney = ({
   labelTitle,
@@ -52,7 +52,7 @@ const InputMoney = ({
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
-    const digits = inputValue.replace(/\D/g, "");
+    const digits = inputValue.replace(/\D/g, '');
     const realValue = Number(digits) / 100;
     field.onChange(realValue);
   };
@@ -62,10 +62,10 @@ const InputMoney = ({
   }, [field.value]);
 
   return (
-    <div className={cn(hidden && "hidden")}>
+    <div className={cn(hidden && 'hidden')}>
       {labelTitle && <Label text={labelTitle} />}
       <ShadInput
-        className={cn("focus:ring-0 focus:border-none", className)}
+        className={cn('focus:border-none focus:ring-0', className)}
         type="text"
         placeholder={placeholder}
         disabled={disabled}

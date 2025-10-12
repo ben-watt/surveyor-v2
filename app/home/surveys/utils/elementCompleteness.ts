@@ -1,4 +1,7 @@
-import { ElementSection, SurveyImage } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import {
+  ElementSection,
+  SurveyImage,
+} from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 export type ElementCompleteness = {
   hasDescription: boolean;
@@ -9,7 +12,7 @@ export type ElementCompleteness = {
 };
 
 function countNonArchived(images: SurveyImage[] | undefined): number {
-  return (images || []).filter(img => !img.isArchived).length;
+  return (images || []).filter((img) => !img.isArchived).length;
 }
 
 export function getElementCompleteness(element: ElementSection): ElementCompleteness {
@@ -25,5 +28,3 @@ export function getElementCompleteness(element: ElementSection): ElementComplete
     componentCount,
   };
 }
-
-

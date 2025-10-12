@@ -41,14 +41,14 @@ export interface AutoSaveResult<T> {
  */
 export function useAutoSave<T>(
   saveFunction: (data: T, options?: { auto?: boolean }) => Promise<void>,
-  options: AutoSaveOptions = {}
+  options: AutoSaveOptions = {},
 ): AutoSaveResult<T> {
   const {
     delay = 500,
     showToast = false,
     enabled = true,
     errorMessage = 'Failed to save changes',
-    successMessage = 'Changes saved automatically'
+    successMessage = 'Changes saved automatically',
   } = options;
 
   const [saveStatus, setSaveStatus] = useState<AutoSaveStatus>('idle');
@@ -68,107 +68,122 @@ export function useAutoSave<T>(
     lastSavedDataRef.current = null;
   }, []);
 
-  const save = useCallback(async (data: T, { auto = false }: { auto?: boolean } = {}) => {
-    if (!enabled) {
-      console.log('[useAutoSave] Autosave disabled, skipping save');
-      return;
-    }
-
-    console.log('[useAutoSave] Starting save operation:', { auto, data });
-
-    try {
-      // Skip save if data hasn't changed since the last successful save
-      if (lastSavedDataRef.current && JSON.stringify(lastSavedDataRef.current) === JSON.stringify(data)) {
-        console.log('[useAutoSave] Data unchanged from last save, skipping save');
+  const save = useCallback(
+    async (data: T, { auto = false }: { auto?: boolean } = {}) => {
+      if (!enabled) {
+        console.log('[useAutoSave] Autosave disabled, skipping save');
         return;
       }
-      setIsSaving(true);
-      setSaveStatus('saving');
-      setHasPendingChanges(false);
-      
-      // Clear any existing timer
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = null;
-      }
-      
-      await saveFunction(data, { auto });
-      
-      lastSavedDataRef.current = data;
-      setLastSavedAt(new Date());
-      setSaveStatus(auto ? 'autosaved' : 'saved');
-      
-      console.log('[useAutoSave] Save successful:', { auto, status: auto ? 'autosaved' : 'saved' });
-      
-      // Show toast only if enabled and not an autosave (or if autosave toast is enabled)
-      if (showToast && (!auto || options.showToast)) {
-        toast.success(auto ? successMessage : 'Changes saved successfully');
-      }
-      
-      // Clear existing status reset timer
-      if (statusResetTimerRef.current) {
-        clearTimeout(statusResetTimerRef.current);
-      }
-      
-      // Reset status after a longer delay (10 seconds instead of 2)
-      statusResetTimerRef.current = setTimeout(() => {
-        setSaveStatus('idle');
-      }, 10000);
-    } catch (error) {
-      setSaveStatus('error');
-      setHasPendingChanges(false);
-      console.error('[useAutoSave] Save failed:', error);
-      
-      if (showToast && (!auto || options.showToast)) {
-        toast.error(auto ? errorMessage : 'Failed to save changes');
-      }
-      
-      // Clear existing status reset timer
-      if (statusResetTimerRef.current) {
-        clearTimeout(statusResetTimerRef.current);
-      }
-      
-      // Reset error status after a longer delay
-      statusResetTimerRef.current = setTimeout(() => {
-        setSaveStatus('idle');
-      }, 10000);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [saveFunction, enabled, showToast, successMessage, errorMessage, options.showToast]);
 
-  const triggerAutoSave = useCallback((data: T) => {
-    if (!enabled || isSaving) {
-      console.log('[useAutoSave] Skipping autosave:', { enabled, isSaving });
-      return;
-    }
-    
-    // Do not schedule autosave if data equals the last successfully saved snapshot
-    if (lastSavedDataRef.current && JSON.stringify(lastSavedDataRef.current) === JSON.stringify(data)) {
-      console.log('[useAutoSave] Data unchanged from last save, skipping autosave trigger');
-      return;
-    }
-    
-    console.log('[useAutoSave] Triggering autosave with delay:', delay);
-    console.log('[useAutoSave] Current data for autosave:', data);
-    console.log('[useAutoSave] Last saved data:', lastSavedDataRef.current);
-    
-    // Set pending status immediately when changes are detected
-    setSaveStatus('pending');
-    setHasPendingChanges(true);
-    
-    // Clear existing timer
-    if (debounceTimerRef.current) {
-      console.log('[useAutoSave] Clearing existing autosave timer');
-      clearTimeout(debounceTimerRef.current);
-    }
-    
-    // Set new timer
-    debounceTimerRef.current = setTimeout(() => {
-      console.log('[useAutoSave] Executing autosave');
-      save(data, { auto: true });
-    }, delay);
-  }, [enabled, isSaving, save, delay]);
+      console.log('[useAutoSave] Starting save operation:', { auto, data });
+
+      try {
+        // Skip save if data hasn't changed since the last successful save
+        if (
+          lastSavedDataRef.current &&
+          JSON.stringify(lastSavedDataRef.current) === JSON.stringify(data)
+        ) {
+          console.log('[useAutoSave] Data unchanged from last save, skipping save');
+          return;
+        }
+        setIsSaving(true);
+        setSaveStatus('saving');
+        setHasPendingChanges(false);
+
+        // Clear any existing timer
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
+        }
+
+        await saveFunction(data, { auto });
+
+        lastSavedDataRef.current = data;
+        setLastSavedAt(new Date());
+        setSaveStatus(auto ? 'autosaved' : 'saved');
+
+        console.log('[useAutoSave] Save successful:', {
+          auto,
+          status: auto ? 'autosaved' : 'saved',
+        });
+
+        // Show toast only if enabled and not an autosave (or if autosave toast is enabled)
+        if (showToast && (!auto || options.showToast)) {
+          toast.success(auto ? successMessage : 'Changes saved successfully');
+        }
+
+        // Clear existing status reset timer
+        if (statusResetTimerRef.current) {
+          clearTimeout(statusResetTimerRef.current);
+        }
+
+        // Reset status after a longer delay (10 seconds instead of 2)
+        statusResetTimerRef.current = setTimeout(() => {
+          setSaveStatus('idle');
+        }, 10000);
+      } catch (error) {
+        setSaveStatus('error');
+        setHasPendingChanges(false);
+        console.error('[useAutoSave] Save failed:', error);
+
+        if (showToast && (!auto || options.showToast)) {
+          toast.error(auto ? errorMessage : 'Failed to save changes');
+        }
+
+        // Clear existing status reset timer
+        if (statusResetTimerRef.current) {
+          clearTimeout(statusResetTimerRef.current);
+        }
+
+        // Reset error status after a longer delay
+        statusResetTimerRef.current = setTimeout(() => {
+          setSaveStatus('idle');
+        }, 10000);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [saveFunction, enabled, showToast, successMessage, errorMessage, options.showToast],
+  );
+
+  const triggerAutoSave = useCallback(
+    (data: T) => {
+      if (!enabled || isSaving) {
+        console.log('[useAutoSave] Skipping autosave:', { enabled, isSaving });
+        return;
+      }
+
+      // Do not schedule autosave if data equals the last successfully saved snapshot
+      if (
+        lastSavedDataRef.current &&
+        JSON.stringify(lastSavedDataRef.current) === JSON.stringify(data)
+      ) {
+        console.log('[useAutoSave] Data unchanged from last save, skipping autosave trigger');
+        return;
+      }
+
+      console.log('[useAutoSave] Triggering autosave with delay:', delay);
+      console.log('[useAutoSave] Current data for autosave:', data);
+      console.log('[useAutoSave] Last saved data:', lastSavedDataRef.current);
+
+      // Set pending status immediately when changes are detected
+      setSaveStatus('pending');
+      setHasPendingChanges(true);
+
+      // Clear existing timer
+      if (debounceTimerRef.current) {
+        console.log('[useAutoSave] Clearing existing autosave timer');
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      // Set new timer
+      debounceTimerRef.current = setTimeout(() => {
+        console.log('[useAutoSave] Executing autosave');
+        save(data, { auto: true });
+      }, delay);
+    },
+    [enabled, isSaving, save, delay],
+  );
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -191,6 +206,6 @@ export function useAutoSave<T>(
     hasPendingChanges,
     lastSavedAt,
     triggerAutoSave,
-    resetStatus
+    resetStatus,
   };
-} 
+}

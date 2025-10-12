@@ -80,15 +80,13 @@ describe('CameraModal', () => {
   });
 
   it('renders null when not open', () => {
-    const { container } = render(
-      <CameraModal {...defaultProps} isOpen={false} />
-    );
+    const { container } = render(<CameraModal {...defaultProps} isOpen={false} />);
     expect(container.firstChild).toBeNull();
   });
 
   it('renders camera modal when open', () => {
     render(<CameraModal {...defaultProps} />);
-    
+
     expect(screen.getByText('Camera')).toBeInTheDocument();
     expect(screen.getByText('0/5 photos')).toBeInTheDocument();
   });
@@ -96,14 +94,14 @@ describe('CameraModal', () => {
   it('shows loading state when camera is loading', () => {
     Object.assign(mockUseCameraStream, { isLoading: true });
     render(<CameraModal {...defaultProps} />);
-    
+
     expect(screen.getByText('Starting camera...')).toBeInTheDocument();
   });
 
   it('shows error state when camera has error', () => {
     Object.assign(mockUseCameraStream, { error: 'Camera permission denied' });
     render(<CameraModal {...defaultProps} />);
-    
+
     expect(screen.getByText('Camera Error')).toBeInTheDocument();
     expect(screen.getByText('Camera permission denied')).toBeInTheDocument();
   });
@@ -111,11 +109,11 @@ describe('CameraModal', () => {
   it('calls onClose when close button is clicked', () => {
     const onClose = jest.fn();
     render(<CameraModal {...defaultProps} onClose={onClose} />);
-    
+
     // The close button is the first button in the header
     const closeButton = screen.getAllByRole('button')[0];
     fireEvent.click(closeButton);
-    
+
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -124,11 +122,11 @@ describe('CameraModal', () => {
       devices: [
         { deviceId: 'device1', label: 'Front Camera', kind: 'videoinput' },
         { deviceId: 'device2', label: 'Back Camera', kind: 'videoinput' },
-      ]
+      ],
     });
-    
+
     render(<CameraModal {...defaultProps} />);
-    
+
     // Should have more than one button when switch button is present
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(1);
@@ -137,26 +135,17 @@ describe('CameraModal', () => {
   it('disables capture button when no stream', () => {
     Object.assign(mockUseCameraStream, { stream: null });
     render(<CameraModal {...defaultProps} />);
-    
-    // The capture button is the large circular button with camera icon
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
+
+    // Capture button is labeled for accessibility
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
     expect(captureButton).toBeDisabled();
   });
 
   it('enables capture button when stream is available', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     render(<CameraModal {...defaultProps} />);
-    
-    // The capture button is the large circular button with camera icon
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
+
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
     expect(captureButton).not.toBeDisabled();
   });
 
@@ -164,17 +153,12 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} />);
-    
-    // The capture button is the large circular button with camera icon
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(mockUseCameraStream.capturePhoto).toHaveBeenCalledTimes(1);
     });
@@ -184,17 +168,12 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} />);
-    
-    // The capture button is the large circular button with camera icon
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(screen.getByAltText(/captured/i)).toBeInTheDocument();
     });
@@ -204,17 +183,12 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} />);
-    
-    // The capture button is the large circular button with camera icon
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(screen.getByText(/upload 1 photo/i)).toBeInTheDocument();
     });
@@ -224,29 +198,28 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} />);
-    
+
     // Capture a photo
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(screen.getByAltText(/captured/i)).toBeInTheDocument();
     });
-    
+
     // Delete the photo - it's a small red button on the thumbnail
     const deleteButtons = screen.getAllByRole('button');
-    const deleteButton = deleteButtons.find(button => 
-      button.className.includes('w-7 h-7') && 
-      button.className.includes('from-red-500')
+    const deleteButton = deleteButtons.find(
+      (button) =>
+        button.classList.contains('w-7') &&
+        button.classList.contains('h-7') &&
+        button.className.includes('from-red-500'),
     );
-    fireEvent.click(deleteButton!);
-    
+    expect(deleteButton).toBeTruthy();
+    fireEvent.click(deleteButton as HTMLButtonElement);
+
     await waitFor(() => {
       expect(screen.queryByAltText(/captured/i)).not.toBeInTheDocument();
     });
@@ -256,17 +229,13 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} maxPhotos={1} />);
-    
+
     // Capture one photo (reaching max)
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(captureButton).toBeDisabled();
     });
@@ -276,17 +245,13 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} />);
-    
+
     // Capture a photo
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(screen.getByText(/upload 1 photo/i)).toBeInTheDocument();
     });
@@ -296,17 +261,13 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} />);
-    
+
     // Capture a photo
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(screen.getByText(/upload 1 photo/i)).toBeInTheDocument();
     });
@@ -316,17 +277,13 @@ describe('CameraModal', () => {
     Object.assign(mockUseCameraStream, { stream: {} as MediaStream });
     const mockBlob = new Blob(['photo'], { type: 'image/jpeg' });
     mockUseCameraStream.capturePhoto.mockResolvedValue(mockBlob);
-    
+
     render(<CameraModal {...defaultProps} maxPhotos={1} />);
-    
+
     // Capture max photos
-    const buttons = screen.getAllByRole('button');
-    const captureButton = buttons.find(button => 
-      button.className.includes('w-16 h-16') && 
-      button.className.includes('rounded-full')
-    );
-    fireEvent.click(captureButton!);
-    
+    const captureButton = screen.getByRole('button', { name: /capture photo/i });
+    fireEvent.click(captureButton);
+
     await waitFor(() => {
       expect(captureButton).toBeDisabled();
     });
@@ -334,11 +291,11 @@ describe('CameraModal', () => {
 
   it('cleans up resources when modal closes', () => {
     const { rerender } = render(<CameraModal {...defaultProps} isOpen={true} />);
-    
+
     expect(mockUseCameraStream.stopCamera).not.toHaveBeenCalled();
-    
+
     rerender(<CameraModal {...defaultProps} isOpen={false} />);
-    
+
     expect(mockUseCameraStream.stopCamera).toHaveBeenCalledTimes(1);
   });
 });

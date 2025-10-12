@@ -7,6 +7,7 @@ This document outlines the migration from the current PWA-based camera implement
 ## Current State Analysis
 
 ### Existing Implementation
+
 - **Component**: `app/home/components/InputImage/CameraModal.tsx`
 - **Technology**: WebRTC MediaStream API (getUserMedia)
 - **Limitations**:
@@ -17,6 +18,7 @@ This document outlines the migration from the current PWA-based camera implement
   - Limited performance on mobile devices
 
 ### Current Features
+
 - Multi-camera support (front/rear switching)
 - Basic zoom (CSS-based fallback)
 - Photo capture and preview
@@ -66,12 +68,14 @@ surveyor-v2/
 ### Phase 1: Capacitor Setup (Week 1)
 
 #### 1.1 Install Capacitor
+
 ```bash
 npm install @capacitor/core @capacitor/cli
 npx cap init
 ```
 
 #### 1.2 Add Platforms
+
 ```bash
 npm install @capacitor/ios @capacitor/android
 npx cap add ios
@@ -79,6 +83,7 @@ npx cap add android
 ```
 
 #### 1.3 Configure Capacitor
+
 ```typescript
 // capacitor.config.ts
 import type { CapacitorConfig } from '@capacitor/cli';
@@ -89,7 +94,7 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
-    iosScheme: 'https'
+    iosScheme: 'https',
   },
   plugins: {
     Camera: {
@@ -97,28 +102,30 @@ const config: CapacitorConfig = {
       quality: 90,
       allowEditing: false,
       resultType: 'uri',
-      saveToGallery: false
-    }
-  }
+      saveToGallery: false,
+    },
+  },
 };
 
 export default config;
 ```
 
 #### 1.4 Update Next.js Build Configuration
+
 ```javascript
 // next.config.js modifications
 module.exports = {
   output: 'export', // Required for Capacitor
   images: {
-    unoptimized: true // Required for static export
-  }
+    unoptimized: true, // Required for static export
+  },
 };
 ```
 
 ### Phase 2: Native Camera Implementation (Week 2)
 
 #### 2.1 Create Platform Detection Utility
+
 ```typescript
 // app/utils/capacitor/platform.ts
 import { Capacitor } from '@capacitor/core';
@@ -133,6 +140,7 @@ export const getPlatform = () => {
 ```
 
 #### 2.2 Native Camera Hook
+
 ```typescript
 // app/home/hooks/useNativeCamera.ts
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
@@ -157,17 +165,17 @@ export const useNativeCamera = ({ quality = 90, maxPhotos, path }: NativeCameraO
         allowEditing: false,
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
-        saveToGallery: false
+        saveToGallery: false,
       });
-      
+
       // Convert to blob for consistency with existing pipeline
       const response = await fetch(photo.webPath!);
       const blob = await response.blob();
-      
+
       return {
         blob,
         uri: photo.webPath!,
-        format: photo.format
+        format: photo.format,
       };
     } catch (error) {
       console.error('Native camera error:', error);
@@ -180,7 +188,7 @@ export const useNativeCamera = ({ quality = 90, maxPhotos, path }: NativeCameraO
   const pickFromGallery = useCallback(async () => {
     const photos = await Camera.pickImages({
       quality,
-      limit: maxPhotos
+      limit: maxPhotos,
     });
     return photos.photos;
   }, [quality, maxPhotos]);
@@ -189,12 +197,13 @@ export const useNativeCamera = ({ quality = 90, maxPhotos, path }: NativeCameraO
     capturePhoto,
     pickFromGallery,
     photos,
-    isCapturing
+    isCapturing,
   };
 };
 ```
 
 #### 2.3 Native Camera Modal Component
+
 ```typescript
 // app/home/components/InputImage/NativeCameraModal.tsx
 import { useNativeCamera } from '@/app/home/hooks/useNativeCamera';
@@ -210,18 +219,18 @@ interface NativeCameraModalProps {
   maxPhotos?: number;
 }
 
-export const NativeCameraModal = ({ 
-  isOpen, 
-  onClose, 
-  path, 
+export const NativeCameraModal = ({
+  isOpen,
+  onClose,
+  path,
   onPhotoCaptured,
-  maxPhotos = 10 
+  maxPhotos = 10,
 }: NativeCameraModalProps) => {
-  const { capturePhoto, pickFromGallery, isCapturing } = useNativeCamera({ 
-    maxPhotos, 
-    path 
+  const { capturePhoto, pickFromGallery, isCapturing } = useNativeCamera({
+    maxPhotos,
+    path,
   });
-  
+
   // Reuse existing resize and upload logic
   // Integrate with native camera APIs
   // Implement native UI for photo review
@@ -231,20 +240,23 @@ export const NativeCameraModal = ({
 ### Phase 3: Progressive Enhancement (Week 3)
 
 #### 3.1 Conditional Component Loading
+
 ```typescript
 // app/home/components/InputImage/index.tsx
 import dynamic from 'next/dynamic';
 import { isNativePlatform } from '@/app/utils/capacitor/platform';
 
-const CameraModal = dynamic(() => 
-  isNativePlatform() 
-    ? import('./NativeCameraModal').then(mod => mod.NativeCameraModal)
-    : import('./CameraModal').then(mod => mod.CameraModal),
-  { ssr: false }
+const CameraModal = dynamic(
+  () =>
+    isNativePlatform()
+      ? import('./NativeCameraModal').then((mod) => mod.NativeCameraModal)
+      : import('./CameraModal').then((mod) => mod.CameraModal),
+  { ssr: false },
 );
 ```
 
 #### 3.2 Native Permissions Handling
+
 ```typescript
 // app/utils/capacitor/permissions.ts
 import { Camera } from '@capacitor/camera';
@@ -263,6 +275,7 @@ export const checkCameraPermissions = async () => {
 ### Phase 4: Native Features Integration (Week 4)
 
 #### 4.1 Advanced Camera Features
+
 - **Flash Control**: Native flash modes (auto, on, off)
 - **Focus/Exposure**: Tap to focus with exposure adjustment
 - **HDR Mode**: Native HDR capture
@@ -271,6 +284,7 @@ export const checkCameraPermissions = async () => {
 - **RAW Capture**: Professional photo format (iOS)
 
 #### 4.2 Native Image Processing
+
 ```typescript
 // app/utils/capacitor/imageProcessing.ts
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -279,9 +293,9 @@ export const processNativeImage = async (photoUri: string) => {
   // Read image as base64
   const file = await Filesystem.readFile({
     path: photoUri,
-    directory: Directory.Cache
+    directory: Directory.Cache,
   });
-  
+
   // Apply native compression/resizing
   // Convert to required format
   // Return processed blob
@@ -291,6 +305,7 @@ export const processNativeImage = async (photoUri: string) => {
 ### Phase 5: Build & Deployment Pipeline (Week 5)
 
 #### 5.1 Build Scripts
+
 ```json
 // package.json additions
 {
@@ -307,6 +322,7 @@ export const processNativeImage = async (photoUri: string) => {
 ```
 
 #### 5.2 CI/CD Configuration
+
 ```yaml
 # .github/workflows/capacitor-build.yml
 name: Capacitor Build
@@ -326,7 +342,7 @@ jobs:
         run: |
           cd ios
           xcodebuild -workspace App.xcworkspace -scheme App -configuration Release
-  
+
   build-android:
     runs-on: ubuntu-latest
     steps:
@@ -343,22 +359,24 @@ jobs:
 
 ## Migration Timeline
 
-| Week | Phase | Tasks |
-|------|-------|-------|
-| 1 | Setup | Install Capacitor, configure platforms, update build process |
-| 2 | Implementation | Create native camera hook, build NativeCameraModal component |
-| 3 | Enhancement | Add conditional loading, implement permissions |
-| 4 | Features | Integrate advanced camera features, native processing |
-| 5 | Deployment | Setup build pipeline, testing, app store preparation |
+| Week | Phase          | Tasks                                                        |
+| ---- | -------------- | ------------------------------------------------------------ |
+| 1    | Setup          | Install Capacitor, configure platforms, update build process |
+| 2    | Implementation | Create native camera hook, build NativeCameraModal component |
+| 3    | Enhancement    | Add conditional loading, implement permissions               |
+| 4    | Features       | Integrate advanced camera features, native processing        |
+| 5    | Deployment     | Setup build pipeline, testing, app store preparation         |
 
 ## Testing Strategy
 
 ### 1. Device Testing Matrix
+
 - **iOS**: iPhone 12+, iPad (iOS 15+)
 - **Android**: Pixel 6+, Samsung Galaxy S21+ (Android 12+)
 - **Web**: Chrome, Safari, Firefox (fallback mode)
 
 ### 2. Test Cases
+
 - Camera permission flows
 - Photo capture quality
 - Multi-photo batch upload
@@ -376,6 +394,7 @@ jobs:
 ## Benefits of Migration
 
 ### Immediate Benefits
+
 - Native camera UI/UX
 - Hardware acceleration
 - Better image quality
@@ -383,6 +402,7 @@ jobs:
 - Access to device gallery
 
 ### Future Capabilities
+
 - Video recording
 - Barcode/QR scanning
 - Document scanning with edge detection
@@ -391,22 +411,24 @@ jobs:
 
 ## Risks & Mitigation
 
-| Risk | Mitigation |
-|------|------------|
-| App store approval delays | Start submission process early |
-| Increased app size | Code splitting, lazy loading |
-| Platform-specific bugs | Extensive device testing |
-| Learning curve | Team training, documentation |
-| Maintenance overhead | Shared codebase, abstraction layer |
+| Risk                      | Mitigation                         |
+| ------------------------- | ---------------------------------- |
+| App store approval delays | Start submission process early     |
+| Increased app size        | Code splitting, lazy loading       |
+| Platform-specific bugs    | Extensive device testing           |
+| Learning curve            | Team training, documentation       |
+| Maintenance overhead      | Shared codebase, abstraction layer |
 
 ## Cost Implications
 
 ### Development
+
 - 5 weeks development time
 - Testing on physical devices
 - App store accounts ($99/year iOS, $25 one-time Android)
 
 ### Ongoing
+
 - App store maintenance
 - Native SDK updates
 - Additional testing for app releases

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext",  "webworker"],
+    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,6 +24,15 @@
     },
     "types": ["@serwist/next/typings", "jest", "@testing-library/jest-dom"]
   },
-  "include": ["next-env.d.ts", "./types.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "next.config.js", "**/*.test.ts", "**/*.test.tsx"],
+  "include": [
+    "next-env.d.ts",
+    "./types.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next.config.js",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
   "exclude": ["node_modules", "public/sw.js", "amplify/**/*"]
 }

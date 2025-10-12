@@ -19,7 +19,7 @@ jest.mock('@/app/home/clients/Database', () => ({
 }));
 
 jest.mock('@/app/home/components/Drawer', () => ({
-  DynamicDrawer: ({ content, isOpen }: any) => 
+  DynamicDrawer: ({ content, isOpen }: any) =>
     isOpen ? <div data-testid="drawer">{content}</div> : null,
   useDynamicDrawer: jest.fn(() => ({
     isOpen: false,
@@ -63,7 +63,7 @@ jest.mock('react-hook-form', () => {
         name: 'test-field',
         onChange: jest.fn(),
         onBlur: jest.fn(),
-        ref: jest.fn()
+        ref: jest.fn(),
       })),
       control: {
         _formState: { errors: {} },
@@ -72,18 +72,18 @@ jest.mock('react-hook-form', () => {
         _formValues: {},
         _stateFlags: { isSubmitted: false, isDirty: false },
         register: jest.fn(() => ({
-        name: 'test-field',
-        onChange: jest.fn(),
-        onBlur: jest.fn(),
-        ref: jest.fn()
-      })),
+          name: 'test-field',
+          onChange: jest.fn(),
+          onBlur: jest.fn(),
+          ref: jest.fn(),
+        })),
         unregister: jest.fn(),
         getFieldState: jest.fn(),
         handleSubmit: jest.fn(),
         _subjects: {
           values: { next: jest.fn() },
           array: { next: jest.fn() },
-          state: { next: jest.fn() }
+          state: { next: jest.fn() },
         },
         _getWatch: jest.fn(),
         _updateValid: jest.fn(),
@@ -102,8 +102,8 @@ jest.mock('react-hook-form', () => {
           shouldUseNativeValidation: false,
           shouldUnregister: false,
           criteriaMode: 'firstError',
-          delayError: 0
-        }
+          delayError: 0,
+        },
       },
       formState: { errors: {} },
       watch: jest.fn(() => ({ unsubscribe: jest.fn() })),
@@ -113,7 +113,7 @@ jest.mock('react-hook-form', () => {
     FormProvider: ({ children }: any) => children,
     useController: jest.fn(() => ({
       field: { value: '', onChange: jest.fn(), onBlur: jest.fn(), name: 'test' },
-      formState: { errors: {} }
+      formState: { errors: {} },
     })),
   };
 });
@@ -123,7 +123,9 @@ const mockUseRouter = useRouter as jest.Mock;
 const mockSurveyStore = surveyStore as jest.Mocked<typeof surveyStore>;
 
 // Get reference to the mocked hook
-const { useAutoSaveForm: mockUseAutoSaveForm } = jest.requireMock('../../../../hooks/useAutoSaveForm');
+const { useAutoSaveForm: mockUseAutoSaveForm } = jest.requireMock(
+  '../../../../hooks/useAutoSaveForm',
+);
 
 describe('PropertyDescriptionForm', () => {
   const mockSurveyId = 'test-survey-id';
@@ -169,7 +171,7 @@ describe('PropertyDescriptionForm', () => {
       // Mock the autosave hook to capture the save function
       let capturedSaveFunction: any;
       mockUseAutoSaveForm.mockImplementation((saveFunction: any) => {
-        console.log("[TEST] useAutoSaveForm called with:", saveFunction);
+        console.log('[TEST] useAutoSaveForm called with:', saveFunction);
         capturedSaveFunction = saveFunction;
         return {
           saveStatus: 'idle',
@@ -207,10 +209,7 @@ describe('PropertyDescriptionForm', () => {
       await capturedSaveFunction(clearedData, { auto: true });
 
       // Verify that the store update was called
-      expect(mockSurveyStore.update).toHaveBeenCalledWith(
-        mockSurveyId,
-        expect.any(Function)
-      );
+      expect(mockSurveyStore.update).toHaveBeenCalledWith(mockSurveyId, expect.any(Function));
     });
 
     it('should save partial data without validation errors', async () => {
@@ -260,22 +259,24 @@ describe('PropertyDescriptionForm', () => {
           numberOfBedrooms: { ...mockSurveyData.propertyDescription.numberOfBedrooms, value: '' },
         },
       };
-      
+
       mockSurveyStore.useGet.mockReturnValue([true, emptySurveyData]);
 
       let capturedSaveFunction: any;
       const { useAutoSaveForm } = require('../../../../hooks/useAutoSaveForm');
-      
+
       // Mock trigger to return false (invalid)
       const mockTrigger = jest.fn().mockResolvedValue(false);
-      useAutoSaveForm.mockImplementation((saveFunction: any, watch: any, getValues: any, trigger: any) => {
-        capturedSaveFunction = saveFunction;
-        return {
-          saveStatus: 'idle',
-          isSaving: false,
-          lastSavedAt: null,
-        };
-      });
+      useAutoSaveForm.mockImplementation(
+        (saveFunction: any, watch: any, getValues: any, trigger: any) => {
+          capturedSaveFunction = saveFunction;
+          return {
+            saveStatus: 'idle',
+            isSaving: false,
+            lastSavedAt: null,
+          };
+        },
+      );
 
       render(<PropertyDescriptionPage />);
 
@@ -295,10 +296,7 @@ describe('PropertyDescriptionForm', () => {
       await capturedSaveFunction(emptyData, { auto: true });
 
       // Check that status was set to Incomplete (Not Started)
-      expect(mockSurveyStore.update).toHaveBeenCalledWith(
-        mockSurveyId,
-        expect.any(Function)
-      );
+      expect(mockSurveyStore.update).toHaveBeenCalledWith(mockSurveyId, expect.any(Function));
     });
 
     it('should show Incomplete status when has data but validation fails', async () => {
@@ -311,12 +309,12 @@ describe('PropertyDescriptionForm', () => {
           numberOfBedrooms: { ...mockSurveyData.propertyDescription.numberOfBedrooms, value: '' },
         },
       };
-      
+
       mockSurveyStore.useGet.mockReturnValue([true, surveyWithData]);
 
       let capturedSaveFunction: any;
       const { useAutoSaveForm } = require('../../../../hooks/useAutoSaveForm');
-      
+
       // Mock trigger to return false (invalid)
       const mockTrigger = jest.fn().mockResolvedValue(false);
       useAutoSaveForm.mockImplementation((saveFunction: any) => {
@@ -338,11 +336,11 @@ describe('PropertyDescriptionForm', () => {
       // Mock the trigger function
       jest.spyOn(require('react-hook-form'), 'useForm').mockReturnValue({
         register: jest.fn(() => ({
-        name: 'test-field',
-        onChange: jest.fn(),
-        onBlur: jest.fn(),
-        ref: jest.fn()
-      })),
+          name: 'test-field',
+          onChange: jest.fn(),
+          onBlur: jest.fn(),
+          ref: jest.fn(),
+        })),
         control: {},
         watch: jest.fn(),
         getValues: jest.fn(),
@@ -358,7 +356,7 @@ describe('PropertyDescriptionForm', () => {
     it('should show Complete status when validation passes', async () => {
       let capturedSaveFunction: any;
       const { useAutoSaveForm } = require('../../../../hooks/useAutoSaveForm');
-      
+
       // Mock trigger to return true (valid)
       const mockTrigger = jest.fn().mockResolvedValue(true);
       useAutoSaveForm.mockImplementation((saveFunction: any) => {
@@ -380,11 +378,11 @@ describe('PropertyDescriptionForm', () => {
       // Mock the trigger function
       jest.spyOn(require('react-hook-form'), 'useForm').mockReturnValue({
         register: jest.fn(() => ({
-        name: 'test-field',
-        onChange: jest.fn(),
-        onBlur: jest.fn(),
-        ref: jest.fn()
-      })),
+          name: 'test-field',
+          onChange: jest.fn(),
+          onBlur: jest.fn(),
+          ref: jest.fn(),
+        })),
         control: {},
         watch: jest.fn(),
         getValues: jest.fn(),

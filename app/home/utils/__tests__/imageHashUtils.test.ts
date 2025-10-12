@@ -3,7 +3,7 @@ import {
   generateHashedFilename,
   areFilesIdentical,
   processFileWithHash,
-  renameFile
+  renameFile,
 } from '../imageHashUtils';
 
 describe('imageHashUtils', () => {
@@ -109,7 +109,7 @@ describe('imageHashUtils', () => {
       const newFile = new File([existingContent], 'image-01.jpg', { type: 'image/jpeg' });
 
       const result = await processFileWithHash(newFile, [
-        { name: 'image-01_abc123.jpg', file: existingFile }
+        { name: 'image-01_abc123.jpg', file: existingFile },
       ]);
 
       expect(result.isDuplicate).toBe(true);
@@ -124,7 +124,7 @@ describe('imageHashUtils', () => {
       const newFile = new File(['bathroom leak'], 'image-01.jpg', { type: 'image/jpeg' });
 
       const result = await processFileWithHash(newFile, [
-        { name: 'image-01_abc123.jpg', file: existingFile }
+        { name: 'image-01_abc123.jpg', file: existingFile },
       ]);
 
       expect(result.isDuplicate).toBe(false);
@@ -139,7 +139,7 @@ describe('imageHashUtils', () => {
 
       const result = await processFileWithHash(newFile, [
         { name: 'image-01_hash1.jpg', file: existing1 },
-        { name: 'image-02_hash2.jpg', file: existing2 }
+        { name: 'image-02_hash2.jpg', file: existing2 },
       ]);
 
       expect(result.isDuplicate).toBe(false);
@@ -151,7 +151,7 @@ describe('imageHashUtils', () => {
     it('should create new File with updated name', () => {
       const original = new File(['content'], 'old-name.jpg', {
         type: 'image/jpeg',
-        lastModified: 1234567890
+        lastModified: 1234567890,
       });
 
       const renamed = renameFile(original, 'new-name_hash123.jpg');

@@ -6,12 +6,12 @@ import { useMediaQuery } from 'usehooks-ts';
 
 // Mock the useMediaQuery hook
 jest.mock('usehooks-ts', () => ({
-  useMediaQuery: jest.fn()
+  useMediaQuery: jest.fn(),
 }));
 
 // Mock the Drawer components
 jest.mock('@/components/ui/drawer', () => ({
-  Drawer: ({ children, open }: any) => open ? <div data-testid="drawer">{children}</div> : null,
+  Drawer: ({ children, open }: any) => (open ? <div data-testid="drawer">{children}</div> : null),
   DrawerContent: ({ children }: any) => <div data-testid="drawer-content">{children}</div>,
   DrawerHeader: ({ children }: any) => <div data-testid="drawer-header">{children}</div>,
   DrawerTitle: ({ children }: any) => <div data-testid="drawer-title">{children}</div>,
@@ -21,14 +21,24 @@ jest.mock('@/components/ui/drawer', () => ({
 const mockData = [
   { value: '1', label: 'Option 1' },
   { value: '2', label: 'Option 2' },
-  { value: '3', label: 'Option 3', children: [
-    { value: '3-1', label: 'Sub Option 1' },
-    { value: '3-2', label: 'Sub Option 2' }
-  ]}
+  {
+    value: '3',
+    label: 'Option 3',
+    children: [
+      { value: '3-1', label: 'Sub Option 1' },
+      { value: '3-2', label: 'Sub Option 2' },
+    ],
+  },
 ];
 
 // Test wrapper component
-function TestWrapper({ children, defaultValues = {} }: { children: React.ReactNode, defaultValues?: any }) {
+function TestWrapper({
+  children,
+  defaultValues = {},
+}: {
+  children: React.ReactNode;
+  defaultValues?: any;
+}) {
   const methods = useForm({ defaultValues });
   return <FormProvider {...methods}>{children}</FormProvider>;
 }
@@ -53,7 +63,7 @@ describe('DynamicComboBox', () => {
             control={undefined as any}
             errors={{}}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       expect(screen.getByText('Test Label')).toBeInTheDocument();
@@ -64,13 +74,8 @@ describe('DynamicComboBox', () => {
     it('should show selected value on desktop', () => {
       render(
         <TestWrapper defaultValues={{ test: '2' }}>
-          <DynamicComboBox
-            name="test"
-            data={mockData}
-            control={undefined as any}
-            errors={{}}
-          />
-        </TestWrapper>
+          <DynamicComboBox name="test" data={mockData} control={undefined as any} errors={{}} />
+        </TestWrapper>,
       );
 
       expect(screen.getByText('Option 2')).toBeInTheDocument();
@@ -92,16 +97,16 @@ describe('DynamicComboBox', () => {
             control={undefined as any}
             errors={{}}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       expect(screen.getByText('Test Label')).toBeInTheDocument();
-      
+
       // Should have a button, not a combobox
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
       expect(button).toHaveTextContent('Select...');
-      
+
       // Drawer should not be open initially
       expect(screen.queryByTestId('drawer')).not.toBeInTheDocument();
     });
@@ -116,7 +121,7 @@ describe('DynamicComboBox', () => {
             control={undefined as any}
             errors={{}}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const button = screen.getByRole('button');
@@ -138,7 +143,7 @@ describe('DynamicComboBox', () => {
             errors={{}}
             isMulti={true}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const button = screen.getByRole('button');
@@ -155,7 +160,7 @@ describe('DynamicComboBox', () => {
             control={undefined as any}
             errors={{}}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const button = screen.getByRole('button');
@@ -167,26 +172,16 @@ describe('DynamicComboBox', () => {
     it('should switch between desktop and mobile modes when screen size changes', () => {
       const { rerender } = render(
         <TestWrapper>
-          <DynamicComboBox
-            name="test"
-            data={mockData}
-            control={undefined as any}
-            errors={{}}
-          />
-        </TestWrapper>
+          <DynamicComboBox name="test" data={mockData} control={undefined as any} errors={{}} />
+        </TestWrapper>,
       );
 
       // Start with desktop
       (useMediaQuery as jest.Mock).mockReturnValue(true);
       rerender(
         <TestWrapper>
-          <DynamicComboBox
-            name="test"
-            data={mockData}
-            control={undefined as any}
-            errors={{}}
-          />
-        </TestWrapper>
+          <DynamicComboBox name="test" data={mockData} control={undefined as any} errors={{}} />
+        </TestWrapper>,
       );
       expect(screen.getByRole('combobox')).toBeInTheDocument();
 
@@ -194,13 +189,8 @@ describe('DynamicComboBox', () => {
       (useMediaQuery as jest.Mock).mockReturnValue(false);
       rerender(
         <TestWrapper>
-          <DynamicComboBox
-            name="test"
-            data={mockData}
-            control={undefined as any}
-            errors={{}}
-          />
-        </TestWrapper>
+          <DynamicComboBox name="test" data={mockData} control={undefined as any} errors={{}} />
+        </TestWrapper>,
       );
       expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
       expect(screen.getByRole('button')).toBeInTheDocument();
@@ -210,21 +200,16 @@ describe('DynamicComboBox', () => {
   describe('Form integration', () => {
     it('should display validation errors', () => {
       const errors: FieldErrors = {
-        test: { 
+        test: {
           type: 'required',
-          message: 'This field is required' 
-        }
+          message: 'This field is required',
+        },
       };
 
       render(
         <TestWrapper>
-          <DynamicComboBox
-            name="test"
-            data={mockData}
-            control={undefined as any}
-            errors={errors}
-          />
-        </TestWrapper>
+          <DynamicComboBox name="test" data={mockData} control={undefined as any} errors={errors} />
+        </TestWrapper>,
       );
 
       expect(screen.getByText('This field is required')).toBeInTheDocument();
@@ -233,18 +218,13 @@ describe('DynamicComboBox', () => {
     it('should handle object values correctly', () => {
       const objectData = [
         { value: { id: '1', name: 'Item 1' }, label: 'Item 1' },
-        { value: { id: '2', name: 'Item 2' }, label: 'Item 2' }
+        { value: { id: '2', name: 'Item 2' }, label: 'Item 2' },
       ];
 
       render(
         <TestWrapper defaultValues={{ test: { id: '1', name: 'Item 1' } }}>
-          <DynamicComboBox
-            name="test"
-            data={objectData}
-            control={undefined as any}
-            errors={{}}
-          />
-        </TestWrapper>
+          <DynamicComboBox name="test" data={objectData} control={undefined as any} errors={{}} />
+        </TestWrapper>,
       );
 
       expect(screen.getByText('Item 1')).toBeInTheDocument();

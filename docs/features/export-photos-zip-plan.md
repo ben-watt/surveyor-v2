@@ -11,11 +11,13 @@ This plan prioritizes fixing the photos page to display human-friendly Section a
 ## Phase 1 — Correct Names on Photos Page (Priority)
 
 ### Problem
+
 The current photos page groups images by inspecting path segments and uses heuristics (e.g., `money-shot`, `front-elevation`, `report-images`). For element and inspection images under `report-images/<surveyId>/elements/<elementId>` and `report-images/<surveyId>/inspections/<inspectionId>`, it can’t always resolve human-friendly names, so IDs or rough path-derived labels appear.
 
 ### Approach
 
 1. Add resolvers to convert an imagePath into a typed descriptor and then into a display name:
+
    - Parse paths into one of:
      - `cover` → Cover Image (money-shot)
      - `front` → Front Elevation
@@ -26,12 +28,14 @@ The current photos page groups images by inspecting path segments and uses heuri
    - Inspection paths: `report-images/${surveyId}/inspections/${inspectionId}/...`
 
 2. Fetch name data for mapping IDs → names:
+
    - `elementStore.useList()` → map `elementId → elementName` and also `elementId → sectionId`.
    - `sectionStore.useList()` → map `sectionId → sectionName`.
    - `surveyStore.useGet(id)` → survey content utilities in `Survey.ts` help resolve inspection → element/section:
      - Use `findComponent(survey, inspectionId)` to get `{ elementSection, section }` and thus names.
 
 3. Rendering logic in `app/home/surveys/[id]/photos/page.tsx`:
+
    - Build a small `resolveDisplayName(imagePath)` that returns one of:
      - `Cover Image`
      - `Front Elevation`
@@ -74,9 +78,11 @@ The current photos page groups images by inspecting path segments and uses heuri
   - Show progress and disable button while running.
 
 Pros:
+
 - Quick to ship; works offline if full images are available locally (less likely) or if URLs cache well.
 
 Cons:
+
 - Browser memory usage grows with large zips; slower on low-end devices; network load from the browser.
 
 ### Scalable (Server-streamed ZIP)
@@ -91,9 +97,11 @@ Cons:
 - Handle per-file errors gracefully (skip with log).
 
 Pros:
+
 - Scales to large surveys; low browser memory footprint; faster and more reliable for big exports.
 
 Cons:
+
 - Requires server infra (Route Handler), dependency on `archiver` and server runtime; signed URL fetching and streaming complexities; must ensure tenant isolation.
 
 ## Folder & Filename Conventions
@@ -133,6 +141,7 @@ Cons:
 ## Implementation Checklist
 
 Phase 1 — Names on Photos Page
+
 - [ ] Build `parseImagePath(imagePath, surveyId)` → kind + ids.
 - [ ] In `page.tsx`, load `elements`, `sections`, and `survey` data.
 - [ ] Implement `resolveDisplayName` using stores and `findComponent` to map IDs → names.
@@ -140,9 +149,9 @@ Phase 1 — Names on Photos Page
 - [ ] Verify counts and grouping remain correct with Show Archived toggle.
 
 Phase 2 — Export ZIP
+
 - [ ] Add Export button with “Include archived” option.
 - [ ] MVP: integrate `jszip` and client-side download with progress.
 - [ ] Scalable: add API route, stream ZIP with `archiver`, mirror folder structure.
 - [ ] Wire button to route; handle auth; show progress/disabled state.
 - [ ] Test with small and large surveys.
-

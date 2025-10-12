@@ -25,15 +25,9 @@ describe('useAutoSaveFormWithImages', () => {
   it('should initialize with correct default values', () => {
     const { result } = renderHook(() => {
       const form = useForm();
-      return useAutoSaveFormWithImages(
-        jest.fn(),
-        form.watch,
-        form.getValues,
-        form.trigger,
-        {
-          imagePaths: ['test-path-1', 'test-path-2'],
-        }
-      );
+      return useAutoSaveFormWithImages(jest.fn(), form.watch, form.getValues, form.trigger, {
+        imagePaths: ['test-path-1', 'test-path-2'],
+      });
     });
 
     expect(result.current.saveStatus).toBe('idle');
@@ -47,7 +41,8 @@ describe('useAutoSaveFormWithImages', () => {
 
   it('should show uploading status when images are uploading', () => {
     // Mock uploading state
-    const mockUseImageUploadStatus = require('../../components/InputImage/useImageUploadStatus').useImageUploadStatus;
+    const mockUseImageUploadStatus =
+      require('../../components/InputImage/useImageUploadStatus').useImageUploadStatus;
     mockUseImageUploadStatus.mockReturnValue({
       isUploading: true,
       isPathUploading: jest.fn(() => true),
@@ -55,18 +50,12 @@ describe('useAutoSaveFormWithImages', () => {
 
     const { result } = renderHook(() => {
       const form = useForm();
-      return useAutoSaveFormWithImages(
-        jest.fn(),
-        form.watch,
-        form.getValues,
-        form.trigger,
-        {
-          imagePaths: ['test-path-1'],
-        }
-      );
+      return useAutoSaveFormWithImages(jest.fn(), form.watch, form.getValues, form.trigger, {
+        imagePaths: ['test-path-1'],
+      });
     });
 
     expect(result.current.isUploading).toBe(true);
     expect(result.current.combinedStatus).toBe('uploading');
   });
-}); 
+});

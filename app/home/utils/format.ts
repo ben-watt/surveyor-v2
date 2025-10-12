@@ -15,4 +15,3 @@ export const formatFileSize = (size?: number): string => {
   const [value, unit] = toFileSize(size);
   return `${value} ${unit}`;
 };
-

@@ -1,10 +1,13 @@
-import { ChevronRight } from "lucide-react";
-import React, { PropsWithChildren, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion"
-import Link from "next/link";
-import { DynamicDrawer, useDynamicDrawer } from "./Drawer";
-import { useRouter } from "next/navigation";
-import { FormSectionStatus, FormStatus } from "../surveys/building-survey-reports/BuildingSurveyReportSchema";
+import { ChevronRight } from 'lucide-react';
+import React, { PropsWithChildren, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import { DynamicDrawer, useDynamicDrawer } from './Drawer';
+import { useRouter } from 'next/navigation';
+import {
+  FormSectionStatus,
+  FormStatus,
+} from '../surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 interface FormSectionProps {
   title?: string;
@@ -19,7 +22,7 @@ export const FormSection = ({
   children,
 }: PropsWithChildren<FormSectionProps>) => {
   const [collapsed, setCollapsed] = React.useState(defaultCollapsed);
-  
+
   useEffect(() => {
     setCollapsed(defaultCollapsed);
   }, [defaultCollapsed]);
@@ -27,40 +30,41 @@ export const FormSection = ({
   const variants = {
     open: { rotate: 90 },
     closed: { rotate: 0 },
-  }
+  };
 
   const contentVariants = {
-    open: { 
-      height: "auto",
+    open: {
+      height: 'auto',
       opacity: 1,
-      transition: { duration: 0.2, ease: "easeOut" }
+      transition: { duration: 0.2, ease: 'easeOut' },
     },
-    closed: { 
+    closed: {
       height: 0,
       opacity: 0,
-      transition: { duration: 0.2, ease: "easeIn" }
-    }
-  }
+      transition: { duration: 0.2, ease: 'easeIn' },
+    },
+  };
 
-  if(!collapsable) {
+  if (!collapsable) {
     return (
-      <div className="border border-grey-600 mt-2 mb-2 rounded p-2">
-        <div className="flex justify-between items-center">
+      <div className="border-grey-600 mb-2 mt-2 rounded border p-2">
+        <div className="flex items-center justify-between">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
         </div>
-        <div className="space-y-2">
-            {children}
-        </div>
+        <div className="space-y-2">{children}</div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="border border-grey-600 mt-2 mb-2 rounded p-2">
+    <div className="border-grey-600 mb-2 mt-2 rounded border p-2">
       {title && (
-        <div className="flex justify-between items-center cursor-pointer" onClick={() => setCollapsed((prev) => !prev)}>
+        <div
+          className="flex cursor-pointer items-center justify-between"
+          onClick={() => setCollapsed((prev) => !prev)}
+        >
           <h2 className="text-lg font-semibold">{title}</h2>
-          <motion.div className="mr-2" animate={collapsed ? "closed" : "open" } variants={variants}>
+          <motion.div className="mr-2" animate={collapsed ? 'closed' : 'open'} variants={variants}>
             <ChevronRight size={20} />
           </motion.div>
         </div>
@@ -68,7 +72,7 @@ export const FormSection = ({
       <AnimatePresence initial={false}>
         {!collapsed && (
           <motion.div
-            className="space-y-2 mt-2 overflow-hidden"
+            className="mt-2 space-y-2 overflow-hidden"
             initial="closed"
             animate="open"
             exit="closed"
@@ -81,7 +85,6 @@ export const FormSection = ({
     </div>
   );
 };
-
 
 interface FormSectionLinkProps {
   title: string;
@@ -101,29 +104,35 @@ export const MultiFormSection = ({ title, href, status, drawer }: FormSectionLin
   const router = useRouter();
 
   const handleClick = () => {
-    if(drawer) {
+    if (drawer) {
       openDrawer({
-        id: "form-section-drawer",
+        id: 'form-section-drawer',
         title: drawer.title,
         description: drawer.description,
         content: drawer.content,
       });
-    } else if(href) {
+    } else if (href) {
       router.push(href);
     }
-  }
+  };
 
   return (
     <div>
-        <div className="border border-grey-600 mt-2 mb-2 rounded p-2 text-sm" onClick={handleClick}>
-        <div className="flex justify-between items-center">
+      <div className="border-grey-600 mb-2 mt-2 rounded border p-2 text-sm" onClick={handleClick}>
+        <div className="flex items-center justify-between">
           {title && <h2 className="text-lg font-semibold">{title}</h2>}
-          {status === "complete" && <div className="bg-green-700 px-2 text-white rounded-sm">Complete</div>}
-          {status === "incomplete" && <div className="bg-slate-500 px-2 text-white rounded-sm">Incomplete</div>}
-          {status === "error" && <div className="bg-red-500 px-2 text-white rounded-sm">Error</div>}
-          {status === "warning" && <div className="bg-yellow-500 px-2 text-white rounded-sm">Warning</div>}
+          {status === 'complete' && (
+            <div className="rounded-sm bg-green-700 px-2 text-white">Complete</div>
+          )}
+          {status === 'incomplete' && (
+            <div className="rounded-sm bg-slate-500 px-2 text-white">Incomplete</div>
+          )}
+          {status === 'error' && <div className="rounded-sm bg-red-500 px-2 text-white">Error</div>}
+          {status === 'warning' && (
+            <div className="rounded-sm bg-yellow-500 px-2 text-white">Warning</div>
+          )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

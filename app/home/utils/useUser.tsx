@@ -18,7 +18,7 @@ export type CurrentUserLike = {
 
 export function getOwnerDisplayName(
   owner: OwnerLike | undefined | null,
-  options?: { isUserHydrated?: boolean; currentUser?: CurrentUserLike | null }
+  options?: { isUserHydrated?: boolean; currentUser?: CurrentUserLike | null },
 ): string {
   if (!owner) return 'Unknown';
 
@@ -34,7 +34,12 @@ export function getOwnerDisplayName(
     return handle;
   }
 
-  if (options?.isUserHydrated && options?.currentUser?.sub && ownerId && options.currentUser.sub === ownerId) {
+  if (
+    options?.isUserHydrated &&
+    options?.currentUser?.sub &&
+    ownerId &&
+    options.currentUser.sub === ownerId
+  ) {
     return 'You';
   }
 
@@ -53,7 +58,7 @@ async function loadCurrentUserOnce(): Promise<AuthUser> {
   if (currentUserPromise) return currentUserPromise;
 
   currentUserPromise = getCurrentUser()
-    .then(user => {
+    .then((user) => {
       cachedCurrentUser = user;
       return user;
     })
@@ -69,7 +74,7 @@ async function loadUserAttributesOnce(): Promise<FetchUserAttributesOutput> {
   if (attributesPromise) return attributesPromise;
 
   attributesPromise = fetchUserAttributes()
-    .then(attrs => {
+    .then((attrs) => {
       cachedAttributes = attrs;
       return attrs;
     })
@@ -94,12 +99,12 @@ async function useAuth() {
 export function useUserHook(): [boolean, AuthUser | null] {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
-  
+
   useEffect(() => {
     let isMounted = true;
-    
+
     loadCurrentUserOnce()
-      .then(u => {
+      .then((u) => {
         if (!isMounted) return;
         setUser(u);
         setIsHydrated(true);
@@ -112,7 +117,7 @@ export function useUserHook(): [boolean, AuthUser | null] {
     return () => {
       isMounted = false;
     };
-  }, []); 
+  }, []);
 
   return [isHydrated, user];
 }
@@ -124,7 +129,7 @@ export function useUserAttributes(): [boolean, FetchUserAttributesOutput | null]
   useEffect(() => {
     let isMounted = true;
     loadUserAttributesOnce()
-      .then(attrs => {
+      .then((attrs) => {
         if (!isMounted) return;
         if (attrs) {
           setUser(attrs);

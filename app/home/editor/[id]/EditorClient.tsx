@@ -1,18 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef } from "react";
-import { NewEditor } from "@/app/home/components/Input/BlockEditor";
-import { PrintPreviewer } from "../components/PrintPreviewer";
-import { useEditorState } from "@/app/home/editor/hooks/useEditorState";
-import { useDocumentSave } from "@/app/home/editor/hooks/useDocumentSave";
+import React, { useState, useEffect, useRef } from 'react';
+import { NewEditor } from '@/app/home/components/Input/BlockEditor';
+import { PrintPreviewer } from '../components/PrintPreviewer';
+import { useEditorState } from '@/app/home/editor/hooks/useEditorState';
+import { useDocumentSave } from '@/app/home/editor/hooks/useDocumentSave';
 import { VersionHistorySidebar } from '../../components/VersionHistorySidebar';
-import toast from "react-hot-toast";
+import toast from 'react-hot-toast';
 import { documentStore } from '@/app/home/clients/DocumentStore';
 import { useTemplateId } from '@/app/home/editor/hooks/useTemplateId';
 import { useVersionHistory, Version } from '@/app/home/editor/hooks/useVersionHistory';
 import { VersionPreview } from '../components/VersionPreview';
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from 'next/navigation';
 
 export default function EditorClient() {
   const params = useParams<{ id: string }>();
@@ -33,12 +33,17 @@ export default function EditorClient() {
   const [isPreviewingVersion, setIsPreviewingVersion] = useState(false);
 
   // Always call useEditorState, but pass undefined for templateId if not available
-  const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } = useEditorState(id, templateId);
+  const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } =
+    useEditorState(id, templateId);
   const effectiveLoading = !templateId || isLoading;
 
   const editorRef = useRef<any>(null);
 
-  const { save, isSaving: documentSaveIsSaving, saveStatus } = useDocumentSave({
+  const {
+    save,
+    isSaving: documentSaveIsSaving,
+    saveStatus,
+  } = useDocumentSave({
     id,
     getDisplayName: getDocName,
     getMetadata: (content: string) => ({
@@ -61,8 +66,11 @@ export default function EditorClient() {
     setSelectedVersion(version);
     setIsPreviewingVersion(true);
     setVersionPreviewContent('');
-    const versionNum = typeof version.version === 'number' ? version.version : parseInt((version.sk || '').replace('v', ''), 10);
-    const { documentStore } = await import("@/app/home/clients/DocumentStore");
+    const versionNum =
+      typeof version.version === 'number'
+        ? version.version
+        : parseInt((version.sk || '').replace('v', ''), 10);
+    const { documentStore } = await import('@/app/home/clients/DocumentStore');
     const result = await documentStore.getVersionContent(id, versionNum);
     if (result.ok) {
       setVersionPreviewContent(result.val);
@@ -83,7 +91,7 @@ export default function EditorClient() {
   };
 
   if (effectiveLoading) {
-    return <div className="w-[962px] m-auto">Loading...</div>;
+    return <div className="m-auto w-[962px]">Loading...</div>;
   }
 
   return (
@@ -93,7 +101,7 @@ export default function EditorClient() {
           <>
             <NewEditor
               ref={editorRef}
-               editorId={id}
+              editorId={id}
               content={editorContent}
               onCreate={updateHandler}
               onUpdate={updateHandler}
@@ -112,12 +120,7 @@ export default function EditorClient() {
             onReturn={handleReturnToLatest}
           />
         )}
-        {preview && (
-          <PrintPreviewer
-            content={previewContent}
-            onBack={() => setPreview(false)}
-          />
-        )}
+        {preview && <PrintPreviewer content={previewContent} onBack={() => setPreview(false)} />}
         <VersionHistorySidebar
           versions={versions as any}
           onSelect={handleSelectVersion}

@@ -11,8 +11,8 @@ describe('AddressDisplay', () => {
     postcode: 'TS1 1TS',
     location: {
       lat: 51.5074,
-      lng: -0.1278
-    }
+      lng: -0.1278,
+    },
   };
 
   it('renders the shortened address by default', () => {
@@ -31,9 +31,9 @@ describe('AddressDisplay', () => {
     const shortAddress: Address = {
       ...mockAddress,
       formatted: '123 Test St',
-      line1: '123 Test St'
+      line1: '123 Test St',
     };
-    
+
     render(<AddressDisplay address={shortAddress} maxLength={15} />);
     const button = screen.getByRole('button');
     expect(button).toHaveTextContent('123 Test St');

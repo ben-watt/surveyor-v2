@@ -1,9 +1,9 @@
-import { 
+import {
   updatePropertyDescriptionStatus,
   updateReportDetailsStatus,
   zodPropertyDescriptionStatus,
   zodReportDetailsStatus,
-  createInitialFormMeta
+  createInitialFormMeta,
 } from '../index';
 import { FormStatus } from '../../building-survey-reports/BuildingSurveyReportSchema';
 
@@ -12,7 +12,7 @@ describe('Metadata-Based Form Status Workflow', () => {
     it('should demonstrate the complete metadata workflow', () => {
       // 1. Start with empty form data
       const emptyData = {};
-      
+
       // Status lookup without metadata (fallback to validation)
       const emptyStatus = zodPropertyDescriptionStatus(emptyData);
       expect(emptyStatus.status).toBe(FormStatus.Incomplete);
@@ -22,7 +22,7 @@ describe('Metadata-Based Form Status Workflow', () => {
       // 2. Add some partial data
       const partialData = {
         propertyType: 'House',
-        constructionDetails: 'Brick built'
+        constructionDetails: 'Brick built',
         // Missing required fields
       };
 
@@ -30,7 +30,7 @@ describe('Metadata-Based Form Status Workflow', () => {
       const partialMeta = updatePropertyDescriptionStatus(partialData);
       const partialWithMeta = {
         ...partialData,
-        _meta: partialMeta
+        _meta: partialMeta,
       };
 
       // Status lookup now uses stored metadata (instant!)
@@ -50,14 +50,14 @@ describe('Metadata-Based Form Status Workflow', () => {
         energyRating: 'C',
         numberOfBedrooms: 3,
         numberOfBathrooms: 2,
-        tenure: 'Freehold'
+        tenure: 'Freehold',
       };
 
       // Generate metadata for complete data
       const completeMeta = updatePropertyDescriptionStatus(completeData);
       const completeWithMeta = {
         ...completeData,
-        _meta: completeMeta
+        _meta: completeMeta,
       };
 
       // Status lookup uses metadata - should be complete now
@@ -82,12 +82,12 @@ describe('Metadata-Based Form Status Workflow', () => {
       // Test with archived photos to show custom validation
       const reportData = {
         clientName: 'John Doe',
-        address: { 
+        address: {
           formatted: '123 Main St, London, SW1A 1AA, UK',
           line1: '123 Main St',
           city: 'London',
           postcode: 'SW1A 1AA',
-          location: { lat: 51.5074, lng: -0.1278 }
+          location: { lat: 51.5074, lng: -0.1278 },
         },
         inspectionDate: new Date('2024-01-15'),
         reportDate: new Date('2024-01-20'),
@@ -101,8 +101,8 @@ describe('Metadata-Based Form Status Workflow', () => {
           { path: 'front1.jpg', isArchived: false, hasMetadata: false },
           { path: 'front2.jpg', isArchived: false, hasMetadata: false },
           { path: 'front3.jpg', isArchived: false, hasMetadata: false },
-          { path: 'front4.jpg', isArchived: true, hasMetadata: false } // Archived - shouldn't count
-        ]
+          { path: 'front4.jpg', isArchived: true, hasMetadata: false }, // Archived - shouldn't count
+        ],
       };
 
       // This should fail because only 3 non-archived frontElevation photos exist
@@ -112,7 +112,9 @@ describe('Metadata-Based Form Status Workflow', () => {
       const status = zodReportDetailsStatus(dataWithMeta);
       expect(status.status).toBe(FormStatus.InProgress);
       expect(status.isValid).toBe(false);
-      expect(status.errors).toContain('frontElevationImagesUri: At least four general photos are required');
+      expect(status.errors).toContain(
+        'frontElevationImagesUri: At least four general photos are required',
+      );
     });
   });
 
@@ -127,7 +129,7 @@ describe('Metadata-Based Form Status Workflow', () => {
         energyRating: 'C',
         numberOfBedrooms: 3,
         numberOfBathrooms: 2,
-        tenure: 'Freehold'
+        tenure: 'Freehold',
       };
 
       // Method 1: Without metadata (fallback - runs full validation)
@@ -138,7 +140,7 @@ describe('Metadata-Based Form Status Workflow', () => {
       // Method 2: With metadata (instant lookup)
       const meta = updatePropertyDescriptionStatus(completeData);
       const dataWithMeta = { ...completeData, _meta: meta };
-      
+
       const start2 = performance.now();
       const statusWithMeta = zodPropertyDescriptionStatus(dataWithMeta);
       const end2 = performance.now();
@@ -150,7 +152,7 @@ describe('Metadata-Based Form Status Workflow', () => {
       // Metadata lookup should be faster (though both are very fast in tests)
       console.log(`Without metadata: ${end1 - start1}ms`);
       console.log(`With metadata: ${end2 - start2}ms`);
-      
+
       // In real applications, the metadata approach scales much better
       // as form complexity increases, while validation time stays constant
     });
@@ -181,7 +183,7 @@ describe('Metadata-Based Form Status Workflow', () => {
         energyRating: 'C',
         numberOfBedrooms: 3,
         numberOfBathrooms: 2,
-        tenure: 'Freehold'
+        tenure: 'Freehold',
       };
 
       // But add metadata that shows it's still in progress (maybe has validation errors)
@@ -190,7 +192,7 @@ describe('Metadata-Based Form Status Workflow', () => {
         status: FormStatus.InProgress,
         isValid: false,
         hasData: true,
-        errors: ['Custom validation error from business logic']
+        errors: ['Custom validation error from business logic'],
       };
 
       const dataWithMeta = { ...data, _meta: overriddenMeta };

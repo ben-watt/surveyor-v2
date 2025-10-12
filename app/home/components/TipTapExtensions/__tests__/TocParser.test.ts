@@ -71,5 +71,3 @@ describe('parseDataHierarchy', () => {
     expect(result[2].hierarchyText).toBe('1.2');
   });
 });
-
-

@@ -1,17 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { v4 } from "uuid";
+import { v4 } from 'uuid';
 
-
-import { Button } from "@/components/ui/button";
-import { surveyStore } from "@/app/home/clients/Database";
-import { BuildingSurveyListCard } from "./SurveyListCard";
-import { Input } from "@/components/ui/input";
-import React from "react";
-import { ListFilter, Plus, Loader2 } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { surveyStore } from '@/app/home/clients/Database';
+import { BuildingSurveyListCard } from './SurveyListCard';
+import { Input } from '@/components/ui/input';
+import React from 'react';
+import { ListFilter, Plus, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,14 +18,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { getSurveyStatusLabel } from "./utils/status";
-import { EmptyState } from "./components/EmptyState";
-import { useUserAttributes } from "../utils/useUser";
-import { getOwnerDisplayName } from "../utils/useUser";
-import { useWelcomeFlow } from "../hooks/useWelcomeFlow";
-import { WelcomeDialog } from "@/components/ui/welcome-dialog";
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { getSurveyStatusLabel } from './utils/status';
+import { EmptyState } from './components/EmptyState';
+import { useUserAttributes } from '../utils/useUser';
+import { getOwnerDisplayName } from '../utils/useUser';
+import { useWelcomeFlow } from '../hooks/useWelcomeFlow';
+import { WelcomeDialog } from '@/components/ui/welcome-dialog';
 
 interface FilterState {
   status: string[];
@@ -37,8 +36,8 @@ function HomePage() {
   const router = useRouter();
   const [isHydrated, data] = surveyStore.useList();
   const [isUserHydrated, currentUser] = useUserAttributes();
-  const [createId, setCreateId] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [createId, setCreateId] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     status: [],
     owner: [],
@@ -49,7 +48,7 @@ function HomePage() {
 
   // Get unique status values from data
   const availableStatuses = React.useMemo(() => {
-    const statuses = new Set(data.map(survey => survey.status));
+    const statuses = new Set(data.map((survey) => survey.status));
     return Array.from(statuses).filter(Boolean);
   }, [data]);
 
@@ -57,13 +56,13 @@ function HomePage() {
   const availableOwners = React.useMemo(() => {
     const owners = new Set(
       data
-        .map(survey =>
+        .map((survey) =>
           getOwnerDisplayName(survey.owner, {
             isUserHydrated,
             currentUser,
-          })
+          }),
         )
-        .filter(name => Boolean(name) && name !== 'You' && name !== 'Unknown')
+        .filter((name) => Boolean(name) && name !== 'You' && name !== 'Unknown'),
     );
     return Array.from(owners);
   }, [data, isUserHydrated, currentUser]);
@@ -72,15 +71,15 @@ function HomePage() {
 
   const filteredData = React.useMemo(() => {
     let filtered = data;
-    
+
     // Apply status filters
     if (filters.status.length > 0) {
-      filtered = filtered.filter(survey => filters.status.includes(survey.status || ''));
+      filtered = filtered.filter((survey) => filters.status.includes(survey.status || ''));
     }
 
     // Apply owner filters
     if (filters.owner.length > 0) {
-      filtered = filtered.filter(survey => {
+      filtered = filtered.filter((survey) => {
         const isMySurveysSelected = filters.owner.includes('My Surveys');
         const isMyOwnedSurvey =
           isUserHydrated && currentUser && survey.owner?.id === currentUser.sub;
@@ -89,11 +88,11 @@ function HomePage() {
           currentUser,
         });
         const isOwnerNameSelected = filters.owner.includes(ownerDisplay);
-        
+
         // Show survey if it matches any of the selected owner criteria
         if (isMySurveysSelected && isMyOwnedSurvey) return true;
         if (isOwnerNameSelected) return true;
-        
+
         return false;
       });
     }
@@ -120,20 +119,20 @@ function HomePage() {
   }, [data, searchQuery, filters, isUserHydrated, currentUser]);
 
   const toggleStatusFilter = (status: string) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       status: prev.status.includes(status)
-        ? prev.status.filter(s => s !== status)
-        : [...prev.status, status]
+        ? prev.status.filter((s) => s !== status)
+        : [...prev.status, status],
     }));
   };
 
   const toggleOwnerFilter = (owner: string) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       owner: prev.owner.includes(owner)
-        ? prev.owner.filter(o => o !== owner)
-        : [...prev.owner, owner]
+        ? prev.owner.filter((o) => o !== owner)
+        : [...prev.owner, owner],
     }));
   };
 
@@ -143,10 +142,12 @@ function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between mb-5 items-end">
+      <div className="mb-5 flex items-end justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <h1 className="text-4xl font-bold tracking-tight dark:text-white mb-2  bg-gradient-to-r from-gray-900 via-blue-800  bg-clip-text ">Surveys</h1>
+          <div className="mb-2 flex items-center gap-2">
+            <h1 className="mb-2 bg-gradient-to-r from-gray-900 via-blue-800 bg-clip-text text-4xl font-bold tracking-tight dark:text-white">
+              Surveys
+            </h1>
             <Badge variant="outline" className="text-sm">
               {data.length} total
             </Badge>
@@ -156,7 +157,7 @@ function HomePage() {
           </p>
         </div>
       </div>
-      
+
       <div className="mb-4 flex items-center gap-2">
         <div className="flex-1">
           <Input
@@ -169,7 +170,7 @@ function HomePage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2">
-              <ListFilter  className="h-4 w-4" />
+              <ListFilter className="h-4 w-4" />
               <span className="hidden sm:inline">Filters</span>
               {activeFilterCount > 0 && (
                 <Badge variant="secondary" className="ml-1">
@@ -214,7 +215,7 @@ function HomePage() {
         <Button
           type="button"
           variant="default"
-          onClick={() => router.push("/home/surveys/create")}
+          onClick={() => router.push('/home/surveys/create')}
           className="gap-2"
         >
           <Plus className="h-4 w-4 sm:hidden" />
@@ -222,7 +223,7 @@ function HomePage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {!isHydrated ? (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
             <Loader2 className="h-10 w-10 animate-spin" />
@@ -231,14 +232,14 @@ function HomePage() {
           filteredData.map((x) => (
             <BuildingSurveyListCard
               key={x.id}
-              survey={x}    
+              survey={x}
               onView={() => router.push(`/home/surveys/${x.id}`)}
             />
           ))
         ) : (
-          <EmptyState 
-            searchQuery={searchQuery} 
-            hasFilters={filters.status.length > 0 || filters.owner.length > 0} 
+          <EmptyState
+            searchQuery={searchQuery}
+            hasFilters={filters.status.length > 0 || filters.owner.length > 0}
           />
         )}
       </div>

@@ -1,0 +1,29 @@
+# Dependency directories
+node_modules
+
+# Next.js build outputs
+.next
+out
+
+# General build/output
+build
+dist
+coverage
+.turbo
+.swc
+
+# Package manager lockfiles
+yarn.lock
+pnpm-lock.yaml
+package-lock.json
+
+# Env and local files
+.env*
+.DS_Store
+
+# Framework/tooling
+.husky
+amplify
+android
+ios
+

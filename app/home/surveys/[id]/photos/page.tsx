@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useEffect, useMemo, useState } from "react";
-import { surveyStore, elementStore, sectionStore } from "@/app/home/clients/Database";
-import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
-import { ArrowLeft, Archive, ImageOff, Loader2, Download } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import { ImageViewerModal } from "@/app/home/components/ImageViewerModal";
-import { findComponent } from "@/app/home/surveys/building-survey-reports/Survey";
-import { Skeleton } from "@/components/ui/skeleton";
+import React, { useEffect, useMemo, useState } from 'react';
+import { surveyStore, elementStore, sectionStore } from '@/app/home/clients/Database';
+import { enhancedImageStore } from '@/app/home/clients/enhancedImageMetadataStore';
+import { ArrowLeft, Archive, ImageOff, Loader2, Download } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { ImageViewerModal } from '@/app/home/components/ImageViewerModal';
+import { findComponent } from '@/app/home/surveys/building-survey-reports/Survey';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PhotoSection {
   name: string;
@@ -116,13 +116,15 @@ function PhotoGallery() {
       const elementId = ctx.elementSection?.id;
       const el = elementId ? elementById.get(elementId) : undefined;
       const elementName = el?.name || ctx.elementSection?.name || 'Unknown Element';
-      const sectionName = (el?.sectionId && sectionNameById.get(el.sectionId)) || ctx.section?.name || 'Unknown Section';
+      const sectionName =
+        (el?.sectionId && sectionNameById.get(el.sectionId)) ||
+        ctx.section?.name ||
+        'Unknown Section';
       return `Inspections / ${sectionName} / ${elementName}`;
     }
 
     return 'Report Images';
   };
-
 
   const loadPhotos = async () => {
     if (!survey) return;
@@ -132,7 +134,7 @@ function PhotoGallery() {
       // Get both active and archived images from enhanced store only
       const [activeResult, archivedResult] = await Promise.all([
         enhancedImageStore.getActiveImages(),
-        enhancedImageStore.getArchivedImages()
+        enhancedImageStore.getArchivedImages(),
       ]);
 
       let allImages: any[] = [];
@@ -143,20 +145,20 @@ function PhotoGallery() {
         allImages.push(...archivedResult.val);
       }
 
-      console.log("[PhotoGallery] Enhanced store images:", allImages);
+      console.log('[PhotoGallery] Enhanced store images:', allImages);
 
       // Filter images for this survey using path segment checks
-      const surveyImages = allImages.filter(img =>
-        isImageForSurvey(String(img.imagePath || ''), id)
+      const surveyImages = allImages.filter((img) =>
+        isImageForSurvey(String(img.imagePath || ''), id),
       );
 
-      console.log("[PhotoGallery] Filtered survey images:", surveyImages);
+      console.log('[PhotoGallery] Filtered survey images:', surveyImages);
 
       // Group images by resolved display name
       const sections: PhotoSection[] = [];
       const groupedImages = new Map<string, typeof surveyImages>();
 
-      surveyImages.forEach(img => {
+      surveyImages.forEach((img) => {
         const sectionName = resolveDisplayName(String(img.imagePath || ''));
 
         if (!groupedImages.has(sectionName)) {
@@ -169,7 +171,7 @@ function PhotoGallery() {
           url: img.thumbnailDataUrl || '', // Use thumbnail for grid display
           isArchived: img.isArchived || false,
           imagePath: img.imagePath,
-          fileName: img.fileName
+          fileName: img.fileName,
         });
       });
 
@@ -180,12 +182,11 @@ function PhotoGallery() {
         }
       });
 
-      console.log("[PhotoGallery] Organized sections:", sections);
+      console.log('[PhotoGallery] Organized sections:', sections);
       setPhotoSections(sections);
     } catch (error) {
-      console.error("[PhotoGallery] Error loading photos:", error);
-    }
-    finally {
+      console.error('[PhotoGallery] Error loading photos:', error);
+    } finally {
       setIsLoadingPhotos(false);
     }
   };
@@ -195,7 +196,7 @@ function PhotoGallery() {
     const section = photoSections[sectionIndex];
     const filteredPhotos = showArchived
       ? section.photos
-      : section.photos.filter(photo => !photo.isArchived);
+      : section.photos.filter((photo) => !photo.isArchived);
 
     if (filteredPhotos.length > 0) {
       setSelectedSection({ ...section, photos: filteredPhotos });
@@ -211,48 +212,54 @@ function PhotoGallery() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, elementsHydrated, sectionsHydrated, survey]);
 
-  const totalPhotos = photoSections.reduce(
-    (total, section) => total + section.photos.length,
-    0
-  );
+  const totalPhotos = photoSections.reduce((total, section) => total + section.photos.length, 0);
   const activeTotal = photoSections.reduce(
-    (total, section) => total + section.photos.filter(p => !p.isArchived).length,
-    0
+    (total, section) => total + section.photos.filter((p) => !p.isArchived).length,
+    0,
   );
   const archivedTotal = photoSections.reduce(
-    (total, section) => total + section.photos.filter(p => p.isArchived).length,
-    0
+    (total, section) => total + section.photos.filter((p) => p.isArchived).length,
+    0,
   );
   const visibleTotal = showArchived ? activeTotal + archivedTotal : activeTotal;
 
   const isValidImageSrc = (url?: string): boolean => {
     if (!url || typeof url !== 'string') return false;
     // Accept data URLs, http(s), and absolute/next public paths
-    return url.startsWith('data:') || url.startsWith('http') || url.startsWith('/') || url.startsWith('blob:');
+    return (
+      url.startsWith('data:') ||
+      url.startsWith('http') ||
+      url.startsWith('/') ||
+      url.startsWith('blob:')
+    );
   };
 
-  const showSkeleton = !isHydrated || !elementsHydrated || !sectionsHydrated || (isLoadingPhotos && photoSections.length === 0);
+  const showSkeleton =
+    !isHydrated ||
+    !elementsHydrated ||
+    !sectionsHydrated ||
+    (isLoadingPhotos && photoSections.length === 0);
 
   if (showSkeleton) {
     return (
       <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <Skeleton className="h-6 w-40 mb-2" />
+            <Skeleton className="mb-2 h-6 w-40" />
             <Skeleton className="h-4 w-24" />
           </div>
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-6 w-36" />
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="h-8 w-24" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-6 w-36" />
+            <Skeleton className="h-8 w-28" />
+            <Skeleton className="h-8 w-24" />
+          </div>
         </div>
-      </div>
 
         <div className="space-y-6">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i}>
-              <Skeleton className="h-5 w-56 mb-2" />
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
+              <Skeleton className="mb-2 h-5 w-56" />
+              <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {Array.from({ length: 10 }).map((__, j) => (
                   <Skeleton key={j} className="aspect-square w-full" />
                 ))}
@@ -268,15 +275,15 @@ function PhotoGallery() {
     try {
       setIsExporting(true);
       // Build items array with server-friendly fields
-      const rawItems = photoSections.flatMap(section =>
-        section.photos.map(p => ({
+      const rawItems = photoSections.flatMap((section) =>
+        section.photos.map((p) => ({
           imagePath: p.imagePath,
           fileName: p.fileName,
           isArchived: !!p.isArchived,
           destFolder: section.name,
           // Provide dataUrl fallback (thumbnail) only if we cannot obtain full URL
           dataUrl: isValidImageSrc(p.url) && p.url.startsWith('data:') ? p.url : undefined,
-        }))
+        })),
       );
 
       // Resolve full URLs on client to ensure full-resolution export
@@ -289,14 +296,17 @@ function PhotoGallery() {
             }
           } catch (_) {}
           return it;
-        })
+        }),
       );
 
-      const res = await fetch(`/api/surveys/${encodeURIComponent(id)}/photos/export?includeArchived=${showArchived ? 'true' : 'false'}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-      });
+      const res = await fetch(
+        `/api/surveys/${encodeURIComponent(id)}/photos/export?includeArchived=${showArchived ? 'true' : 'false'}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items }),
+        },
+      );
 
       if (!res.ok) {
         console.error('[PhotoGallery] Export failed:', await res.text());
@@ -321,7 +331,7 @@ function PhotoGallery() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl dark:text-white">Photo Gallery</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -336,19 +346,19 @@ function PhotoGallery() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-2">
             <input
               type="checkbox"
               checked={showArchived}
               onChange={(e) => setShowArchived(e.target.checked)}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
             />
             <span className="text-sm text-gray-600 dark:text-gray-400">Show Archived</span>
           </label>
           <button
             onClick={handleExportZip}
             disabled={isExporting || photoSections.length === 0}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${isExporting ? 'bg-gray-200 dark:bg-gray-700 text-gray-500' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'}`}
+            className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors ${isExporting ? 'bg-gray-200 text-gray-500 dark:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'}`}
           >
             {isExporting ? (
               <>
@@ -364,7 +374,7 @@ function PhotoGallery() {
           </button>
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors"
+            className="inline-flex items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <ArrowLeft size={18} />
             <span>Back</span>
@@ -374,10 +384,10 @@ function PhotoGallery() {
 
       <div className="space-y-6">
         {photoSections.map((section, sectionIndex) => {
-          const filteredPhotos = showArchived 
-            ? section.photos 
-            : section.photos.filter(photo => !photo.isArchived);
-            
+          const filteredPhotos = showArchived
+            ? section.photos
+            : section.photos.filter((photo) => !photo.isArchived);
+
           if (filteredPhotos.length === 0) return null;
 
           // Group photos: non-archived first, then archived
@@ -385,16 +395,16 @@ function PhotoGallery() {
             if (a.isArchived === b.isArchived) return 0;
             return a.isArchived ? 1 : -1;
           });
-            
+
           return (
             <div key={sectionIndex}>
-              <p className="text-sm mb-2">
+              <p className="mb-2 text-sm">
                 {section.name}
                 {(() => {
-                  const activeCount = section.photos.filter(p => !p.isArchived).length;
-                  const archivedCount = section.photos.filter(p => p.isArchived).length;
+                  const activeCount = section.photos.filter((p) => !p.isArchived).length;
+                  const archivedCount = section.photos.filter((p) => p.isArchived).length;
                   return (
-                    <span className="text-sm text-gray-600 dark:text-gray-400 font-normal ml-2">
+                    <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
                       {showArchived
                         ? `(${activeCount} active, ${archivedCount} archived)`
                         : archivedCount > 0
@@ -404,15 +414,15 @@ function PhotoGallery() {
                   );
                 })()}
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
+              <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {sortedPhotos.map((photo, photoIndex) => {
                   if (!showArchived && photo.isArchived) return null;
 
                   // Calculate filtered index for modal navigation
                   const filteredPhotos = showArchived
                     ? sortedPhotos
-                    : sortedPhotos.filter(p => !p.isArchived);
-                  const filteredIndex = filteredPhotos.findIndex(p => p.id === photo.id);
+                    : sortedPhotos.filter((p) => !p.isArchived);
+                  const filteredIndex = filteredPhotos.findIndex((p) => p.id === photo.id);
 
                   const isValid = isValidImageSrc(photo.url);
                   return (
@@ -427,14 +437,14 @@ function PhotoGallery() {
                           alt={`${section.name} photo ${photoIndex + 1}`}
                           fill
                           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                          className={`object-cover hover:scale-105 transition-transform duration-300 ${photo.isArchived ? 'grayscale' : ''}`}
-                          loading={sectionIndex === 0 && photoIndex < 6 ? "eager" : "lazy"}
+                          className={`object-cover transition-transform duration-300 hover:scale-105 ${photo.isArchived ? 'grayscale' : ''}`}
+                          loading={sectionIndex === 0 && photoIndex < 6 ? 'eager' : 'lazy'}
                           quality={75}
                           placeholder="blur"
                           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvLy02Mi85OEI2PTZFOT5ZXVlZfG1+fW6Ghn6QjpCOd3p3gHj/2wBDARUXFx4eHR8fHXhwLicucHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHD/wAARCAAIAAoDASIAAhEBAxEAPwCdABmX/9k="
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-gray-600 dark:bg-gray-900 dark:text-gray-300">
                           <div className="flex flex-col items-center gap-1">
                             <ImageOff size={20} />
                             <span className="text-xs">Image unavailable</span>
@@ -444,7 +454,7 @@ function PhotoGallery() {
 
                       {/* Archive indicator */}
                       {photo.isArchived && (
-                        <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 bg-gray-800/80 text-white text-xs rounded">
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-gray-800/80 px-2 py-1 text-xs text-white">
                           <Archive size={12} />
                           <span>Archived</span>
                         </div>

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { fetchAuthSession } from "aws-amplify/auth/server";
-import { runWithAmplifyServerContext } from "@/app/home/utils/amplify-utils";
+import { NextRequest, NextResponse } from 'next/server';
+import { fetchAuthSession } from 'aws-amplify/auth/server';
+import { runWithAmplifyServerContext } from '@/app/home/utils/amplify-utils';
 
 /**
  * Determines if the request is from a development environment
@@ -39,21 +39,21 @@ export async function middleware(request: NextRequest) {
   }
 
   // Define route types
-  const authPages = new Set(["/", "/login", "/signup", "/reset-password"]);
+  const authPages = new Set(['/', '/login', '/signup', '/reset-password']);
   const isAuthPage = authPages.has(pathname);
-  const isProtected = pathname.startsWith("/home");
+  const isProtected = pathname.startsWith('/home');
 
   // Check authentication status
   const authenticated = await checkAuthentication(request, response);
 
   // Redirect authenticated users away from auth pages
   if (authenticated && isAuthPage) {
-    return NextResponse.redirect(new URL("/home/surveys", request.url));
+    return NextResponse.redirect(new URL('/home/surveys', request.url));
   }
 
   // Redirect unauthenticated users from protected routes
   if (!authenticated && isProtected) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Allow access to the requested route
@@ -70,6 +70,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - any path with a file extension (e.g. .png, .jpg, .svg)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 };

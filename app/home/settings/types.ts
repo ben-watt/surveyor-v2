@@ -1,7 +1,7 @@
-import { SyncStatus } from "../clients/Dexie";
-import type { CreateComponent, CreateElement, CreatePhrase } from "../clients/Database";
+import { SyncStatus } from '../clients/Dexie';
+import type { CreateComponent, CreateElement, CreatePhrase } from '../clients/Database';
 
-export type EntityType = "elements" | "components" | "phrases" | "sections" | "surveys";
+export type EntityType = 'elements' | 'components' | 'phrases' | 'sections' | 'surveys';
 
 export type SyncingEntities = {
   elements: boolean;
@@ -26,6 +26,6 @@ export interface EntityCounts {
   sections: number;
 }
 
-export type ElementData = Omit<CreateElement, "syncStatus" | "tenantId">;
-export type ComponentData = Omit<CreateComponent, "syncStatus" | "tenantId">;
-export type PhraseData = Omit<CreatePhrase, "syncStatus" | "tenantId">;
+export type ElementData = Omit<CreateElement, 'syncStatus' | 'tenantId'>;
+export type ComponentData = Omit<CreateComponent, 'syncStatus' | 'tenantId'>;
+export type PhraseData = Omit<CreatePhrase, 'syncStatus' | 'tenantId'>;

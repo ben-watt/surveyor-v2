@@ -27,7 +27,12 @@ const S3ImageNodeView = (props: any) => {
   const align = node.attrs.align;
   const imgRef = useRef<HTMLImageElement>(null);
   const [isResizing, setIsResizing] = useState<null | string>(null); // 'nw', 'ne', 'sw', 'se'
-  const startPos = useRef<{ x: number; y: number; width: number; height: number }>({ x: 0, y: 0, width: 0, height: 0 });
+  const startPos = useRef<{ x: number; y: number; width: number; height: number }>({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  });
   const [aspectLocked, setAspectLocked] = useState(true);
   const aspectRatio = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +50,11 @@ const S3ImageNodeView = (props: any) => {
   }
 
   // Image style (no float, just inline-block for resizing)
-  let style: React.CSSProperties = { maxWidth: '100%', cursor: isResizing ? 'nwse-resize' : 'pointer', display: 'inline-block' };
+  let style: React.CSSProperties = {
+    maxWidth: '100%',
+    cursor: isResizing ? 'nwse-resize' : 'pointer',
+    display: 'inline-block',
+  };
   if (width) style.width = width;
   if (height) style.height = height;
   else style.height = 'auto';
@@ -54,8 +63,8 @@ const S3ImageNodeView = (props: any) => {
     let cancelled = false;
     if (s3Path) {
       getImageHref(s3Path)
-        .then(url => {
-          console.log("[S3ImageNodeView] url", url);
+        .then((url) => {
+          console.log('[S3ImageNodeView] url', url);
           if (!cancelled) setUrl(url);
         })
         .catch(() => setUrl(undefined));
@@ -65,7 +74,9 @@ const S3ImageNodeView = (props: any) => {
       setUrl(undefined);
     }
     setIsLoading(true); // Reset loading state when src changes
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [s3Path, src]);
 
   // Set aspect ratio on first select or when image size changes
@@ -90,24 +101,28 @@ const S3ImageNodeView = (props: any) => {
       let newHeight = startPos.current.height;
       if (isResizing === 'se') {
         newWidth = Math.max(20, startPos.current.width + dx);
-        newHeight = aspectLocked && aspectRatio.current
-          ? Math.max(20, newWidth / aspectRatio.current)
-          : Math.max(20, startPos.current.height + dy);
+        newHeight =
+          aspectLocked && aspectRatio.current
+            ? Math.max(20, newWidth / aspectRatio.current)
+            : Math.max(20, startPos.current.height + dy);
       } else if (isResizing === 'sw') {
         newWidth = Math.max(20, startPos.current.width - dx);
-        newHeight = aspectLocked && aspectRatio.current
-          ? Math.max(20, newWidth / aspectRatio.current)
-          : Math.max(20, startPos.current.height + dy);
+        newHeight =
+          aspectLocked && aspectRatio.current
+            ? Math.max(20, newWidth / aspectRatio.current)
+            : Math.max(20, startPos.current.height + dy);
       } else if (isResizing === 'ne') {
         newWidth = Math.max(20, startPos.current.width + dx);
-        newHeight = aspectLocked && aspectRatio.current
-          ? Math.max(20, newWidth / aspectRatio.current)
-          : Math.max(20, startPos.current.height - dy);
+        newHeight =
+          aspectLocked && aspectRatio.current
+            ? Math.max(20, newWidth / aspectRatio.current)
+            : Math.max(20, startPos.current.height - dy);
       } else if (isResizing === 'nw') {
         newWidth = Math.max(20, startPos.current.width - dx);
-        newHeight = aspectLocked && aspectRatio.current
-          ? Math.max(20, newWidth / aspectRatio.current)
-          : Math.max(20, startPos.current.height - dy);
+        newHeight =
+          aspectLocked && aspectRatio.current
+            ? Math.max(20, newWidth / aspectRatio.current)
+            : Math.max(20, startPos.current.height - dy);
       }
       props.updateAttributes({ width: newWidth + 'px', height: newHeight + 'px' });
     };
@@ -164,16 +179,16 @@ const S3ImageNodeView = (props: any) => {
         const response = await fetch(src);
         const blob = await response.blob();
         await uploadData({ path: s3Path, data: blob, options: { contentType: blob.type } });
-        console.log("[S3ImageNodeView] uploaded image to", s3Path);
+        console.log('[S3ImageNodeView] uploaded image to', s3Path);
         const presigned = await getImageHref(s3Path);
-        console.log("[S3ImageNodeView] presigned", presigned);
+        console.log('[S3ImageNodeView] presigned', presigned);
         // Update node attributes: set S3 path, remove uploading id, update src to presigned
         props.updateAttributes({
           'data-s3-path': s3Path,
           'data-uploading-id': null,
         });
         setUrl(presigned); // Show the image immediately after upload
-        console.log("[S3ImageNodeView] updated attributes", props.node.attrs);
+        console.log('[S3ImageNodeView] updated attributes', props.node.attrs);
       })();
     }
   }, [src, s3Path, node.attrs['data-uploading-id']]);
@@ -181,11 +196,15 @@ const S3ImageNodeView = (props: any) => {
   console.log('[S3ImageNodeView] <img> will render with url:', url, 'src:', src, 's3Path:', s3Path);
 
   return (
-    <NodeViewWrapper as="div" className={selected ? 'ProseMirror-selectednode' : ''} style={{ position: 'relative', display: 'block', ...wrapperAlignmentStyle }}>
+    <NodeViewWrapper
+      as="div"
+      className={selected ? 'ProseMirror-selectednode' : ''}
+      style={{ position: 'relative', display: 'block', ...wrapperAlignmentStyle }}
+    >
       {selected && (
         <button
           type="button"
-          onClick={() => setAspectLocked(l => !l)}
+          onClick={() => setAspectLocked((l) => !l)}
           style={{
             position: 'absolute',
             left: '50%',
@@ -210,29 +229,30 @@ const S3ImageNodeView = (props: any) => {
         </button>
       )}
       <div style={{ display: 'inline-block', position: 'relative' }}>
-        {selected && handlePositions.map(({ corner, style: posStyle }) => (
-          <div
-            key={corner}
-            style={{
-              position: 'absolute',
-              width: 16,
-              height: 16,
-              background: '#fff',
-              border: '2px solid #007bff',
-              borderRadius: '50%',
-              zIndex: 20,
-              ...posStyle,
-              boxSizing: 'border-box',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onMouseDown={handleResizeMouseDown(corner)}
-            aria-label={`Resize image ${corner}`}
-            role="slider"
-            tabIndex={0}
-          />
-        ))}
+        {selected &&
+          handlePositions.map(({ corner, style: posStyle }) => (
+            <div
+              key={corner}
+              style={{
+                position: 'absolute',
+                width: 16,
+                height: 16,
+                background: '#fff',
+                border: '2px solid #007bff',
+                borderRadius: '50%',
+                zIndex: 20,
+                ...posStyle,
+                boxSizing: 'border-box',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onMouseDown={handleResizeMouseDown(corner)}
+              aria-label={`Resize image ${corner}`}
+              role="slider"
+              tabIndex={0}
+            />
+          ))}
         {/* Skeleton placeholder while loading */}
         {isLoading && url && (
           <div
@@ -334,4 +354,4 @@ export const S3ImageExtension = Image.extend({
 
 export { S3ImageNodeView };
 
-export default S3ImageExtension; 
+export default S3ImageExtension;

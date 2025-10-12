@@ -28,13 +28,7 @@ const mkElement = (overrides: Partial<ElementSection> = {}): ElementSection => (
 
 describe('ElementSection badges', () => {
   it('shows missing description, no images, and 0 components', () => {
-    render(
-      <ElementSectionComponent
-        elementSection={mkElement()}
-        sectionId="s1"
-        surveyId="sv1"
-      />
-    );
+    render(<ElementSectionComponent elementSection={mkElement()} sectionId="s1" surveyId="sv1" />);
     expect(screen.getByRole('status', { name: /description missing/i })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: /no images added/i })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: /0 components/i })).toBeInTheDocument();
@@ -45,19 +39,29 @@ describe('ElementSection badges', () => {
       <ElementSectionComponent
         elementSection={mkElement({
           description: 'Text',
-          images: [ { path: 'a', isArchived: false, hasMetadata: false } ],
-          components: [{
-            id: 'i1', inspectionId: 'i1', name: 'Roof', conditions: [], ragStatus: 'N/I', useNameOverride: false, nameOverride: '', location: '', additionalDescription: '', images: [], costings: []
-          }]
+          images: [{ path: 'a', isArchived: false, hasMetadata: false }],
+          components: [
+            {
+              id: 'i1',
+              inspectionId: 'i1',
+              name: 'Roof',
+              conditions: [],
+              ragStatus: 'N/I',
+              useNameOverride: false,
+              nameOverride: '',
+              location: '',
+              additionalDescription: '',
+              images: [],
+              costings: [],
+            },
+          ],
         })}
         sectionId="s1"
         surveyId="sv1"
-      />
+      />,
     );
     expect(screen.getByRole('status', { name: /description present/i })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: /1 image/i })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: /1 component/i })).toBeInTheDocument();
   });
 });
-
-

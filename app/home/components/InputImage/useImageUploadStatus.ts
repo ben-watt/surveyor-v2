@@ -11,7 +11,7 @@ export function useImageUploadStatus(paths: string[]) {
 
   // Check if any images are uploading
   const checkUploadStatus = useCallback(() => {
-    const uploading = paths.some(path => imageUploadStatusStore.isUploading(path));
+    const uploading = paths.some((path) => imageUploadStatusStore.isUploading(path));
     setIsUploading(uploading);
     return uploading;
   }, [paths]);
@@ -24,19 +24,16 @@ export function useImageUploadStatus(paths: string[]) {
         checkUploadStatus();
       }
     });
-    
+
     // Initial check
     checkUploadStatus();
-    
+
     return () => unsubscribe();
   }, [paths, checkUploadStatus]);
 
   return {
     isUploading,
     checkUploadStatus,
-    isPathUploading: useCallback(
-      (path: string) => imageUploadStatusStore.isUploading(path),
-      []
-    ),
+    isPathUploading: useCallback((path: string) => imageUploadStatusStore.isUploading(path), []),
   };
-} 
+}

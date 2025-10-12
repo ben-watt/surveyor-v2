@@ -4,7 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { useSearchParams } from 'next/navigation';
 import { HierarchicalConfigView } from '../components/HierarchicalConfigView';
 import { mockHierarchicalData, createMockStores } from './utils/mockData';
-import { setupRouterMock, setupLocalStorageMock, cleanupMocks, mockLocalStorage } from './utils/testUtils';
+import {
+  setupRouterMock,
+  setupLocalStorageMock,
+  cleanupMocks,
+  mockLocalStorage,
+} from './utils/testUtils';
 
 // Mock Amplify dependencies
 jest.mock('../../clients/Database', () => ({
@@ -21,8 +26,8 @@ jest.mock('../../clients/AmplifyDataClient', () => ({
       Element: { list: jest.fn() },
       Component: { list: jest.fn() },
       Phrase: { list: jest.fn() },
-    }
-  }
+    },
+  },
 }));
 
 // Mock the hooks
@@ -39,28 +44,29 @@ const mockUseSearchParams = useSearchParams as jest.MockedFunction<typeof useSea
 const mockUseHierarchicalData = require('../hooks/useHierarchicalData').useHierarchicalData;
 
 // Helper function to create proper URLSearchParams mock
-const createMockSearchParams = (getImplementation?: jest.Mock) => ({
-  get: getImplementation || jest.fn().mockReturnValue(null),
-  has: jest.fn().mockReturnValue(false),
-  toString: jest.fn().mockReturnValue(''),
-  append: jest.fn(),
-  delete: jest.fn(),
-  set: jest.fn(),
-  sort: jest.fn(),
-  entries: jest.fn(),
-  forEach: jest.fn(),
-  keys: jest.fn(),
-  values: jest.fn(),
-  getAll: jest.fn().mockReturnValue([]),
-  size: 0,
-  [Symbol.iterator]: jest.fn(),
-} as any);
+const createMockSearchParams = (getImplementation?: jest.Mock) =>
+  ({
+    get: getImplementation || jest.fn().mockReturnValue(null),
+    has: jest.fn().mockReturnValue(false),
+    toString: jest.fn().mockReturnValue(''),
+    append: jest.fn(),
+    delete: jest.fn(),
+    set: jest.fn(),
+    sort: jest.fn(),
+    entries: jest.fn(),
+    forEach: jest.fn(),
+    keys: jest.fn(),
+    values: jest.fn(),
+    getAll: jest.fn().mockReturnValue([]),
+    size: 0,
+    [Symbol.iterator]: jest.fn(),
+  }) as any;
 
 describe('HierarchicalConfigView', () => {
   beforeEach(() => {
     setupRouterMock();
     setupLocalStorageMock();
-    
+
     // Default mock implementations
     mockUseHierarchicalData.mockReturnValue(mockHierarchicalData);
     mockUseSearchParams.mockReturnValue(createMockSearchParams());
@@ -78,14 +84,14 @@ describe('HierarchicalConfigView', () => {
       });
 
       render(<HierarchicalConfigView />);
-      
+
       expect(screen.getByText('Loading configuration...')).toBeInTheDocument();
       expect(document.querySelector('.lucide-loader-circle')).toBeInTheDocument();
     });
 
     it('should render tree structure when data is loaded', () => {
       render(<HierarchicalConfigView />);
-      
+
       expect(screen.getByText('Structure')).toBeInTheDocument();
       expect(screen.getByText('Electrical')).toBeInTheDocument();
       expect(screen.getByText('Plumbing')).toBeInTheDocument();
@@ -98,13 +104,13 @@ describe('HierarchicalConfigView', () => {
       });
 
       render(<HierarchicalConfigView />);
-      
+
       expect(screen.getByText(/no configuration data available/i)).toBeInTheDocument();
     });
 
     it('should display search results count when searching', async () => {
       render(<HierarchicalConfigView />);
-      
+
       const searchInput = screen.getByPlaceholderText(/search configuration/i);
       fireEvent.change(searchInput, { target: { value: 'Foundation' } });
 
@@ -117,14 +123,14 @@ describe('HierarchicalConfigView', () => {
   describe('Interaction Tests', () => {
     it('should expand/collapse all nodes when clicking expand/collapse buttons', async () => {
       render(<HierarchicalConfigView />);
-      
+
       const expandAllButton = screen.getByRole('button', { name: /expand all/i });
       fireEvent.click(expandAllButton);
 
       await waitFor(() => {
         expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
           'hierarchical-config-state',
-          expect.stringContaining('"expandedNodes"')
+          expect.stringContaining('"expandedNodes"'),
         );
       });
 
@@ -134,7 +140,7 @@ describe('HierarchicalConfigView', () => {
       await waitFor(() => {
         expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
           'hierarchical-config-state',
-          expect.stringContaining('[]')
+          expect.stringContaining('[]'),
         );
       });
     });
@@ -142,7 +148,7 @@ describe('HierarchicalConfigView', () => {
     it('should open create dropdown and display all entity types', async () => {
       const user = userEvent.setup();
       render(<HierarchicalConfigView />);
-      
+
       const createButton = screen.getByRole('button', { name: /create new/i });
       await user.click(createButton);
 
@@ -160,7 +166,7 @@ describe('HierarchicalConfigView', () => {
       setupRouterMock({ push: mockPush });
 
       render(<HierarchicalConfigView />);
-      
+
       const createButton = screen.getByRole('button', { name: /create new/i });
       await user.click(createButton);
 
@@ -168,20 +174,20 @@ describe('HierarchicalConfigView', () => {
       await user.click(sectionOption);
 
       expect(mockPush).toHaveBeenCalledWith(
-        expect.stringContaining('/home/configuration/sections/create')
+        expect.stringContaining('/home/configuration/sections/create'),
       );
     });
 
     it('should update search query when using search bar', async () => {
       render(<HierarchicalConfigView />);
-      
+
       const searchInput = screen.getByPlaceholderText(/search configuration/i);
       fireEvent.change(searchInput, { target: { value: 'electrical' } });
 
       await waitFor(() => {
         expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
           'hierarchical-config-state',
-          expect.stringContaining('"searchQuery":"electrical"')
+          expect.stringContaining('"searchQuery":"electrical"'),
         );
       });
     });
@@ -193,11 +199,11 @@ describe('HierarchicalConfigView', () => {
         expandedNodes: ['section-1', 'element-1'],
         searchQuery: '',
       };
-      
+
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(savedState));
 
       render(<HierarchicalConfigView />);
-      
+
       expect(mockLocalStorage.getItem).toHaveBeenCalledWith('hierarchical-config-state');
     });
 
@@ -206,11 +212,11 @@ describe('HierarchicalConfigView', () => {
         expandedNodes: [],
         searchQuery: 'foundation',
       };
-      
+
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(savedState));
 
       render(<HierarchicalConfigView />);
-      
+
       const searchInput = screen.getByDisplayValue('foundation');
       expect(searchInput).toBeInTheDocument();
     });
@@ -222,11 +228,11 @@ describe('HierarchicalConfigView', () => {
         if (key === 'editedType') return 'element';
         return null;
       });
-      
+
       mockUseSearchParams.mockReturnValue(createMockSearchParams(mockGet));
 
       render(<HierarchicalConfigView />);
-      
+
       expect(mockGet).toHaveBeenCalledWith('returnFrom');
       expect(mockGet).toHaveBeenCalledWith('editedId');
     });
@@ -241,11 +247,11 @@ describe('HierarchicalConfigView', () => {
           timestamp: Date.now() - 60000, // 1 minute ago
         },
       };
-      
+
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(savedState));
 
       render(<HierarchicalConfigView />);
-      
+
       // The highlighting logic would be tested through the tree node component
       expect(mockLocalStorage.getItem).toHaveBeenCalled();
     });
@@ -256,9 +262,11 @@ describe('HierarchicalConfigView', () => {
         value: { replaceState: mockReplaceState },
         writable: true,
       });
-      
+
       Object.defineProperty(window, 'location', {
-        value: { href: 'http://localhost:3000/home/configuration?returnFrom=edit&editedId=element-1&editedType=element' },
+        value: {
+          href: 'http://localhost:3000/home/configuration?returnFrom=edit&editedId=element-1&editedType=element',
+        },
         writable: true,
       });
 
@@ -268,12 +276,16 @@ describe('HierarchicalConfigView', () => {
         if (key === 'editedType') return 'element';
         return null;
       });
-      
+
       mockUseSearchParams.mockReturnValue(createMockSearchParams(mockGet));
 
       render(<HierarchicalConfigView />);
-      
-      expect(mockReplaceState).toHaveBeenCalledWith({}, '', 'http://localhost:3000/home/configuration');
+
+      expect(mockReplaceState).toHaveBeenCalledWith(
+        {},
+        '',
+        'http://localhost:3000/home/configuration',
+      );
     });
   });
 
@@ -282,7 +294,7 @@ describe('HierarchicalConfigView', () => {
       mockLocalStorage.getItem.mockReturnValue('invalid json');
 
       render(<HierarchicalConfigView />);
-      
+
       // Should not crash and should render normally
       expect(screen.getByText('Structure')).toBeInTheDocument();
     });
@@ -291,14 +303,14 @@ describe('HierarchicalConfigView', () => {
       mockUseSearchParams.mockReturnValue(createMockSearchParams());
 
       render(<HierarchicalConfigView />);
-      
+
       // Should render normally without errors
       expect(screen.getByText('Structure')).toBeInTheDocument();
     });
 
     it('should handle empty search results', async () => {
       render(<HierarchicalConfigView />);
-      
+
       const searchInput = screen.getByPlaceholderText(/search configuration/i);
       fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
@@ -311,7 +323,7 @@ describe('HierarchicalConfigView', () => {
   describe('Search Functionality', () => {
     it('should filter results based on search query', async () => {
       render(<HierarchicalConfigView />);
-      
+
       const searchInput = screen.getByPlaceholderText(/search configuration/i);
       fireEvent.change(searchInput, { target: { value: 'Foundation' } });
 
@@ -323,7 +335,7 @@ describe('HierarchicalConfigView', () => {
 
     it('should clear search when clear button is clicked', async () => {
       render(<HierarchicalConfigView />);
-      
+
       const searchInput = screen.getByPlaceholderText(/search configuration/i);
       fireEvent.change(searchInput, { target: { value: 'Foundation' } });
 

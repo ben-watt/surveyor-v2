@@ -3,7 +3,12 @@ import { useDragDrop } from '@/app/home/configuration/hooks/useDragDrop';
 import { TreeNode } from '@/app/home/configuration/hooks/useHierarchicalData';
 import { DragStartEvent, DragOverEvent, DragEndEvent } from '@dnd-kit/core';
 import { calculateReorderedItems } from '@/app/home/configuration/utils/dragValidation';
-import { createMockTreeNode, createDragStartEvent, createDragEndEvent, createDragOverEvent } from '@/test-utils/drag-drop-utils';
+import {
+  createMockTreeNode,
+  createDragStartEvent,
+  createDragEndEvent,
+  createDragOverEvent,
+} from '@/test-utils/drag-drop-utils';
 
 // Mock toast to avoid errors
 jest.mock('react-hot-toast', () => ({
@@ -20,7 +25,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
       createMockTreeNode('element-3', 'Element 3', 'element', 3000),
     ]),
   ];
-  
+
   // Update the expanded state
   mockTreeData[0].isExpanded = true;
 
@@ -40,7 +45,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
       ];
 
       const result = calculateReorderedItems(items, 'element-3', 'element-1', 'before');
-      
+
       expect(result).toEqual([
         { id: 'element-3', order: 1000 },
         { id: 'element-1', order: 2000 },
@@ -56,7 +61,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
       ];
 
       const result = calculateReorderedItems(items, 'element-1', 'element-3', 'after');
-      
+
       expect(result).toEqual([
         { id: 'element-2', order: 1000 },
         { id: 'element-3', order: 2000 },
@@ -72,7 +77,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       const dragStartEvent = createDragStartEvent('element-2');
@@ -93,7 +98,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       const dragStartEvent = createDragStartEvent('element-2');
@@ -105,7 +110,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
       // Elements within the same section should be valid drop targets for reordering
       expect(result.current.dragState.validDropTargets.has('element-1')).toBe(true);
       expect(result.current.dragState.validDropTargets.has('element-3')).toBe(true);
-      
+
       // The element being dragged should not be a valid target for itself
       expect(result.current.dragState.validDropTargets.has('element-2')).toBe(false);
     });
@@ -116,7 +121,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element-2
@@ -131,7 +136,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
         'element-2',
         'element-1',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        110 // Near top, should be 'before'
+        110, // Near top, should be 'before'
       );
 
       act(() => {
@@ -148,7 +153,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element-3
@@ -161,7 +166,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
         'element-3',
         'element-1',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        110 // Near top, should be 'before'
+        110, // Near top, should be 'before'
       );
 
       await act(async () => {
@@ -187,7 +192,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element-1
@@ -200,7 +205,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
         'element-1',
         'element-2',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        140 // Near bottom, should be 'after'
+        140, // Near bottom, should be 'after'
       );
 
       await act(async () => {
@@ -222,7 +227,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
           nodes: mockTreeData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element-2
@@ -232,12 +237,12 @@ describe('Drag and Drop - Element Reordering within Section', () => {
         } as DragStartEvent);
       });
 
-      // Try to drop element-2 on itself  
+      // Try to drop element-2 on itself
       const dragEndEvent = createDragEndEvent(
         'element-2',
         'element-2',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        125
+        125,
       );
 
       await act(async () => {
@@ -267,7 +272,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
           nodes: multiSectionData,
           onReorder: mockOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging element from section 1
@@ -277,10 +282,10 @@ describe('Drag and Drop - Element Reordering within Section', () => {
 
       // Should identify valid targets in same section
       expect(result.current.dragState.validDropTargets.has('element-1-1')).toBe(true);
-      
+
       // Should identify section-2 as valid drop target (to move element into it)
       expect(result.current.dragState.validDropTargets.has('section-2')).toBe(true);
-      
+
       // Elements in different section should NOT be valid targets for reordering
       expect(result.current.dragState.validDropTargets.has('element-2-1')).toBe(false);
     });
@@ -289,13 +294,13 @@ describe('Drag and Drop - Element Reordering within Section', () => {
   describe('Error handling', () => {
     it('should handle failed reorder operations gracefully', async () => {
       const failingOnReorder = jest.fn().mockRejectedValue(new Error('Reorder failed'));
-      
+
       const { result } = renderHook(() =>
         useDragDrop({
           nodes: mockTreeData,
           onReorder: failingOnReorder,
           onMove: mockOnMove,
-        })
+        }),
       );
 
       // Start dragging
@@ -310,7 +315,7 @@ describe('Drag and Drop - Element Reordering within Section', () => {
         'element-2',
         'element-1',
         { top: 100, bottom: 150, height: 50, left: 0, right: 100, width: 100 },
-        110
+        110,
       );
 
       // Suppress console.error for this test

@@ -1,5 +1,5 @@
-import React from "react";
-import ReactDOMServer from "react-dom/server";
+import React from 'react';
+import ReactDOMServer from 'react-dom/server';
 
 // Type definition for Tiptap DOMSpec
 type DOMSpec = [string, Record<string, any>, ...(DOMSpec | string)[]] | string;
@@ -12,7 +12,7 @@ type DOMSpec = [string, Record<string, any>, ...(DOMSpec | string)[]] | string;
 function domToDomSpec(element: Node): DOMSpec {
   if (element.nodeType === Node.TEXT_NODE) {
     // If it's a text node, return its text content
-    return element.textContent || "";
+    return element.textContent || '';
   }
 
   if (element.nodeType === Node.ELEMENT_NODE) {
@@ -32,7 +32,7 @@ function domToDomSpec(element: Node): DOMSpec {
   }
 
   // For unsupported node types, return an empty string
-  return "";
+  return '';
 }
 
 /**
@@ -45,13 +45,13 @@ export function renderReactToDomSpec(jsx: React.ReactNode): DOMSpec {
   const htmlString = ReactDOMServer.renderToStaticMarkup(jsx);
 
   // Create a temporary DOM element to parse the HTML string
-  const tempDiv = document.createElement("div");
+  const tempDiv = document.createElement('div');
   tempDiv.innerHTML = htmlString;
 
   // Convert the parsed DOM into a Tiptap-compatible DOMSpec
   const firstChild = tempDiv.firstChild;
   if (!firstChild) {
-    throw new Error("No root element found in rendered JSX.");
+    throw new Error('No root element found in rendered JSX.');
   }
 
   return domToDomSpec(firstChild);

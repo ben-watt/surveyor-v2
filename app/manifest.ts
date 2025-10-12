@@ -1,8 +1,8 @@
-import type { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next';
 
 // Required for static export
-export const dynamic = 'force-static'
- 
+export const dynamic = 'force-static';
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Survii',
@@ -19,10 +19,12 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
     ],
-    screenshots: [{
-      src: "/typical-house.webp",
-      sizes: "871x572",
-      type: "image/webp",
-    }]
-  }
+    screenshots: [
+      {
+        src: '/typical-house.webp',
+        sizes: '871x572',
+        type: 'image/webp',
+      },
+    ],
+  };
 }

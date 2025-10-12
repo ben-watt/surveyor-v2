@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 type useAsyncStateResult<T> = [isLoading: boolean, data: T | null];
 
-export const useAsyncState = <T>(
-  promise: Promise<T | undefined>
-): useAsyncStateResult<T> => {
+export const useAsyncState = <T>(promise: Promise<T | undefined>): useAsyncStateResult<T> => {
   const [state, setState] = React.useState<T | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -23,11 +21,11 @@ export const useAsyncState = <T>(
 type useAsyncArrayStateResult<T> = [
   isLoading: boolean,
   data: T[],
-  setData: React.Dispatch<React.SetStateAction<T[]>>
+  setData: React.Dispatch<React.SetStateAction<T[]>>,
 ];
 
 export const useAsyncArrayState = <T>(
-  fn: () => Promise<T[] | undefined>
+  fn: () => Promise<T[] | undefined>,
 ): useAsyncArrayStateResult<T> => {
   const [state, setState] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +38,7 @@ export const useAsyncArrayState = <T>(
           setState(result);
         }
       } catch (err) {
-        console.log("[useAsyncArrayState]", "failed to fetch data", err);
+        console.log('[useAsyncArrayState]', 'failed to fetch data', err);
       }
 
       setIsLoading(false);

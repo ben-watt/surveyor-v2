@@ -18,11 +18,11 @@ export const VersionPreview: React.FC<VersionPreviewProps> = ({
   content,
   onReturn,
 }) => (
-  <div className="border rounded bg-gray-50 p-4">
-    <div className="flex items-center justify-between mb-2">
+  <div className="rounded border bg-gray-50 p-4">
+    <div className="mb-2 flex items-center justify-between">
       <span className="font-semibold">Previewing Version {versionLabel}</span>
       <button
-        className="text-blue-600 underline text-sm"
+        className="text-sm text-blue-600 underline"
         onClick={onReturn}
         aria-label="Return to editing latest version"
       >
@@ -30,10 +30,10 @@ export const VersionPreview: React.FC<VersionPreviewProps> = ({
       </button>
     </div>
     <div
-      className="prose max-w-none bg-white p-4 rounded shadow-inner min-h-[300px]"
+      className="prose min-h-[300px] max-w-none rounded bg-white p-4 shadow-inner"
       dangerouslySetInnerHTML={{ __html: content }}
       role="region"
       aria-label="Version preview content"
     />
   </div>
-); 
+);

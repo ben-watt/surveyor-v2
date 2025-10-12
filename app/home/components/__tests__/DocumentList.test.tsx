@@ -31,7 +31,10 @@ describe('DocumentList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (documentStore.list as jest.Mock).mockResolvedValue({ ok: true, val: mockDocuments });
-    (documentStore.rename as jest.Mock).mockResolvedValue({ ok: true, val: { ...mockDocuments[0], displayName: 'Renamed' } });
+    (documentStore.rename as jest.Mock).mockResolvedValue({
+      ok: true,
+      val: { ...mockDocuments[0], displayName: 'Renamed' },
+    });
     (documentStore.remove as jest.Mock).mockResolvedValue({ ok: true });
   });
 
@@ -97,4 +100,4 @@ describe('DocumentList', () => {
     fireEvent.keyDown(name, { key: 'Enter' });
     expect(screen.getByRole('textbox', { name: /rename document/i })).toBeInTheDocument();
   });
-}); 
+});

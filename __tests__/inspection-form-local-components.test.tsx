@@ -20,19 +20,44 @@ const makeEmptySurvey = () => ({
   owner: { id: 'o1', name: 'Owner', email: 'o@example.com', signaturePath: [] },
   status: 'draft',
   reportDetails: {
-    level: '2', reference: '',
+    level: '2',
+    reference: '',
     address: { formatted: '', line1: '', city: '', postcode: '', location: { lat: 0, lng: 0 } },
-    clientName: '', reportDate: new Date(), inspectionDate: new Date(), weather: '', orientation: '', situation: '',
-    moneyShot: [], frontElevationImagesUri: []
+    clientName: '',
+    reportDate: new Date(),
+    inspectionDate: new Date(),
+    weather: '',
+    orientation: '',
+    situation: '',
+    moneyShot: [],
+    frontElevationImagesUri: [],
   },
   propertyDescription: {
-    propertyType: '', constructionDetails: '', yearOfConstruction: '', grounds: '', services: '', energyRating: '',
-    numberOfBedrooms: 0, numberOfBathrooms: 0, tenure: ''
+    propertyType: '',
+    constructionDetails: '',
+    yearOfConstruction: '',
+    grounds: '',
+    services: '',
+    energyRating: '',
+    numberOfBedrooms: 0,
+    numberOfBathrooms: 0,
+    tenure: '',
   },
   sections: [
-    { id: 'sec1', name: 'Section 1', elementSections: [
-      { id: 'el1', name: 'Element 1', isPartOfSurvey: true, description: '', components: [], images: [] }
-    ]}
+    {
+      id: 'sec1',
+      name: 'Section 1',
+      elementSections: [
+        {
+          id: 'el1',
+          name: 'Element 1',
+          isPartOfSurvey: true,
+          description: '',
+          components: [],
+          images: [],
+        },
+      ],
+    },
   ],
   checklist: { items: [] },
 });
@@ -46,7 +71,10 @@ jest.mock('@/app/home/clients/Database', () => {
       useList: () => [true, []],
     },
     elementStore: {
-      useList: () => [true, [{ id: 'el1', name: 'Element 1', order: 0, sectionId: 'sec1', description: '' }]],
+      useList: () => [
+        true,
+        [{ id: 'el1', name: 'Element 1', order: 0, sectionId: 'sec1', description: '' }],
+      ],
     },
     phraseStore: {
       useList: () => [true, []],
@@ -93,8 +121,8 @@ describe('InspectionForm - Local Components', () => {
             costings: [],
             ...defaults,
           }}
-        />
-      )
+        />,
+      ),
     );
   }
 
@@ -133,7 +161,11 @@ describe('InspectionForm - Local Components', () => {
 
     // The survey data should contain the inspection persisted under the element
     const element = (global as any).__currentSurveyRef.sections[0].elementSections[0];
-    expect(element.components.some((c: any) => c.name === 'Lintel' && String(c.id || '').startsWith('local_'))).toBe(true);
+    expect(
+      element.components.some(
+        (c: any) => c.name === 'Lintel' && String(c.id || '').startsWith('local_'),
+      ),
+    ).toBe(true);
   });
 
   test('creating a local condition persists immediately and is visible as selected', async () => {

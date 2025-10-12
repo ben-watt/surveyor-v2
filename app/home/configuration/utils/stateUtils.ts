@@ -24,14 +24,14 @@ export const loadConfigurationState = (): ConfigurationState | null => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return null;
-    
+
     const state = JSON.parse(saved) as ConfigurationState;
-    
+
     // Clear old edited entity highlights (older than 5 minutes)
     if (state.lastEditedEntity && Date.now() - state.lastEditedEntity.timestamp > 5 * 60 * 1000) {
       state.lastEditedEntity = undefined;
     }
-    
+
     return state;
   } catch (error) {
     console.warn('Failed to load configuration state:', error);
@@ -39,7 +39,10 @@ export const loadConfigurationState = (): ConfigurationState | null => {
   }
 };
 
-export const setLastEditedEntity = (id: string, type: 'section' | 'element' | 'component' | 'condition') => {
+export const setLastEditedEntity = (
+  id: string,
+  type: 'section' | 'element' | 'component' | 'condition',
+) => {
   const currentState = loadConfigurationState() || { expandedNodes: [] };
   const newState: ConfigurationState = {
     ...currentState,
@@ -52,7 +55,11 @@ export const setLastEditedEntity = (id: string, type: 'section' | 'element' | 'c
   saveConfigurationState(newState);
 };
 
-export const setNavigationContext = (entityId: string, entityType: 'section' | 'element' | 'component' | 'condition', expandedNodes: string[]) => {
+export const setNavigationContext = (
+  entityId: string,
+  entityType: 'section' | 'element' | 'component' | 'condition',
+  expandedNodes: string[],
+) => {
   const currentState = loadConfigurationState() || { expandedNodes: [] };
   const newState: ConfigurationState = {
     ...currentState,
@@ -66,25 +73,22 @@ export const setNavigationContext = (entityId: string, entityType: 'section' | '
   saveConfigurationState(newState);
 };
 
-export const findPathToEntity = (
-  treeData: any[],
-  entityId: string
-): string[] => {
+export const findPathToEntity = (treeData: any[], entityId: string): string[] => {
   const visited = new Set<string>();
-  
+
   const findPath = (nodes: any[], targetId: string, currentPath: string[]): string[] | null => {
     if (!nodes || !Array.isArray(nodes)) return null;
-    
+
     for (const node of nodes) {
       if (!node || typeof node !== 'object' || !node.id) continue;
-      
+
       // Prevent circular references
       if (visited.has(node.id)) continue;
       visited.add(node.id);
-      
+
       // Add current node to path
       currentPath.push(node.id);
-      
+
       if (node.id === targetId) {
         // Found target - return copy of current path
         const result = [...currentPath];
@@ -92,7 +96,7 @@ export const findPathToEntity = (
         visited.delete(node.id);
         return result;
       }
-      
+
       if (node.children && Array.isArray(node.children) && node.children.length > 0) {
         const result = findPath(node.children, targetId, currentPath);
         if (result) {
@@ -101,14 +105,14 @@ export const findPathToEntity = (
           return result;
         }
       }
-      
+
       // Backtrack
       currentPath.pop();
       visited.delete(node.id);
     }
     return null;
   };
-  
+
   const result = findPath(treeData, entityId, []);
   return result || [];
 };
@@ -124,11 +128,11 @@ export const getEntityDisplayId = (entityId: string, entityType: string): string
 export const getConditionDisplayId = (
   conditionId: string,
   elementId?: string,
-  componentId?: string
+  componentId?: string,
 ): string => {
   if (!elementId) {
     return conditionId;
   }
-  
+
   return `${elementId}-${conditionId}`;
 };

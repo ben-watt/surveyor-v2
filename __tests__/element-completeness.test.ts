@@ -1,5 +1,8 @@
 import { getElementCompleteness } from '@/app/home/surveys/utils/elementCompleteness';
-import type { ElementSection, SurveyImage } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import type {
+  ElementSection,
+  SurveyImage,
+} from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 const img = (overrides: Partial<SurveyImage> = {}): SurveyImage => ({
   path: 'p',
@@ -40,12 +43,26 @@ describe('getElementCompleteness', () => {
   });
 
   it('counts components', () => {
-    const res = getElementCompleteness(baseElement({ components: [{
-      id: 'i1', inspectionId: 'i1', name: 'Roof', conditions: [], ragStatus: 'N/I', useNameOverride: false, nameOverride: '', location: '', additionalDescription: '', images: [], costings: []
-    }] }));
+    const res = getElementCompleteness(
+      baseElement({
+        components: [
+          {
+            id: 'i1',
+            inspectionId: 'i1',
+            name: 'Roof',
+            conditions: [],
+            ragStatus: 'N/I',
+            useNameOverride: false,
+            nameOverride: '',
+            location: '',
+            additionalDescription: '',
+            images: [],
+            costings: [],
+          },
+        ],
+      }),
+    );
     expect(res.hasComponents).toBe(true);
     expect(res.componentCount).toBe(1);
   });
 });
-
-

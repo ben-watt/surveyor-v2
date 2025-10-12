@@ -1,4 +1,8 @@
-import { Costing, RagStatus, SurveyImage } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+import {
+  Costing,
+  RagStatus,
+  SurveyImage,
+} from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 export type FormPhrase = {
   id: string;
@@ -7,7 +11,7 @@ export type FormPhrase = {
 };
 
 export type InspectionFormData = {
-  inspectionId: string;  // Unique identifier for this specific inspection
+  inspectionId: string; // Unique identifier for this specific inspection
   location: string;
   surveySection: {
     id: string;
@@ -37,8 +41,8 @@ export interface InspectionFormProps {
 }
 
 export const RAG_OPTIONS = [
-  { value: "Red", label: "Red" },
-  { value: "Amber", label: "Amber" },
-  { value: "Green", label: "Green" },
-  { value: "N/I", label: "Not Inspected" },
-] as const; 
+  { value: 'Red', label: 'Red' },
+  { value: 'Amber', label: 'Amber' },
+  { value: 'Green', label: 'Green' },
+  { value: 'N/I', label: 'Not Inspected' },
+] as const;

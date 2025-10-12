@@ -1,15 +1,10 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { FormStatus } from "../building-survey-reports/BuildingSurveyReportSchema";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { FormStatus } from '../building-survey-reports/BuildingSurveyReportSchema';
 
 interface EnhancedFormSectionProps {
   title: string;
@@ -20,14 +15,13 @@ interface EnhancedFormSectionProps {
 }
 
 const SECTION_DESCRIPTIONS = {
-  "Report Details":
-    "Basic information about the survey including client details, dates, and property address",
-  "Property Description":
-    "Detailed description of the property including construction, age, and key characteristics",
-  "Property Condition":
-    "Inspection findings for each building element including defects and recommendations",
-  Checklist:
-    "Final verification checklist to ensure all critical items have been inspected",
+  'Report Details':
+    'Basic information about the survey including client details, dates, and property address',
+  'Property Description':
+    'Detailed description of the property including construction, age, and key characteristics',
+  'Property Condition':
+    'Inspection findings for each building element including defects and recommendations',
+  Checklist: 'Final verification checklist to ensure all critical items have been inspected',
 };
 
 export function EnhancedFormSection({
@@ -35,51 +29,50 @@ export function EnhancedFormSection({
   href,
   status,
   description,
-  className = "",
+  className = '',
 }: EnhancedFormSectionProps) {
   const router = useRouter();
 
   const sectionDescription =
-    description ||
-    SECTION_DESCRIPTIONS[title as keyof typeof SECTION_DESCRIPTIONS];
+    description || SECTION_DESCRIPTIONS[title as keyof typeof SECTION_DESCRIPTIONS];
 
   const getStatusConfig = (status: FormStatus) => {
     switch (status) {
       case FormStatus.Complete:
         return {
-          badge: "bg-green-100 text-green-800 border-green-200",
-          border: "border-l-green-500",
-          icon: <CheckCircle className="w-5 h-5 text-green-500" />,
-          text: "Complete",
+          badge: 'bg-green-100 text-green-800 border-green-200',
+          border: 'border-l-green-500',
+          icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+          text: 'Complete',
         };
       case FormStatus.Error:
         return {
-          badge: "bg-red-100 text-red-800 border-red-200",
-          border: "border-l-red-500",
-          icon: <AlertCircle className="w-5 h-5 text-red-500" />,
-          text: "Has Errors",
+          badge: 'bg-red-100 text-red-800 border-red-200',
+          border: 'border-l-red-500',
+          icon: <AlertCircle className="h-5 w-5 text-red-500" />,
+          text: 'Has Errors',
         };
       case FormStatus.Warning:
         return {
-          badge: "bg-amber-100 text-amber-800 border-amber-200",
-          border: "border-l-amber-500",
-          icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
-          text: "Needs Review",
+          badge: 'bg-amber-100 text-amber-800 border-amber-200',
+          border: 'border-l-amber-500',
+          icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
+          text: 'Needs Review',
         };
       case FormStatus.InProgress:
         return {
-          badge: "bg-blue-100 text-blue-800 border-blue-200",
-          border: "border-l-blue-500",
-          icon: <Clock className="w-5 h-5 text-blue-500" />,
-          text: "Incomplete",
+          badge: 'bg-blue-100 text-blue-800 border-blue-200',
+          border: 'border-l-blue-500',
+          icon: <Clock className="h-5 w-5 text-blue-500" />,
+          text: 'Incomplete',
         };
       case FormStatus.Incomplete:
       default:
         return {
-          badge: "bg-gray-100 text-gray-600 border-gray-200",
-          border: "border-l-primary/20 hover:border-l-primary",
-          icon: <Clock className="w-5 h-5 text-gray-400" />,
-          text: "Not Started",
+          badge: 'bg-gray-100 text-gray-600 border-gray-200',
+          border: 'border-l-primary/20 hover:border-l-primary',
+          icon: <Clock className="h-5 w-5 text-gray-400" />,
+          text: 'Not Started',
         };
     }
   };
@@ -92,18 +85,18 @@ export function EnhancedFormSection({
 
   return (
     <Card
-      className={`group cursor-pointer hover:shadow-md transition-all duration-200 border-l-4 ${statusConfig.border} ${className}`}
+      className={`group cursor-pointer border-l-4 transition-all duration-200 hover:shadow-md ${statusConfig.border} ${className}`}
       onClick={handleClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="font-semibold text-lg truncate">{title}</h3>
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex items-center gap-3">
+              <h3 className="truncate text-lg font-semibold">{title}</h3>
             </div>
 
             {sectionDescription && (
-              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+              <p className="mb-2 line-clamp-2 text-sm text-muted-foreground">
                 {sectionDescription}
               </p>
             )}
@@ -114,19 +107,18 @@ export function EnhancedFormSection({
         </div>
 
         {status === FormStatus.Error && (
-          <div className="mt-3 p-2 bg-red-50 rounded border border-red-200">
+          <div className="mt-3 rounded border border-red-200 bg-red-50 p-2">
             <p className="text-xs text-red-700">
-              This section has validation errors that need to be fixed before
-              the survey can be completed.
+              This section has validation errors that need to be fixed before the survey can be
+              completed.
             </p>
           </div>
         )}
 
         {status === FormStatus.Warning && (
-          <div className="mt-3 p-2 bg-amber-50 rounded border border-amber-200">
+          <div className="mt-3 rounded border border-amber-200 bg-amber-50 p-2">
             <p className="text-xs text-amber-700">
-              This section has warnings that should be reviewed before
-              finalizing the survey.
+              This section has warnings that should be reviewed before finalizing the survey.
             </p>
           </div>
         )}

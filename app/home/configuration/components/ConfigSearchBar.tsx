@@ -40,12 +40,12 @@ export function ConfigSearchBar({ onSearch, treeData, initialQuery = '' }: Confi
     const searchInNode = (node: TreeNode, ancestors: TreeNode[] = []): boolean => {
       const matchesQuery = node.name.toLowerCase().includes(searchTerm);
       const matchesFilter = entityFilter === 'all' || node.type === entityFilter;
-      
+
       let hasMatchingChildren = false;
       const filteredChildren: TreeNode[] = [];
 
       // Recursively search children
-      node.children.forEach(child => {
+      node.children.forEach((child) => {
         if (searchInNode(child, [...ancestors, node])) {
           hasMatchingChildren = true;
           filteredChildren.push(child);
@@ -55,8 +55,8 @@ export function ConfigSearchBar({ onSearch, treeData, initialQuery = '' }: Confi
       // Include this node if it matches or has matching children
       if ((matchesQuery && matchesFilter) || hasMatchingChildren) {
         // If this node matches, include all its children
-        const childrenToInclude = (matchesQuery && matchesFilter) ? node.children : filteredChildren;
-        
+        const childrenToInclude = matchesQuery && matchesFilter ? node.children : filteredChildren;
+
         // Create a copy of the node with filtered children
         const nodeWithFilteredChildren = {
           ...node,
@@ -67,14 +67,14 @@ export function ConfigSearchBar({ onSearch, treeData, initialQuery = '' }: Confi
         if (ancestors.length === 0) {
           results.push(nodeWithFilteredChildren);
         }
-        
+
         return true;
       }
 
       return false;
     };
 
-    treeData.forEach(rootNode => {
+    treeData.forEach((rootNode) => {
       searchInNode(rootNode);
     });
 
@@ -87,25 +87,28 @@ export function ConfigSearchBar({ onSearch, treeData, initialQuery = '' }: Confi
     onSearch('', treeData);
   }, [onSearch, treeData]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      onSearch(query, searchResults);
-    }
-  }, [query, searchResults, onSearch]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        onSearch(query, searchResults);
+      }
+    },
+    [query, searchResults, onSearch],
+  );
 
   // Auto-search as user types (debounced)
   React.useEffect(() => {
     const timeoutId = setTimeout(() => {
       onSearch(query, searchResults);
     }, 300);
-    
+
     return () => clearTimeout(timeoutId);
   }, [query, entityFilter, searchResults, onSearch]);
 
   const getResultCount = () => {
     let count = 0;
     const countNodes = (nodes: TreeNode[]) => {
-      nodes.forEach(node => {
+      nodes.forEach((node) => {
         if (query.trim() && node.name.toLowerCase().includes(query.toLowerCase())) {
           if (entityFilter === 'all' || node.type === entityFilter) {
             count++;
@@ -120,21 +123,24 @@ export function ConfigSearchBar({ onSearch, treeData, initialQuery = '' }: Confi
 
   return (
     <div className="flex flex-col space-y-3">
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           <Input
             placeholder="Search configuration..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-10 h-10 sm:h-9"
+            className="h-10 pl-10 sm:h-9"
           />
         </div>
-        
+
         <div className="flex gap-2">
-          <Select value={entityFilter} onValueChange={(value: EntityType) => setEntityFilter(value)}>
-            <SelectTrigger className="w-full sm:w-40 h-10 sm:h-9">
+          <Select
+            value={entityFilter}
+            onValueChange={(value: EntityType) => setEntityFilter(value)}
+          >
+            <SelectTrigger className="h-10 w-full sm:h-9 sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -147,8 +153,14 @@ export function ConfigSearchBar({ onSearch, treeData, initialQuery = '' }: Confi
           </Select>
 
           {query && (
-            <Button variant="outline" size="icon" onClick={handleClear} className="h-10 w-10 sm:h-9 sm:w-9 flex-shrink-0" aria-label="Clear search">
-              <X className="w-4 h-4" />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleClear}
+              className="h-10 w-10 flex-shrink-0 sm:h-9 sm:w-9"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>

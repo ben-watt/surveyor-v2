@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useParams } from "next/navigation";
-import SectionForm from "../../../sections/form";
-import { sectionStore } from "@/app/home/clients/Database";
-import { PageHeader } from "@/components/page-header";
+import React from 'react';
+import { useParams } from 'next/navigation';
+import SectionForm from '../../../sections/form';
+import { sectionStore } from '@/app/home/clients/Database';
+import { PageHeader } from '@/components/page-header';
 
 export default function SectionEditClient() {
   const params = useParams<{ id: string }>();
@@ -21,7 +21,10 @@ export default function SectionEditClient() {
   }
 
   return (
-    <PageHeader title="Edit Section" subtitle="Edit an existing section used to group elements in a building survey report.">
+    <PageHeader
+      title="Edit Section"
+      subtitle="Edit an existing section used to group elements in a building survey report."
+    >
       <SectionForm initialData={section} />
     </PageHeader>
   );

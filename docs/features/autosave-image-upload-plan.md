@@ -7,6 +7,7 @@ This document outlines the implementation plan for adding autosave functionality
 ## Current System Analysis
 
 ### Image Upload Architecture
+
 - **SurveyImage Type**: `{ path: string, isArchived: boolean, hasMetadata: boolean }`
 - **Upload Process**: Images are uploaded asynchronously via `ImageUploadStore` (IndexedDB → AWS S3)
 - **Status Tracking**: `imageUploadStatusStore` tracks upload status globally
@@ -14,7 +15,9 @@ This document outlines the implementation plan for adding autosave functionality
 - **Current Form Integration**: `SaveButtonWithUploadStatus` waits for uploads to complete
 
 ### The Challenge
+
 Current autosave doesn't handle async image uploads. We need to:
+
 1. Save immediately when image uploads complete
 2. Handle partial saves during upload progress
 3. Provide appropriate status indicators
@@ -27,12 +30,14 @@ Current autosave doesn't handle async image uploads. We need to:
 **Purpose**: Extends `useAutoSaveForm` to handle image uploads intelligently.
 
 **Key Features**:
+
 - Tracks image upload status for specified paths
 - Triggers autosave when images finish uploading
 - Provides combined status (form save + image upload)
 - Handles partial saves with upload progress
 
 **API**:
+
 ```typescript
 interface AutoSaveFormWithImagesOptions extends AutoSaveFormOptions {
   imagePaths: string[];
@@ -49,7 +54,7 @@ function useAutoSaveFormWithImages<T>(
   saveFunction: (data: T, options?: { auto?: boolean }) => Promise<void>,
   watch: UseFormWatch<T>,
   getValues: UseFormGetValues<T>,
-  options: AutoSaveFormWithImagesOptions
+  options: AutoSaveFormWithImagesOptions,
 ): AutoSaveFormWithImagesResult;
 ```
 
@@ -58,12 +63,14 @@ function useAutoSaveFormWithImages<T>(
 **Purpose**: Shows both save status and upload progress.
 
 **Status Logic**:
+
 - `uploading`: Images are currently uploading
 - `saving`: Form is being saved
 - `saved`: Both form saved and images uploaded
 - `error`: Save or upload failed
 
 **API**:
+
 ```typescript
 interface LastSavedIndicatorWithUploadsProps extends LastSavedIndicatorProps {
   isUploading: boolean;
@@ -76,6 +83,7 @@ interface LastSavedIndicatorWithUploadsProps extends LastSavedIndicatorProps {
 **Purpose**: Triggers autosave when image uploads complete.
 
 **Implementation**:
+
 - Subscribes to `imageUploadStatusStore` changes
 - Monitors specific paths for upload completion
 - Triggers autosave when all monitored uploads complete
@@ -104,19 +112,22 @@ export function useAutoSaveFormWithImages<T extends FieldValues>(
   saveFunction: (data: T, options?: { auto?: boolean }) => Promise<void>,
   watch: UseFormWatch<T>,
   getValues: UseFormGetValues<T>,
-  options: AutoSaveFormWithImagesOptions
+  options: AutoSaveFormWithImagesOptions,
 ) {
   const { imagePaths, saveOnImageUpload = true, ...autoSaveOptions } = options;
   const { isUploading, isPathUploading } = useImageUploadStatus(imagePaths);
   const [previousUploadState, setPreviousUploadState] = useState<Record<string, boolean>>({});
-  
+
   const autoSave = useAutoSaveForm(saveFunction, watch, getValues, autoSaveOptions);
 
   // Track individual upload progress
-  const uploadProgress = imagePaths.reduce((acc, path) => {
-    acc[path] = isPathUploading(path);
-    return acc;
-  }, {} as Record<string, boolean>);
+  const uploadProgress = imagePaths.reduce(
+    (acc, path) => {
+      acc[path] = isPathUploading(path);
+      return acc;
+    },
+    {} as Record<string, boolean>,
+  );
 
   // Combined status logic
   const combinedStatus = isUploading ? 'uploading' : autoSave.saveStatus;
@@ -125,13 +136,16 @@ export function useAutoSaveFormWithImages<T extends FieldValues>(
   useEffect(() => {
     if (!saveOnImageUpload) return;
 
-    const currentUploadState = imagePaths.reduce((acc, path) => {
-      acc[path] = isPathUploading(path);
-      return acc;
-    }, {} as Record<string, boolean>);
+    const currentUploadState = imagePaths.reduce(
+      (acc, path) => {
+        acc[path] = isPathUploading(path);
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
 
     // Check if any uploads just completed
-    const hasCompletedUploads = imagePaths.some(path => {
+    const hasCompletedUploads = imagePaths.some((path) => {
       const wasUploading = previousUploadState[path];
       const isCurrentlyUploading = currentUploadState[path];
       return wasUploading && !isCurrentlyUploading;
@@ -150,7 +164,7 @@ export function useAutoSaveFormWithImages<T extends FieldValues>(
     ...autoSave,
     isUploading,
     uploadProgress,
-    combinedStatus
+    combinedStatus,
   };
 }
 ```
@@ -230,7 +244,7 @@ export function LastSavedIndicatorWithUploads({
   };
 
   const config = getStatusConfig();
-  
+
   return (
     <div className={cn(
       'flex items-center gap-2 text-sm',
@@ -238,17 +252,17 @@ export function LastSavedIndicatorWithUploads({
       className
     )}>
       {showIcon && config.icon && (
-        <config.icon 
+        <config.icon
           className={cn(
             'h-4 w-4',
             (status === 'saving' || isUploading) && 'animate-spin'
-          )} 
+          )}
         />
       )}
-      
+
       <div className="flex flex-col">
         <span>{config.text}</span>
-        
+
         {showTimestamp && !isUploading && status !== 'saving' && status !== 'error' && (
           <span className="text-xs opacity-75">
             {/* Same timestamp logic as original LastSavedIndicator */}
@@ -265,11 +279,13 @@ export function LastSavedIndicatorWithUploads({
 #### 2.1 Convert ReportDetailsForm
 
 **Key Changes**:
+
 - Replace `SaveButtonWithUploadStatus` with autosave
 - Add `LastSavedIndicatorWithUploads`
 - Configure image paths for monitoring
 
 **Example Implementation**:
+
 ```typescript
 // In ReportDetailsForm.tsx
 const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithImages(
@@ -299,6 +315,7 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 #### 2.2 Convert ElementForm
 
 **Key Changes**:
+
 - Handle dynamic image paths based on element ID
 - Integrate with existing component management
 - Replace `AddComponentButton` upload check
@@ -306,12 +323,14 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 #### 2.3 Convert InspectionForm
 
 **Key Changes**:
+
 - Handle single image upload path
 - Integrate with existing form structure
 
 #### 2.4 Convert BuildingSurveyForm
 
 **Key Changes**:
+
 - Handle multiple sections with different image paths
 - Integrate with existing action menu
 - Consider per-section autosave approach
@@ -319,6 +338,7 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 ### Phase 3: Testing and Validation
 
 #### 3.1 Test Scenarios
+
 1. **Basic Autosave**: Form changes trigger autosave without images
 2. **Image Upload Completion**: Images finish uploading, autosave triggers
 3. **Concurrent Operations**: User types while images upload
@@ -326,6 +346,7 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 5. **Multiple Image Paths**: Forms with multiple image upload areas
 
 #### 3.2 Status Indicator Testing
+
 1. **Upload Progress**: Shows uploading status during image upload
 2. **Save Progress**: Shows saving status during form save
 3. **Combined Status**: Correctly prioritizes upload vs save status
@@ -334,11 +355,13 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 ### Phase 4: Optimization and Polish
 
 #### 4.1 Performance Optimizations
+
 - Debounce image upload listeners
 - Optimize status indicator re-renders
 - Memory cleanup for upload listeners
 
 #### 4.2 User Experience Enhancements
+
 - Clear visual feedback during uploads
 - Appropriate loading states
 - Error recovery mechanisms
@@ -346,21 +369,25 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 ## Implementation Timeline
 
 ### Week 1: Core Infrastructure
+
 - [ ] Create `useAutoSaveFormWithImages` hook
 - [ ] Create `LastSavedIndicatorWithUploads` component
 - [ ] Test core functionality
 
 ### Week 2: Form Conversions
+
 - [ ] Convert ReportDetailsForm
 - [ ] Convert ElementForm
 - [ ] Convert InspectionForm
 
 ### Week 3: Complex Forms and Testing
+
 - [ ] Convert BuildingSurveyForm
 - [ ] Comprehensive testing
 - [ ] Bug fixes and optimizations
 
 ### Week 4: Polish and Documentation
+
 - [ ] Performance optimizations
 - [ ] User experience improvements
 - [ ] Documentation updates
@@ -368,12 +395,14 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 ## Success Criteria
 
 1. **Functional Requirements**:
+
    - Forms automatically save when images finish uploading
    - Status indicators accurately reflect upload and save progress
    - No data loss during upload/save operations
    - Proper error handling for failed uploads/saves
 
 2. **User Experience**:
+
    - Clear visual feedback during all operations
    - No unexpected delays or blocking operations
    - Intuitive status messaging
@@ -388,15 +417,19 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 ## Risks and Mitigation
 
 ### Risk: Upload Status Race Conditions
+
 **Mitigation**: Implement proper state management and debouncing
 
 ### Risk: Performance Impact
+
 **Mitigation**: Optimize listeners and status checks
 
 ### Risk: Complex Form State Management
+
 **Mitigation**: Incremental conversion and thorough testing
 
 ### Risk: User Confusion with Status Indicators
+
 **Mitigation**: Clear, consistent messaging and visual design
 
 ## Next Steps
@@ -410,4 +443,4 @@ const { saveStatus, isSaving, isUploading, lastSavedAt } = useAutoSaveFormWithIm
 
 ---
 
-This plan provides a comprehensive approach to implementing autosave functionality for forms with image uploads while maintaining the existing system's reliability and user experience. 
+This plan provides a comprehensive approach to implementing autosave functionality for forms with image uploads while maintaining the existing system's reliability and user experience.

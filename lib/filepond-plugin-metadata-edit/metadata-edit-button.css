@@ -26,23 +26,23 @@
   fill: currentColor;
 }
 
-.filepond--action-metadata-item[data-align*="top"] {
+.filepond--action-metadata-item[data-align*='top'] {
   top: 1em;
 }
 
-.filepond--action-metadata-item[data-align*="bottom"] {
+.filepond--action-metadata-item[data-align*='bottom'] {
   bottom: 1em;
 }
 
-.filepond--action-metadata-item[data-align*="center"] {
+.filepond--action-metadata-item[data-align*='center'] {
   left: calc(50% - (var(--action-metadata-item-width) * 0.5));
 }
 
-.filepond--action-metadata-item[data-align*="left"] {
+.filepond--action-metadata-item[data-align*='left'] {
   left: 1em;
 }
 
-.filepond--action-metadata-item[data-align*="right"] {
+.filepond--action-metadata-item[data-align*='right'] {
   right: 1em;
 }
 
@@ -67,13 +67,15 @@
 }
 
 /* Hide if the item is being processed/removed */
-.filepond--file-wrapper[data-file-status="processing"] .filepond--action-metadata-edit-item,
-.filepond--file-wrapper[data-file-status="processing-complete"] .filepond--action-metadata-edit-item,
-.filepond--file-wrapper[data-file-status="processing-error"] .filepond--action-metadata-edit-item,
-.filepond--file-wrapper[data-file-status="processing-revert-error"] .filepond--action-metadata-edit-item,
-.filepond--file-wrapper[data-file-status="fetching"] .filepond--action-metadata-edit-item,
-.filepond--file-wrapper[data-file-status="fetching-error"] .filepond--action-metadata-edit-item,
-.filepond--file-wrapper[data-file-status="removing"] .filepond--action-metadata-edit-item {
+.filepond--file-wrapper[data-file-status='processing'] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status='processing-complete']
+  .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status='processing-error'] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status='processing-revert-error']
+  .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status='fetching'] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status='fetching-error'] .filepond--action-metadata-edit-item,
+.filepond--file-wrapper[data-file-status='removing'] .filepond--action-metadata-edit-item {
   display: none;
 }
 
@@ -109,6 +111,5 @@
 }
 
 .filepond--action-metadata-item-alt:hover {
-  background-color: rgba(0,
-  0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.1);
 }

@@ -17,25 +17,43 @@ jest.mock('../../clients/Database', () => ({
     add: (...args: any[]) => mockAdd(...args),
     update: (...args: any[]) => mockUpdate(...args),
     get: jest.fn(),
-    useGet: (id: string) => [true, createdRef.value ? {
-      id,
-      name: 'Existing',
-      type: 'condition',
-      phrase: '',
-      phraseLevel2: '',
-      associatedComponentIds: [],
-      order: 0,
-      createdAt: '',
-      updatedAt: '',
-      syncStatus: 'synced',
-      tenantId: 't1'
-    } : undefined],
+    useGet: (id: string) => [
+      true,
+      createdRef.value
+        ? {
+            id,
+            name: 'Existing',
+            type: 'condition',
+            phrase: '',
+            phraseLevel2: '',
+            associatedComponentIds: [],
+            order: 0,
+            createdAt: '',
+            updatedAt: '',
+            syncStatus: 'synced',
+            tenantId: 't1',
+          }
+        : undefined,
+    ],
   },
   componentStore: {
-    useList: () => [true, [
-      { id: 'c1', name: 'Component 1', elementId: 'e1', materials: [], order: 0, createdAt: '', updatedAt: '', syncStatus: 'synced', tenantId: 't1' },
-    ]],
-  }
+    useList: () => [
+      true,
+      [
+        {
+          id: 'c1',
+          name: 'Component 1',
+          elementId: 'e1',
+          materials: [],
+          order: 0,
+          createdAt: '',
+          updatedAt: '',
+          syncStatus: 'synced',
+          tenantId: 't1',
+        },
+      ],
+    ],
+  },
 }));
 
 describe('Condition DataForm autosave on create', () => {
@@ -70,7 +88,7 @@ describe('Condition DataForm autosave on create', () => {
     await waitFor(() => expect(mockAdd).toHaveBeenCalled());
 
     // Wait 2 seconds for debounce
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     await userEvent.clear(phraseTextarea);
     await userEvent.type(phraseTextarea, 'Updated Phrase');
 
@@ -78,5 +96,3 @@ describe('Condition DataForm autosave on create', () => {
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
   });
 });
-
-

@@ -49,7 +49,7 @@ export const generateThumbnail = (file: File): Promise<string> => {
           reject(new Error('Unexpected thumbnail format'));
         }
       },
-      'base64'
+      'base64',
     );
   });
 };
@@ -101,7 +101,7 @@ export const fileToArrayBuffer = (file: File): Promise<ArrayBuffer> => {
 export const arrayBufferToFile = (
   buffer: ArrayBuffer,
   fileName: string,
-  mimeType: string
+  mimeType: string,
 ): File => {
   return new File([buffer], fileName, {
     type: mimeType,

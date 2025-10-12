@@ -1,21 +1,17 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import * as React from 'react';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { FieldValues, useController, UseControllerProps } from "react-hook-form";
-import { ErrorMessage } from "@hookform/error-message";
-import InputError from "../InputError";
-import { useEffect } from "react";
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { FieldValues, useController, UseControllerProps } from 'react-hook-form';
+import { ErrorMessage } from '@hookform/error-message';
+import InputError from '../InputError';
+import { useEffect } from 'react';
 
 interface InputDateProps {
   labelTitle: string;
@@ -42,22 +38,18 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
         <Popover open={open}>
           <PopoverTrigger asChild onClick={(ev) => setOpen(!open)}>
             <Button
-              variant={"outline"}
+              variant={'outline'}
               className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !field.value && "text-muted-foreground"
+                'w-[240px] justify-start text-left font-normal',
+                !field.value && 'text-muted-foreground',
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+              {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={new Date(field.value)}
-              onSelect={handleSelect}
-            />
+            <Calendar mode="single" selected={new Date(field.value)} onSelect={handleSelect} />
           </PopoverContent>
         </Popover>
       </div>
@@ -71,6 +63,6 @@ const InputDate = ({ labelTitle, controllerProps }: InputDateProps) => {
   );
 };
 
-InputDate.displayName = "InputDate";
+InputDate.displayName = 'InputDate';
 
 export default InputDate;

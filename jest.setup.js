@@ -38,7 +38,7 @@ beforeEach(() => {
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => {
+  value: jest.fn().mockImplementation((query) => {
     const q = String(query || '');
     // Treat desktop queries as matching to avoid mobile drawer (vaul) in tests
     const isDesktop = /min-width:\s*768px/.test(q);
@@ -69,9 +69,9 @@ beforeAll(() => {
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Warning: ReactDOM.render is no longer supported') ||
-       args[0].includes('Warning: `ReactDOMTestUtils.act` is deprecated') ||
-       args[0].includes('Warning: An update to') ||
-       args[0].includes('was not wrapped in act(...)'))
+        args[0].includes('Warning: `ReactDOMTestUtils.act` is deprecated') ||
+        args[0].includes('Warning: An update to') ||
+        args[0].includes('was not wrapped in act(...)'))
     ) {
       return;
     }
@@ -103,7 +103,7 @@ global.PointerEvent = class PointerEvent extends Event {
     this.pointerId = props?.pointerId || 0;
     this.pointerType = props?.pointerType || 'mouse';
   }
-}; 
+};
 
 // Polyfill pointer capture APIs required by components using pointer events (e.g., vaul)
 if (!Element.prototype.setPointerCapture) {
@@ -129,8 +129,8 @@ if (!Element.prototype.hasPointerCapture) {
 
 // Ensure requestAnimationFrame exists for components relying on it during tests
 if (!global.requestAnimationFrame) {
-  global.requestAnimationFrame = cb => setTimeout(cb, 0);
+  global.requestAnimationFrame = (cb) => setTimeout(cb, 0);
 }
 if (!global.cancelAnimationFrame) {
-  global.cancelAnimationFrame = id => clearTimeout(id);
+  global.cancelAnimationFrame = (id) => clearTimeout(id);
 }

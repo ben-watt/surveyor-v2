@@ -21,9 +21,9 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
       try {
         setIsLoading(true);
         const result = await documentStore.list();
-        
+
         if (result.ok) {
-          const docs = result.val
+          const docs = result.val;
           setDocuments(docs);
         } else {
           throw new Error(result.val.message);
@@ -41,11 +41,11 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return;
-    
+
     try {
       const result = await documentStore.remove(id);
       if (result.ok) {
-        setDocuments(docs => docs.filter(doc => doc.id !== id));
+        setDocuments((docs) => docs.filter((doc) => doc.id !== id));
         toast.success('Document deleted successfully');
       } else {
         throw new Error(result.val.message);
@@ -64,7 +64,9 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
     try {
       const result = await documentStore.rename(id, renameValue.trim());
       if (result.ok) {
-        setDocuments(docs => docs.map(doc => doc.id === id ? { ...doc, displayName: renameValue.trim() } : doc));
+        setDocuments((docs) =>
+          docs.map((doc) => (doc.id === id ? { ...doc, displayName: renameValue.trim() } : doc)),
+        );
         toast.success('Document renamed successfully');
         setRenamingId(null);
         setRenameValue('');
@@ -83,19 +85,19 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
 
   return (
     <div className="p-4">
-      <h2 className="text-lg font-semibold mb-4">Your Documents</h2>
+      <h2 className="mb-4 text-lg font-semibold">Your Documents</h2>
       <div className="space-y-2">
         {documents.length === 0 ? (
           <p className="text-gray-500">No documents found</p>
         ) : (
-          documents.map((doc) => (
+          documents.map((doc) =>
             !doc.id ? null : (
               <div
                 key={doc.id}
-                className={`flex items-center justify-between p-3 rounded-lg ${
+                className={`flex items-center justify-between rounded-lg p-3 ${
                   currentDocumentId === doc.id
-                    ? 'bg-blue-50 border border-blue-200'
-                    : 'hover:bg-gray-50 border border-gray-200'
+                    ? 'border border-blue-200 bg-blue-50'
+                    : 'border border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -104,14 +106,14 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
                     <input
                       aria-label="Rename document"
                       role="textbox"
-                      className="border rounded px-2 py-1 text-sm"
+                      className="rounded border px-2 py-1 text-sm"
                       value={renameValue}
-                      onChange={e => setRenameValue(e.target.value)}
+                      onChange={(e) => setRenameValue(e.target.value)}
                       autoFocus
                       maxLength={100}
                       style={{ width: 140 }}
                       onBlur={() => setRenamingId(null)}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleRename(doc.id as string);
                         } else if (e.key === 'Escape') {
@@ -122,7 +124,7 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
                     />
                   ) : (
                     <span
-                      className="text-sm cursor-pointer hover:underline"
+                      className="cursor-pointer text-sm hover:underline"
                       tabIndex={0}
                       role="button"
                       aria-label="Edit document name"
@@ -130,7 +132,7 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
                         setRenamingId(doc.id as string);
                         setRenameValue(doc.displayName ?? '');
                       }}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           setRenamingId(doc.id as string);
                           setRenameValue(doc.displayName ?? '');
@@ -145,11 +147,7 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
                   <span className="text-xs text-gray-500">
                     {doc.lastModified ? formatShortDate(doc.lastModified) : ''}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onOpen?.(doc.id as string)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => onOpen?.(doc.id as string)}>
                     Open
                   </Button>
                   <Button
@@ -162,10 +160,10 @@ export function DocumentList({ currentDocumentId, onOpen }: DocumentListProps) {
                   </Button>
                 </div>
               </div>
-            )
-          ))
+            ),
+          )
         )}
       </div>
     </div>
   );
-} 
+}

@@ -11,10 +11,10 @@ type ExportItem = {
   fileName?: string;
   isArchived?: boolean;
   // Optional client-provided destination override
-  destPath?: string;     // full path inside zip (e.g., "Exterior / Roof/a.jpg")
-  destFolder?: string;   // folder inside zip (e.g., "Exterior / Roof")
-  dataUrl?: string;      // optional data URL thumbnail fallback
-  fullUrl?: string;      // optional pre-signed full URL from client
+  destPath?: string; // full path inside zip (e.g., "Exterior / Roof/a.jpg")
+  destFolder?: string; // folder inside zip (e.g., "Exterior / Roof")
+  dataUrl?: string; // optional data URL thumbnail fallback
+  fullUrl?: string; // optional pre-signed full URL from client
 };
 
 function sanitizeName(name: string): string {
@@ -133,7 +133,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       if (it?.isArchived && !includeArchived) return false;
       const raw = String(it.imagePath || '');
       const normalized = raw.replace(/^\/+/, '');
-      const okPrefix = normalized.startsWith(`report-images/${surveyId}/`) || normalized.startsWith(`surveys/${surveyId}/`);
+      const okPrefix =
+        normalized.startsWith(`report-images/${surveyId}/`) ||
+        normalized.startsWith(`surveys/${surveyId}/`);
       return okPrefix;
     });
 
@@ -182,7 +184,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
               const parsed = dataUrlToBuffer(item.dataUrl);
               if (parsed) {
                 const baseName = sanitizeName(item.fileName || basename(item.imagePath));
-                const name = destinationPathFor({ ...item, fileName: baseName.endsWith(`.${parsed.ext}`) ? baseName : `${baseName}.${parsed.ext}` }, surveyId);
+                const name = destinationPathFor(
+                  {
+                    ...item,
+                    fileName: baseName.endsWith(`.${parsed.ext}`)
+                      ? baseName
+                      : `${baseName}.${parsed.ext}`,
+                  },
+                  surveyId,
+                );
                 archive.append(parsed.buffer, { name });
                 appended = true;
               }

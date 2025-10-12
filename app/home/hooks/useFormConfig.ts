@@ -50,8 +50,8 @@ export function createAutosaveConfig(overrides: Partial<AutosaveConfig> = {}): A
  * Helper to create autosave configuration with images
  */
 export function createAutosaveConfigWithImages(
-  imagePaths: string[], 
-  overrides: Partial<AutosaveConfig> = {}
+  imagePaths: string[],
+  overrides: Partial<AutosaveConfig> = {},
 ): AutosaveConfigWithImages {
   return {
     ...DEFAULT_AUTOSAVE_CONFIG,

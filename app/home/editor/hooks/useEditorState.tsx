@@ -1,25 +1,28 @@
-import React from "react";
-import { BuildingSurveyFormData, formatAddress } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
-import { surveyStore } from "@/app/home/clients/Database";
-import { mapFormDataToHtml } from "../utils/formData";
-import { Footer, Header, TitlePage } from "../components/HeaderFooter";
-import { renderToStaticMarkup } from "react-dom/server";
-import { Editor } from "@tiptap/react";
-import { documentStore } from "../../clients/DocumentStore";
+import React from 'react';
+import {
+  BuildingSurveyFormData,
+  formatAddress,
+} from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import { surveyStore } from '@/app/home/clients/Database';
+import { mapFormDataToHtml } from '../utils/formData';
+import { Footer, Header, TitlePage } from '../components/HeaderFooter';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Editor } from '@tiptap/react';
+import { documentStore } from '../../clients/DocumentStore';
 
-type TemplateId = "building-survey";
+type TemplateId = 'building-survey';
 
 export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) => {
-  const [editorContent, setEditorContent] = React.useState<string>("");
+  const [editorContent, setEditorContent] = React.useState<string>('');
   const [editorData, setEditorData] = React.useState<BuildingSurveyFormData>();
-  const [previewContent, setPreviewContent] = React.useState<string>("");
+  const [previewContent, setPreviewContent] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState(true);
-  const [header, setHeader] = React.useState<string>("");
-  const [footer, setFooter] = React.useState<string>("");
-  const [titlePage, setTitlePage] = React.useState<string>("");
+  const [header, setHeader] = React.useState<string>('');
+  const [footer, setFooter] = React.useState<string>('');
+  const [titlePage, setTitlePage] = React.useState<string>('');
 
-  if(templateId !== "building-survey") {
-    throw new Error("Invalid template id");
+  if (templateId !== 'building-survey') {
+    throw new Error('Invalid template id');
   }
 
   // Load initial data
@@ -32,7 +35,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
           setEditorData(document.content);
         }
       } catch (error) {
-        console.error("Failed to fetch survey:", error);
+        console.error('Failed to fetch survey:', error);
         setIsLoading(false);
       }
     };
@@ -46,7 +49,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
       const newHeader = renderToStaticMarkup(<Header editorData={editorData} />);
       const newFooter = renderToStaticMarkup(<Footer editorData={editorData} />);
       const newTitlePage = renderToStaticMarkup(<TitlePage editorData={editorData} />);
-      
+
       setHeader(newHeader);
       setFooter(newFooter);
       setTitlePage(newTitlePage);
@@ -63,7 +66,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
           setPreviewContent(titlePage + header + html + footer);
           setIsLoading(false);
         } catch (error) {
-          console.error("[useEditorState] Failed to map form data to HTML", error);
+          console.error('[useEditorState] Failed to map form data to HTML', error);
           setIsLoading(false);
         }
       }
@@ -72,11 +75,14 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
     updateContent();
   }, [editorData, header, footer, titlePage]);
 
-  const addTitleHeaderFooter = React.useCallback(({editor}: {editor: Editor}) => {
-    const currentEditorHtml = editor.getHTML();
-    setEditorContent(currentEditorHtml);
-    setPreviewContent(titlePage + header + currentEditorHtml + footer);
-  }, [titlePage, header, footer]);
+  const addTitleHeaderFooter = React.useCallback(
+    ({ editor }: { editor: Editor }) => {
+      const currentEditorHtml = editor.getHTML();
+      setEditorContent(currentEditorHtml);
+      setPreviewContent(titlePage + header + currentEditorHtml + footer);
+    },
+    [titlePage, header, footer],
+  );
 
   const getDocName = async () => {
     const document = await surveyStore.get(surveyId);
@@ -84,7 +90,7 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
       return formatAddress(document.content.reportDetails.address);
     }
     return surveyId;
-  }
+  };
 
   return {
     editorContent,
@@ -103,7 +109,17 @@ export const useDocumentTemplate = (surveyId: string, templateId: TemplateId) =>
 async function getTemplateInitialContent(surveyId: string, templateId: TemplateId) {
   if (templateId !== 'building-survey') throw new Error('Invalid template id');
   const document = await surveyStore.get(surveyId);
-  if (!document) return { editorContent: '', previewContent: '', header: '', footer: '', titlePage: '', addTitleHeaderFooter: undefined, getDocName: async () => surveyId, isLoading: false };
+  if (!document)
+    return {
+      editorContent: '',
+      previewContent: '',
+      header: '',
+      footer: '',
+      titlePage: '',
+      addTitleHeaderFooter: undefined,
+      getDocName: async () => surveyId,
+      isLoading: false,
+    };
   const editorData = document.content;
   const header = renderToStaticMarkup(<Header editorData={editorData} />);
   const footer = renderToStaticMarkup(<Footer editorData={editorData} />);
@@ -151,7 +167,10 @@ export function useEditorState(id: string, templateId?: string) {
             setEditorContent(contentResult.val);
             // If the document has a templateId, use the template logic
             if (result.val.templateId) {
-              const template = await getTemplateInitialContent(id, result.val.templateId as TemplateId);
+              const template = await getTemplateInitialContent(
+                id,
+                result.val.templateId as TemplateId,
+              );
               setPreviewContent(template.previewContent);
               setHeader(template.header);
               setFooter(template.footer);
@@ -159,7 +178,9 @@ export function useEditorState(id: string, templateId?: string) {
               setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
                 const currentEditorHtml = editor.getHTML();
                 setEditorContent(currentEditorHtml);
-                setPreviewContent(template.titlePage + template.header + currentEditorHtml + template.footer);
+                setPreviewContent(
+                  template.titlePage + template.header + currentEditorHtml + template.footer,
+                );
               });
               setGetDocName(() => template.getDocName);
             } else {
@@ -192,7 +213,9 @@ export function useEditorState(id: string, templateId?: string) {
           setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
             const currentEditorHtml = editor.getHTML();
             setEditorContent(currentEditorHtml);
-            setPreviewContent(template.titlePage + template.header + currentEditorHtml + template.footer);
+            setPreviewContent(
+              template.titlePage + template.header + currentEditorHtml + template.footer,
+            );
           });
           setGetDocName(() => template.getDocName);
         }
@@ -215,7 +238,9 @@ export function useEditorState(id: string, templateId?: string) {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id, templateId]);
 
   return {

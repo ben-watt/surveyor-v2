@@ -28,7 +28,7 @@ const mockPhraseStore = Database.phraseStore as jest.Mocked<typeof Database.phra
 describe('useHierarchicalData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Reset store mocks to default state
     mockSectionStore.useList.mockReturnValue([true, mockSections]);
     mockElementStore.useList.mockReturnValue([true, mockElements]);
@@ -39,37 +39,43 @@ describe('useHierarchicalData', () => {
   describe('Data Structure Tests', () => {
     it('should build correct hierarchy from flat data', async () => {
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
       expect(result.current.isLoading).toBe(false);
       expect(result.current.treeData).toHaveLength(3); // 3 sections
-      
+
       // Check section structure
-      const structureSection = result.current.treeData.find(node => node.id === 'section-1');
+      const structureSection = result.current.treeData.find((node) => node.id === 'section-1');
       expect(structureSection).toBeDefined();
       expect(structureSection?.name).toBe('Structure');
       expect(structureSection?.type).toBe('section');
       expect(structureSection?.children).toHaveLength(2); // Foundation and Walls elements
-      
+
       // Check element structure
-      const foundationElement = structureSection?.children.find(child => child.id === 'element-1');
+      const foundationElement = structureSection?.children.find(
+        (child) => child.id === 'element-1',
+      );
       expect(foundationElement).toBeDefined();
       expect(foundationElement?.name).toBe('Foundation');
       expect(foundationElement?.type).toBe('element');
       expect(foundationElement?.children).toHaveLength(1); // 1 component only
-      
+
       // Check component structure
-      const concreteComponent = foundationElement?.children.find(child => child.id === 'component-1');
+      const concreteComponent = foundationElement?.children.find(
+        (child) => child.id === 'component-1',
+      );
       expect(concreteComponent).toBeDefined();
       expect(concreteComponent?.name).toBe('Concrete Footing');
       expect(concreteComponent?.type).toBe('component');
       expect(concreteComponent?.children).toHaveLength(1); // 1 condition
-      
+
       // Check condition structure
-      const crackCondition = concreteComponent?.children.find(child => child.id === 'condition-condition-1');
+      const crackCondition = concreteComponent?.children.find(
+        (child) => child.id === 'condition-condition-1',
+      );
       expect(crackCondition).toBeDefined();
       expect(crackCondition?.name).toBe('Crack in Foundation');
       expect(crackCondition?.type).toBe('condition');
@@ -78,7 +84,7 @@ describe('useHierarchicalData', () => {
 
     it('should sort sections and elements by order', async () => {
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -96,7 +102,7 @@ describe('useHierarchicalData', () => {
 
     it('should associate conditions with correct components', async () => {
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -104,7 +110,9 @@ describe('useHierarchicalData', () => {
       // Find component-level condition
       const structureSection = result.current.treeData[0];
       const foundationElement = structureSection.children[0];
-      const concreteComponent = foundationElement.children.find(child => child.type === 'component');
+      const concreteComponent = foundationElement.children.find(
+        (child) => child.type === 'component',
+      );
       const componentCondition = concreteComponent?.children[0];
 
       expect(componentCondition?.type).toBe('condition');
@@ -114,7 +122,9 @@ describe('useHierarchicalData', () => {
 
       // Verify that conditions without component associations are not displayed
       // (element-level conditions are no longer supported)
-      const elementLevelConditions = foundationElement.children.filter(child => child.type === 'condition');
+      const elementLevelConditions = foundationElement.children.filter(
+        (child) => child.type === 'condition',
+      );
       expect(elementLevelConditions).toHaveLength(0);
     });
 
@@ -125,7 +135,7 @@ describe('useHierarchicalData', () => {
       mockPhraseStore.useList.mockReturnValue([true, []]);
 
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -142,7 +152,7 @@ describe('useHierarchicalData', () => {
           sectionId: 'non-existent-section-id',
         },
       ];
-      
+
       const orphanedComponents = [
         {
           ...mockComponents[0],
@@ -154,7 +164,7 @@ describe('useHierarchicalData', () => {
       mockComponentStore.useList.mockReturnValue([true, orphanedComponents]);
 
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -177,7 +187,7 @@ describe('useHierarchicalData', () => {
 
     it('should return data when all stores are hydrated', async () => {
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -201,7 +211,7 @@ describe('useHierarchicalData', () => {
   describe('Data Integrity Tests', () => {
     it('should maintain referential integrity in tree structure', async () => {
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -215,7 +225,9 @@ describe('useHierarchicalData', () => {
         expect((foundationElement.data as any).sectionId).toBe('section-1');
       }
 
-      const concreteComponent = foundationElement.children.find(child => child.type === 'component');
+      const concreteComponent = foundationElement.children.find(
+        (child) => child.type === 'component',
+      );
       if (concreteComponent?.type === 'component') {
         expect((concreteComponent.data as any).elementId).toBe('element-1');
       }
@@ -235,7 +247,7 @@ describe('useHierarchicalData', () => {
       mockElementStore.useList.mockReturnValue([true, circularElements]);
 
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -247,7 +259,7 @@ describe('useHierarchicalData', () => {
 
     it('should preserve all entity metadata', async () => {
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -258,7 +270,9 @@ describe('useHierarchicalData', () => {
       const foundationElement = structureSection.children[0];
       expect(foundationElement.data).toEqual(mockElements[0]);
 
-      const concreteComponent = foundationElement.children.find(child => child.type === 'component');
+      const concreteComponent = foundationElement.children.find(
+        (child) => child.type === 'component',
+      );
       expect(concreteComponent?.data).toEqual(mockComponents[0]);
 
       const condition = concreteComponent?.children[0];
@@ -288,9 +302,9 @@ describe('useHierarchicalData', () => {
       mockElementStore.useList.mockReturnValue([true, largeElements]);
 
       const startTime = performance.now();
-      
+
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -304,7 +318,7 @@ describe('useHierarchicalData', () => {
 
     it('should memoize results to avoid unnecessary recalculations', async () => {
       const { result, rerender } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -338,7 +352,7 @@ describe('useHierarchicalData', () => {
       mockSectionStore.useList.mockReturnValue([true, malformedSections as any]);
 
       const { result } = renderHook(() => useHierarchicalData());
-      
+
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });

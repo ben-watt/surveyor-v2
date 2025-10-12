@@ -25,7 +25,7 @@ export function useAutoSaveForm<T extends FieldValues>(
   watch: UseFormWatch<T>,
   getValues: UseFormGetValues<T>,
   trigger?: UseFormTrigger<T>,
-  options: AutoSaveFormOptions = {}
+  options: AutoSaveFormOptions = {},
 ): AutoSaveResult<T> & { skipNextChange: () => void } {
   const {
     watchChanges = true,
@@ -63,7 +63,7 @@ export function useAutoSaveForm<T extends FieldValues>(
         type,
         hasData: !!data,
         skipFocusBlur,
-        shouldSkip: skipFocusBlur && (type === 'focus' || type === 'blur')
+        shouldSkip: skipFocusBlur && (type === 'focus' || type === 'blur'),
       });
 
       // Skip if no data
@@ -71,13 +71,13 @@ export function useAutoSaveForm<T extends FieldValues>(
         console.log('[useAutoSaveForm] No data, skipping autosave');
         return;
       }
-      
+
       // Skip if this is just a focus/blur event without value change
       if (skipFocusBlur && (type === 'focus' || type === 'blur')) {
         console.log('[useAutoSaveForm] Skipping focus/blur event');
         return;
       }
-      
+
       // Check if values have actually changed (compare JSON snapshots)
       const currentValues = data as T;
       const currentValuesString = JSON.stringify(currentValues);
@@ -86,7 +86,13 @@ export function useAutoSaveForm<T extends FieldValues>(
       // Check if we should skip this change (e.g., after a reset)
       const now = Date.now();
       if (skipUntilRef.current > now) {
-        console.log('[useAutoSaveForm] Skipping change after reset (skip until:', skipUntilRef.current, 'now:', now, ')');
+        console.log(
+          '[useAutoSaveForm] Skipping change after reset (skip until:',
+          skipUntilRef.current,
+          'now:',
+          now,
+          ')',
+        );
         previousValuesRef.current = currentValuesString;
         // Still mark as initialized if we haven't already
         if (!isInitializedRef.current && currentValuesString) {
@@ -106,7 +112,7 @@ export function useAutoSaveForm<T extends FieldValues>(
       console.log('[useAutoSaveForm] Comparing values:', {
         currentValues,
         previousValuesString,
-        hasChanged: !previousValuesString || currentValuesString !== previousValuesString
+        hasChanged: !previousValuesString || currentValuesString !== previousValuesString,
       });
 
       if (previousValuesString && currentValuesString === previousValuesString) {
@@ -120,8 +126,13 @@ export function useAutoSaveForm<T extends FieldValues>(
       // If this change caused the form to become valid (and it wasn't before), save immediately
       if (validateBeforeSave && trigger) {
         const nowValid = await trigger();
-        console.log('[useAutoSaveForm] Immediate validation result:', nowValid, 'prev:', lastValidationWasValidRef.current);
-          if (nowValid && !lastValidationWasValidRef.current) {
+        console.log(
+          '[useAutoSaveForm] Immediate validation result:',
+          nowValid,
+          'prev:',
+          lastValidationWasValidRef.current,
+        );
+        if (nowValid && !lastValidationWasValidRef.current) {
           if (saveImmediatelyOnBecomeValid) {
             // Clear any pending timer and flush save now
             if (debounceTimerRef.current) {
@@ -135,39 +146,41 @@ export function useAutoSaveForm<T extends FieldValues>(
         }
         lastValidationWasValidRef.current = nowValid;
       }
-      
+
       // Clear existing timer
       if (debounceTimerRef.current) {
         console.log('[useAutoSaveForm] Clearing existing timer');
         clearTimeout(debounceTimerRef.current);
       }
-      
+
       // Debounce the autosave trigger
       console.log(`[useAutoSaveForm] Setting autosave timer for ${watchDelay}ms`);
       debounceTimerRef.current = setTimeout(async () => {
         console.log('[useAutoSaveForm] Triggering autosave with data:', currentValues);
-        
+
         // Validate before saving if validation is enabled and trigger is available
         if (validateBeforeSave && trigger) {
           console.log('[useAutoSaveForm] Validating form before autosave');
           const isValid = await trigger();
           console.log('[useAutoSaveForm] Form validation result:', isValid);
-          
+
           if (!isValid) {
-            console.log('[useAutoSaveForm] Form is invalid, scheduling single retry after short delay');
+            console.log(
+              '[useAutoSaveForm] Form is invalid, scheduling single retry after short delay',
+            );
             // Edge case: some controlled components update validation state slightly after change
             // Retry once shortly after to catch transitions from invalid -> valid (e.g., final dropdown selection)
             setTimeout(async () => {
               const recheck = await trigger();
               console.log('[useAutoSaveForm] Re-validation result:', recheck);
-                if (recheck) {
-                  triggerAutoSaveRef.current(currentValues);
-                }
+              if (recheck) {
+                triggerAutoSaveRef.current(currentValues);
+              }
             }, 150);
             return;
           }
         }
-        
+
         triggerAutoSaveRef.current(currentValues);
       }, watchDelay);
     });
@@ -179,7 +192,15 @@ export function useAutoSaveForm<T extends FieldValues>(
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [watch, watchChanges, watchDelay, skipFocusBlur, validateBeforeSave, saveImmediatelyOnBecomeValid, trigger]);
+  }, [
+    watch,
+    watchChanges,
+    watchDelay,
+    skipFocusBlur,
+    validateBeforeSave,
+    saveImmediatelyOnBecomeValid,
+    trigger,
+  ]);
 
   // Reset initialization flag when watchChanges changes
   useEffect(() => {
@@ -190,23 +211,26 @@ export function useAutoSaveForm<T extends FieldValues>(
   }, [watchChanges]);
 
   // Enhanced save function that gets current form values and optionally validates
-  const save = useCallback(async (data?: T, options?: { auto?: boolean }) => {
-    const currentData = data || getValues();
-    
-    // Validate before saving if validation is enabled and trigger is available
-    if (validateBeforeSave && trigger && !options?.auto) {
-      console.log('[useAutoSaveForm] Validating form before manual save');
-      const isValid = await trigger();
-      console.log('[useAutoSaveForm] Form validation result:', isValid);
-      
-      if (!isValid) {
-        console.log('[useAutoSaveForm] Form is invalid, cannot save');
-        throw new Error('Form validation failed');
+  const save = useCallback(
+    async (data?: T, options?: { auto?: boolean }) => {
+      const currentData = data || getValues();
+
+      // Validate before saving if validation is enabled and trigger is available
+      if (validateBeforeSave && trigger && !options?.auto) {
+        console.log('[useAutoSaveForm] Validating form before manual save');
+        const isValid = await trigger();
+        console.log('[useAutoSaveForm] Form validation result:', isValid);
+
+        if (!isValid) {
+          console.log('[useAutoSaveForm] Form is invalid, cannot save');
+          throw new Error('Form validation failed');
+        }
       }
-    }
-    
-    return autoSave.save(currentData, options);
-  }, [autoSave, getValues, validateBeforeSave, trigger]);
+
+      return autoSave.save(currentData, options);
+    },
+    [autoSave, getValues, validateBeforeSave, trigger],
+  );
 
   // Function to skip changes for the next 500ms (useful before reset)
   const skipNextChange = useCallback(() => {
@@ -216,7 +240,7 @@ export function useAutoSaveForm<T extends FieldValues>(
   return {
     ...autoSave,
     save,
-    skipNextChange
+    skipNextChange,
   };
 }
 
@@ -229,7 +253,7 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
   watch: UseFormWatch<T>,
   getValues: UseFormGetValues<T>,
   trigger?: UseFormTrigger<T>,
-  options: AutoSaveFormOptions = {}
+  options: AutoSaveFormOptions = {},
 ): AutoSaveResult<T> & { skipNextChange: () => void } {
   const {
     watchChanges = true,
@@ -255,8 +279,8 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
         extracted[key] = field.value;
       } else if (Array.isArray(field)) {
         // Handle arrays (like checklist items)
-        extracted[key] = field.map(item => 
-          item && typeof item === 'object' && 'value' in item ? item.value : item
+        extracted[key] = field.map((item) =>
+          item && typeof item === 'object' && 'value' in item ? item.value : item,
         );
       } else {
         extracted[key] = field;
@@ -277,7 +301,7 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
         type,
         hasData: !!data,
         skipFocusBlur,
-        shouldSkip: skipFocusBlur && (type === 'focus' || type === 'blur')
+        shouldSkip: skipFocusBlur && (type === 'focus' || type === 'blur'),
       });
 
       // Skip if no data
@@ -285,21 +309,27 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
         console.log('[useAutoSaveSurveyForm] No data, skipping autosave');
         return;
       }
-      
+
       // Skip if this is just a focus/blur event without value change
       if (skipFocusBlur && (type === 'focus' || type === 'blur')) {
         console.log('[useAutoSaveSurveyForm] Skipping focus/blur event');
         return;
       }
-      
+
       // Extract values from nested structure for comparison
       const currentValues = extractValues(data as T);
       const currentValuesString = JSON.stringify(currentValues);
-      
+
       // Check if we should skip this change (e.g., after a reset)
       const now = Date.now();
       if (skipUntilRef.current > now) {
-        console.log('[useAutoSaveSurveyForm] Skipping change after reset (skip until:', skipUntilRef.current, 'now:', now, ')');
+        console.log(
+          '[useAutoSaveSurveyForm] Skipping change after reset (skip until:',
+          skipUntilRef.current,
+          'now:',
+          now,
+          ')',
+        );
         previousValuesRef.current = currentValuesString;
         // Still mark as initialized if we haven't already
         if (!isInitializedRef.current && currentValuesString) {
@@ -307,7 +337,7 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
         }
         return;
       }
-      
+
       // Initialize on first real data if not already initialized
       if (!isInitializedRef.current && currentValuesString) {
         console.log('[useAutoSaveSurveyForm] Initializing baseline values');
@@ -315,45 +345,45 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
         isInitializedRef.current = true;
         return; // Skip autosave on initialization
       }
-      
+
       console.log('[useAutoSaveSurveyForm] Comparing values:', {
         currentValues,
         currentValuesString,
         previousValuesString: previousValuesRef.current,
-        hasChanged: !previousValuesRef.current || currentValuesString !== previousValuesRef.current
+        hasChanged: !previousValuesRef.current || currentValuesString !== previousValuesRef.current,
       });
-      
+
       if (previousValuesRef.current && currentValuesString === previousValuesRef.current) {
         console.log('[useAutoSaveSurveyForm] No actual change, skipping autosave');
         return; // No actual change, skip autosave
       }
-      
+
       // Update previous values
       previousValuesRef.current = currentValuesString;
-      
+
       // Clear existing timer
       if (debounceTimerRef.current) {
         console.log('[useAutoSaveSurveyForm] Clearing existing timer');
         clearTimeout(debounceTimerRef.current);
       }
-      
+
       // Debounce the autosave trigger
       console.log(`[useAutoSaveSurveyForm] Setting autosave timer for ${watchDelay}ms`);
       debounceTimerRef.current = setTimeout(async () => {
         console.log('[useAutoSaveSurveyForm] Triggering autosave with data:', data);
-        
+
         // Validate before saving if validation is enabled and trigger is available
         if (validateBeforeSave && trigger) {
           console.log('[useAutoSaveSurveyForm] Validating form before autosave');
           const isValid = await trigger();
           console.log('[useAutoSaveSurveyForm] Form validation result:', isValid);
-          
+
           if (!isValid) {
             console.log('[useAutoSaveSurveyForm] Form is invalid, skipping autosave');
             return;
           }
         }
-        
+
         autoSave.triggerAutoSave(data as T);
       }, watchDelay);
     });
@@ -365,7 +395,16 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [watch, watchChanges, watchDelay, autoSave, skipFocusBlur, validateBeforeSave, trigger, extractValues]);
+  }, [
+    watch,
+    watchChanges,
+    watchDelay,
+    autoSave,
+    skipFocusBlur,
+    validateBeforeSave,
+    trigger,
+    extractValues,
+  ]);
 
   // Reset initialization flag when watchChanges changes
   useEffect(() => {
@@ -376,23 +415,26 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
   }, [watchChanges]);
 
   // Enhanced save function that gets current form values and optionally validates
-  const save = useCallback(async (data?: T, options?: { auto?: boolean }) => {
-    const currentData = data || getValues();
-    
-    // Validate before saving if validation is enabled and trigger is available
-    if (validateBeforeSave && trigger && !options?.auto) {
-      console.log('[useAutoSaveSurveyForm] Validating form before manual save');
-      const isValid = await trigger();
-      console.log('[useAutoSaveSurveyForm] Form validation result:', isValid);
-      
-      if (!isValid) {
-        console.log('[useAutoSaveSurveyForm] Form is invalid, cannot save');
-        throw new Error('Form validation failed');
+  const save = useCallback(
+    async (data?: T, options?: { auto?: boolean }) => {
+      const currentData = data || getValues();
+
+      // Validate before saving if validation is enabled and trigger is available
+      if (validateBeforeSave && trigger && !options?.auto) {
+        console.log('[useAutoSaveSurveyForm] Validating form before manual save');
+        const isValid = await trigger();
+        console.log('[useAutoSaveSurveyForm] Form validation result:', isValid);
+
+        if (!isValid) {
+          console.log('[useAutoSaveSurveyForm] Form is invalid, cannot save');
+          throw new Error('Form validation failed');
+        }
       }
-    }
-    
-    return autoSave.save(currentData, options);
-  }, [autoSave, getValues, validateBeforeSave, trigger]);
+
+      return autoSave.save(currentData, options);
+    },
+    [autoSave, getValues, validateBeforeSave, trigger],
+  );
 
   // Function to skip changes for the next 500ms (useful before reset)
   const skipNextChange = useCallback(() => {
@@ -402,6 +444,6 @@ export function useAutoSaveSurveyForm<T extends FieldValues>(
   return {
     ...autoSave,
     save,
-    skipNextChange
+    skipNextChange,
   };
-} 
+}

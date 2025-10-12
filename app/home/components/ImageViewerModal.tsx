@@ -28,7 +28,7 @@ export function ImageViewerModal({
   onClose,
   photos,
   initialIndex,
-  sectionName
+  sectionName,
 }: ImageViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
@@ -127,32 +127,30 @@ export function ImageViewerModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-7xl w-full h-[90vh] p-0 bg-black/95 border-gray-800">
+      <DialogContent className="h-[90vh] w-full max-w-7xl border-gray-800 bg-black/95 p-0">
         {/* Visually hidden title for accessibility */}
-        <DialogTitle className="sr-only">
-          Image Viewer - {sectionName}
-        </DialogTitle>
+        <DialogTitle className="sr-only">Image Viewer - {sectionName}</DialogTitle>
 
         {/* Close button */}
-        <DialogClose className="absolute right-4 top-4 z-10 rounded-sm opacity-70 text-white hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black">
+        <DialogClose className="absolute right-4 top-4 z-10 rounded-sm text-white opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black">
           <X className="h-6 w-6" />
           <span className="sr-only">Close</span>
         </DialogClose>
 
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative flex h-full w-full items-center justify-center">
           {/* Navigation arrows */}
           {photos.length > 1 && (
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70"
                 aria-label="Next image"
               >
                 <ChevronRight className="h-6 w-6" />
@@ -161,32 +159,32 @@ export function ImageViewerModal({
           )}
 
           {/* Image display */}
-          <div className="relative w-full h-full flex items-center justify-center p-8">
+          <div className="relative flex h-full w-full items-center justify-center p-8">
             {isLoadingFullImage && (
               <div className="flex items-center justify-center">
-                <Loader2 className="h-8 w-8 text-white animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
                 <span className="ml-2 text-white">Loading full image...</span>
               </div>
             )}
 
             {imageError && (
               <div className="flex flex-col items-center justify-center text-center">
-                <div className="text-white mb-4">
-                  <p className="text-lg mb-2">Failed to load full resolution image</p>
+                <div className="mb-4 text-white">
+                  <p className="mb-2 text-lg">Failed to load full resolution image</p>
                   <p className="text-sm text-gray-400">Showing thumbnail instead</p>
                 </div>
                 {currentPhoto.url && (
                   <img
                     src={currentPhoto.url}
                     alt={currentPhoto.fileName || 'Image'}
-                    className="max-w-full max-h-full object-contain"
+                    className="max-h-full max-w-full object-contain"
                   />
                 )}
               </div>
             )}
 
             {fullImageUrl && !isLoadingFullImage && !imageError && (
-              <div className="relative w-full h-full">
+              <div className="relative h-full w-full">
                 <Image
                   src={fullImageUrl}
                   alt={currentPhoto.fileName || 'Full resolution image'}
@@ -204,16 +202,14 @@ export function ImageViewerModal({
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold">
-                  {currentPhoto.fileName || 'Untitled'}
-                </h3>
+                <h3 className="text-lg font-semibold">{currentPhoto.fileName || 'Untitled'}</h3>
                 <p className="text-sm text-gray-300">
                   {sectionName} • {currentIndex + 1} of {photos.length}
                 </p>
               </div>
 
               {currentPhoto.isArchived && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-gray-800/80 rounded-full">
+                <div className="flex items-center gap-2 rounded-full bg-gray-800/80 px-3 py-1">
                   <Archive className="h-4 w-4" />
                   <span className="text-sm">Archived</span>
                 </div>
@@ -223,7 +219,7 @@ export function ImageViewerModal({
 
           {/* Image counter for multiple images */}
           {photos.length > 1 && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+            <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-sm text-white">
               {currentIndex + 1} / {photos.length}
             </div>
           )}

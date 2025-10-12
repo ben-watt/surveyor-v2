@@ -5,5 +5,3 @@ export function getAutoSaveTimings(defaultDelayMs: number = 300) {
     watchDelay: isTest ? 0 : 300,
   };
 }
-
-

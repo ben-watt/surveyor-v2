@@ -7,14 +7,24 @@ import userEvent from '@testing-library/user-event';
 const mockData = [
   { value: '1', label: 'Option 1' },
   { value: '2', label: 'Option 2' },
-  { value: '3', label: 'Option 3', children: [
-    { value: '3-1', label: 'Sub Option 1' },
-    { value: '3-2', label: 'Sub Option 2' }
-  ]}
+  {
+    value: '3',
+    label: 'Option 3',
+    children: [
+      { value: '3-1', label: 'Sub Option 1' },
+      { value: '3-2', label: 'Sub Option 2' },
+    ],
+  },
 ];
 
 // Test wrapper component
-function TestWrapper({ children, defaultValues = {} }: { children: React.ReactNode, defaultValues?: any }) {
+function TestWrapper({
+  children,
+  defaultValues = {},
+}: {
+  children: React.ReactNode;
+  defaultValues?: any;
+}) {
   const methods = useForm({ defaultValues });
   return <FormProvider {...methods}>{children}</FormProvider>;
 }
@@ -30,7 +40,7 @@ describe('Combobox', () => {
           control={undefined as any}
           errors={{}}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByText('Test Label')).toBeInTheDocument();
@@ -39,13 +49,8 @@ describe('Combobox', () => {
   it('should display placeholder when no value is selected', () => {
     render(
       <TestWrapper>
-        <Combobox
-          name="test"
-          data={mockData}
-          control={undefined as any}
-          errors={{}}
-        />
-      </TestWrapper>
+        <Combobox name="test" data={mockData} control={undefined as any} errors={{}} />
+      </TestWrapper>,
     );
 
     expect(screen.getByText('Select...')).toBeInTheDocument();
@@ -54,13 +59,8 @@ describe('Combobox', () => {
   it('should open popover when clicked', async () => {
     render(
       <TestWrapper>
-        <Combobox
-          name="test"
-          data={mockData}
-          control={undefined as any}
-          errors={{}}
-        />
-      </TestWrapper>
+        <Combobox name="test" data={mockData} control={undefined as any} errors={{}} />
+      </TestWrapper>,
     );
 
     const trigger = screen.getByRole('combobox');
@@ -74,13 +74,8 @@ describe('Combobox', () => {
   it('should filter options based on search', async () => {
     render(
       <TestWrapper>
-        <Combobox
-          name="test"
-          data={mockData}
-          control={undefined as any}
-          errors={{}}
-        />
-      </TestWrapper>
+        <Combobox name="test" data={mockData} control={undefined as any} errors={{}} />
+      </TestWrapper>,
     );
 
     const trigger = screen.getByRole('combobox');
@@ -98,13 +93,8 @@ describe('Combobox', () => {
   it('should handle hierarchical navigation', async () => {
     render(
       <TestWrapper>
-        <Combobox
-          name="test"
-          data={mockData}
-          control={undefined as any}
-          errors={{}}
-        />
-      </TestWrapper>
+        <Combobox name="test" data={mockData} control={undefined as any} errors={{}} />
+      </TestWrapper>,
     );
 
     const trigger = screen.getByRole('combobox');
@@ -132,7 +122,7 @@ describe('Combobox', () => {
           errors={{}}
           isMulti={true}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     const trigger = screen.getByRole('combobox');
@@ -151,18 +141,13 @@ describe('Combobox', () => {
 
   it('should display validation errors', () => {
     const errors = {
-      test: { message: 'This field is required', type: 'required' }
+      test: { message: 'This field is required', type: 'required' },
     };
 
     render(
       <TestWrapper>
-        <Combobox
-          name="test"
-          data={mockData}
-          control={undefined as any}
-          errors={errors}
-        />
-      </TestWrapper>
+        <Combobox name="test" data={mockData} control={undefined as any} errors={errors} />
+      </TestWrapper>,
     );
 
     expect(screen.getByText('This field is required')).toBeInTheDocument();
@@ -180,7 +165,7 @@ describe('Combobox', () => {
           errors={{}}
           onCreateNew={onCreateNew}
         />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     const trigger = screen.getByRole('combobox');
@@ -195,18 +180,13 @@ describe('Combobox', () => {
   it('should handle object values with unique keys', () => {
     const objectData = [
       { value: { id: '1', name: 'Item 1' }, label: 'Item 1' },
-      { value: { id: '2', name: 'Item 2' }, label: 'Item 2' }
+      { value: { id: '2', name: 'Item 2' }, label: 'Item 2' },
     ];
 
     const { container } = render(
       <TestWrapper>
-        <Combobox
-          name="test"
-          data={objectData}
-          control={undefined as any}
-          errors={{}}
-        />
-      </TestWrapper>
+        <Combobox name="test" data={objectData} control={undefined as any} errors={{}} />
+      </TestWrapper>,
     );
 
     const trigger = screen.getByRole('combobox');
@@ -227,15 +207,15 @@ describe('Combobox', () => {
             errors={{}}
             inDrawer={true}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should not have the popover trigger button (the button role)
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
-      
+
       // Should have the search input directly (combobox in Command component)
       expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument();
-      
+
       // Should have options directly visible
       expect(screen.getByText('Option 1')).toBeInTheDocument();
     });
@@ -253,7 +233,7 @@ describe('Combobox', () => {
             inDrawer={true}
             onClose={onClose}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const option1 = screen.getByText('Option 1');
@@ -274,7 +254,7 @@ describe('Combobox', () => {
             errors={{}}
             inDrawer={true}
           />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const option1 = screen.getByText('Option 1');

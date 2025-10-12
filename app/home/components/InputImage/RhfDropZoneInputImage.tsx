@@ -7,7 +7,7 @@ import InputError from '../InputError';
 
 export interface RhfDropZoneInputImageProps<
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>
+  TName extends Path<TFieldValues>,
 > extends Omit<DropZoneInputImageProps, 'onChange'> {
   rhfProps: UseControllerProps<TFieldValues, TName>;
   labelText?: string;
@@ -17,19 +17,18 @@ const MemoizedDropZoneInputImage = React.memo(DropZoneInputImage);
 
 export function RhfDropZoneInputImage<
   TFieldValues extends FieldValues,
-  TName extends Path<TFieldValues>
->({
-  path,
-  rhfProps,
-  labelText,
-  ...props
-}: RhfDropZoneInputImageProps<TFieldValues, TName>) {
+  TName extends Path<TFieldValues>,
+>({ path, rhfProps, labelText, ...props }: RhfDropZoneInputImageProps<TFieldValues, TName>) {
   const { field } = useController<TFieldValues, TName>(rhfProps);
   const lastSigRef = useRef<string | null>(null);
   const lastTimeRef = useRef<number>(0);
 
   const commit = (files: DropZoneInputFile[]) => {
-    const mappedFiles = files.map(file => ({ path: file.path, isArchived: file.isArchived, hasMetadata: file.hasMetadata }));
+    const mappedFiles = files.map((file) => ({
+      path: file.path,
+      isArchived: file.isArchived,
+      hasMetadata: file.hasMetadata,
+    }));
     const sig = JSON.stringify(mappedFiles);
     const now = Date.now();
     // De-dupe rapid duplicate events (e.g., onReorder then onChange from child)

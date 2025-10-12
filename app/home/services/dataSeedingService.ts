@@ -1,6 +1,10 @@
 import { componentStore, elementStore, phraseStore, sectionStore } from '../clients/Database';
 import { getCurrentTenantId, withTenantId } from '../utils/tenant-utils';
-import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData } from '../settings/utils/mappers';
+import {
+  mapBodToComponentData,
+  mapBodToPhraseData,
+  mapElementsToElementData,
+} from '../settings/utils/mappers';
 
 // Import the seed data
 import bankOfDefects from '../settings/defects.json';
@@ -20,9 +24,7 @@ export type SeedingProgressCallback = (progress: SeedingProgress) => void;
  * Seeds initial data for new users
  * This includes sections, elements, components, and phrases
  */
-export async function seedInitialData(
-  onProgress?: SeedingProgressCallback
-): Promise<void> {
+export async function seedInitialData(onProgress?: SeedingProgressCallback): Promise<void> {
   const steps = ['sections', 'elements', 'components', 'phrases'];
   let currentStepIndex = 0;
 
@@ -32,7 +34,7 @@ export async function seedInitialData(
         currentStep: step,
         totalSteps: steps.length,
         currentStepIndex,
-        isComplete: false
+        isComplete: false,
       });
     }
     currentStepIndex++;
@@ -52,7 +54,7 @@ export async function seedInitialData(
       await sectionStore.add({
         id: `${section.id}#${tenantId}`,
         name: section.name,
-        order: section.order
+        order: section.order,
       } as any);
     }
 
@@ -91,12 +93,11 @@ export async function seedInitialData(
         currentStep: 'Data initialization complete!',
         totalSteps: steps.length,
         currentStepIndex: steps.length,
-        isComplete: true
+        isComplete: true,
       });
     }
 
     console.log('[seedInitialData] Initial data seeding completed successfully');
-
   } catch (error) {
     console.error('[seedInitialData] Error seeding initial data:', error);
     throw error;
@@ -111,7 +112,7 @@ export function hasInitialData(
   elementsHydrated: boolean,
   elements: any[],
   sectionsHydrated: boolean,
-  sections: any[]
+  sections: any[],
 ): boolean {
   try {
     // Wait for data to be hydrated
@@ -121,7 +122,6 @@ export function hasInitialData(
 
     // Check if we have any core data
     return elements.length > 0 || sections.length > 0;
-
   } catch (error) {
     console.error('[hasInitialData] Error checking for initial data:', error);
     return false;

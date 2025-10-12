@@ -16,13 +16,13 @@ interface LastSavedIndicatorProps {
 /**
  * Component to display last saved timestamp and current save status
  */
-export function LastSavedIndicator({ 
-  status, 
+export function LastSavedIndicator({
+  status,
   lastSavedAt,
   entityUpdatedAt,
   className,
   showIcon = true,
-  showTimestamp = true 
+  showTimestamp = true,
 }: LastSavedIndicatorProps) {
   const getStatusConfig = () => {
     switch (status) {
@@ -30,64 +30,66 @@ export function LastSavedIndicator({
         return {
           icon: Circle,
           text: 'Changes pending...',
-          className: 'text-yellow-600'
+          className: 'text-yellow-600',
         };
       case 'saving':
         return {
           icon: Loader2,
           text: 'Saving...',
-          className: 'text-blue-600'
+          className: 'text-blue-600',
         };
       case 'saved':
         return {
           icon: CheckCircle,
           text: 'All changes saved',
-          className: 'text-green-600'
+          className: 'text-green-600',
         };
       case 'autosaved':
         return {
           icon: CheckCircle,
           text: 'Auto-saved',
-          className: 'text-green-600'
+          className: 'text-green-600',
         };
       case 'error':
         return {
           icon: AlertCircle,
           text: 'Save failed',
-          className: 'text-red-600'
+          className: 'text-red-600',
         };
       default:
         return {
           icon: CheckCircle,
           text: 'Last saved',
-          className: 'text-gray-500'
+          className: 'text-gray-500',
         };
     }
   };
 
   const config = getStatusConfig();
-  
+
   return (
-    <div className={cn(
-      'flex items-center gap-2 text-sm transition-all duration-300 ease-in-out',
-      config.className,
-      className
-    )}>
+    <div
+      className={cn(
+        'flex items-center gap-2 text-sm transition-all duration-300 ease-in-out',
+        config.className,
+        className,
+      )}
+    >
       {showIcon && config.icon && (
-        <config.icon 
+        <config.icon
           className={cn(
             'h-4 w-4 transition-all duration-300',
             status === 'saving' && 'animate-spin',
-            status === 'pending' && 'animate-pulse'
-          )} 
+            status === 'pending' && 'animate-pulse',
+          )}
         />
       )}
-      
+
       <div className="flex flex-col">
         <span className="transition-all duration-300">{config.text}</span>
-        
+
         {showTimestamp && status !== 'saving' && status !== 'error' && status !== 'pending' && (
-          <span className="text-sm opacity-90 transition-opacity duration-300 font-normal">
+          <span className="text-sm font-normal opacity-90 transition-opacity duration-300">
             {(() => {
               // If we have a recent autosave timestamp, use that
               if (lastSavedAt) {
@@ -112,4 +114,4 @@ export function LastSavedIndicator({
       </div>
     </div>
   );
-} 
+}

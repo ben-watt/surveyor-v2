@@ -49,7 +49,11 @@ jest.mock('react-dropzone', () => ({
 }));
 
 const { enhancedImageStore } = require('@/app/home/clients/enhancedImageMetadataStore');
-const { resizeImage, generateThumbnail, getImageDimensions } = require('@/app/home/utils/imageResizer');
+const {
+  resizeImage,
+  generateThumbnail,
+  getImageDimensions,
+} = require('@/app/home/utils/imageResizer');
 const { generateImageHash } = require('@/app/home/utils/imageHashUtils');
 
 describe('DropZoneInputImageV2 Core Functionality', () => {
@@ -192,11 +196,7 @@ describe('DropZoneInputImageV2 Core Functionality', () => {
       enhancedImageStore.getArchivedImages.mockResolvedValue({ ok: true, val: archivedImages });
 
       render(
-        <DropZoneInputImage
-          path={mockPath}
-          onChange={mockOnChange}
-          features={{ archive: true }}
-        />
+        <DropZoneInputImage path={mockPath} onChange={mockOnChange} features={{ archive: true }} />,
       );
 
       await waitFor(() => {
@@ -227,7 +227,7 @@ describe('DropZoneInputImageV2 Core Functionality', () => {
           path={mockPath}
           onChange={mockOnChange}
           features={{ archive: false }}
-        />
+        />,
       );
 
       await waitFor(() => {
@@ -240,12 +240,12 @@ describe('DropZoneInputImageV2 Core Functionality', () => {
     it('handles store errors gracefully', async () => {
       enhancedImageStore.getActiveImages.mockResolvedValue({
         ok: false,
-        val: new Error('Store error')
+        val: new Error('Store error'),
       });
 
       enhancedImageStore.getArchivedImages.mockResolvedValue({
         ok: false,
-        val: new Error('Store error')
+        val: new Error('Store error'),
       });
 
       render(<DropZoneInputImage path={mockPath} onChange={mockOnChange} />);
@@ -276,13 +276,7 @@ describe('DropZoneInputImageV2 Core Functionality', () => {
 
       enhancedImageStore.getActiveImages.mockResolvedValue({ ok: true, val: activeImages });
 
-      render(
-        <DropZoneInputImage
-          path={mockPath}
-          onChange={mockOnChange}
-          maxFiles={1}
-        />
-      );
+      render(<DropZoneInputImage path={mockPath} onChange={mockOnChange} maxFiles={1} />);
 
       await waitFor(() => {
         // When maxFiles is reached, dropzone input should be hidden

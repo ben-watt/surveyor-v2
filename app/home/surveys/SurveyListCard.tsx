@@ -1,72 +1,84 @@
-import { useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ImageIcon, MoreVertical, Trash2 } from "lucide-react";
-import { BuildingSurveyFormData, SurveyStatus } from "./building-survey-reports/BuildingSurveyReportSchema";
-import { getSurveyStatusLabel } from "./utils/status";
+import { useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ImageIcon, MoreVertical, Trash2 } from 'lucide-react';
+import {
+  BuildingSurveyFormData,
+  SurveyStatus,
+} from './building-survey-reports/BuildingSurveyReportSchema';
+import { getSurveyStatusLabel } from './utils/status';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { surveyStore } from "../clients/Database";
-import { toast } from "react-hot-toast";
-import { useUserAttributes } from "../utils/useUser";
+} from '@/components/ui/dropdown-menu';
+import { surveyStore } from '../clients/Database';
+import { toast } from 'react-hot-toast';
+import { useUserAttributes } from '../utils/useUser';
 // Relative time rendering with hover is handled by TimeAgo
-import TimeAgo from "../components/TimeAgo";
-import { getOwnerDisplayName as computeOwnerDisplayName } from "../utils/useUser";
-import { UserAvatar } from "../components/UserAvatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getAllSurveyImages } from "./building-survey-reports/Survey";
-import { computeSurveyProgress } from "./utils/progress";
+import TimeAgo from '../components/TimeAgo';
+import { getOwnerDisplayName as computeOwnerDisplayName } from '../utils/useUser';
+import { UserAvatar } from '../components/UserAvatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getAllSurveyImages } from './building-survey-reports/Survey';
+import { computeSurveyProgress } from './utils/progress';
 
 interface BuildingSurveyListCardProps {
   survey: BuildingSurveyFormData;
   onView: (id: string) => void;
 }
 
-export function BuildingSurveyListCard({
-  survey,
-  onView,
-}: BuildingSurveyListCardProps) {
+export function BuildingSurveyListCard({ survey, onView }: BuildingSurveyListCardProps) {
   const [isUserHydrated, user] = useUserAttributes();
 
   const handleDelete = async () => {
     try {
       if (!isUserHydrated || !user) {
-        toast.error("You are not authorized to delete this survey");
+        toast.error('You are not authorized to delete this survey');
         return;
       }
 
       await surveyStore.remove(survey.id);
     } catch (error) {
-      toast.error("Failed to delete survey, please try again later");
+      toast.error('Failed to delete survey, please try again later');
     }
   };
 
-  const isDraft = survey.status === "draft";
-  const fullTitle = survey.reportDetails?.address.formatted || "New survey";
+  const isDraft = survey.status === 'draft';
+  const fullTitle = survey.reportDetails?.address.formatted || 'New survey';
   const title = fullTitle.length > 80 ? `${fullTitle.slice(0, 80)}…` : fullTitle;
 
   const getStatusBadgeProps = (status: SurveyStatus) => {
     switch (status) {
-      case "draft":
-        return { variant: "secondary" as const, className: "bg-amber-100 text-amber-800 border-amber-200" };
-      case "ready_for_qa":
-        return { variant: "secondary" as const, className: "bg-blue-100 text-blue-800 border-blue-200" };
-      case "issued_to_client":
-        return { variant: "secondary" as const, className: "bg-indigo-100 text-indigo-800 border-indigo-200" };
-      case "archived":
-        return { variant: "secondary" as const, className: "bg-gray-100 text-gray-600 border-gray-200" };
+      case 'draft':
+        return {
+          variant: 'secondary' as const,
+          className: 'bg-amber-100 text-amber-800 border-amber-200',
+        };
+      case 'ready_for_qa':
+        return {
+          variant: 'secondary' as const,
+          className: 'bg-blue-100 text-blue-800 border-blue-200',
+        };
+      case 'issued_to_client':
+        return {
+          variant: 'secondary' as const,
+          className: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+        };
+      case 'archived':
+        return {
+          variant: 'secondary' as const,
+          className: 'bg-gray-100 text-gray-600 border-gray-200',
+        };
       default:
-        return { variant: "secondary" as const, className: "" };
+        return { variant: 'secondary' as const, className: '' };
     }
   };
 
   const statusBadgeProps = getStatusBadgeProps(survey.status);
-  
+
   const ownerDisplayName = computeOwnerDisplayName(survey.owner, {
     isUserHydrated,
     currentUser: user,
@@ -74,93 +86,100 @@ export function BuildingSurveyListCard({
 
   // Get createdAt from raw dexie list for this survey id (lightweight, memoized by hook)
   const [isRawHydrated, rawList] = surveyStore.useRawList();
-  const createdAt = isRawHydrated
-    ? rawList.find((s) => s.id === survey.id)?.createdAt
-    : undefined;
+  const createdAt = isRawHydrated ? rawList.find((s) => s.id === survey.id)?.createdAt : undefined;
   const createdAtDate = createdAt ? new Date(createdAt) : undefined;
 
   // Compute a total image count using helper
-  const imageCount = getAllSurveyImages(survey).filter(i => !i.isArchived).length;
+  const imageCount = getAllSurveyImages(survey).filter((i) => !i.isArchived).length;
 
   // Compute compact progress (always compute; render only for drafts)
   const { progressPercent, completedSections, totalSections } = useMemo(
     () => computeSurveyProgress(survey),
-    [survey]
+    [survey],
   );
 
   return (
-    <Card 
+    <Card
       role="button"
       tabIndex={0}
-      aria-labelledby={`survey-title-${survey.id}`} 
+      aria-labelledby={`survey-title-${survey.id}`}
       onClick={() => onView(survey.id)}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
+        if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onView(survey.id);
         }
       }}
-      className={`overflow-hidden relative transition-all duration-200 hover:shadow-lg hover:-translate-y-1 group cursor-pointer`}
+      className={`group relative cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg`}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex h-full flex-col">
         <CardContent className="flex-1 p-3">
-          <div className="flex flex-col h-full justify-between">
+          <div className="flex h-full flex-col justify-between">
             <div>
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
                   <Badge
                     {...statusBadgeProps}
                     className={`shrink-0 capitalize ${statusBadgeProps.className}`}
                   >
                     {getSurveyStatusLabel(survey.status)}
                   </Badge>
-                  <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
-                    🏢 Level {survey.reportDetails?.level ?? "—"}
+                  <Badge
+                    variant="outline"
+                    className="border-gray-200 bg-gray-50 font-medium text-gray-700"
+                  >
+                    🏢 Level {survey.reportDetails?.level ?? '—'}
                   </Badge>
-
                 </div>
                 {isUserHydrated && user && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      aria-label="Open survey actions menu"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 hover:bg-gray-100 opacity-60 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={(ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        if (confirm("Delete this survey? This cannot be undone.")) {
-                          void handleDelete();
-                        }
-                      }}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Survey
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        aria-label="Open survey actions menu"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-60 transition-opacity hover:bg-gray-100 group-hover:opacity-100"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(ev) => {
+                          ev.preventDefault();
+                          ev.stopPropagation();
+                          if (confirm('Delete this survey? This cannot be undone.')) {
+                            void handleDelete();
+                          }
+                        }}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Survey
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
               </div>
-              <h3 id={`survey-title-${survey.id}`} title={fullTitle} className="font-bold text-xl leading-tight truncate flex-1 text-gray-900">
-                  {title}
-                  </h3> 
+              <h3
+                id={`survey-title-${survey.id}`}
+                title={fullTitle}
+                className="flex-1 truncate text-xl font-bold leading-tight text-gray-900"
+              >
+                {title}
+              </h3>
 
-
-              <div className="space-y-3 mt-3">
+              <div className="mt-3 space-y-3">
                 <div className="flex flex-wrap items-center gap-3 text-sm">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center">
-                          <UserAvatar name={ownerDisplayName} imageUrl={survey.owner?.signaturePath?.[0]} size="sm" />
+                          <UserAvatar
+                            name={ownerDisplayName}
+                            imageUrl={survey.owner?.signaturePath?.[0]}
+                            size="sm"
+                          />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>{ownerDisplayName}</TooltipContent>
@@ -170,28 +189,34 @@ export function BuildingSurveyListCard({
 
                 {isDraft && (
                   <div className="mt-1 flex items-center gap-2">
-                    <div className="w-full bg-muted rounded h-1.5 overflow-hidden" aria-hidden>
-                      <div className={`h-1.5 ${progressPercent === 100 ? 'bg-green-500' : 'bg-primary'}`} style={{ width: `${progressPercent}%` }} />
+                    <div className="h-1.5 w-full overflow-hidden rounded bg-muted" aria-hidden>
+                      <div
+                        className={`h-1.5 ${progressPercent === 100 ? 'bg-green-500' : 'bg-primary'}`}
+                        style={{ width: `${progressPercent}%` }}
+                      />
                     </div>
-                    <div className="mt-1 text-[11px] text-gray-500 text-nowrap">{completedSections} / {totalSections}</div>
+                    <div className="mt-1 text-nowrap text-[11px] text-gray-500">
+                      {completedSections} / {totalSections}
+                    </div>
                   </div>
                 )}
-
-              
-
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between border-t border-gray-100 pt-3">
               <div className="text-xs text-gray-500">
                 {createdAtDate ? (
                   <>
                     Created <TimeAgo date={createdAtDate} />
                   </>
-                ) : (isDraft ? "Draft" : "")}
+                ) : isDraft ? (
+                  'Draft'
+                ) : (
+                  ''
+                )}
               </div>
-              <div className="text-xs text-gray-500 flex items-center gap-1" aria-hidden>
-                <ImageIcon className="w-4 h-4" />
+              <div className="flex items-center gap-1 text-xs text-gray-500" aria-hidden>
+                <ImageIcon className="h-4 w-4" />
                 <span> {imageCount}</span>
               </div>
             </div>

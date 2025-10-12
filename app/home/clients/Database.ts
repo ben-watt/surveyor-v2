@@ -7,18 +7,21 @@ import {
   CreateDexieHooks,
   Phrase,
   Section,
-} from "./Dexie";
-import client from "./AmplifyDataClient";
-import { Schema } from "@/amplify/data/resource";
-import { BuildingSurveyFormData } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
-import { Draft } from "immer";
+} from './Dexie';
+import client from './AmplifyDataClient';
+import { Schema } from '@/amplify/data/resource';
+import { BuildingSurveyFormData } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import { Draft } from 'immer';
 import { Ok, Err, Result } from 'ts-results';
-import { withTenantId, getCurrentTenantId } from "@/app/home/utils/tenant-utils";
-import { getErrorMessage } from "../utils/handleError";
+import { withTenantId, getCurrentTenantId } from '@/app/home/utils/tenant-utils';
+import { getErrorMessage } from '../utils/handleError';
 
 // Helper function to fetch all paginated results
 async function fetchAllPages<T>(
-  listFn: (params?: { nextToken?: string | null; limit?: number }) => Promise<{ data: T[]; nextToken?: string | null; errors?: any[] }>
+  listFn: (params?: {
+    nextToken?: string | null;
+    limit?: number;
+  }) => Promise<{ data: T[]; nextToken?: string | null; errors?: any[] }>,
 ): Promise<{ data: T[]; errors?: any[] }> {
   const allItems: T[] = [];
   let nextToken: string | null = null;
@@ -26,12 +29,12 @@ async function fetchAllPages<T>(
 
   do {
     const response = await listFn({ nextToken, limit: 1000 }); // Use higher limit
-    
+
     if (response.errors) {
       errors.push(...response.errors);
       break;
     }
-    
+
     allItems.push(...response.data);
     nextToken = response.nextToken || null;
   } while (nextToken);
@@ -53,64 +56,63 @@ type CreateSurvey = Schema['Surveys']['createType'];
 
 // Create a wrapper for the survey store
 const createSurveyStore = () => {
-  const store = CreateDexieHooks<DexieSurvey, CreateSurvey, UpdateSurvey>(
-    db,
-    "surveys",
-    {
-      list: async (): Promise<Result<DexieSurvey[], Error>> => {
-        const response = await fetchAllPages((params) => client.models.Surveys.list(params));
-        if (response.errors) {
-          return Err(new Error(response.errors.map(e => e.message).join(", ")));
-        }
-        return Ok(response.data.map(mapToSurvey));
-      },
-      create: async (data): Promise<Result<DexieSurvey, Error>> => {
-        // Add tenant ID to new survey
-        const baseData = {
-          id: data.id,
-          syncStatus: SyncStatus.Synced,
-          content: typeof data.content === 'string' ? data.content : JSON.stringify(data.content),
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-        };
-        const serverData = await withTenantId(baseData);
+  const store = CreateDexieHooks<DexieSurvey, CreateSurvey, UpdateSurvey>(db, 'surveys', {
+    list: async (): Promise<Result<DexieSurvey[], Error>> => {
+      const response = await fetchAllPages((params) => client.models.Surveys.list(params));
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(response.data.map(mapToSurvey));
+    },
+    create: async (data): Promise<Result<DexieSurvey, Error>> => {
+      // Add tenant ID to new survey
+      const baseData = {
+        id: data.id,
+        syncStatus: SyncStatus.Synced,
+        content: typeof data.content === 'string' ? data.content : JSON.stringify(data.content),
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+      const serverData = await withTenantId(baseData);
 
-        console.log("[createSurveyStore] Creating survey", serverData);
-        const response = await client.models.Surveys.create(serverData);
-        if (response.errors) {
-          return Err(new Error(response.errors.map(e => e.message).join(", ")));
-        }
-        return Ok(mapToSurvey(response.data));
-      },
-      update: async (data): Promise<Result<DexieSurvey, Error>> => {
-        // Add tenant ID to update
-        const baseData = {
-          id: data.id,
-          syncStatus: SyncStatus.Synced,
-          content: typeof data.content === 'string' ? data.content : JSON.stringify(data.content),
-        };
-        const serverData = await withTenantId(baseData);
+      console.log('[createSurveyStore] Creating survey', serverData);
+      const response = await client.models.Surveys.create(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(mapToSurvey(response.data));
+    },
+    update: async (data): Promise<Result<DexieSurvey, Error>> => {
+      // Add tenant ID to update
+      const baseData = {
+        id: data.id,
+        syncStatus: SyncStatus.Synced,
+        content: typeof data.content === 'string' ? data.content : JSON.stringify(data.content),
+      };
+      const serverData = await withTenantId(baseData);
 
-        console.log("[createSurveyStore] Updating survey", serverData); 
-        const response = await client.models.Surveys.update(serverData);
-        if (response.errors) {
-          return Err(new Error(response.errors.map(e => e.message).join(", ")));
-        }
-        return Ok(mapToSurvey(response.data));
-      },
-      delete: async (id): Promise<Result<string, Error>> => {
-        const tenantId = await getCurrentTenantId();
-        if (!tenantId) {
-          return Err(new Error("No tenant ID available for delete operation"));
-        }
-        const response = await client.models.Surveys.delete({ id, tenantId }, { authMode: 'userPool' });
-        if (response.errors) {
-          return Err(new Error(response.errors.map(e => e.message).join(", ")));
-        }
-        return Ok(id);
-      },
-    }
-  );
+      console.log('[createSurveyStore] Updating survey', serverData);
+      const response = await client.models.Surveys.update(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(mapToSurvey(response.data));
+    },
+    delete: async (id): Promise<Result<string, Error>> => {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        return Err(new Error('No tenant ID available for delete operation'));
+      }
+      const response = await client.models.Surveys.delete(
+        { id, tenantId },
+        { authMode: 'userPool' },
+      );
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(id);
+    },
+  });
 
   return {
     ...store,
@@ -122,7 +124,7 @@ const createSurveyStore = () => {
     useList: (): [boolean, BuildingSurveyFormData[]] => {
       const [isHydrated, surveys] = store.useList();
       if (!isHydrated) return [isHydrated, []];
-      return [isHydrated, surveys.map(s => s.content as BuildingSurveyFormData)];
+      return [isHydrated, surveys.map((s) => s.content as BuildingSurveyFormData)];
     },
     useRawList: (): [boolean, DexieSurvey[]] => {
       const [isHydrated, surveys] = store.useList();
@@ -133,7 +135,7 @@ const createSurveyStore = () => {
         updater(dexieSurvey.content as BuildingSurveyFormData);
       });
     },
-    forceSync: store.forceSync
+    forceSync: store.forceSync,
   };
 };
 
@@ -154,48 +156,48 @@ const mapToComponent = (data: any): Component => ({
 export type UpdateComponent = Partial<Component> & { id: string };
 export type CreateComponent = Schema['Components']['createType'];
 
-export const componentStore = CreateDexieHooks<
-  Component,
-  CreateComponent,
-  UpdateComponent
->(db, "components", {
-  list: async (): Promise<Result<Component[], Error>> => {
-    const response = await fetchAllPages((params) => client.models.Components.list(params));
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(response.data.map(mapToComponent));
+export const componentStore = CreateDexieHooks<Component, CreateComponent, UpdateComponent>(
+  db,
+  'components',
+  {
+    list: async (): Promise<Result<Component[], Error>> => {
+      const response = await fetchAllPages((params) => client.models.Components.list(params));
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(response.data.map(mapToComponent));
+    },
+    create: async (data): Promise<Result<Component, Error>> => {
+      // Add tenant ID to new component
+      const serverData = await withTenantId(data);
+      const response = await client.models.Components.create(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(mapToComponent(response.data));
+    },
+    update: async (data): Promise<Result<Component, Error>> => {
+      // Add tenant ID to update
+      const serverData = await withTenantId(data);
+      const response = await client.models.Components.update(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(mapToComponent(response.data));
+    },
+    delete: async (id): Promise<Result<string, Error>> => {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        return Err(new Error('No tenant ID available for delete operation'));
+      }
+      const response = await client.models.Components.delete({ id, tenantId });
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(id);
+    },
   },
-  create: async (data): Promise<Result<Component, Error>> => {
-    // Add tenant ID to new component
-    const serverData = await withTenantId(data);
-    const response = await client.models.Components.create(serverData);
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(mapToComponent(response.data));
-  },
-  update: async (data): Promise<Result<Component, Error>> => {
-    // Add tenant ID to update
-    const serverData = await withTenantId(data);
-    const response = await client.models.Components.update(serverData);
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(mapToComponent(response.data));
-  },
-  delete: async (id): Promise<Result<string, Error>> => {
-    const tenantId = await getCurrentTenantId();
-    if (!tenantId) {
-      return Err(new Error("No tenant ID available for delete operation"));
-    }
-    const response = await client.models.Components.delete({ id, tenantId });
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(id);
-  },
-});
+);
 
 const mapToElement = (data: any): BuildingSurveyElement => ({
   id: data.id,
@@ -212,48 +214,48 @@ const mapToElement = (data: any): BuildingSurveyElement => ({
 export type UpdateElement = Partial<BuildingSurveyElement> & { id: string };
 export type CreateElement = Schema['Elements']['createType'];
 
-export const elementStore = CreateDexieHooks<
-  BuildingSurveyElement,
-  CreateElement,
-  UpdateElement
->(db, "elements", {
-  list: async (): Promise<Result<BuildingSurveyElement[], Error>> => {
-    const response = await fetchAllPages((params) => client.models.Elements.list(params));
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(response.data.map(mapToElement));
+export const elementStore = CreateDexieHooks<BuildingSurveyElement, CreateElement, UpdateElement>(
+  db,
+  'elements',
+  {
+    list: async (): Promise<Result<BuildingSurveyElement[], Error>> => {
+      const response = await fetchAllPages((params) => client.models.Elements.list(params));
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(response.data.map(mapToElement));
+    },
+    create: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
+      // Add tenant ID to new element
+      const serverData = await withTenantId(data);
+      const response = await client.models.Elements.create(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(mapToElement(response.data));
+    },
+    update: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
+      // Add tenant ID to update
+      const serverData = await withTenantId(data);
+      const response = await client.models.Elements.update(serverData);
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(mapToElement(response.data));
+    },
+    delete: async (id): Promise<Result<string, Error>> => {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) {
+        return Err(new Error('No tenant ID available for delete operation'));
+      }
+      const response = await client.models.Elements.delete({ id, tenantId });
+      if (response.errors) {
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+      }
+      return Ok(id);
+    },
   },
-  create: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
-    // Add tenant ID to new element
-    const serverData = await withTenantId(data);
-    const response = await client.models.Elements.create(serverData);
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(mapToElement(response.data));
-  },
-  update: async (data): Promise<Result<BuildingSurveyElement, Error>> => {
-    // Add tenant ID to update
-    const serverData = await withTenantId(data);
-    const response = await client.models.Elements.update(serverData);
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(mapToElement(response.data));
-  },
-  delete: async (id): Promise<Result<string, Error>> => {
-    const tenantId = await getCurrentTenantId();
-    if (!tenantId) {
-      return Err(new Error("No tenant ID available for delete operation"));
-    }
-    const response = await client.models.Elements.delete({ id, tenantId });
-    if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
-    }
-    return Ok(id);
-  },
-});
+);
 
 const mapToSection = (data: any): Section => ({
   id: data.id,
@@ -270,12 +272,12 @@ export type CreateSection = Schema['Sections']['createType'];
 
 export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSection>(
   db,
-  "sections",
+  'sections',
   {
     list: async (): Promise<Result<Section[], Error>> => {
       const response = await fetchAllPages((params) => client.models.Sections.list(params));
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
       return Ok(response.data.map(mapToSection));
     },
@@ -283,7 +285,7 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
       const serverData = await withTenantId(data);
       const response = await client.models.Sections.create(serverData);
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
       return Ok(mapToSection(response.data));
     },
@@ -291,22 +293,22 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
       const serverData = await withTenantId(data);
       const response = await client.models.Sections.update(serverData);
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
       return Ok(mapToSection(response.data));
     },
     delete: async (id): Promise<Result<string, Error>> => {
       const tenantId = await getCurrentTenantId();
       if (!tenantId) {
-        return Err(new Error("No tenant ID available for delete operation"));
+        return Err(new Error('No tenant ID available for delete operation'));
       }
       const response = await client.models.Sections.delete({ id, tenantId });
       if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
+        return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
       return Ok(id);
     },
-  }
+  },
 );
 
 const mapToPhrase = (data: any): Phrase => ({
@@ -327,11 +329,11 @@ const mapToPhrase = (data: any): Phrase => ({
 export type UpdatePhrase = Partial<Phrase> & { id: string };
 export type CreatePhrase = Schema['Phrases']['createType'];
 
-export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(db, "phrases", {
+export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(db, 'phrases', {
   list: async (): Promise<Result<Phrase[], Error>> => {
     const response = await fetchAllPages((params) => client.models.Phrases.list(params));
     if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
     }
     return Ok(response.data.map(mapToPhrase));
   },
@@ -340,7 +342,7 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
     const serverData = await withTenantId(data);
     const response = await client.models.Phrases.create(serverData);
     if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
     }
     return Ok(mapToPhrase(response.data));
   },
@@ -349,18 +351,18 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
     const serverData = await withTenantId(data);
     const response = await client.models.Phrases.update(serverData);
     if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
     }
     return Ok(mapToPhrase(response.data));
   },
   delete: async (id): Promise<Result<string, Error>> => {
     const tenantId = await getCurrentTenantId();
     if (!tenantId) {
-      return Err(new Error("No tenant ID available for delete operation"));
+      return Err(new Error('No tenant ID available for delete operation'));
     }
     const response = await client.models.Phrases.delete({ id, tenantId });
     if (response.errors) {
-      return Err(new Error(response.errors.map(e => e.message).join(", ")));
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
     }
     return Ok(id);
   },
@@ -369,10 +371,10 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
 type ServerImageMetadata = Schema['ImageMetadata']['type'];
 
 type LocalOnlyImageFields = {
-  uploadProgress?: number;  // Upload progress percentage (0-100)
-  localFileData?: ArrayBuffer;  // Temporary storage for offline uploads (using ArrayBuffer instead of File)
-  localFileType?: string;  // MIME type for reconstructing File from ArrayBuffer
-  localFileName?: string;  // File name for reconstructing File from ArrayBuffer
+  uploadProgress?: number; // Upload progress percentage (0-100)
+  localFileData?: ArrayBuffer; // Temporary storage for offline uploads (using ArrayBuffer instead of File)
+  localFileType?: string; // MIME type for reconstructing File from ArrayBuffer
+  localFileName?: string; // File name for reconstructing File from ArrayBuffer
 };
 
 // Client ImageMetadata is the server type, but with a stronger SyncStatus type and extra local-only fields
@@ -391,12 +393,18 @@ export const IMAGE_METADATA_LOCAL_ONLY_FIELDS = [
 // Canonical set of server-synced fields for ImageMetadata.
 // Keep in sync with amplify/data/resource.ts -> ImageMetadata model.
 // Compile-time check: ensure client/server fields stay aligned (excluding local-only fields and syncStatus type)
-type NonLocalClientKeys = Exclude<keyof ImageMetadata, typeof IMAGE_METADATA_LOCAL_ONLY_FIELDS[number]>;
+type NonLocalClientKeys = Exclude<
+  keyof ImageMetadata,
+  (typeof IMAGE_METADATA_LOCAL_ONLY_FIELDS)[number]
+>;
 type ServerKeys = keyof ServerImageMetadata;
 type ClientMissingFromServer = Exclude<NonLocalClientKeys, ServerKeys>;
 type ServerMissingFromClient = Exclude<ServerKeys, NonLocalClientKeys>;
 // If either is not never, TS will error here
-const _imageMetadataKeysTypeCheck: [ClientMissingFromServer, ServerMissingFromClient] = [undefined as never, undefined as never];
+const _imageMetadataKeysTypeCheck: [ClientMissingFromServer, ServerMissingFromClient] = [
+  undefined as never,
+  undefined as never,
+];
 
 // Helper to remove local-only fields before syncing to server
 const removeLocalOnlyFields = (data: any): any => {
@@ -405,10 +413,14 @@ const removeLocalOnlyFields = (data: any): any => {
   // Convert SyncStatus enum to string for server
   const convertedData = {
     ...serverData,
-    syncStatus: serverData.syncStatus === SyncStatus.Queued ? 'queued' :
-                serverData.syncStatus === SyncStatus.Synced ? 'synced' :
-                serverData.syncStatus === SyncStatus.Failed ? 'failed' :
-                serverData.syncStatus || 'queued', // Default to queued
+    syncStatus:
+      serverData.syncStatus === SyncStatus.Queued
+        ? 'queued'
+        : serverData.syncStatus === SyncStatus.Synced
+          ? 'synced'
+          : serverData.syncStatus === SyncStatus.Failed
+            ? 'failed'
+            : serverData.syncStatus || 'queued', // Default to queued
   };
 
   // Ensure required fields are not null/undefined
@@ -445,50 +457,50 @@ const mapToImageMetadata = (data: any): ImageMetadata => ({
 export type UpdateImageMetadata = Schema['ImageMetadata']['updateType'];
 export type CreateImageMetadata = Schema['ImageMetadata']['createType'];
 
-export const imageMetadataStore = CreateDexieHooks<ImageMetadata, CreateImageMetadata, UpdateImageMetadata>(
-  db,
-  "imageMetadata",
-  {
-    list: async (): Promise<Result<ImageMetadata[], Error>> => {
-      const response = await fetchAllPages((params) => client.models.ImageMetadata.list(params));
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(response.data.map(mapToImageMetadata));
-    },
-    create: async (data): Promise<Result<ImageMetadata, Error>> => {
-      // Remove local-only fields and add tenant ID
-      const cleanData = removeLocalOnlyFields(data);
-      const serverData = await withTenantId(cleanData);
-      const response = await client.models.ImageMetadata.create(serverData);
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(mapToImageMetadata(response.data));
-    },
-    update: async (data): Promise<Result<ImageMetadata, Error>> => {
-      // Remove local-only fields and add tenant ID
-      const cleanData = removeLocalOnlyFields(data);
-      const serverData = await withTenantId(cleanData);
-      const response = await client.models.ImageMetadata.update(serverData);
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(mapToImageMetadata(response.data));
-    },
-    delete: async (id): Promise<Result<string, Error>> => {
-      const tenantId = await getCurrentTenantId();
-      if (!tenantId) {
-        return Err(new Error("No tenant ID available for delete operation"));
-      }
-      const response = await client.models.ImageMetadata.delete({ id, tenantId });
-      if (response.errors) {
-        return Err(new Error(response.errors.map(e => e.message).join(", ")));
-      }
-      return Ok(id);
-    },
-  }
-);
+export const imageMetadataStore = CreateDexieHooks<
+  ImageMetadata,
+  CreateImageMetadata,
+  UpdateImageMetadata
+>(db, 'imageMetadata', {
+  list: async (): Promise<Result<ImageMetadata[], Error>> => {
+    const response = await fetchAllPages((params) => client.models.ImageMetadata.list(params));
+    if (response.errors) {
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+    }
+    return Ok(response.data.map(mapToImageMetadata));
+  },
+  create: async (data): Promise<Result<ImageMetadata, Error>> => {
+    // Remove local-only fields and add tenant ID
+    const cleanData = removeLocalOnlyFields(data);
+    const serverData = await withTenantId(cleanData);
+    const response = await client.models.ImageMetadata.create(serverData);
+    if (response.errors) {
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+    }
+    return Ok(mapToImageMetadata(response.data));
+  },
+  update: async (data): Promise<Result<ImageMetadata, Error>> => {
+    // Remove local-only fields and add tenant ID
+    const cleanData = removeLocalOnlyFields(data);
+    const serverData = await withTenantId(cleanData);
+    const response = await client.models.ImageMetadata.update(serverData);
+    if (response.errors) {
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+    }
+    return Ok(mapToImageMetadata(response.data));
+  },
+  delete: async (id): Promise<Result<string, Error>> => {
+    const tenantId = await getCurrentTenantId();
+    if (!tenantId) {
+      return Err(new Error('No tenant ID available for delete operation'));
+    }
+    const response = await client.models.ImageMetadata.delete({ id, tenantId });
+    if (response.errors) {
+      return Err(new Error(response.errors.map((e) => e.message).join(', ')));
+    }
+    return Ok(id);
+  },
+});
 
 export async function getRawCounts(): Promise<Result<{ [key: string]: number }, Error>> {
   try {
@@ -497,20 +509,25 @@ export async function getRawCounts(): Promise<Result<{ [key: string]: number }, 
       return Err(new Error('No tenant ID available'));
     }
 
-    const [
-      elements,
-      components,
-      phrases,
-      sections,
-      surveys,
-      imageMetadata
-    ] = await Promise.all([
-      fetchAllPages((params) => client.models.Elements.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
-      fetchAllPages((params) => client.models.Components.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
-      fetchAllPages((params) => client.models.Phrases.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
-      fetchAllPages((params) => client.models.Sections.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
-      fetchAllPages((params) => client.models.Surveys.list({ ...params, filter: { tenantId: { eq: tenantId } } })),
-      fetchAllPages((params) => client.models.ImageMetadata.list({ ...params, filter: { tenantId: { eq: tenantId } } }))
+    const [elements, components, phrases, sections, surveys, imageMetadata] = await Promise.all([
+      fetchAllPages((params) =>
+        client.models.Elements.list({ ...params, filter: { tenantId: { eq: tenantId } } }),
+      ),
+      fetchAllPages((params) =>
+        client.models.Components.list({ ...params, filter: { tenantId: { eq: tenantId } } }),
+      ),
+      fetchAllPages((params) =>
+        client.models.Phrases.list({ ...params, filter: { tenantId: { eq: tenantId } } }),
+      ),
+      fetchAllPages((params) =>
+        client.models.Sections.list({ ...params, filter: { tenantId: { eq: tenantId } } }),
+      ),
+      fetchAllPages((params) =>
+        client.models.Surveys.list({ ...params, filter: { tenantId: { eq: tenantId } } }),
+      ),
+      fetchAllPages((params) =>
+        client.models.ImageMetadata.list({ ...params, filter: { tenantId: { eq: tenantId } } }),
+      ),
     ]);
 
     return Ok({

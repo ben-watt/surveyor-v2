@@ -13,7 +13,7 @@ export function useTemplateId(id: string, initialTemplateId?: string): string | 
 
   useEffect(() => {
     if (!templateId && id) {
-      documentStore.get(id).then(result => {
+      documentStore.get(id).then((result) => {
         if (result.ok && result.val?.templateId) {
           setTemplateId(result.val.templateId);
         }
@@ -22,4 +22,4 @@ export function useTemplateId(id: string, initialTemplateId?: string): string | 
   }, [id, templateId]);
 
   return templateId;
-} 
+}

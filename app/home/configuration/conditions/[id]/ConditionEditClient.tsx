@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useParams } from "next/navigation";
-import { DataForm } from "../../../conditions/form";
-import { PageHeader } from "@/components/page-header";
+import React from 'react';
+import { useParams } from 'next/navigation';
+import { DataForm } from '../../../conditions/form';
+import { PageHeader } from '@/components/page-header';
 
 export default function ConditionEditClient() {
   const params = useParams<{ id: string }>();
@@ -11,7 +11,10 @@ export default function ConditionEditClient() {
   const id = decodeURIComponent(rawId);
 
   return (
-    <PageHeader title="Edit Condition" subtitle="Edit a condition used to describe the state of components.">
+    <PageHeader
+      title="Edit Condition"
+      subtitle="Edit a condition used to describe the state of components."
+    >
       <DataForm id={id} />
     </PageHeader>
   );

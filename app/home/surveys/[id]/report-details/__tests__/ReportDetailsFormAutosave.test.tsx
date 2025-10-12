@@ -51,7 +51,7 @@ jest.mock('react-hook-form', () => {
         name: 'test-field',
         onChange: jest.fn(),
         onBlur: jest.fn(),
-        ref: jest.fn()
+        ref: jest.fn(),
       })),
       control: {
         _formState: { errors: {} },
@@ -60,19 +60,19 @@ jest.mock('react-hook-form', () => {
         _formValues: {},
         _stateFlags: { isSubmitted: false, isDirty: false },
         register: jest.fn(() => ({
-        name: 'test-field',
-        onChange: jest.fn(),
-        onBlur: jest.fn(),
-        ref: jest.fn()
-      })),
+          name: 'test-field',
+          onChange: jest.fn(),
+          onBlur: jest.fn(),
+          ref: jest.fn(),
+        })),
         unregister: jest.fn(),
         getFieldState: jest.fn(),
         handleSubmit: jest.fn(),
         _subjects: {
           values: { next: jest.fn() },
           array: { next: jest.fn() },
-          state: { next: jest.fn() }
-        }
+          state: { next: jest.fn() },
+        },
       },
       formState: { errors: {} },
       watch: jest.fn(() => ({ unsubscribe: jest.fn() })),
@@ -82,7 +82,7 @@ jest.mock('react-hook-form', () => {
     FormProvider: ({ children }: any) => children,
     useController: jest.fn(() => ({
       field: { value: '', onChange: jest.fn(), onBlur: jest.fn(), name: 'test' },
-      formState: { errors: {} }
+      formState: { errors: {} },
     })),
   };
 });
@@ -91,7 +91,7 @@ const mockSurveyStore = surveyStore as jest.Mocked<typeof surveyStore>;
 
 describe('ReportDetailsForm Autosave', () => {
   const mockSurveyId = 'test-survey-id';
-  
+
   const mockReportDetails: any = {
     clientName: 'Test Client',
     reference: 'REF123',
@@ -129,12 +129,7 @@ describe('ReportDetailsForm Autosave', () => {
         };
       });
 
-      render(
-        <ReportDetailsForm 
-          surveyId={mockSurveyId} 
-          reportDetails={mockReportDetails} 
-        />
-      );
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
 
       // Simulate clearing all fields
       const clearedData = {
@@ -148,10 +143,7 @@ describe('ReportDetailsForm Autosave', () => {
 
       await capturedSaveFunction(clearedData, { auto: true });
 
-      expect(mockSurveyStore.update).toHaveBeenCalledWith(
-        mockSurveyId,
-        expect.any(Function)
-      );
+      expect(mockSurveyStore.update).toHaveBeenCalledWith(mockSurveyId, expect.any(Function));
     });
 
     it('should save partial data without validation blocking', async () => {
@@ -167,12 +159,7 @@ describe('ReportDetailsForm Autosave', () => {
         };
       });
 
-      render(
-        <ReportDetailsForm 
-          surveyId={mockSurveyId} 
-          reportDetails={mockReportDetails} 
-        />
-      );
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
 
       // Simulate partial data (some required fields missing)
       const partialData = {
@@ -194,25 +181,22 @@ describe('ReportDetailsForm Autosave', () => {
     it('should set InProgress status when has existing data but validation fails', async () => {
       let capturedSaveFunction: any;
       const { useAutoSaveFormWithImages } = require('@/app/home/hooks/useAutoSaveFormWithImages');
-      
+
       // Mock trigger to return false (validation fails)
       const mockTrigger = jest.fn().mockResolvedValue(false);
-      useAutoSaveFormWithImages.mockImplementation((saveFunction: any, watch: any, getValues: any, trigger: any) => {
-        capturedSaveFunction = saveFunction;
-        return {
-          saveStatus: 'idle',
-          isSaving: false,
-          isUploading: false,
-          lastSavedAt: null,
-        };
-      });
-
-      render(
-        <ReportDetailsForm 
-          surveyId={mockSurveyId} 
-          reportDetails={mockReportDetails} 
-        />
+      useAutoSaveFormWithImages.mockImplementation(
+        (saveFunction: any, watch: any, getValues: any, trigger: any) => {
+          capturedSaveFunction = saveFunction;
+          return {
+            saveStatus: 'idle',
+            isSaving: false,
+            isUploading: false,
+            lastSavedAt: null,
+          };
+        },
       );
+
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
 
       // Update trigger for this specific test
       const { useForm } = jest.requireMock('react-hook-form');
@@ -253,7 +237,7 @@ describe('ReportDetailsForm Autosave', () => {
 
       let capturedSaveFunction: any;
       const { useAutoSaveFormWithImages } = require('@/app/home/hooks/useAutoSaveFormWithImages');
-      
+
       // Mock trigger to return false (validation fails)
       const mockTrigger = jest.fn().mockResolvedValue(false);
       useAutoSaveFormWithImages.mockImplementation((saveFunction: any) => {
@@ -266,12 +250,7 @@ describe('ReportDetailsForm Autosave', () => {
         };
       });
 
-      render(
-        <ReportDetailsForm 
-          surveyId={mockSurveyId} 
-          reportDetails={emptyReportDetails} 
-        />
-      );
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={emptyReportDetails} />);
 
       // Update trigger for this specific test
       const { useForm } = jest.requireMock('react-hook-form');
@@ -288,7 +267,7 @@ describe('ReportDetailsForm Autosave', () => {
     it('should set Complete status when validation passes', async () => {
       let capturedSaveFunction: any;
       const { useAutoSaveFormWithImages } = require('@/app/home/hooks/useAutoSaveFormWithImages');
-      
+
       // Mock trigger to return true (validation passes)
       const mockTrigger = jest.fn().mockResolvedValue(true);
       useAutoSaveFormWithImages.mockImplementation((saveFunction: any) => {
@@ -301,12 +280,7 @@ describe('ReportDetailsForm Autosave', () => {
         };
       });
 
-      render(
-        <ReportDetailsForm 
-          surveyId={mockSurveyId} 
-          reportDetails={mockReportDetails} 
-        />
-      );
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
 
       // Update trigger for this specific test
       const { useForm } = jest.requireMock('react-hook-form');
@@ -340,20 +314,14 @@ describe('ReportDetailsForm Autosave', () => {
         };
       });
 
-      render(
-        <ReportDetailsForm 
-          surveyId={mockSurveyId} 
-          reportDetails={mockReportDetails} 
-        />
-      );
+      render(<ReportDetailsForm surveyId={mockSurveyId} reportDetails={mockReportDetails} />);
 
-      await expect(capturedSaveFunction(mockReportDetails, { auto: true })).rejects.toThrow('Network error');
+      await expect(capturedSaveFunction(mockReportDetails, { auto: true })).rejects.toThrow(
+        'Network error',
+      );
 
       // Should attempt to update status to Error
-      expect(mockSurveyStore.update).toHaveBeenCalledWith(
-        mockSurveyId,
-        expect.any(Function)
-      );
+      expect(mockSurveyStore.update).toHaveBeenCalledWith(mockSurveyId, expect.any(Function));
     });
   });
 });

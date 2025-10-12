@@ -61,11 +61,11 @@ export const Thumbnail = ({
   };
 
   if (!hydrated || !image) {
-    return <div className="animate-pulse bg-gray-200 rounded aspect-[3/2]" />;
+    return <div className="aspect-[3/2] animate-pulse rounded bg-gray-200" />;
   }
 
   return (
-    <div className="relative rounded-md overflow-hidden">
+    <div className="relative overflow-hidden rounded-md">
       <div>
         <ProgressiveImage
           imageId={imageId}
@@ -73,14 +73,14 @@ export const Thumbnail = ({
           alt={image.fileName || 'Image'}
         />
       </div>
-      <aside className="absolute top-0 left-0 right-0 bottom-0 from-black/70 to-black/0 bg-gradient-to-b"></aside>
-      <aside className="absolute top-0 left-9 right-9 text-white p-2 text-xs">
+      <aside className="absolute bottom-0 left-0 right-0 top-0 bg-gradient-to-b from-black/70 to-black/0"></aside>
+      <aside className="absolute left-9 right-9 top-0 p-2 text-xs text-white">
         <p className="truncate">{image.fileName}</p>
-        <p className="text-background/50 text-[0.6rem]">{formatFileSize(image.fileSize || 0)}</p>
+        <p className="text-[0.6rem] text-background/50">{formatFileSize(image.fileSize || 0)}</p>
       </aside>
-      <aside className="absolute top-0 left-0">
+      <aside className="absolute left-0 top-0">
         <button
-          className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+          className="m-2 rounded-full border border-white/50 bg-black/50 p-1 text-white transition hover:border-white"
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -91,10 +91,10 @@ export const Thumbnail = ({
         </button>
       </aside>
       {features?.metadata && (
-        <aside className="absolute top-0 right-0">
+        <aside className="absolute right-0 top-0">
           <button
-            className={`p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white ${
-              hasMetadata ? 'text-green-500 border-green-500' : 'text-white'
+            className={`m-2 rounded-full border border-white/50 bg-black/50 p-1 transition hover:border-white ${
+              hasMetadata ? 'border-green-500 text-green-500' : 'text-white'
             }`}
             onClick={(event) => {
               event.preventDefault();
@@ -109,7 +109,7 @@ export const Thumbnail = ({
       {features?.archive && (
         <aside className="absolute bottom-0 left-0">
           <button
-            className="text-white p-1 m-2 rounded-full bg-black/50 transition border border-white/50 hover:border-white"
+            className="m-2 rounded-full border border-white/50 bg-black/50 p-1 text-white transition hover:border-white"
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();

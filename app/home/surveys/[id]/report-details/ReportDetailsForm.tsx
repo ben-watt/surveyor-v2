@@ -1,19 +1,22 @@
-import { DynamicComboBox } from "@/app/home/components/Input";
-import InputDate from "@/app/home/components/Input/InputDate";
-import Input from "@/app/home/components/Input/InputText";
-import TextAreaInput from "@/app/home/components/Input/TextAreaInput";
-import { FormProvider, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { reportDetailsSchema, ReportDetailsInput } from "../../schemas/reportDetails";
-import { FormStatus, ReportDetails } from "../../building-survey-reports/BuildingSurveyReportSchema";
-import { surveyStore } from "@/app/home/clients/Database";
-import { memo } from "react";
-import { useRouter } from "next/navigation";
-import { RhfDropZoneInputImage } from "@/app/home/components/InputImage/RhfDropZoneInputImage";
-import { useDynamicDrawer } from "@/app/home/components/Drawer";
-import AddressInput from "@/app/home/components/Input/AddressInput";
-import { useAutoSaveFormWithImages } from "@/app/home/hooks/useAutoSaveFormWithImages";
-import { LastSavedIndicatorWithUploads } from "@/app/home/components/LastSavedIndicatorWithUploads";
+import { DynamicComboBox } from '@/app/home/components/Input';
+import InputDate from '@/app/home/components/Input/InputDate';
+import Input from '@/app/home/components/Input/InputText';
+import TextAreaInput from '@/app/home/components/Input/TextAreaInput';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { reportDetailsSchema, ReportDetailsInput } from '../../schemas/reportDetails';
+import {
+  FormStatus,
+  ReportDetails,
+} from '../../building-survey-reports/BuildingSurveyReportSchema';
+import { surveyStore } from '@/app/home/clients/Database';
+import { memo } from 'react';
+import { useRouter } from 'next/navigation';
+import { RhfDropZoneInputImage } from '@/app/home/components/InputImage/RhfDropZoneInputImage';
+import { useDynamicDrawer } from '@/app/home/components/Drawer';
+import AddressInput from '@/app/home/components/Input/AddressInput';
+import { useAutoSaveFormWithImages } from '@/app/home/hooks/useAutoSaveFormWithImages';
+import { LastSavedIndicatorWithUploads } from '@/app/home/components/LastSavedIndicatorWithUploads';
 
 interface ReportDetailsFormProps {
   surveyId: string;
@@ -39,8 +42,8 @@ const LevelField = memo(({ control, errors }: any) => (
     <DynamicComboBox
       labelTitle="Level"
       data={[
-        { label: "Level 2", value: "2" },
-        { label: "Level 3", value: "3" },
+        { label: 'Level 2', value: '2' },
+        { label: 'Level 3', value: '3' },
       ]}
       name="level"
       control={control}
@@ -55,7 +58,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
   const methods = useForm<ReportDetailsInput>({
     resolver: zodResolver(reportDetailsSchema),
     defaultValues: reportDetails,
-    mode: 'onChange'
+    mode: 'onChange',
   });
   const {
     register,
@@ -65,14 +68,14 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
     getValues,
     trigger,
   } = methods;
-  
+
   const router = useRouter();
   const drawerContext = useDynamicDrawer();
 
   const saveData = async (data: ReportDetailsInput, { auto = false } = {}) => {
     if (!surveyId) return;
 
-    console.log("[ReportDetailsForm] Save data", data);
+    console.log('[ReportDetailsForm] Save data', data);
 
     try {
       await surveyStore.update(surveyId, (survey) => {
@@ -87,7 +90,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
         router.push(`/home/surveys/${surveyId}`);
       }
     } catch (error) {
-      console.error("[ReportDetailsForm] Save failed", error);
+      console.error('[ReportDetailsForm] Save failed', error);
       throw error; // Re-throw for autosave error handling
     }
   };
@@ -102,9 +105,9 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
       validateBeforeSave: false, // Allow saving partial/invalid data
       imagePaths: [
         `report-images/${surveyId}/moneyShot/`,
-        `report-images/${surveyId}/frontElevationImagesUri/`
-      ]
-    }
+        `report-images/${surveyId}/frontElevationImagesUri/`,
+      ],
+    },
   );
 
   return (
@@ -112,20 +115,20 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
       <div className="space-y-2">
         <LevelField control={control} errors={errors} />
         <AddressField control={control} errors={errors} />
-        
+
         <div>
           <Input
             labelTitle="Client"
             placeholder="Mr John Doe"
-            register={() => register("clientName", { required: true })}
+            register={() => register('clientName', { required: true })}
           />
         </div>
-        
+
         <div>
           <Input
             labelTitle="Reference"
             placeholder="24.123"
-            register={() => register("reference", { required: true })}
+            register={() => register('reference', { required: true })}
           />
         </div>
 
@@ -133,13 +136,13 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           <InputDate
             labelTitle="Inspection Date"
             controllerProps={{
-              name: "inspectionDate",
+              name: 'inspectionDate',
               rules: {
                 required: true,
                 validate: (v) => {
                   const endOfDay = new Date();
                   endOfDay.setHours(23, 59, 59, 999);
-                  return new Date(v) < endOfDay || "Date cannot be in the future";
+                  return new Date(v) < endOfDay || 'Date cannot be in the future';
                 },
               },
             }}
@@ -150,7 +153,7 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           <InputDate
             labelTitle="Report Date"
             controllerProps={{
-              name: "reportDate",
+              name: 'reportDate',
               rules: {
                 required: true,
               },
@@ -162,21 +165,21 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           <Input
             labelTitle="Weather"
             placeholder="Sunny, clear, 20°C"
-            register={() => register("weather", { required: true })}
+            register={() => register('weather', { required: true })}
           />
         </div>
 
         <div>
           <TextAreaInput
             labelTitle="Orientation"
-            register={() => register("orientation", { required: true })}
+            register={() => register('orientation', { required: true })}
           />
         </div>
 
         <div>
           <TextAreaInput
             labelTitle="Situation"
-            register={() => register("situation", { required: true })}
+            register={() => register('situation', { required: true })}
           />
         </div>
 
@@ -188,10 +191,10 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             maxFiles={1}
             features={{
               archive: false,
-              metadata: false
+              metadata: false,
             }}
             rhfProps={{
-              name: 'moneyShot'
+              name: 'moneyShot',
             }}
           />
         </div>
@@ -204,10 +207,10 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
             maxFiles={4}
             features={{
               archive: true,
-              metadata: true
+              metadata: true,
             }}
             rhfProps={{
-              name: 'frontElevationImagesUri'
+              name: 'frontElevationImagesUri',
             }}
           />
         </div>
@@ -215,11 +218,11 @@ const ReportDetailsForm = ({ reportDetails, surveyId }: ReportDetailsFormProps) 
           status={saveStatus}
           isUploading={isUploading}
           lastSavedAt={lastSavedAt}
-          className="text-sm justify-center"
+          className="justify-center text-sm"
         />
       </div>
     </FormProvider>
   );
 };
 
-export default memo(ReportDetailsForm); 
+export default memo(ReportDetailsForm);

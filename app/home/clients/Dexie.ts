@@ -1,11 +1,11 @@
 import Dexie, { EntityTable } from 'dexie';
-import { type Schema } from "@/amplify/data/resource";
+import { type Schema } from '@/amplify/data/resource';
 import { BuildingSurveyFormData } from '../surveys/building-survey-reports/BuildingSurveyReportSchema';
 
-import { Draft, produce } from "immer";
+import { Draft, produce } from 'immer';
 import { Err, Ok, Result } from 'ts-results';
 import { getErrorMessage } from '../utils/handleError';
-import { useLiveQuery } from "dexie-react-hooks";
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, useEffect } from 'react';
 import { debounce, DebouncedFunc } from 'lodash';
 import { getCurrentTenantId } from '../utils/tenant-utils';
@@ -16,15 +16,23 @@ type ReplaceFieldType<T, K extends keyof T, NewType> = Omit<T, K> & {
   [P in K]: NewType;
 };
 
-export type Survey = ReplaceFieldType<Schema['Surveys']['type'], "content", BuildingSurveyFormData>;
-export type UpdateSurvey = ReplaceFieldType<Schema['Surveys']['updateType'], "content", BuildingSurveyFormData>;
-export type CreateSurvey = ReplaceFieldType<Schema['Surveys']['createType'], "content", BuildingSurveyFormData>;
-export type DeleteSurvey = Schema['Surveys']['deleteType']
+export type Survey = ReplaceFieldType<Schema['Surveys']['type'], 'content', BuildingSurveyFormData>;
+export type UpdateSurvey = ReplaceFieldType<
+  Schema['Surveys']['updateType'],
+  'content',
+  BuildingSurveyFormData
+>;
+export type CreateSurvey = ReplaceFieldType<
+  Schema['Surveys']['createType'],
+  'content',
+  BuildingSurveyFormData
+>;
+export type DeleteSurvey = Schema['Surveys']['deleteType'];
 
-export type Component = Omit<Schema['Components']['type'], "element">;
-export type Element = Omit<Schema['Elements']['type'], "components" | "section">;
+export type Component = Omit<Schema['Components']['type'], 'element'>;
+export type Element = Omit<Schema['Elements']['type'], 'components' | 'section'>;
 export type Phrase = Schema['Phrases']['type'];
-export type Section = Omit<Schema['Sections']['type'], "elements"> & TableEntity;
+export type Section = Omit<Schema['Sections']['type'], 'elements'> & TableEntity;
 
 type TableEntity = {
   id: string;
@@ -32,15 +40,15 @@ type TableEntity = {
   syncStatus: string;
   syncError?: string | undefined | null;
   tenantId: string;
-}
+};
 
 export enum SyncStatus {
-  Synced = "synced",
-  Draft = "draft", // Used in other components
-  Queued = "queued",
-  Failed = "failed",
-  PendingDelete = "pending_delete",
-  Archived = "archived", // Used in ImageUploadStore
+  Synced = 'synced',
+  Draft = 'draft', // Used in other components
+  Queued = 'queued',
+  Failed = 'failed',
+  PendingDelete = 'pending_delete',
+  Archived = 'archived', // Used in ImageUploadStore
 }
 
 export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
@@ -52,9 +60,11 @@ export interface DexieRemoteHandlers<T, TCreate, TUpdate> {
 }
 
 export interface DexieStore<T, TCreate> {
-  useList: () => [boolean, T[]];  
+  useList: () => [boolean, T[]];
   useGet: (id: string) => [boolean, T | undefined];
-  add: (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt" | "tenantId">) => Promise<void>;
+  add: (
+    data: Omit<TCreate, 'syncStatus' | 'createdAt' | 'updatedAt' | 'tenantId'>,
+  ) => Promise<void>;
   get: (id: string) => Promise<T | null>;
   update: (id: string, updateFn: (currentState: Draft<T>) => void) => Promise<void>;
   remove: (id: string) => Promise<void>;
@@ -109,7 +119,10 @@ const useAuthAndTenant = () => {
           }
         }
       } catch (error) {
-        console.debug(`[useAuthAndTenant] Auth attempt ${retryCount + 1}/${maxRetries} failed:`, error);
+        console.debug(
+          `[useAuthAndTenant] Auth attempt ${retryCount + 1}/${maxRetries} failed:`,
+          error,
+        );
 
         if (mounted) {
           retryCount++;
@@ -140,11 +153,15 @@ const useAuthAndTenant = () => {
   return { tenantId, authReady, authSuccess };
 };
 
-function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string }, TUpdate extends { id: string }>(
+function CreateDexieHooks<
+  T extends TableEntity,
+  TCreate extends { id: string },
+  TUpdate extends { id: string },
+>(
   db: Dexie,
   tableName: string,
-  remoteHandlers: DexieRemoteHandlers<T, TCreate, TUpdate>
-) : DexieStore<T, TCreate> {
+  remoteHandlers: DexieRemoteHandlers<T, TCreate, TUpdate>,
+): DexieStore<T, TCreate> {
   const table = db.table<T>(tableName);
   let syncInProgress = false;
 
@@ -159,11 +176,11 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
 
     return null;
   };
-  
+
   const sync = async () => {
     if (!navigator.onLine) {
-      console.debug("[sync] Skipping sync - not online");
-      return Err(new Error("Not online"));
+      console.debug('[sync] Skipping sync - not online');
+      return Err(new Error('Not online'));
     }
 
     console.debug(`[sync] Starting sync for ${tableName}`);
@@ -175,7 +192,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
 
     console.error(`[sync] Error syncing ${tableName} with server:`, syncResult.val);
     return Err(new Error(syncResult.val.message));
-  }
+  };
 
   const debounceSync = debounce(sync, 1000);
 
@@ -184,34 +201,29 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     const [initialSyncTriggered, setInitialSyncTriggered] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
 
-    const data = useLiveQuery(
-      async () => {
-        if (!authReady || !authSuccess || !tenantId) {
-          return [];
-        }
-        console.debug("[useList] Getting data", tenantId, authReady);
-        const items = await table
-          .where('tenantId')
-          .equals(tenantId)
-          .and(item => item.syncStatus !== SyncStatus.PendingDelete)
-          .toArray();
-        
-        // Mark data as loaded once we've queried the database
-        setDataLoaded(true);
-        
-        // Trigger initial sync if no data and online
-        if (!initialSyncTriggered && items.length === 0 && navigator.onLine) {
-          setInitialSyncTriggered(true);
-          console.debug("[useList] No local data found, triggering initial sync");
-          syncWithServer().catch(err => 
-            console.error("[useList] Initial sync failed:", err)
-          );
-        }
-        
-        return items;
-      },
-      [tenantId, authReady, authSuccess]
-    );
+    const data = useLiveQuery(async () => {
+      if (!authReady || !authSuccess || !tenantId) {
+        return [];
+      }
+      console.debug('[useList] Getting data', tenantId, authReady);
+      const items = await table
+        .where('tenantId')
+        .equals(tenantId)
+        .and((item) => item.syncStatus !== SyncStatus.PendingDelete)
+        .toArray();
+
+      // Mark data as loaded once we've queried the database
+      setDataLoaded(true);
+
+      // Trigger initial sync if no data and online
+      if (!initialSyncTriggered && items.length === 0 && navigator.onLine) {
+        setInitialSyncTriggered(true);
+        console.debug('[useList] No local data found, triggering initial sync');
+        syncWithServer().catch((err) => console.error('[useList] Initial sync failed:', err));
+      }
+
+      return items;
+    }, [tenantId, authReady, authSuccess]);
 
     // Only return hydrated=true when auth is successful AND data has been queried
     return [authReady && authSuccess && tenantId !== null && dataLoaded, data ?? []];
@@ -221,30 +233,25 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     const { tenantId, authReady, authSuccess } = useAuthAndTenant();
     const [dataQueried, setDataQueried] = useState(false);
 
-    const result = useLiveQuery(
-      async () => {
-        if (!authReady || !authSuccess || !tenantId) return { value: undefined };
-        const item = await getItem(id);
-        
-        // Mark as queried once we've attempted to get the item
-        setDataQueried(true);
-        
-        return item && 
-               item.syncStatus !== SyncStatus.PendingDelete && 
-               item.tenantId === tenantId 
-          ? { value: item } 
-          : { value: undefined };
-      },
-      [id, tenantId, authReady, authSuccess]
-    );
-    
+    const result = useLiveQuery(async () => {
+      if (!authReady || !authSuccess || !tenantId) return { value: undefined };
+      const item = await getItem(id);
+
+      // Mark as queried once we've attempted to get the item
+      setDataQueried(true);
+
+      return item && item.syncStatus !== SyncStatus.PendingDelete && item.tenantId === tenantId
+        ? { value: item }
+        : { value: undefined };
+    }, [id, tenantId, authReady, authSuccess]);
+
     // Only return hydrated=true when auth is successful AND data has been queried
     return [authReady && authSuccess && tenantId !== null && dataQueried, result?.value];
   };
 
   const syncWithServer = async (): Promise<Result<void, Error>> => {
     if (syncInProgress) return Ok(undefined);
-    
+
     syncInProgress = true;
     console.debug(`[syncWithServer] Starting sync for ${tableName}`);
 
@@ -252,7 +259,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       // Resolve tenant early; needed for all phases (deletes, merges, pushes)
       const tenantId = await getCurrentTenantId();
       if (!tenantId) {
-        return Err(new Error("No tenant ID available"));
+        return Err(new Error('No tenant ID available'));
       }
 
       // Use custom sync handler if provided
@@ -264,7 +271,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       const pendingDeletes = await table
         .where('syncStatus')
         .equals(SyncStatus.PendingDelete)
-        .and(item => item.tenantId === tenantId)
+        .and((item) => item.tenantId === tenantId)
         .toArray();
 
       for (const item of pendingDeletes) {
@@ -286,7 +293,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
           await table.put({
             ...item,
             syncStatus: SyncStatus.PendingDelete,
-            syncError: error instanceof Error ? error.message : "Failed to delete item",
+            syncError: error instanceof Error ? error.message : 'Failed to delete item',
             updatedAt: new Date().toISOString(),
           });
         }
@@ -301,7 +308,7 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       } else if (Array.isArray(remoteDataResult)) {
         remoteData = remoteDataResult;
       } else {
-        return Err(new Error("Failed to get remote data"));
+        return Err(new Error('Failed to get remote data'));
       }
 
       // tenantId already resolved above
@@ -314,19 +321,21 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         }
         const local = await getItem(remote.id);
 
-        if(!local) {
+        if (!local) {
           console.debug(`[syncWithServer] New item from server ${remote.id} in ${tableName}`);
           await table.put({ ...remote, tenantId, syncStatus: SyncStatus.Synced });
           continue;
         }
-        
-        if(local?.syncStatus === SyncStatus.PendingDelete) {
-          console.debug("[syncWithServer] Skipping pending delete", remote);
+
+        if (local?.syncStatus === SyncStatus.PendingDelete) {
+          console.debug('[syncWithServer] Skipping pending delete', remote);
           continue;
         }
 
-        if(new Date(remote.updatedAt) > new Date(local.updatedAt)) {
-          console.debug(`[syncWithServer] Updating ${remote.id} in ${tableName} with newer server version`);
+        if (new Date(remote.updatedAt) > new Date(local.updatedAt)) {
+          console.debug(
+            `[syncWithServer] Updating ${remote.id} in ${tableName} with newer server version`,
+          );
           await table.put({ ...remote, tenantId, syncStatus: SyncStatus.Synced });
           continue;
         }
@@ -335,48 +344,51 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
       // Helper to process local records
       const processLocalRecord = async (local: T, exists: boolean) => {
         try {
-          const operation = exists ? "Updating" : "Creating";
+          const operation = exists ? 'Updating' : 'Creating';
           console.log(`[syncWithServer] ${operation}...`, local);
-          
-          const result = exists 
+
+          const result = exists
             ? await remoteHandlers.update({ ...local } as unknown as TUpdate)
             : await remoteHandlers.create({ ...local } as unknown as TCreate);
-          
+
           const normalized = normalizeResult(result);
           if (normalized.ok) {
             await table.put({ ...normalized.val, tenantId, syncStatus: SyncStatus.Synced });
           } else {
-            await table.put({ 
-              ...local, 
-              syncStatus: SyncStatus.Failed, 
-              syncError: normalized.val.message ?? `Failed to ${exists ? 'update' : 'create'} item`
+            await table.put({
+              ...local,
+              syncStatus: SyncStatus.Failed,
+              syncError: normalized.val.message ?? `Failed to ${exists ? 'update' : 'create'} item`,
             });
           }
-        } catch(error: any) {
-          console.log("[syncWithServer] Error...", error);
-          await table.put({ 
-            ...local, 
-            syncStatus: SyncStatus.Failed, 
-            syncError: error.message || error.toString() || "Unknown error"
+        } catch (error: any) {
+          console.log('[syncWithServer] Error...', error);
+          await table.put({
+            ...local,
+            syncStatus: SyncStatus.Failed,
+            syncError: error.message || error.toString() || 'Unknown error',
           });
         }
       };
 
       // Process local queued/failed items
-      const localRecords = await table.where('syncStatus')
+      const localRecords = await table
+        .where('syncStatus')
         .equals(SyncStatus.Queued)
         .or('syncStatus')
         .equals(SyncStatus.Failed)
-        .and(item => item.tenantId === tenantId)
+        .and((item) => item.tenantId === tenantId)
         .toArray();
 
       for (const local of localRecords) {
-        console.log("[syncWithServer] Processing local record", local);
-        const exists = remoteData.find(r => r.id === local.id);
+        console.log('[syncWithServer] Processing local record', local);
+        const exists = remoteData.find((r) => r.id === local.id);
         await processLocalRecord(local, !!exists);
       }
 
-      console.debug(`[syncWithServer] Successfully synced ${tableName} - Processed ${localRecords.length} local items and ${remoteData.length} remote items`); 
+      console.debug(
+        `[syncWithServer] Successfully synced ${tableName} - Processed ${localRecords.length} local items and ${remoteData.length} remote items`,
+      );
       return Ok(undefined);
     } catch (error: any) {
       console.error(`[syncWithServer] Error syncing ${tableName}:`, error);
@@ -389,47 +401,49 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
   const get = async (id: string) => {
     const local = await getItem(id);
     if (!local || local.syncStatus === SyncStatus.PendingDelete) {
-      console.debug("[get] Item not found with id: " + id);
+      console.debug('[get] Item not found with id: ' + id);
       return null;
     }
 
     return local;
   };
 
-  const add = async (data: Omit<TCreate, "syncStatus" | "createdAt" | "updatedAt" | "tenantId">) => {
-      const tenantId = await getCurrentTenantId();
-      if (!tenantId) return;
-      await table.add({
-        ...data,
-        syncStatus: SyncStatus.Queued,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        tenantId: tenantId
-      } as unknown as T);
-      
-      // Trigger sync asynchronously if online
-      debounceSync();
+  const add = async (
+    data: Omit<TCreate, 'syncStatus' | 'createdAt' | 'updatedAt' | 'tenantId'>,
+  ) => {
+    const tenantId = await getCurrentTenantId();
+    if (!tenantId) return;
+    await table.add({
+      ...data,
+      syncStatus: SyncStatus.Queued,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      tenantId: tenantId,
+    } as unknown as T);
+
+    // Trigger sync asynchronously if online
+    debounceSync();
   };
 
   const update = async (id: string, updateFn: (currentState: Draft<T>) => void) => {
-      const local = await getItem(id);
-      if (!local) {
-        throw new Error("Item not found");
-      }
+    const local = await getItem(id);
+    if (!local) {
+      throw new Error('Item not found');
+    }
 
-      if (local.syncStatus === SyncStatus.PendingDelete) {
-        throw new Error("Cannot update a deleted item");
-      }
+    if (local.syncStatus === SyncStatus.PendingDelete) {
+      throw new Error('Cannot update a deleted item');
+    }
 
-      const data = produce(local, updateFn);
-      await table.put({
-        ...data,
-        syncStatus: SyncStatus.Queued,
-        updatedAt: new Date().toISOString(),
-      });
+    const data = produce(local, updateFn);
+    await table.put({
+      ...data,
+      syncStatus: SyncStatus.Queued,
+      updatedAt: new Date().toISOString(),
+    });
 
-      // Trigger sync asynchronously if online
-      debounceSync();
+    // Trigger sync asynchronously if online
+    debounceSync();
   };
 
   const remove = async (id: string) => {
@@ -441,32 +455,32 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         syncStatus: SyncStatus.PendingDelete,
         updatedAt: new Date().toISOString(),
       });
-      
+
       debounceSync();
-      console.debug("[remove] Item removed", id);
+      console.debug('[remove] Item removed', id);
     } else {
-      console.error("[remove] Item not found", id);
+      console.error('[remove] Item not found', id);
     }
   };
 
   const removeAll = async (deleteRemote: boolean = true) => {
-      if (deleteRemote) {
-        const tenantId = await getCurrentTenantId();
-        if (!tenantId) return;
-        
-        // Mark all items for deletion using bulk operation
-        const items = await table.where('tenantId').equals(tenantId).toArray();
-        const updates = items.map(item => ({
-          ...item,
-          syncStatus: SyncStatus.PendingDelete,
-          updatedAt: new Date().toISOString(),
-        }));
-        
-        await table.bulkPut(updates);
-        debounceSync();
-      } else {
-        // Just clear the table locally
-        await table.clear();
+    if (deleteRemote) {
+      const tenantId = await getCurrentTenantId();
+      if (!tenantId) return;
+
+      // Mark all items for deletion using bulk operation
+      const items = await table.where('tenantId').equals(tenantId).toArray();
+      const updates = items.map((item) => ({
+        ...item,
+        syncStatus: SyncStatus.PendingDelete,
+        updatedAt: new Date().toISOString(),
+      }));
+
+      await table.bulkPut(updates);
+      debounceSync();
+    } else {
+      // Just clear the table locally
+      await table.clear();
     }
   };
 
@@ -477,38 +491,39 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
         try {
           await syncWithServer();
         } catch (error) {
-          console.error("[startPeriodicSync] Error during periodic sync:", error);
+          console.error('[startPeriodicSync] Error during periodic sync:', error);
         }
       }
     }, intervalMs);
-    
+
     return () => clearInterval(interval);
   };
 
   const forceSync = async (): Promise<Result<void, Error>> => {
     console.debug(`[forceSync] Starting forced sync for ${tableName}`);
-    
+
     // Reset all failed items to try again
     const tenantId = await getCurrentTenantId();
     if (tenantId) {
-      const failedItems = await table.where('syncStatus')
+      const failedItems = await table
+        .where('syncStatus')
         .equals(SyncStatus.Failed)
-        .and(item => item.tenantId === tenantId)
+        .and((item) => item.tenantId === tenantId)
         .toArray();
-      
+
       if (failedItems.length > 0) {
-        const updates = failedItems.map(item => ({
+        const updates = failedItems.map((item) => ({
           ...item,
           syncStatus: SyncStatus.Queued,
           syncError: undefined,
           updatedAt: new Date().toISOString(),
         }));
-        
+
         await table.bulkPut(updates);
         console.debug(`[forceSync] Reset ${failedItems.length} failed items in ${tableName}`);
       }
     }
-    
+
     return await syncWithServer();
   };
 
@@ -522,17 +537,17 @@ function CreateDexieHooks<T extends TableEntity, TCreate extends { id: string },
     removeAll,
     startPeriodicSync,
     sync: debounceSync,
-    forceSync
+    forceSync,
   };
 }
 
 const db = new Dexie('Surveys') as Dexie & {
-  surveys: EntityTable<Survey, "id", "tenantId">;
-  components: EntityTable<Component, "id", "tenantId">;
-  elements: EntityTable<Element, "id", "tenantId">;
-  phrases: EntityTable<Phrase, "id", "tenantId">;
-  sections: EntityTable<Section, "id", "tenantId">;
-  imageMetadata: EntityTable<ImageMetadata, "id", "tenantId">;
+  surveys: EntityTable<Survey, 'id', 'tenantId'>;
+  components: EntityTable<Component, 'id', 'tenantId'>;
+  elements: EntityTable<Element, 'id', 'tenantId'>;
+  phrases: EntityTable<Phrase, 'id', 'tenantId'>;
+  sections: EntityTable<Section, 'id', 'tenantId'>;
+  imageMetadata: EntityTable<ImageMetadata, 'id', 'tenantId'>;
 };
 
 // Version 2: Initial schema (kept for upgrade path)
@@ -543,17 +558,18 @@ db.version(2).stores({
   phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   imageUploads: 'id, tenantId, path, updatedAt, syncStatus, [tenantId+updatedAt]',
-  imageMetadata: 'id, tenantId, imagePath, updatedAt, syncStatus, [tenantId+updatedAt]'
+  imageMetadata: 'id, tenantId, imagePath, updatedAt, syncStatus, [tenantId+updatedAt]',
 });
 
-db.version(21)
-.upgrade(async tx => {
-  console.log("[Dexie] Upgrading phrases...");
-  return tx.table<Phrase, "id", "tenantId">('phrases').toCollection().modify((phrase) => {
-    delete (phrase as any)["associatedMaterialIds"];
-    delete (phrase as any)["associatedElementIds"];
-  });
-
+db.version(21).upgrade(async (tx) => {
+  console.log('[Dexie] Upgrading phrases...');
+  return tx
+    .table<Phrase, 'id', 'tenantId'>('phrases')
+    .toCollection()
+    .modify((phrase) => {
+      delete (phrase as any)['associatedMaterialIds'];
+      delete (phrase as any)['associatedElementIds'];
+    });
 });
 
 // Add indexes for new imageMetadata fields
@@ -564,7 +580,8 @@ db.version(22).stores({
   phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   imageUploads: 'id, tenantId, path, updatedAt, syncStatus, [tenantId+updatedAt]',
-  imageMetadata: 'id, tenantId, imagePath, uploadStatus, isArchived, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived]'
+  imageMetadata:
+    'id, tenantId, imagePath, uploadStatus, isArchived, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived]',
 });
 
 // Version 23: Remove imageUploads table (migrated to imageMetadata)
@@ -574,7 +591,8 @@ db.version(23).stores({
   elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
-  imageMetadata: 'id, tenantId, imagePath, uploadStatus, isArchived, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived]'
+  imageMetadata:
+    'id, tenantId, imagePath, uploadStatus, isArchived, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived]',
   // imageUploads table removed in v23
 });
 
@@ -585,7 +603,8 @@ db.version(24).stores({
   elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
-  imageMetadata: 'id, tenantId, imagePath, uploadStatus, isArchived, isDeleted, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived], [tenantId+isDeleted]'
+  imageMetadata:
+    'id, tenantId, imagePath, uploadStatus, isArchived, isDeleted, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived], [tenantId+isDeleted]',
 });
 
 export { db, CreateDexieHooks };

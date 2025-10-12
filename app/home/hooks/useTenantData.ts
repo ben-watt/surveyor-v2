@@ -12,7 +12,7 @@ const client = generateClient<Schema>();
  */
 export function useTenantData<T>(
   fetchFunction: (tenantId: string | null) => Promise<T>,
-  dependencies: any[] = []
+  dependencies: any[] = [],
 ) {
   const { currentTenant } = useTenant();
   const [data, setData] = useState<T | null>(null);
@@ -23,10 +23,10 @@ export function useTenantData<T>(
     try {
       setLoading(true);
       setError(null);
-      
+
       // Pass the current tenant ID to the fetch function
       const result = await fetchFunction(currentTenant?.name || null);
-      
+
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -51,21 +51,21 @@ export function useTenantData<T>(
  */
 export function withTenantFilter<T>(
   queryFn: (filter?: any) => Promise<T>,
-  tenantId: string | null
+  tenantId: string | null,
 ): Promise<T> {
   if (!tenantId) {
     return queryFn();
   }
-  
+
   // Add tenant filter to the query
   return queryFn({
-    tenantId: { eq: tenantId }
+    tenantId: { eq: tenantId },
   });
 }
 
 /**
  * Example usage:
- * 
+ *
  * // In a component:
  * const { data: surveys, loading } = useTenantData(
  *   (tenantId) => withTenantFilter(
@@ -73,4 +73,4 @@ export function withTenantFilter<T>(
  *     tenantId
  *   )
  * );
- */ 
+ */

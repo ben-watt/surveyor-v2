@@ -1,17 +1,15 @@
-"use client";
+'use client';
 
-import { FormSection } from "@/app/home/components/FormSection";
-import {
-  SurveySection,
-} from "../../building-survey-reports/BuildingSurveyReportSchema";
-import { surveyStore } from "@/app/home/clients/Database";
-import { ClipboardList, Search } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { DynamicDrawer, useDynamicDrawer } from "@/app/home/components/Drawer";
-import InspectionForm from "./InspectionForm";
-import { ElementSectionComponent } from "./ElementSectionComponent";
+import { FormSection } from '@/app/home/components/FormSection';
+import { SurveySection } from '../../building-survey-reports/BuildingSurveyReportSchema';
+import { surveyStore } from '@/app/home/clients/Database';
+import { ClipboardList, Search } from 'lucide-react';
+import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { DynamicDrawer, useDynamicDrawer } from '@/app/home/components/Drawer';
+import InspectionForm from './InspectionForm';
+import { ElementSectionComponent } from './ElementSectionComponent';
 
 const ConditionPage = () => {
   const params = useParams<{ id: string }>();
@@ -37,7 +35,7 @@ const ConditionPage = () => {
       {!isHydrated && <div>Loading...</div>}
       {isHydrated && survey && (
         <DynamicDrawer
-          id={id + "-condition"}
+          id={id + '-condition'}
           isOpen={isOpen}
           handleClose={handleClose}
           title="Property Condition"
@@ -55,25 +53,25 @@ interface ConditionFormProps {
 
 const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
   const { openDrawer } = useDynamicDrawer();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
 
   const onStartNewInspection = () => {
     openDrawer({
       id: `${id}-condition-inspect`,
-      title: "Inspect Component",
-      description: "Inspect the component",
+      title: 'Inspect Component',
+      description: 'Inspect the component',
       content: <InspectionForm surveyId={id} />,
     });
   };
 
   if (initValues.length == 0) {
     return (
-      <div className="text-center p-6">
-        <div className="mx-auto bg-muted rounded-full w-12 h-12 flex items-center justify-center mb-4">
+      <div className="p-6 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
           <ClipboardList className="h-6 w-6 text-muted-foreground" />
         </div>
-        <h2 className="text-2xl font-semibold mb-2">No Inspections Yet</h2>
-        <p className="text-muted-foreground mb-6">
+        <h2 className="mb-2 text-2xl font-semibold">No Inspections Yet</h2>
+        <p className="mb-6 text-muted-foreground">
           You haven't inspected any components in this building.
         </p>
         <Button onClick={onStartNewInspection}>Start New Inspection</Button>
@@ -83,26 +81,26 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
 
   const filteredSections = initValues
     // Filter out sections with missing/empty names
-    .filter((section) => (section?.name ?? "").trim().length > 0)
+    .filter((section) => (section?.name ?? '').trim().length > 0)
     .map((section) => ({
       ...section,
       elementSections: section.elementSections.filter((element) =>
-        (element.name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+        (element.name ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
       ),
-    }))
+    }));
 
   return (
     <div>
-      <div className="mb-4 relative">
+      <div className="relative mb-4">
         <div className="relative">
           <input
             type="text"
             placeholder="Search elements..."
-            className="w-full p-2 pl-9 border rounded-md bg-background hover:bg-accent/50 focus:bg-background transition-colors"
+            className="w-full rounded-md border bg-background p-2 pl-9 transition-colors hover:bg-accent/50 focus:bg-background"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted-foreground">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-muted-foreground">
             <Search className="h-5 w-5" />
           </div>
         </div>
@@ -110,7 +108,7 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
       {filteredSections.map((section, sectionIndex) => (
         <FormSection
           key={section.id}
-          title={section.name ?? "Untitled Section"}
+          title={section.name ?? 'Untitled Section'}
           collapsable
           defaultCollapsed={!(searchTerm.length > 0)}
         >
@@ -123,20 +121,14 @@ const ConditionForm = ({ id, initValues }: ConditionFormProps) => {
             />
           ))}
           {section.elementSections.length == 0 && (
-            <div className="text-center p-6">
-              <p className="text-muted-foreground mb-6">
-                No elements found for this section.
-              </p>
+            <div className="p-6 text-center">
+              <p className="mb-6 text-muted-foreground">No elements found for this section.</p>
             </div>
           )}
         </FormSection>
       ))}
       <div className="space-y-2">
-        <Button
-          className="w-full"
-          variant="default"
-          onClick={onStartNewInspection}
-        >
+        <Button className="w-full" variant="default" onClick={onStartNewInspection}>
           Inspect Component
         </Button>
       </div>

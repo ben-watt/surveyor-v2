@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
 import { capturePhoto, pickFromGallery, CapturePhotoOptions } from '@/app/utils/capacitor/camera';
-import { requestCameraPermissions, checkCameraPermissions } from '@/app/utils/capacitor/permissions';
+import {
+  requestCameraPermissions,
+  checkCameraPermissions,
+} from '@/app/utils/capacitor/permissions';
 import { canUseNativeCamera } from '@/app/utils/capacitor/platform';
 
 interface NativeCameraOptions {
@@ -51,108 +54,114 @@ export const useNativeCamera = ({ quality = 90, maxPhotos, path }: NativeCameraO
     }
   }, []);
 
-  const captureNativePhoto = useCallback(async (options: CapturePhotoOptions = {}) => {
-    if (!canUseNativeCamera()) {
-      setError('Native camera not available on this platform');
-      return null;
-    }
-
-    if (photos.length >= maxPhotos) {
-      setError(`Maximum of ${maxPhotos} photos allowed`);
-      return null;
-    }
-
-    setIsCapturing(true);
-    setError(null);
-
-    try {
-      // Check permissions first
-      const hasPerms = hasPermission ?? await checkPermissions();
-      if (!hasPerms) {
-        const granted = await requestPermissions();
-        if (!granted) {
-          throw new Error('Camera permission required');
-        }
+  const captureNativePhoto = useCallback(
+    async (options: CapturePhotoOptions = {}) => {
+      if (!canUseNativeCamera()) {
+        setError('Native camera not available on this platform');
+        return null;
       }
 
-      const result = await capturePhoto({
-        quality,
-        ...options
-      });
+      if (photos.length >= maxPhotos) {
+        setError(`Maximum of ${maxPhotos} photos allowed`);
+        return null;
+      }
 
-      const photo: CapturedPhoto = {
-        id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        blob: result.blob,
-        uri: result.uri,
-        timestamp: Date.now(),
-        format: result.format
-      };
+      setIsCapturing(true);
+      setError(null);
 
-      setPhotos(prev => [...prev, photo]);
-      return photo;
-    } catch (err) {
-      console.error('Native camera capture error:', err);
-      setError(err instanceof Error ? err.message : 'Camera capture failed');
-      return null;
-    } finally {
-      setIsCapturing(false);
-    }
-  }, [quality, maxPhotos, photos.length, hasPermission, checkPermissions, requestPermissions]);
+      try {
+        // Check permissions first
+        const hasPerms = hasPermission ?? (await checkPermissions());
+        if (!hasPerms) {
+          const granted = await requestPermissions();
+          if (!granted) {
+            throw new Error('Camera permission required');
+          }
+        }
 
-  const pickFromNativeGallery = useCallback(async (limit: number = 1) => {
-    if (!canUseNativeCamera()) {
-      setError('Native gallery not available on this platform');
-      return [];
-    }
+        const result = await capturePhoto({
+          quality,
+          ...options,
+        });
 
-    const remaining = maxPhotos - photos.length;
-    const actualLimit = Math.min(limit, remaining);
+        const photo: CapturedPhoto = {
+          id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          blob: result.blob,
+          uri: result.uri,
+          timestamp: Date.now(),
+          format: result.format,
+        };
 
-    if (actualLimit <= 0) {
-      setError(`Maximum of ${maxPhotos} photos allowed`);
-      return [];
-    }
+        setPhotos((prev) => [...prev, photo]);
+        return photo;
+      } catch (err) {
+        console.error('Native camera capture error:', err);
+        setError(err instanceof Error ? err.message : 'Camera capture failed');
+        return null;
+      } finally {
+        setIsCapturing(false);
+      }
+    },
+    [quality, maxPhotos, photos.length, hasPermission, checkPermissions, requestPermissions],
+  );
 
-    setError(null);
+  const pickFromNativeGallery = useCallback(
+    async (limit: number = 1) => {
+      if (!canUseNativeCamera()) {
+        setError('Native gallery not available on this platform');
+        return [];
+      }
 
-    try {
-      const results = await pickFromGallery({
-        quality,
-        limit: actualLimit
-      });
+      const remaining = maxPhotos - photos.length;
+      const actualLimit = Math.min(limit, remaining);
 
-      const newPhotos: CapturedPhoto[] = results.map((result, index) => ({
-        id: `gallery-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-        blob: result.blob,
-        uri: result.uri,
-        timestamp: Date.now(),
-        format: result.format
-      }));
+      if (actualLimit <= 0) {
+        setError(`Maximum of ${maxPhotos} photos allowed`);
+        return [];
+      }
 
-      setPhotos(prev => [...prev, ...newPhotos]);
-      return newPhotos;
-    } catch (err) {
-      console.error('Native gallery picker error:', err);
-      setError(err instanceof Error ? err.message : 'Gallery picker failed');
-      return [];
-    }
-  }, [quality, maxPhotos, photos.length]);
+      setError(null);
+
+      try {
+        const results = await pickFromGallery({
+          quality,
+          limit: actualLimit,
+        });
+
+        const newPhotos: CapturedPhoto[] = results.map((result, index) => ({
+          id: `gallery-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+          blob: result.blob,
+          uri: result.uri,
+          timestamp: Date.now(),
+          format: result.format,
+        }));
+
+        setPhotos((prev) => [...prev, ...newPhotos]);
+        return newPhotos;
+      } catch (err) {
+        console.error('Native gallery picker error:', err);
+        setError(err instanceof Error ? err.message : 'Gallery picker failed');
+        return [];
+      }
+    },
+    [quality, maxPhotos, photos.length],
+  );
 
   const removePhoto = useCallback((photoId: string) => {
-    setPhotos(prev => {
-      const photo = prev.find(p => p.id === photoId);
+    setPhotos((prev) => {
+      const photo = prev.find((p) => p.id === photoId);
       if (photo) {
         // Revoke object URL to prevent memory leaks
         URL.revokeObjectURL(photo.uri);
       }
-      return prev.filter(p => p.id !== photoId);
+      return prev.filter((p) => p.id !== photoId);
     });
   }, []);
 
   const clearPhotos = useCallback(() => {
-    setPhotos(prev => {
+    setPhotos((prev) => {
       // Revoke all object URLs
-      prev.forEach(photo => URL.revokeObjectURL(photo.uri));
+      prev.forEach((photo) => URL.revokeObjectURL(photo.uri));
       return [];
     });
   }, []);
@@ -164,7 +173,7 @@ export const useNativeCamera = ({ quality = 90, maxPhotos, path }: NativeCameraO
     hasPermission,
     error,
     canUseNative: canUseNativeCamera(),
-    
+
     // Actions
     capturePhoto: captureNativePhoto,
     pickFromGallery: pickFromNativeGallery,
@@ -172,8 +181,8 @@ export const useNativeCamera = ({ quality = 90, maxPhotos, path }: NativeCameraO
     clearPhotos,
     checkPermissions,
     requestPermissions,
-    
+
     // Utilities
-    setError
+    setError,
   };
 };

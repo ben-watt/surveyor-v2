@@ -26,9 +26,11 @@ describe('useAutoSaveForm', () => {
 
   it('should initialize with form integration', () => {
     const mockSaveFunction = jest.fn();
-    
+
     const TestForm = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
       const { saveStatus, isSaving } = useAutoSaveForm(
@@ -36,7 +38,7 @@ describe('useAutoSaveForm', () => {
         form.watch,
         getValues,
         form.trigger,
-        { watchChanges: true }
+        { watchChanges: true },
       );
 
       return (
@@ -55,21 +57,22 @@ describe('useAutoSaveForm', () => {
 
   it('should provide enhanced save function', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
+
     const TestFormWithSave = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
-      const { save, saveStatus } = useAutoSaveForm(
-        mockSaveFunction,
-        form.watch,
-        getValues
-      );
+      const { save, saveStatus } = useAutoSaveForm(mockSaveFunction, form.watch, getValues);
 
       return (
         <FormProvider {...(form as any)}>
           <div data-testid="status">{saveStatus}</div>
-          <button data-testid="manual-save" onClick={() => save({ name: 'Test', email: 'test@example.com' })}>
+          <button
+            data-testid="manual-save"
+            onClick={() => save({ name: 'Test', email: 'test@example.com' })}
+          >
             Save
           </button>
         </FormProvider>
@@ -85,7 +88,7 @@ describe('useAutoSaveForm', () => {
 
     expect(mockSaveFunction).toHaveBeenCalledWith(
       { name: 'Test', email: 'test@example.com' },
-      { auto: false }
+      { auto: false },
     );
 
     // Wait for status update
@@ -96,21 +99,22 @@ describe('useAutoSaveForm', () => {
 
   it('should handle save errors correctly', async () => {
     const mockSaveFunction = jest.fn().mockRejectedValue(new Error('Save failed'));
-    
+
     const TestFormWithError = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
-      const { save, saveStatus } = useAutoSaveForm(
-        mockSaveFunction,
-        form.watch,
-        getValues
-      );
+      const { save, saveStatus } = useAutoSaveForm(mockSaveFunction, form.watch, getValues);
 
       return (
         <FormProvider {...(form as any)}>
           <div data-testid="status">{saveStatus}</div>
-          <button data-testid="manual-save" onClick={() => save({ name: 'Test', email: 'test@example.com' })}>
+          <button
+            data-testid="manual-save"
+            onClick={() => save({ name: 'Test', email: 'test@example.com' })}
+          >
             Save
           </button>
         </FormProvider>
@@ -126,7 +130,7 @@ describe('useAutoSaveForm', () => {
 
     // The error should be handled by the hook
     expect(mockSaveFunction).toHaveBeenCalled();
-    
+
     // Wait for error status
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('error');
@@ -135,9 +139,11 @@ describe('useAutoSaveForm', () => {
 
   it('should provide triggerAutoSave function', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
+
     const TestFormWithTrigger = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
       const { triggerAutoSave, saveStatus } = useAutoSaveForm(
@@ -145,13 +151,16 @@ describe('useAutoSaveForm', () => {
         form.watch,
         getValues,
         form.trigger,
-        { delay: 1000 }
+        { delay: 1000 },
       );
 
       return (
         <FormProvider {...(form as any)}>
           <div data-testid="status">{saveStatus}</div>
-          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+          <button
+            data-testid="trigger-autosave"
+            onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}
+          >
             Trigger Autosave
           </button>
         </FormProvider>
@@ -177,7 +186,7 @@ describe('useAutoSaveForm', () => {
     await waitFor(() => {
       expect(mockSaveFunction).toHaveBeenCalledWith(
         { name: 'New', email: 'new@test.com' },
-        { auto: true }
+        { auto: true },
       );
     });
 
@@ -186,9 +195,11 @@ describe('useAutoSaveForm', () => {
 
   it('should not trigger autosave when disabled', async () => {
     const mockSaveFunction = jest.fn();
-    
+
     const TestFormDisabled = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
       const { triggerAutoSave } = useAutoSaveForm(
@@ -196,12 +207,15 @@ describe('useAutoSaveForm', () => {
         form.watch,
         getValues,
         form.trigger,
-        { enabled: false, delay: 1000 }
+        { enabled: false, delay: 1000 },
       );
 
       return (
         <FormProvider {...(form as any)}>
-          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+          <button
+            data-testid="trigger-autosave"
+            onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}
+          >
             Trigger Autosave
           </button>
         </FormProvider>
@@ -225,16 +239,14 @@ describe('useAutoSaveForm', () => {
 
   it('should provide resetStatus function', () => {
     const mockSaveFunction = jest.fn();
-    
+
     const TestFormWithReset = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
-      const { resetStatus, saveStatus } = useAutoSaveForm(
-        mockSaveFunction,
-        form.watch,
-        getValues
-      );
+      const { resetStatus, saveStatus } = useAutoSaveForm(mockSaveFunction, form.watch, getValues);
 
       return (
         <FormProvider {...(form as any)}>
@@ -249,7 +261,7 @@ describe('useAutoSaveForm', () => {
     render(<TestFormWithReset />);
 
     expect(screen.getByTestId('status')).toHaveTextContent('idle');
-    
+
     act(() => {
       screen.getByTestId('reset-status').click();
     });
@@ -259,21 +271,22 @@ describe('useAutoSaveForm', () => {
 
   it('should track last saved timestamp', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
+
     const TestFormWithTimestamp = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
-      const { save, lastSavedAt } = useAutoSaveForm(
-        mockSaveFunction,
-        form.watch,
-        getValues
-      );
+      const { save, lastSavedAt } = useAutoSaveForm(mockSaveFunction, form.watch, getValues);
 
       return (
         <FormProvider {...(form as any)}>
           <div data-testid="last-saved">{lastSavedAt ? lastSavedAt.toISOString() : 'never'}</div>
-          <button data-testid="manual-save" onClick={() => save({ name: 'Test', email: 'test@example.com' })}>
+          <button
+            data-testid="manual-save"
+            onClick={() => save({ name: 'Test', email: 'test@example.com' })}
+          >
             Save
           </button>
         </FormProvider>
@@ -300,9 +313,11 @@ describe('useAutoSaveForm', () => {
 
   it('should use updated default watchDelay of 300ms', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
+
     const TestFormWithDefaultTiming = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
       const { triggerAutoSave, saveStatus } = useAutoSaveForm(
@@ -310,13 +325,16 @@ describe('useAutoSaveForm', () => {
         form.watch,
         getValues,
         form.trigger,
-        { delay: 1000 } // Default watchDelay should be 300ms
+        { delay: 1000 }, // Default watchDelay should be 300ms
       );
 
       return (
         <FormProvider {...(form as any)}>
           <div data-testid="status">{saveStatus}</div>
-          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+          <button
+            data-testid="trigger-autosave"
+            onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}
+          >
             Trigger Autosave
           </button>
         </FormProvider>
@@ -342,7 +360,7 @@ describe('useAutoSaveForm', () => {
     await waitFor(() => {
       expect(mockSaveFunction).toHaveBeenCalledWith(
         { name: 'New', email: 'new@test.com' },
-        { auto: true }
+        { auto: true },
       );
     });
 
@@ -351,9 +369,11 @@ describe('useAutoSaveForm', () => {
 
   it('should expose hasPendingChanges property', () => {
     const mockSaveFunction = jest.fn();
-    
+
     const TestFormWithPendingChanges = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
       const { triggerAutoSave, hasPendingChanges, saveStatus } = useAutoSaveForm(
@@ -361,14 +381,17 @@ describe('useAutoSaveForm', () => {
         form.watch,
         getValues,
         form.trigger,
-        { delay: 1000 }
+        { delay: 1000 },
       );
 
       return (
         <FormProvider {...(form as any)}>
           <div data-testid="status">{saveStatus}</div>
           <div data-testid="pending">{hasPendingChanges ? 'true' : 'false'}</div>
-          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+          <button
+            data-testid="trigger-autosave"
+            onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}
+          >
             Trigger Autosave
           </button>
         </FormProvider>
@@ -390,9 +413,11 @@ describe('useAutoSaveForm', () => {
 
   it('should clear pending status when save completes', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
+
     const TestFormPendingClear = () => {
-      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({ defaultValues: { name: 'Test', email: 'test@example.com' } });
+      const form: ReturnType<typeof useForm<TestFormData>> = useForm<TestFormData>({
+        defaultValues: { name: 'Test', email: 'test@example.com' },
+      });
       const { getValues } = form;
 
       const { triggerAutoSave, hasPendingChanges, saveStatus } = useAutoSaveForm(
@@ -400,14 +425,17 @@ describe('useAutoSaveForm', () => {
         form.watch,
         getValues,
         form.trigger,
-        { delay: 1000 }
+        { delay: 1000 },
       );
 
       return (
         <FormProvider {...(form as any)}>
           <div data-testid="status">{saveStatus}</div>
           <div data-testid="pending">{hasPendingChanges ? 'true' : 'false'}</div>
-          <button data-testid="trigger-autosave" onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}>
+          <button
+            data-testid="trigger-autosave"
+            onClick={() => triggerAutoSave({ name: 'New', email: 'new@test.com' })}
+          >
             Trigger Autosave
           </button>
         </FormProvider>
@@ -436,4 +464,4 @@ describe('useAutoSaveForm', () => {
 
     expect(screen.getByTestId('pending')).toHaveTextContent('false');
   });
-}); 
+});

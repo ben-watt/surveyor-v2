@@ -53,7 +53,7 @@ export const AUTO_SAVE_CONFIG = {
 // Form status labels
 export const FORM_STATUS_LABELS = {
   INCOMPLETE: 'Incomplete',
-  IN_PROGRESS: 'In Progress', 
+  IN_PROGRESS: 'In Progress',
   COMPLETE: 'Complete',
   ERROR: 'Error',
   SAVING: 'Saving...',

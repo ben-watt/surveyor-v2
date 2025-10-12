@@ -1,5 +1,5 @@
 import { matchSorter } from 'match-sorter';
-import { ElementData, ComponentData, PhraseData } from "../types";
+import { ElementData, ComponentData, PhraseData } from '../types';
 import { getCurrentTenantId } from '../../utils/tenant-utils';
 
 interface SeedElement {
@@ -32,24 +32,26 @@ interface SeedLocation {
 
 export async function mapElementsToElementData(elements: SeedElement[]): Promise<ElementData[]> {
   const tenantId = await getCurrentTenantId();
-  return elements.map(element => ({
+  return elements.map((element) => ({
     id: `${element.id}#${tenantId}`,
     name: element.name,
     description: element.description || null,
-    sectionId: element.sectionId ? `${element.sectionId}#${tenantId}` : "",
+    sectionId: element.sectionId ? `${element.sectionId}#${tenantId}` : '',
     order: element.order || 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    tenantId: tenantId || ""
+    tenantId: tenantId || '',
   }));
 }
 
-
-export async function mapBodToComponentData(bod: BodSheet[], elements: ElementData[]): Promise<ComponentData[]> {
+export async function mapBodToComponentData(
+  bod: BodSheet[],
+  elements: ElementData[],
+): Promise<ComponentData[]> {
   const componentData: ComponentData[] = [];
   const componentIds = new Map<string, string>();
   const tenantId = await getCurrentTenantId();
-  
+
   bod.forEach((sheet) => {
     sheet.defects.forEach(async (d) => {
       const componentKey = `${d.type}:${d.specification}`;
@@ -59,18 +61,20 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
         componentIds.set(componentKey, componentId);
       }
 
-      const existingComponent = componentData.find(c => c.name === d.type);
+      const existingComponent = componentData.find((c) => c.name === d.type);
       if (existingComponent) {
-        const existingMaterial = existingComponent.materials.find(m => m.name === d.specification);
+        const existingMaterial = existingComponent.materials.find(
+          (m) => m.name === d.specification,
+        );
         if (!existingMaterial) {
           existingComponent.materials.push({ name: d.specification });
         }
       } else {
-        const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
+        const matchingElement = matchSorter(elements, sheet.elementName, { keys: ['name'] }).at(0);
         componentData.push({
           id: componentId,
           order: 0,
-          elementId: matchingElement?.id ? matchingElement.id : "",
+          elementId: matchingElement?.id ? matchingElement.id : '',
           name: d.type,
           materials: [{ name: d.specification }],
           createdAt: new Date().toISOString(),
@@ -80,40 +84,44 @@ export async function mapBodToComponentData(bod: BodSheet[], elements: ElementDa
     });
   });
 
-
   return componentData;
 }
 
-export async function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[], components: ComponentData[]): Promise<PhraseData[]> {
+export async function mapBodToPhraseData(
+  bod: BodSheet[],
+  elements: ElementData[],
+  components: ComponentData[],
+): Promise<PhraseData[]> {
   const phrases: PhraseData[] = [];
   const tenantId = await getCurrentTenantId();
-  
+
   bod.forEach((sheet) => {
-    const matchingElement = matchSorter(elements, sheet.elementName, { keys: ["name"] }).at(0);
+    const matchingElement = matchSorter(elements, sheet.elementName, { keys: ['name'] }).at(0);
     if (!matchingElement?.id) return;
 
     sheet.defects.forEach((d) => {
-      const matchingComponent = components.find(c => 
-        c.name === d.type && 
-        c.materials.some(m => m.name === d.specification)
+      const matchingComponent = components.find(
+        (c) => c.name === d.type && c.materials.some((m) => m.name === d.specification),
       );
 
       if (!matchingComponent) {
-        console.warn(`No matching component found for type: ${d.type} and specification: ${d.specification}`);
+        console.warn(
+          `No matching component found for type: ${d.type} and specification: ${d.specification}`,
+        );
         return;
       }
 
       const phraseName = `${d.defect}`;
-      const level2 = (d.level2Wording || "") as string;
-      const level3 = (d.level3Wording || "") as string;
-      const phraseText = level2.trim() || level3.trim() || "No description available";
+      const level2 = (d.level2Wording || '') as string;
+      const level3 = (d.level3Wording || '') as string;
+      const phraseText = level2.trim() || level3.trim() || 'No description available';
 
-      if (!phrases.some(p => p.name === phraseName)) {
+      if (!phrases.some((p) => p.name === phraseName)) {
         phrases.push({
           id: crypto.randomUUID(),
           name: phraseName,
           order: 0,
-          type: "Condition",
+          type: 'Condition',
           associatedComponentIds: matchingComponent.id ? [matchingComponent.id] : [],
           phrase: phraseText,
           createdAt: new Date().toISOString(),
@@ -124,4 +132,4 @@ export async function mapBodToPhraseData(bod: BodSheet[], elements: ElementData[
   });
 
   return phrases;
-} 
+}

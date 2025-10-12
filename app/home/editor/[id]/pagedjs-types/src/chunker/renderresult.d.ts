@@ -1,6 +1,6 @@
 export class OverflowContentError extends Error {
-    constructor(message: any, items: any);
-    items: any;
+  constructor(message: any, items: any);
+  items: any;
 }
 export default RenderResult;
 /**
@@ -8,7 +8,7 @@ export default RenderResult;
  * @class
  */
 declare class RenderResult {
-    constructor(breakToken: any, error: any);
-    breakToken: any;
-    error: any;
+  constructor(breakToken: any, error: any);
+  breakToken: any;
+  error: any;
 }

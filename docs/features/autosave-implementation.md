@@ -17,15 +17,17 @@ import { useAutoSave } from '@/app/home/hooks/useAutoSave';
 
 const { save, saveStatus, isSaving, triggerAutoSave, resetStatus } = useAutoSave(
   saveFunction,
-  options
+  options,
 );
 ```
 
 **Parameters:**
+
 - `saveFunction`: Function that handles the actual saving logic
 - `options`: Configuration options (see AutoSaveOptions interface)
 
 **Returns:**
+
 - `save`: Function to trigger manual save
 - `saveStatus`: Current save status ('idle' | 'saving' | 'saved' | 'error' | 'autosaved')
 - `isSaving`: Boolean indicating if a save operation is in progress
@@ -39,15 +41,11 @@ A specialized hook that integrates autosave functionality with React Hook Form.
 ```typescript
 import { useAutoSaveForm } from '@/app/home/hooks/useAutoSaveForm';
 
-const { save, saveStatus, isSaving } = useAutoSaveForm(
-  saveFunction,
-  watch,
-  getValues,
-  options
-);
+const { save, saveStatus, isSaving } = useAutoSaveForm(saveFunction, watch, getValues, options);
 ```
 
 **Parameters:**
+
 - `saveFunction`: Function that handles the actual saving logic
 - `watch`: React Hook Form's watch function
 - `getValues`: React Hook Form's getValues function
@@ -60,7 +58,7 @@ A reusable component to display autosave status with appropriate icons and styli
 ```typescript
 import { AutoSaveStatusIndicator } from '@/app/home/components/AutoSaveStatus';
 
-<AutoSaveStatusIndicator 
+<AutoSaveStatusIndicator
   status={saveStatus}
   showIcon={true}
   showText={true}
@@ -88,11 +86,11 @@ import { LastSavedIndicator } from '@/app/home/components/LastSavedIndicator';
 
 ```typescript
 interface AutoSaveOptions {
-  delay?: number;           // Delay in milliseconds (default: 3000)
-  showToast?: boolean;      // Show toast notifications (default: false)
-  enabled?: boolean;        // Enable autosave (default: true)
-  errorMessage?: string;    // Custom error message
-  successMessage?: string;  // Custom success message
+  delay?: number; // Delay in milliseconds (default: 3000)
+  showToast?: boolean; // Show toast notifications (default: false)
+  enabled?: boolean; // Enable autosave (default: true)
+  errorMessage?: string; // Custom error message
+  successMessage?: string; // Custom success message
 }
 ```
 
@@ -100,9 +98,9 @@ interface AutoSaveOptions {
 
 ```typescript
 interface AutoSaveFormOptions extends AutoSaveOptions {
-  watchChanges?: boolean;   // Trigger autosave on form changes (default: true)
-  watchDelay?: number;      // Debounce delay for form watching (default: 1000)
-  skipFocusBlur?: boolean;  // Skip focus/blur events (default: true)
+  watchChanges?: boolean; // Trigger autosave on form changes (default: true)
+  watchDelay?: number; // Debounce delay for form watching (default: 1000)
+  skipFocusBlur?: boolean; // Skip focus/blur events (default: true)
 }
 ```
 
@@ -113,34 +111,40 @@ The following forms have been successfully converted to use auto-save functional
 ### ✅ Completed Conversions
 
 1. **Sections Form** (`app/home/sections/form.tsx`)
+
    - Removed save button and form submission
    - Added `useAutoSaveForm` hook
    - Added `LastSavedIndicator` component
    - Auto-save enabled only for existing sections
 
 2. **Conditions Form** (`app/home/conditions/form.tsx`)
+
    - Removed save button and form submission
    - Added `useAutoSaveForm` hook
    - Added `LastSavedIndicator` component
    - Auto-save enabled only for existing phrases
 
 3. **Profile Page** (`app/home/profile/page.tsx`)
+
    - Removed save button and form submission
    - Added `useAutoSaveForm` hook
    - Added `LastSavedIndicator` component
    - Handles file upload fields properly
 
 4. **Property Description Form** (`app/home/surveys/[id]/property-description/page.tsx`)
+
    - Removed save button and form submission
    - Added `useAutoSaveForm` hook
    - Added `LastSavedIndicator` component
 
 5. **Checklist Form** (`app/home/surveys/[id]/checklist/page.tsx`)
+
    - Removed save button and form submission
    - Added `useAutoSaveForm` hook
    - Added `LastSavedIndicator` component
 
 6. **Elements Form** (`app/home/elements/form.tsx`)
+
    - Already converted to auto-save
    - Uses `useAutoSaveForm` hook
    - Uses `LastSavedIndicator` component
@@ -155,21 +159,25 @@ The following forms have been successfully converted to use auto-save functional
 The following forms still need to be converted to auto-save:
 
 1. **Report Details Form** (`app/home/surveys/[id]/report-details/ReportDetailsForm.tsx`)
+
    - Uses `SaveButtonWithUploadStatus` for image uploads
    - Complex form with multiple image upload fields
    - May require special handling for upload status
 
 2. **Element Form** (`app/home/surveys/[id]/condition/ElementForm.tsx`)
+
    - Uses `SaveButtonWithUploadStatus` for image uploads
    - Complex form with image uploads and component management
    - May require special handling for upload status
 
 3. **Inspection Form** (`app/home/surveys/[id]/condition/InspectionForm.tsx`)
+
    - Uses `SaveButtonWithUploadStatus` for image uploads
    - Complex form with image uploads
    - May require special handling for upload status
 
 4. **Building Survey Form** (`app/home/surveys/building-survey-reports/BuildingSurveyForm.tsx`)
+
    - Complex form with multiple sections and actions
    - Has "Save As Draft" and "Generate Report" actions
    - May need different approach due to complexity
@@ -313,8 +321,8 @@ function MyForm() {
   return (
     <div className="space-y-4">
       {/* Form fields */}
-      
-      <LastSavedIndicator 
+
+      <LastSavedIndicator
         status={saveStatus}
         lastSavedAt={lastSavedAt}
         className="text-sm justify-center"
@@ -329,6 +337,7 @@ function MyForm() {
 ### 1. Save Function Implementation
 
 Your save function should:
+
 - Accept an `auto` parameter to distinguish between manual and autosave
 - Handle errors appropriately and re-throw them for autosave error handling
 - Only show user notifications for manual saves (not autosaves)
@@ -354,15 +363,10 @@ const saveData = async (data: FormData, { auto = false } = {}) => {
 Enable autosave only when appropriate:
 
 ```typescript
-const { save, saveStatus, isSaving } = useAutoSaveForm(
-  saveData,
-  watch,
-  getValues,
-  {
-    enabled: !!existingId, // Only autosave existing records
-    delay: 2000
-  }
-);
+const { save, saveStatus, isSaving } = useAutoSaveForm(saveData, watch, getValues, {
+  enabled: !!existingId, // Only autosave existing records
+  delay: 2000,
+});
 ```
 
 ### 3. User Feedback
@@ -389,6 +393,7 @@ Provide clear feedback about autosave status:
 ### Example Migration
 
 **Before:**
+
 ```typescript
 const onSubmit = async (data) => {
   await api.save(data);
@@ -404,6 +409,7 @@ return (
 ```
 
 **After:**
+
 ```typescript
 const saveData = async (data, { auto = false } = {}) => {
   await api.save(data);
@@ -452,32 +458,31 @@ This ensures users always see the most accurate "last saved" information, whethe
 The autosave system intelligently handles form events to prevent unnecessary saves:
 
 ### Event Filtering
+
 - **Focus/Blur Events**: Skipped by default to prevent saves on field interactions
 - **Value Changes**: Only triggers autosave when actual values change
 - **Event Types**: Filters out non-value-change events
 
 ### Value Comparison
+
 - **Deep Comparison**: Uses JSON.stringify to compare form values
 - **Previous Values**: Tracks previous state to detect actual changes
 - **Initialization**: Sets baseline values when form is first loaded
 
 ### Configuration
+
 ```typescript
-const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(
-  saveData,
-  watch,
-  getValues,
-  {
-    delay: 2000,
-    skipFocusBlur: true, // Skip focus/blur events (default: true)
-    enabled: true
-  }
-);
+const { saveStatus, isSaving, lastSavedAt } = useAutoSaveForm(saveData, watch, getValues, {
+  delay: 2000,
+  skipFocusBlur: true, // Skip focus/blur events (default: true)
+  enabled: true,
+});
 ```
 
 ## Error Handling
 
 The autosave system includes comprehensive error handling:
+
 - Automatic error status display
 - Configurable error messages
 - Error status timeout (10 seconds)
@@ -499,6 +504,7 @@ The autosave system includes comprehensive error handling:
 The remaining forms that need conversion have image uploads and complex interactions:
 
 1. **Forms with Image Uploads**: These forms use `SaveButtonWithUploadStatus` which tracks upload progress. They may need:
+
    - Integration with the existing upload status tracking
    - Special handling for upload completion before autosave
    - Consideration of upload progress in the save status
@@ -513,4 +519,4 @@ The remaining forms that need conversion have image uploads and complex interact
 1. **For Image Upload Forms**: Consider creating a specialized autosave hook that integrates with the existing upload status system
 2. **For Complex Forms**: Consider implementing autosave on a per-section basis rather than the entire form
 3. **Testing**: Ensure all converted forms work correctly with the new autosave functionality
-4. **User Feedback**: Monitor user experience with the new autosave feature and adjust timing/behavior as needed 
+4. **User Feedback**: Monitor user experience with the new autosave feature and adjust timing/behavior as needed

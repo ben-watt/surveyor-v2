@@ -52,29 +52,33 @@ async function fetchAndCacheUserTenants(): Promise<Tenant[]> {
     let tenants: Tenant[];
 
     if (isAdmin) {
-      tenants = result.data.map(item => ({
+      tenants = result.data.map((item) => ({
         name: item.name,
         description: item.description || undefined,
         createdAt: item.createdAt,
-        createdBy: item.createdBy
+        createdBy: item.createdBy,
       }));
     } else {
       const userGroups = await getUserGroups();
       console.debug('[fetchAndCacheUserTenants] User groups:', userGroups);
 
       tenants = result.data
-        .filter(item => userGroups.includes(item.name))
-        .map(item => ({
+        .filter((item) => userGroups.includes(item.name))
+        .map((item) => ({
           name: item.name,
           description: item.description || undefined,
           createdAt: item.createdAt,
-          createdBy: item.createdBy
+          createdBy: item.createdBy,
         }));
     }
 
     // Cache the fresh data
     tenantsCache = { value: tenants, timestamp: Date.now() };
-    console.debug('[fetchAndCacheUserTenants] Updated tenants cache with', tenants.length, 'tenants');
+    console.debug(
+      '[fetchAndCacheUserTenants] Updated tenants cache with',
+      tenants.length,
+      'tenants',
+    );
 
     return tenants;
   } catch (error) {
@@ -155,7 +159,7 @@ export function useTenantData() {
       try {
         const currentTenantName = await getCurrentTenantId();
         setCurrentTenant(currentTenantName);
-        
+
         const tenantsList = await listUserTenants();
         setTenants(tenantsList);
       } catch (error) {
@@ -164,10 +168,10 @@ export function useTenantData() {
         setLoading(false);
       }
     }
-    
+
     loadTenantData();
   }, []);
-  
+
   const switchTenant = async (newTenantName: string) => {
     try {
       await setPreferredTenant(newTenantName);
@@ -178,7 +182,7 @@ export function useTenantData() {
       return false;
     }
   };
-  
+
   return {
     currentTenant,
     loading,
@@ -208,12 +212,12 @@ export async function createTenant(name: string, description?: string): Promise<
     await client.mutations.tenantAdmin({
       action: 'createGroup',
       groupName: name,
-      description: description || `Tenant group for ${name}`
+      description: description || `Tenant group for ${name}`,
     });
-    
+
     // Get current user
     const currentUser = await getCurrentUser();
-    
+
     // Create tenant record in database using name as primary key
     const result = await client.models.Tenant.create({
       name,
@@ -221,16 +225,16 @@ export async function createTenant(name: string, description?: string): Promise<
       createdBy: currentUser.username,
       createdAt: new Date().toISOString(),
     });
-    
+
     if (!result.data) {
       throw new Error('Failed to create tenant');
     }
-    
+
     return {
       name: result.data.name,
       description: result.data.description || undefined,
       createdAt: result.data.createdAt,
-      createdBy: result.data.createdBy
+      createdBy: result.data.createdBy,
     };
   } catch (error) {
     console.error('Error creating tenant:', error);
@@ -240,17 +244,21 @@ export async function createTenant(name: string, description?: string): Promise<
 
 export async function getUserGroups(): Promise<string[]> {
   const tokens = await cognitoUserPoolsTokenProvider.getTokens();
-  console.debug("tokens", tokens);
-  return tokens?.accessToken?.payload['cognito:groups'] as string[] || [];
+  console.debug('tokens', tokens);
+  return (tokens?.accessToken?.payload['cognito:groups'] as string[]) || [];
 }
-
 
 /**
  * List all tenants the current user has access to
  * Uses stale-while-revalidate pattern for offline-first experience
  */
 export async function listUserTenants(forceRefresh: boolean = false): Promise<Tenant[]> {
-  console.debug('[listUserTenants] Cache valid:', isCacheValid(tenantsCache), 'Force refresh:', forceRefresh);
+  console.debug(
+    '[listUserTenants] Cache valid:',
+    isCacheValid(tenantsCache),
+    'Force refresh:',
+    forceRefresh,
+  );
 
   // If we have fresh cache and not forcing refresh, return immediately
   if (!forceRefresh && isCacheValid(tenantsCache)) {
@@ -289,15 +297,15 @@ export async function addUserToTenant(username: string, tenantName: string): Pro
     if (!isAdmin) {
       throw new Error('Only global administrators can add users to tenants');
     }
-    
+
     // Add user to the Cognito group directly using tenant name
     const result = await client.mutations.tenantAdmin({
       action: 'addUserToGroup',
       username,
-      groupName: tenantName
+      groupName: tenantName,
     });
 
-    if(result.errors) {
+    if (result.errors) {
       console.error('Error adding user to tenant:', result.errors);
       throw new Error(result.errors[0].message);
     }
@@ -317,12 +325,12 @@ export async function removeUserFromTenant(username: string, tenantName: string)
     if (!isAdmin) {
       throw new Error('Only global administrators can remove users from tenants');
     }
-    
+
     // Remove user from the Cognito group directly using tenant name
     await client.mutations.tenantAdmin({
       action: 'removeUserFromGroup',
       username,
-      groupName: tenantName
+      groupName: tenantName,
     });
   } catch (error) {
     console.error('Error removing user from tenant:', error);
@@ -338,16 +346,16 @@ export async function listTenantUsers(tenantName: string): Promise<TenantUser[]>
     // List users in the Cognito group directly using tenant name
     const usersResult = await client.mutations.tenantAdmin({
       action: 'listUsersInGroup',
-      groupName: tenantName
+      groupName: tenantName,
     });
 
     const userResultJson = JSON.parse(usersResult.data as string) as any[];
-    
+
     return userResultJson.map((user: any) => ({
       username: user.Username || '',
       email: user.Attributes?.find((attr: any) => attr.Name === 'email')?.Value || '',
       name: user.Attributes?.find((attr: any) => attr.Name === 'name')?.Value,
-      addedAt: user.UserCreateDate || new Date().toISOString()
+      addedAt: user.UserCreateDate || new Date().toISOString(),
     }));
   } catch (error) {
     console.error('Error listing tenant users:', error);
@@ -362,13 +370,16 @@ export async function setPreferredTenant(tenantName: string): Promise<void> {
   try {
     await updateUserAttributes({
       userAttributes: {
-        'custom:preferredTenant': tenantName
-      }
+        'custom:preferredTenant': tenantName,
+      },
     });
     // Clear the cache when setting new preferred tenant
     preferredTenantCache = null;
     preferredTenantInFlight = null;
-    console.debug('[setPreferredTenant] Cleared preferred tenant cache after setting to:', tenantName);
+    console.debug(
+      '[setPreferredTenant] Cleared preferred tenant cache after setting to:',
+      tenantName,
+    );
   } catch (error) {
     console.error('Error setting preferred tenant:', error);
     throw error;
@@ -431,7 +442,7 @@ export async function deleteTenant(tenantName: string): Promise<void> {
     // Delete the Cognito group
     await client.mutations.tenantAdmin({
       action: 'deleteGroup',
-      groupName: tenantName
+      groupName: tenantName,
     });
 
     // Delete tenant record from database

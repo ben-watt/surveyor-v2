@@ -8,7 +8,10 @@ import { SeedingProgress } from '@/app/home/services/dataSeedingService';
 jest.mock('../dialog', () => ({
   Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
     open ? <div data-testid="dialog">{children}</div> : null,
-  DialogContent: ({ children, onPointerDownOutside }: {
+  DialogContent: ({
+    children,
+    onPointerDownOutside,
+  }: {
     children: React.ReactNode;
     onPointerDownOutside?: (e: React.PointerEvent<HTMLDivElement>) => void;
   }) => (
@@ -25,7 +28,12 @@ jest.mock('../dialog', () => ({
 }));
 
 jest.mock('../button', () => ({
-  Button: ({ children, onClick, disabled, className }: {
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    className,
+  }: {
     children: React.ReactNode;
     onClick?: () => void;
     disabled?: boolean;
@@ -33,17 +41,12 @@ jest.mock('../button', () => ({
   }) => {
     // Extract text content from children, filtering out React elements
     const childText = React.Children.toArray(children)
-      .filter(child => typeof child === 'string')
+      .filter((child) => typeof child === 'string')
       .join(' ');
     const testId = `button-${childText.toLowerCase().replace(/\s+/g, '-')}`;
 
     return (
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={className}
-        data-testid={testId}
-      >
+      <button onClick={onClick} disabled={disabled} className={className} data-testid={testId}>
         {children}
       </button>
     );
@@ -61,7 +64,11 @@ jest.mock('../progress', () => ({
 // Mock icons
 jest.mock('lucide-react', () => ({
   CheckCircle: () => <div data-testid="check-circle-icon">✓</div>,
-  Loader2: () => <div data-testid="loader-icon" className="animate-spin">⟳</div>,
+  Loader2: () => (
+    <div data-testid="loader-icon" className="animate-spin">
+      ⟳
+    </div>
+  ),
 }));
 
 describe('WelcomeDialog', () => {
@@ -175,7 +182,7 @@ describe('WelcomeDialog', () => {
       const progress75 = { ...mockProgress, currentStepIndex: 3 }; // 75%
 
       const { rerender } = render(
-        <WelcomeDialog {...defaultProps} progress={progress25} showSetupOptions={false} />
+        <WelcomeDialog {...defaultProps} progress={progress25} showSetupOptions={false} />,
       );
 
       let progressBar = screen.getByTestId('progress');
@@ -218,17 +225,23 @@ describe('WelcomeDialog', () => {
     };
 
     it('should show completion state when finished', () => {
-      render(<WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />);
+      render(
+        <WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />,
+      );
 
       expect(screen.getByText('Setup Complete!')).toBeInTheDocument();
-      expect(screen.getByText('Your account is ready. You can start creating surveys right away.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Your account is ready. You can start creating surveys right away.'),
+      ).toBeInTheDocument();
       expect(screen.getByTestId('check-circle-icon')).toBeInTheDocument();
       expect(screen.getByTestId('button-get-started')).toBeInTheDocument();
     });
 
     it('should handle get started button click', async () => {
       const user = userEvent.setup();
-      render(<WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />);
+      render(
+        <WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />,
+      );
 
       const getStartedButton = screen.getByTestId('button-get-started');
       await user.click(getStartedButton);
@@ -237,13 +250,17 @@ describe('WelcomeDialog', () => {
     });
 
     it('should not show progress bar when complete', () => {
-      render(<WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />);
+      render(
+        <WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />,
+      );
 
       expect(screen.queryByTestId('progress')).not.toBeInTheDocument();
     });
 
     it('should not show loading icon when complete', () => {
-      render(<WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />);
+      render(
+        <WelcomeDialog {...defaultProps} progress={completeProgress} showSetupOptions={false} />,
+      );
 
       expect(screen.queryByTestId('loader-icon')).not.toBeInTheDocument();
     });
@@ -291,8 +308,12 @@ describe('WelcomeDialog', () => {
     it('should have proper button labels', () => {
       render(<WelcomeDialog {...defaultProps} />);
 
-      expect(screen.getByTestId('button-set-up-sample-data')).toHaveTextContent('Set Up Sample Data');
-      expect(screen.getByTestId('button-start-with-empty-account')).toHaveTextContent('Start with Empty Account');
+      expect(screen.getByTestId('button-set-up-sample-data')).toHaveTextContent(
+        'Set Up Sample Data',
+      );
+      expect(screen.getByTestId('button-start-with-empty-account')).toHaveTextContent(
+        'Start with Empty Account',
+      );
     });
 
     it('should handle keyboard navigation', async () => {

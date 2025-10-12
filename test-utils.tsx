@@ -14,12 +14,9 @@ import { render as rtlRender } from '@testing-library/react';
 //   });
 // }
 
-export function renderWithProviders(
-  ui: React.ReactElement,
-  options?: any
-) {
+export function renderWithProviders(ui: React.ReactElement, options?: any) {
   // const queryClient = createTestQueryClient();
-  
+
   // function Wrapper({ children }: { children: React.ReactNode }) {
   //   return (
   //     <QueryClientProvider client={queryClient}>

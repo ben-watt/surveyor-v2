@@ -1,19 +1,14 @@
-import { Input as ShadInput } from "@/components/ui/input";
-import {
-  FieldErrors,
-  FieldValues,
-  useController,
-  Control,
-} from "react-hook-form";
-import { Label } from "./Label";
-import { ErrorMessage } from "@hookform/error-message";
-import InputError from "../InputError";
-import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { Input as ShadInput } from '@/components/ui/input';
+import { FieldErrors, FieldValues, useController, Control } from 'react-hook-form';
+import { Label } from './Label';
+import { ErrorMessage } from '@hookform/error-message';
+import InputError from '../InputError';
+import { cn } from '@/lib/utils';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { APIProvider, Map, Marker, useMapsLibrary } from '@vis.gl/react-google-maps';
-import React from "react";
-import { Address } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
-import { debounce } from "lodash";
+import React from 'react';
+import { Address } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import { debounce } from 'lodash';
 
 interface AddressInputProps {
   labelTitle?: string;
@@ -27,18 +22,18 @@ interface AddressInputProps {
 }
 
 const mapContainerStyle = {
-  width: "100%",
-  height: "200px",
-  marginTop: "0.5rem",
-  borderRadius: "0.375rem",
+  width: '100%',
+  height: '200px',
+  marginTop: '0.5rem',
+  borderRadius: '0.375rem',
 };
 
-function CustomPlacesAutocomplete({ 
-  inputRef, 
-  onPlaceSelect 
-}: { 
-  inputRef: React.RefObject<HTMLInputElement | null>,
-  onPlaceSelect: (place: google.maps.places.PlaceResult) => void
+function CustomPlacesAutocomplete({
+  inputRef,
+  onPlaceSelect,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  onPlaceSelect: (place: google.maps.places.PlaceResult) => void;
 }) {
   const [predictions, setPredictions] = useState<google.maps.places.AutocompletePrediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
@@ -55,48 +50,48 @@ function CustomPlacesAutocomplete({
     placesService.current = new places.PlacesService(dummyElement);
   }, [places]);
 
-  const getPlacePredictions = useCallback(
-    async (input: string) => {
-      if (!autocompleteService.current || input.length < 3) {
-        setPredictions([]);
-        return;
-      }
+  const getPlacePredictions = useCallback(async (input: string) => {
+    if (!autocompleteService.current || input.length < 3) {
+      setPredictions([]);
+      return;
+    }
 
-      const request: google.maps.places.AutocompletionRequest = {
-        input,
-        componentRestrictions: { country: 'gb' } // Restrict to UK addresses
-      };
-
-      try {
-        const response = await autocompleteService.current.getPlacePredictions(request);
-        setPredictions(response.predictions);
-        setShowPredictions(true);
-      } catch (error) {
-        console.error('Error fetching predictions:', error);
-        setPredictions([]);
-      }
-    },
-    []
-  );
-
-  const handlePredictionClick = useCallback(async (prediction: google.maps.places.AutocompletePrediction) => {
-    if (!placesService.current) return;
-
-    const request: google.maps.places.PlaceDetailsRequest = {
-      placeId: prediction.place_id,
-      fields: ['formatted_address', 'geometry', 'address_components']
+    const request: google.maps.places.AutocompletionRequest = {
+      input,
+      componentRestrictions: { country: 'gb' }, // Restrict to UK addresses
     };
 
-    placesService.current.getDetails(request, (place, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-        onPlaceSelect(place);
-        if (inputRef.current) {
-          inputRef.current.value = place.formatted_address || '';
+    try {
+      const response = await autocompleteService.current.getPlacePredictions(request);
+      setPredictions(response.predictions);
+      setShowPredictions(true);
+    } catch (error) {
+      console.error('Error fetching predictions:', error);
+      setPredictions([]);
+    }
+  }, []);
+
+  const handlePredictionClick = useCallback(
+    async (prediction: google.maps.places.AutocompletePrediction) => {
+      if (!placesService.current) return;
+
+      const request: google.maps.places.PlaceDetailsRequest = {
+        placeId: prediction.place_id,
+        fields: ['formatted_address', 'geometry', 'address_components'],
+      };
+
+      placesService.current.getDetails(request, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+          onPlaceSelect(place);
+          if (inputRef.current) {
+            inputRef.current.value = place.formatted_address || '';
+          }
+          setShowPredictions(false);
         }
-        setShowPredictions(false);
-      }
-    });
-  }, [inputRef, onPlaceSelect]);
+      });
+    },
+    [inputRef, onPlaceSelect],
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -111,7 +106,7 @@ function CustomPlacesAutocomplete({
 
   useEffect(() => {
     if (!inputRef.current) return;
-    const ref = inputRef.current
+    const ref = inputRef.current;
 
     const handleInput = (e: Event) => {
       const input = (e.target as HTMLInputElement).value;
@@ -130,7 +125,7 @@ function CustomPlacesAutocomplete({
 
   useEffect(() => {
     if (!inputRef.current) return;
-    const ref = inputRef.current
+    const ref = inputRef.current;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!showPredictions || predictions.length === 0) return;
@@ -138,15 +133,11 @@ function CustomPlacesAutocomplete({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex(prev => 
-            prev < predictions.length - 1 ? prev + 1 : prev
-          );
+          setSelectedIndex((prev) => (prev < predictions.length - 1 ? prev + 1 : prev));
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedIndex(prev => 
-            prev > 0 ? prev - 1 : -1
-          );
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
           break;
         case 'Enter':
           e.preventDefault();
@@ -177,15 +168,13 @@ function CustomPlacesAutocomplete({
   return (
     <div className="relative">
       {showPredictions && predictions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
           {predictions.map((prediction, index) => (
             <div
               key={prediction.place_id}
               className={cn(
-                "px-4 py-2 cursor-pointer text-sm",
-                selectedIndex === index 
-                  ? "bg-blue-100 hover:bg-blue-200" 
-                  : "hover:bg-gray-100"
+                'cursor-pointer px-4 py-2 text-sm',
+                selectedIndex === index ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-100',
               )}
               onClick={() => handlePredictionClick(prediction)}
               onMouseEnter={() => setSelectedIndex(index)}
@@ -201,8 +190,8 @@ function CustomPlacesAutocomplete({
 
 function AddressInput({
   labelTitle,
-  placeholder = "Start typing an address...",
-  className = "",
+  placeholder = 'Start typing an address...',
+  className = '',
   disabled = false,
   name,
   control,
@@ -211,7 +200,7 @@ function AddressInput({
 }: AddressInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  
+
   const { field } = useController({
     name,
     control,
@@ -225,16 +214,24 @@ function AddressInput({
   }, [field.value]);
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    console.log("[AddressInput] place_changed event", place);
+    console.log('[AddressInput] place_changed event', place);
     if (place.formatted_address && place.geometry?.location) {
       // Parse address components
       const addressComponents = place.address_components || [];
-      const streetNumber = addressComponents.find(c => c.types.includes('street_number'))?.long_name || '';
-      const route = addressComponents.find(c => c.types.includes('route'))?.long_name || '';
-      const subpremise = addressComponents.find(c => c.types.includes('subpremise'))?.long_name || '';
-      const city = addressComponents.find(c => c.types.includes('postal_town') || c.types.includes('locality'))?.long_name || '';
-      const county = addressComponents.find(c => c.types.includes('administrative_area_level_2'))?.long_name || '';
-      const postcode = addressComponents.find(c => c.types.includes('postal_code'))?.long_name || '';
+      const streetNumber =
+        addressComponents.find((c) => c.types.includes('street_number'))?.long_name || '';
+      const route = addressComponents.find((c) => c.types.includes('route'))?.long_name || '';
+      const subpremise =
+        addressComponents.find((c) => c.types.includes('subpremise'))?.long_name || '';
+      const city =
+        addressComponents.find(
+          (c) => c.types.includes('postal_town') || c.types.includes('locality'),
+        )?.long_name || '';
+      const county =
+        addressComponents.find((c) => c.types.includes('administrative_area_level_2'))?.long_name ||
+        '';
+      const postcode =
+        addressComponents.find((c) => c.types.includes('postal_code'))?.long_name || '';
 
       // Construct line1 from subpremise (if exists), street number and route
       const line1Parts = [subpremise, streetNumber, route].filter(Boolean);
@@ -243,15 +240,15 @@ function AddressInput({
       const newAddress: Address = {
         formatted: place.formatted_address,
         line1,
-        line2: '',  // Optional: Can be filled manually if needed
-        line3: '',  // Optional: Can be filled manually if needed
+        line2: '', // Optional: Can be filled manually if needed
+        line3: '', // Optional: Can be filled manually if needed
         city,
         county,
         postcode,
         location: {
           lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng()
-        }
+          lng: place.geometry.location.lng(),
+        },
       };
       field.onChange(newAddress);
       setLocation(newAddress.location);
@@ -259,21 +256,21 @@ function AddressInput({
   };
 
   return (
-    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}>
+    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''}>
       <div>
         {labelTitle && <Label text={labelTitle} />}
         <div className="relative">
           <ShadInput
             ref={inputRef}
-            className={cn("focus:ring-0 focus:border-none", className)}
+            className={cn('focus:border-none focus:ring-0', className)}
             placeholder={placeholder}
             disabled={disabled}
-            defaultValue={field.value?.formatted ?? ""}
+            defaultValue={field.value?.formatted ?? ''}
             onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
               const target = e.target as HTMLInputElement;
               field.onChange({
                 ...field.value,
-                formatted: target.value
+                formatted: target.value,
               });
             }}
             onKeyDown={(e) => {
@@ -282,19 +279,11 @@ function AddressInput({
               }
             }}
           />
-          <CustomPlacesAutocomplete 
-            inputRef={inputRef}
-            onPlaceSelect={handlePlaceSelect}
-          />
+          <CustomPlacesAutocomplete inputRef={inputRef} onPlaceSelect={handlePlaceSelect} />
         </div>
         {location && location.lat !== 0 && location.lng !== 0 && (
           <div style={mapContainerStyle}>
-            <Map
-              zoom={15}
-              center={location}
-              gestureHandling="none"
-              disableDefaultUI={true}
-            >
+            <Map zoom={15} center={location} gestureHandling="none" disableDefaultUI={true}>
               <Marker position={location} />
             </Map>
           </div>
@@ -309,4 +298,4 @@ function AddressInput({
   );
 }
 
-export default AddressInput; 
+export default AddressInput;

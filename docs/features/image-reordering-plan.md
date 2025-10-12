@@ -25,15 +25,18 @@ Add drag-and-drop reordering of images so users can control the display order. T
 ## Key Integration Points
 
 - `app/home/components/InputImage/DropZoneInputImageV2.tsx:1`
+
   - Render images in a sortable list using `@dnd-kit/sortable`.
   - Maintain the displayed order from a controlled `value` when provided.
   - Emit `onReorder` with the new ordered array.
 
 - `app/home/components/InputImage/RhfDropZoneInputImage.tsx:1`
+
   - Bridge RHF field value to `DropZoneInputImageV2` via new `value` and `onReorder` props.
   - Ensure uploads append to the end; delete/archive remove from the value.
 
 - Editor preview
+
   - No code change required; `mapFormDataToHtml` preserves the order in `SurveyImage[]` so the editor renders images in the same order as stored in the survey content.
 
 - `app/home/editor/utils/formData.tsx:86`
@@ -63,15 +66,17 @@ Add drag-and-drop reordering of images so users can control the display order. T
 
 ## Component/API Changes
 
-1) DropZoneInputImageV2
+1. DropZoneInputImageV2
 
 - New props
+
   - `value?: DropZoneInputFile[]` — Optional controlled list used for display order.
   - `onReorder?: (files: DropZoneInputFile[]) => void` — Called after drag end with new order.
   - `enableReorder?: boolean` — Default `true`; toggles drag UI.
   - `dragHandleAriaLabel?: string` — Accessibility label for the handle.
 
 - Behavior
+
   - If `value` is provided, render images in that order. If absent, fallback to internally discovered files order but prefer to emit initial `onChange` to seed the form value.
   - Only active images are sortable; archived images are listed separately (non-sortable).
   - On upload success, append new image to the end (maintain order semantics users expect).
@@ -82,13 +87,13 @@ Add drag-and-drop reordering of images so users can control the display order. T
   - Use `rectSortingStrategy` or a grid-friendly strategy; use `arrayMove` to compute the new ordered array in `onDragEnd`.
   - Provide a visible drag handle within `Thumbnail` or the container; pass `attributes`/`listeners` to the handle.
 
-2) RhfDropZoneInputImage
+2. RhfDropZoneInputImage
 
 - Map RHF `field.value` to `DropZoneInputImageV2.value`.
 - Implement `onReorder` to call `field.onChange` with the updated array.
 - Ensure existing `onChange` from uploads also updates the RHF array value and preserves order.
 
-3) Editor (preview)
+3. Editor (preview)
 
 - No change needed; preview reflects ordering because arrays are rendered in order by `mapFormDataToHtml`.
 
@@ -100,12 +105,12 @@ Add drag-and-drop reordering of images so users can control the display order. T
 // onDragEnd pseudo
 const handleDragEnd = ({ active, over }) => {
   if (!over || active.id === over.id) return;
-  const oldIndex = files.findIndex(f => f.path === active.id);
-  const newIndex = files.findIndex(f => f.path === over.id);
+  const oldIndex = files.findIndex((f) => f.path === active.id);
+  const newIndex = files.findIndex((f) => f.path === over.id);
   const next = arrayMove(files, oldIndex, newIndex);
   setFiles(next);
-  onReorder?.(next.filter(f => !f.isArchived));
-  onChange?.(next.filter(f => !f.isArchived));
+  onReorder?.(next.filter((f) => !f.isArchived));
+  onChange?.(next.filter((f) => !f.isArchived));
 };
 ```
 
@@ -119,7 +124,7 @@ const handleDragEnd = ({ active, over }) => {
   onChange={field.onChange}
   enableReorder
   features={{ archive: true, metadata: true }}
-/> 
+/>
 ```
 
 ## Editor Preview Flow
@@ -129,12 +134,14 @@ const handleDragEnd = ({ active, over }) => {
 ## Testing Plan
 
 - Unit tests
+
   - Drop reorder event updates order (use `arrayMove` expectation).
   - Upload appends to end; delete removes item and compacts order.
   - Archived items are excluded from the sortable list and do not affect indices.
   - RHF integration: `onReorder` updates `field.value` and re-renders in new order.
 
 - Integration tests
+
   - Reorder “money shot” and verify preview order changes in the editor (assert via rendered image sequence in HTML output from `mapFormDataToHtml`).
   - Reorder element-level and component-level images and confirm persistence in survey content via `surveyStore.update`.
 
@@ -157,10 +164,10 @@ const handleDragEnd = ({ active, over }) => {
 
 ## Implementation Steps
 
-1) Add sortable behavior to `DropZoneInputImageV2` with new props and DnD wiring.
-2) Wire `RhfDropZoneInputImage` to pass `value` and handle `onReorder`.
-3) Add unit tests for reorder logic and RHF integration under `app/home/components/InputImage/__tests__`.
-4) Add an integration test to verify editor preview reflects the new order.
+1. Add sortable behavior to `DropZoneInputImageV2` with new props and DnD wiring.
+2. Wire `RhfDropZoneInputImage` to pass `value` and handle `onReorder`.
+3. Add unit tests for reorder logic and RHF integration under `app/home/components/InputImage/__tests__`.
+4. Add an integration test to verify editor preview reflects the new order.
 
 ## Acceptance Criteria
 

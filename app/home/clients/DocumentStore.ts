@@ -9,7 +9,6 @@ import { Schema } from '@/amplify/data/resource';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
-
 const CreateDocumentSchema = z.object({
   id: z.string().optional(),
   displayName: z.string().optional(),
@@ -41,7 +40,7 @@ function createDocumentStore() {
   const create = async (document: CreateDocument): Promise<Result<DocumentRecord, Error>> => {
     const validation = CreateDocumentSchema.safeParse(document);
     if (!validation.success) return Err(new Error(validation.error.message));
-    
+
     if (!isOnline()) return Err(new Error('Cannot create document while offline'));
     try {
       const tenantId = await getCurrentTenantId();
@@ -56,7 +55,11 @@ function createDocumentStore() {
       const fileType = document.metadata.fileType;
 
       const contentType = fileType === 'markdown' ? 'text/markdown' : 'text/html';
-      const uploadResult = await uploadData({ path, data: document.content, options: { contentType } });
+      const uploadResult = await uploadData({
+        path,
+        data: document.content,
+        options: { contentType },
+      });
       if (!uploadResult.result) return Err(new Error('Failed to upload document content'));
       // Write v0 version
       await client.models.DocumentRecord.create({
@@ -104,7 +107,12 @@ function createDocumentStore() {
   /**
    * Update document: creates new version, updates #LATEST, prunes to 10 versions
    */
-  const update = async (id: string, content: string, templateId?: string, changeType: string = 'update'): Promise<Result<DocumentRecord, Error>> => {
+  const update = async (
+    id: string,
+    content: string,
+    templateId?: string,
+    changeType: string = 'update',
+  ): Promise<Result<DocumentRecord, Error>> => {
     const tenantId = await getCurrentTenantId();
     if (!tenantId) return Err(new Error('No tenant ID found'));
     const pk = `${tenantId}#${id}`;
@@ -125,7 +133,8 @@ function createDocumentStore() {
         content,
         changeType,
       });
-      if (mutationRes.errors) return Err(new Error(mutationRes.errors.map(e => e.message).join(', ')));
+      if (mutationRes.errors)
+        return Err(new Error(mutationRes.errors.map((e) => e.message).join(', ')));
       if (!mutationRes.data) return Err(new Error('Failed to update document metadata'));
       return Ok(mutationRes.data as DocumentRecord);
     } catch (error) {
@@ -156,7 +165,10 @@ function createDocumentStore() {
     try {
       const tenantId = await getCurrentTenantId();
       if (!tenantId) return Err(new Error('No tenant ID found'));
-      const result = await client.models.DocumentRecord.listDocumentRecordByTenantIdAndSk({ tenantId, sk: { eq: '#LATEST' } });
+      const result = await client.models.DocumentRecord.listDocumentRecordByTenantIdAndSk({
+        tenantId,
+        sk: { eq: '#LATEST' },
+      });
       return Ok(result.data as DocumentRecord[]);
     } catch (error) {
       return Err(error instanceof Error ? error : new Error('Failed to list documents'));
@@ -217,7 +229,11 @@ function createDocumentStore() {
   /**
    * Update document content (creates new version)
    */
-  const updateContent = async (id: string, content: string, templateId?: string): Promise<Result<DocumentRecord, Error>> => {
+  const updateContent = async (
+    id: string,
+    content: string,
+    templateId?: string,
+  ): Promise<Result<DocumentRecord, Error>> => {
     return update(id, content, templateId, 'update');
   };
 
@@ -232,7 +248,11 @@ function createDocumentStore() {
     if (!isOnline()) return Err(new Error('Cannot rename document while offline'));
     if (!newName) return Err(new Error('New name cannot be empty'));
     try {
-      const updated = await client.models.DocumentRecord.update({ pk, sk: '#LATEST', displayName: newName });
+      const updated = await client.models.DocumentRecord.update({
+        pk,
+        sk: '#LATEST',
+        displayName: newName,
+      });
       if (!updated.data) return Err(new Error('Failed to update document metadata'));
       return Ok(updated.data as DocumentRecord);
     } catch (error) {
@@ -250,8 +270,8 @@ function createDocumentStore() {
       const pk = `${tenantId}#${id}`;
       // List all items for pk where sk starts with 'v'
       const itemsRes = await client.models.DocumentRecord.list({ pk });
-      const items = (itemsRes.data as DocumentRecord[]).filter(item =>
-        typeof item.sk === 'string' && item.sk.startsWith('v')
+      const items = (itemsRes.data as DocumentRecord[]).filter(
+        (item) => typeof item.sk === 'string' && item.sk.startsWith('v'),
       );
       // Sort by version ascending (v0, v1, ...)
       items.sort((a, b) => {
@@ -299,4 +319,4 @@ function createDocumentStore() {
   };
 }
 
-export const documentStore = createDocumentStore(); 
+export const documentStore = createDocumentStore();

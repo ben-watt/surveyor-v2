@@ -1,11 +1,11 @@
-import { FileWithPath } from "react-dropzone";
-import { imageMetadataStore, type ImageMetadata } from "@/app/home/clients/Database";
-import { Label } from "@/app/home/components/Input/Label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
-import { join } from "path";
+import { FileWithPath } from 'react-dropzone';
+import { imageMetadataStore, type ImageMetadata } from '@/app/home/clients/Database';
+import { Label } from '@/app/home/components/Input/Label';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { useState, useEffect } from 'react';
+import { join } from 'path';
 
 interface ImageMetadataDialogProps {
   file: FileWithPath;
@@ -28,12 +28,12 @@ export const ImageMetadataDialog = ({ file, path, onClose }: ImageMetadataDialog
         if (existingMetadata) {
           setMetadataId(existingMetadata.id);
           setMetadata({
-            caption: existingMetadata.caption || "",
-            notes: existingMetadata.notes || "",
+            caption: existingMetadata.caption || '',
+            notes: existingMetadata.notes || '',
           });
         }
       } catch (error) {
-        console.error("Error loading file metadata:", error);
+        console.error('Error loading file metadata:', error);
       } finally {
         setIsLoading(false);
       }
@@ -60,12 +60,12 @@ export const ImageMetadataDialog = ({ file, path, onClose }: ImageMetadataDialog
           id: imagePath,
           imagePath,
           caption: metadata.caption,
-          notes: metadata.notes
+          notes: metadata.notes,
         });
       }
       onClose();
     } catch (error) {
-      console.error("Error saving metadata:", error);
+      console.error('Error saving metadata:', error);
     }
   };
 
@@ -79,32 +79,31 @@ export const ImageMetadataDialog = ({ file, path, onClose }: ImageMetadataDialog
         <Label text="Caption" />
         <Input
           placeholder="Enter image caption"
-          value={metadata.caption || ""}
-          onChange={(e) =>
-            setMetadata((prev) => ({ ...prev, caption: e.target.value }))
-          }
+          value={metadata.caption || ''}
+          onChange={(e) => setMetadata((prev) => ({ ...prev, caption: e.target.value }))}
         />
       </div>
       <div className="grid gap-2">
         <Label text="Notes" />
         <Textarea
           placeholder="Enter any additional notes"
-          value={metadata.notes || ""}
-          onChange={(e) =>
-            setMetadata((prev) => ({ ...prev, notes: e.target.value }))
-          }
+          value={metadata.notes || ''}
+          onChange={(e) => setMetadata((prev) => ({ ...prev, notes: e.target.value }))}
         />
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={(ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          onClose();
-        }}>
+        <Button
+          variant="outline"
+          onClick={(ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            onClose();
+          }}
+        >
           Cancel
         </Button>
         <Button onClick={handleSave}>Save Metadata</Button>
       </div>
     </div>
   );
-}; 
+};

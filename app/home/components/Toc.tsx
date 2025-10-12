@@ -1,20 +1,20 @@
-import React from "react";
+import React from 'react';
 
 export type TocProvider = (htmlElement: string) => string;
 
 export const DefaultTocProvider = () => {
   const startingValue = 1;
-  const elementHierarchy: { [key: string]: number; } = {
-    "": 0,
-    "h1": 1,
-    "h2": 2,
-    "h3": 3,
-    "h4": 4,
-    "h5": 5,
-    "h6": 6
+  const elementHierarchy: { [key: string]: number } = {
+    '': 0,
+    h1: 1,
+    h2: 2,
+    h3: 3,
+    h4: 4,
+    h5: 5,
+    h6: 6,
   };
 
-  let lastElementType = "";
+  let lastElementType = '';
   let currentValue: number[] = [];
 
   const updateToc = (htmlElementType: string): string => {
@@ -32,7 +32,7 @@ export const DefaultTocProvider = () => {
     }
 
     lastElementType = htmlElementType;
-    return currentValue.join(".");
+    return currentValue.join('.');
   };
 
   return updateToc;

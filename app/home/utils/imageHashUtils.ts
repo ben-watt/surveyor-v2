@@ -30,7 +30,7 @@ export async function generateImageHash(file: File | Blob): Promise<string> {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(16).padStart(8, '0').substring(0, 8);
@@ -39,7 +39,7 @@ export async function generateImageHash(file: File | Blob): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   // Return first 8 characters for brevity (still gives us 16^8 = 4.3 billion unique values)
   return hashHex.substring(0, 8);
 }
@@ -55,7 +55,7 @@ export async function generateImageHash(file: File | Blob): Promise<string> {
  */
 export async function generateHashedFilename(
   file: File,
-  preserveOriginalName: boolean = true
+  preserveOriginalName: boolean = true,
 ): Promise<string> {
   const hash = await generateImageHash(file);
   const nameParts = file.name.split('.');
@@ -76,10 +76,7 @@ export async function generateHashedFilename(
  * @param file2 Second file to compare
  * @returns True if files have identical content
  */
-export async function areFilesIdentical(
-  file1: File | Blob,
-  file2: File | Blob
-): Promise<boolean> {
+export async function areFilesIdentical(file1: File | Blob, file2: File | Blob): Promise<boolean> {
   // Quick check: if sizes differ, they're definitely different
   if (file1.size !== file2.size) {
     return false;
@@ -101,7 +98,7 @@ export async function areFilesIdentical(
  */
 export async function processFileWithHash(
   newFile: File,
-  existingFiles: { name: string; file: File | Blob; isArchived?: boolean }[]
+  existingFiles: { name: string; file: File | Blob; isArchived?: boolean }[],
 ): Promise<{
   filename: string;
   isDuplicate: boolean;
@@ -116,7 +113,7 @@ export async function processFileWithHash(
         filename: existing.name,
         isDuplicate: true,
         matchedFile: existing.name,
-        isArchived: existing.isArchived || false
+        isArchived: existing.isArchived || false,
       };
     }
   }
@@ -125,7 +122,7 @@ export async function processFileWithHash(
   const hashedName = await generateHashedFilename(newFile);
   return {
     filename: hashedName,
-    isDuplicate: false
+    isDuplicate: false,
   };
 }
 
@@ -138,6 +135,6 @@ export async function processFileWithHash(
 export function renameFile(originalFile: File, newName: string): File {
   return new File([originalFile], newName, {
     type: originalFile.type,
-    lastModified: originalFile.lastModified
+    lastModified: originalFile.lastModified,
   });
 }

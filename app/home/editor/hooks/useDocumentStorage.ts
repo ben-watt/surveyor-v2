@@ -16,7 +16,7 @@ export const useDocumentStorage = ({ documentId, getDocumentPath }: UseDocumentS
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [content, setContent] = useState<string | null>(null);
-  
+
   const [isUserHydrated, user] = useUserHook();
   const [isTenantHydrated, tenantId] = useCurrentTenantId();
 
@@ -49,7 +49,7 @@ export const useDocumentStorage = ({ documentId, getDocumentPath }: UseDocumentS
       setContent(loadedContent);
       return loadedContent;
     } catch (error) {
-      console.error("Failed to load document:", error);
+      console.error('Failed to load document:', error);
       setContent(null);
       return null;
     } finally {
@@ -59,11 +59,11 @@ export const useDocumentStorage = ({ documentId, getDocumentPath }: UseDocumentS
 
   const handleSave = async (newContent: string, metadata: Record<string, string> = {}) => {
     if (!tenantId) {
-      toast.error("No tenant ID available");
+      toast.error('No tenant ID available');
       return;
     }
     if (!user?.userId) {
-      toast.error("No user ID available");
+      toast.error('No user ID available');
       return;
     }
 
@@ -75,18 +75,18 @@ export const useDocumentStorage = ({ documentId, getDocumentPath }: UseDocumentS
         path,
         data: newContent,
         options: {
-          contentType: "text/html", 
+          contentType: 'text/html',
           metadata: {
             id: documentId,
-          }
+          },
         },
       });
 
       setContent(newContent);
-      toast.success("Document saved successfully");
+      toast.success('Document saved successfully');
     } catch (error) {
-      console.error("Failed to save document:", error);
-      toast.error("Failed to save document");
+      console.error('Failed to save document:', error);
+      toast.error('Failed to save document');
     } finally {
       setIsSaving(false);
     }
@@ -99,4 +99,4 @@ export const useDocumentStorage = ({ documentId, getDocumentPath }: UseDocumentS
     loadDocument,
     handleSave,
   };
-}; 
+};

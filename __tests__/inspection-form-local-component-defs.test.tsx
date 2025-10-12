@@ -19,21 +19,47 @@ const makeSurveyWithLocalDef = () => ({
   owner: { id: 'o1', name: 'Owner', email: 'o@example.com', signaturePath: [] },
   status: 'draft',
   reportDetails: {
-    level: '2', reference: '',
+    level: '2',
+    reference: '',
     address: { formatted: '', line1: '', city: '', postcode: '', location: { lat: 0, lng: 0 } },
-    clientName: '', reportDate: new Date(), inspectionDate: new Date(), weather: '', orientation: '', situation: '',
-    moneyShot: [], frontElevationImagesUri: []
+    clientName: '',
+    reportDate: new Date(),
+    inspectionDate: new Date(),
+    weather: '',
+    orientation: '',
+    situation: '',
+    moneyShot: [],
+    frontElevationImagesUri: [],
   },
   propertyDescription: {
-    propertyType: '', constructionDetails: '', yearOfConstruction: '', grounds: '', services: '', energyRating: '',
-    numberOfBedrooms: 0, numberOfBathrooms: 0, tenure: ''
+    propertyType: '',
+    constructionDetails: '',
+    yearOfConstruction: '',
+    grounds: '',
+    services: '',
+    energyRating: '',
+    numberOfBedrooms: 0,
+    numberOfBathrooms: 0,
+    tenure: '',
   },
   sections: [
-    { id: 'sec1', name: 'Section 1', elementSections: [
-      { id: 'el1', name: 'Element 1', isPartOfSurvey: true, description: '', components: [], images: [], localComponentDefs: [
-        { id: 'localdef_1', name: 'Lintel', elementId: 'el1', materials: [] }
-      ] }
-    ]}
+    {
+      id: 'sec1',
+      name: 'Section 1',
+      elementSections: [
+        {
+          id: 'el1',
+          name: 'Element 1',
+          isPartOfSurvey: true,
+          description: '',
+          components: [],
+          images: [],
+          localComponentDefs: [
+            { id: 'localdef_1', name: 'Lintel', elementId: 'el1', materials: [] },
+          ],
+        },
+      ],
+    },
   ],
   checklist: { items: [] },
 });
@@ -46,7 +72,10 @@ jest.mock('@/app/home/clients/Database', () => {
       useList: () => [true, []],
     },
     elementStore: {
-      useList: () => [true, [{ id: 'el1', name: 'Element 1', order: 0, sectionId: 'sec1', description: '' }]],
+      useList: () => [
+        true,
+        [{ id: 'el1', name: 'Element 1', order: 0, sectionId: 'sec1', description: '' }],
+      ],
     },
     phraseStore: {
       useList: () => [true, []],
@@ -91,8 +120,8 @@ describe('InspectionForm - Local Component Definitions', () => {
             costings: [],
             ...defaults,
           }}
-        />
-      )
+        />,
+      ),
     );
   }
 
@@ -104,4 +133,3 @@ describe('InspectionForm - Local Component Definitions', () => {
     expect(await screen.findByText('Lintel - (survey only)')).toBeInTheDocument();
   });
 });
-

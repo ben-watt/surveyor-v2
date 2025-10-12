@@ -27,8 +27,7 @@ describe('Breadcrumbs', () => {
   });
 
   it('redirects config entity crumbs to /home/configuration', () => {
-    mockPathname =
-      '/home/configuration/components/18f3b5f4-1a2b-4c3d-8e9f-abcdef123456';
+    mockPathname = '/home/configuration/components/18f3b5f4-1a2b-4c3d-8e9f-abcdef123456';
 
     render(<Breadcrumbs />);
 
@@ -46,5 +45,3 @@ describe('Breadcrumbs', () => {
     expect(screen.getByText(/#/)).toBeInTheDocument();
   });
 });
-
-

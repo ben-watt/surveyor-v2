@@ -18,21 +18,38 @@ jest.mock('next/navigation', () => ({
 // Mock survey store with one valid and one invalid section
 jest.mock('@/app/home/clients/Database', () => ({
   surveyStore: {
-    useGet: (id: string) => [true, {
-      id,
-      sections: [
-        {
-          id: 'sec-1',
-          name: 'Exterior',
-          elementSections: [
-            { id: 'e1', name: 'Roof', isPartOfSurvey: true, description: '', components: [], images: [] },
-            { id: 'e2', name: null as any, isPartOfSurvey: true, description: '', components: [], images: [] },
-          ],
-        },
-        { id: 'sec-2', name: null as any, elementSections: [] },
-      ],
-      reportDetails: {},
-    }],
+    useGet: (id: string) => [
+      true,
+      {
+        id,
+        sections: [
+          {
+            id: 'sec-1',
+            name: 'Exterior',
+            elementSections: [
+              {
+                id: 'e1',
+                name: 'Roof',
+                isPartOfSurvey: true,
+                description: '',
+                components: [],
+                images: [],
+              },
+              {
+                id: 'e2',
+                name: null as any,
+                isPartOfSurvey: true,
+                description: '',
+                components: [],
+                images: [],
+              },
+            ],
+          },
+          { id: 'sec-2', name: null as any, elementSections: [] },
+        ],
+        reportDetails: {},
+      },
+    ],
   },
 }));
 
@@ -59,4 +76,3 @@ describe('ConditionPage filtering and safety', () => {
     expect(await screen.findByText('Roof')).toBeInTheDocument();
   });
 });
-

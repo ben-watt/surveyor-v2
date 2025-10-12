@@ -1,85 +1,82 @@
 @media print {
-    @page title {
-        margin: 0;
+  @page title {
+    margin: 0;
+  }
+
+  @page {
+    size: A4 landscape;
+
+    @bottom-center {
+      content: counter(page);
+      font-size: small;
     }
 
-    @page {
-        size: A4 landscape;
-    
-        @bottom-center {
-            content: counter(page);
-            font-size: small;
-        }
-
-        @top-left-corner {
-            content: element(headerRunning);
-        }
-
-        @top-right {
-            content: element(addressRunning);
-            font-size: x-small;
-        }
-
-        @bottom-right {
-            content: element(footerRunning);
-            width: 3cm;
-        }
+    @top-left-corner {
+      content: element(headerRunning);
     }
+
+    @top-right {
+      content: element(addressRunning);
+      font-size: x-small;
+    }
+
+    @bottom-right {
+      content: element(footerRunning);
+      width: 3cm;
+    }
+  }
 }
 
 .title-page {
-    page: title;
+  page: title;
 }
 
 .pagedjs_margin .pagedjs_margin-top-left-corner .pagedjs_margin-content {
-    width: 920px;
+  width: 920px;
 }
 
 .headerAddress {
-    position: running(addressRunning);
+  position: running(addressRunning);
 }
 
 /* Override the default line-height and min-height which we put in tiptap to emulate new lines */
 .headerAddress p {
-    line-height: normal;
-    min-height: auto;
+  line-height: normal;
+  min-height: auto;
 }
 
 /* footer */
 .pagedjs_margin .pagedjs_margin-bottom-right .pagedjs_margin-content {
-    display: flex;
-    justify-content: flex-end;
-    padding-right: 2mm;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 2mm;
 }
 
 .footerImage {
-    position: running(footerRunning);
+  position: running(footerRunning);
 }
 
 .headerImage {
-    position: running(headerRunning);
+  position: running(headerRunning);
 }
 
-[data-type="table-of-contents"] li p {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-    text-wrap: nowrap;
+[data-type='table-of-contents'] li p {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  text-wrap: nowrap;
 }
 
 /* Adjust orders for remaining elements */
-[data-type="table-of-contents"] li p::before {
-    order: 2;
-    content: 
-    ". . . . . . . . . . . . . . . . . . . . "
-    ". . . . . . . . . . . . . . . . . . . . "
-    ". . . . . . . . . . . . . . . . . . . . "
-    ". . . . . . . . . . . . . . . . . . . . "
-    ". . . . . . . . . . . . . . . . . . . . ";
-    overflow: hidden;
-    text-wrap: nowrap;
+[data-type='table-of-contents'] li p::before {
+  order: 2;
+  content: '. . . . . . . . . . . . . . . . . . . . ' '. . . . . . . . . . . . . . . . . . . . '
+    '. . . . . . . . . . . . . . . . . . . . ' '. . . . . . . . . . . . . . . . . . . . '
+    '. . . . . . . . . . . . . . . . . . . . ';
+  overflow: hidden;
+  text-wrap: nowrap;
 }
 
 /*
@@ -87,10 +84,10 @@ In the CSS, the target-counter property is used within ::before and ::after pseu
 using the content property. It can be translated as: find the counter named page that appears 
 where you find the element we're targetting with the attribute data-toc-id-selector:
 */
-[data-type="table-of-contents"] li p::after {
-    order: 3;
-    display: flex;
-    content: target-counter(attr(data-toc-id-selector), page);
-    background-color: white;
-    padding-left: 2mm;  
+[data-type='table-of-contents'] li p::after {
+  order: 3;
+  display: flex;
+  content: target-counter(attr(data-toc-id-selector), page);
+  background-color: white;
+  padding-left: 2mm;
 }

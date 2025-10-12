@@ -1,9 +1,9 @@
-import { ImageIcon } from "lucide-react";
+import { ImageIcon } from 'lucide-react';
 
 function ImagePlaceholder() {
   return (
-    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-      <ImageIcon className="w-8 h-8 text-gray-400" />
+    <div className="flex h-full w-full items-center justify-center bg-gray-100">
+      <ImageIcon className="h-8 w-8 text-gray-400" />
     </div>
   );
 }

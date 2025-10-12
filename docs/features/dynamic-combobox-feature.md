@@ -1,17 +1,20 @@
 # Dynamic ComboBox Feature
 
 ## Overview
+
 The DynamicComboBox component provides a mobile-friendly alternative to the standard ComboBox by using a drawer on mobile devices, making it easier for users to interact with the selection interface on smaller screens.
 
 ## Implementation Details
 
 ### New Components
+
 1. **DynamicComboBox** (`app/home/components/Input/DynamicComboBox.tsx`)
    - Responsive wrapper that switches between desktop popover and mobile drawer
    - Uses `useMediaQuery` hook to detect mobile screens (<768px)
    - Maintains the same API as the original ComboBox
 
 ### Updated Components
+
 1. **ComboBox** (`app/home/components/Input/ComboBox.tsx`)
    - Added `inDrawer` prop to render without popover wrapper
    - Added `onClose` callback for drawer integration
@@ -24,14 +27,21 @@ import { DynamicComboBox } from '@/app/home/components/Input';
 import { useForm } from 'react-hook-form';
 
 function MyForm() {
-  const { control, formState: { errors } } = useForm();
-  
+  const {
+    control,
+    formState: { errors },
+  } = useForm();
+
   const locationData = [
     { value: '1', label: 'Building A' },
-    { value: '2', label: 'Building B', children: [
-      { value: '2-1', label: 'Floor 1' },
-      { value: '2-2', label: 'Floor 2' }
-    ]}
+    {
+      value: '2',
+      label: 'Building B',
+      children: [
+        { value: '2-1', label: 'Floor 1' },
+        { value: '2-2', label: 'Floor 2' },
+      ],
+    },
   ];
 
   return (
@@ -50,6 +60,7 @@ function MyForm() {
 ## Key Features
 
 ### Mobile Experience
+
 - Opens from bottom of screen using drawer
 - Larger touch targets (increased padding)
 - Full-screen search interface
@@ -57,16 +68,19 @@ function MyForm() {
 - Native mobile feel
 
 ### Desktop Experience
+
 - Maintains existing popover behavior
 - No changes to desktop user experience
 - Consistent with other form inputs
 
 ### Multi-select Support
+
 - Works with `isMulti` prop
 - Shows selected count on mobile trigger
 - Inline removal of selected items
 
 ### Hierarchical Navigation
+
 - Supports nested data structures
 - Back navigation in drawer mode
 - Search across all levels

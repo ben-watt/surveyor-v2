@@ -18,9 +18,9 @@ const mockBankOfDefects = [
         specification: 'Brick',
         defect: 'Cracking',
         level2Wording: 'Minor cracks visible in brick joints',
-      }
-    ]
-  }
+      },
+    ],
+  },
 ];
 
 const expectedComponentCount = 1;
@@ -54,52 +54,83 @@ jest.mock('../../utils/tenant-utils', () => ({
   withTenantId: jest.fn((data) => Promise.resolve({ ...data, tenantId: 'test-tenant-123' })),
 }));
 
-jest.mock('../../settings/defects.json', () => [
-  {
-    elementName: 'Walls',
-    defects: [
-      {
-        type: 'Masonry',
-        specification: 'Brick',
-        defect: 'Cracking',
-        level2Wording: 'Minor cracks visible in brick joints',
-      }
-    ]
-  }
-], { virtual: true });
-jest.mock('../../settings/sections.json', () => [
-  { id: '1', name: 'Exterior', order: 1 },
-  { id: '2', name: 'Interior', order: 2 },
-], { virtual: true });
-jest.mock('../../settings/elements.json', () => [
-  { id: '1', name: 'Walls', sectionId: '1', description: 'External walls', order: 1 },
-  { id: '2', name: 'Roof', sectionId: '1', description: 'Roof structure', order: 2 },
-], { virtual: true });
+jest.mock(
+  '../../settings/defects.json',
+  () => [
+    {
+      elementName: 'Walls',
+      defects: [
+        {
+          type: 'Masonry',
+          specification: 'Brick',
+          defect: 'Cracking',
+          level2Wording: 'Minor cracks visible in brick joints',
+        },
+      ],
+    },
+  ],
+  { virtual: true },
+);
+jest.mock(
+  '../../settings/sections.json',
+  () => [
+    { id: '1', name: 'Exterior', order: 1 },
+    { id: '2', name: 'Interior', order: 2 },
+  ],
+  { virtual: true },
+);
+jest.mock(
+  '../../settings/elements.json',
+  () => [
+    { id: '1', name: 'Walls', sectionId: '1', description: 'External walls', order: 1 },
+    { id: '2', name: 'Roof', sectionId: '1', description: 'Roof structure', order: 2 },
+  ],
+  { virtual: true },
+);
 jest.mock('../../settings/utils/mappers', () => ({
-  mapElementsToElementData: jest.fn().mockImplementation((elements: any[]) =>
-    Promise.resolve(elements.map((el: any) => ({ ...el, id: `${el.id}#test-tenant-123` })))
-  ),
+  mapElementsToElementData: jest
+    .fn()
+    .mockImplementation((elements: any[]) =>
+      Promise.resolve(elements.map((el: any) => ({ ...el, id: `${el.id}#test-tenant-123` }))),
+    ),
   mapBodToComponentData: jest.fn().mockImplementation(() =>
-    Promise.resolve(Array(1).fill(null).map((_, i) => ({
-      id: `component-${i}`,
-      name: `Component ${i}`,
-      materials: [{ name: 'Test Material' }]
-    })))
+    Promise.resolve(
+      Array(1)
+        .fill(null)
+        .map((_, i) => ({
+          id: `component-${i}`,
+          name: `Component ${i}`,
+          materials: [{ name: 'Test Material' }],
+        })),
+    ),
   ),
   mapBodToPhraseData: jest.fn().mockImplementation(() =>
-    Promise.resolve(Array(1).fill(null).map((_, i) => ({
-      id: `phrase-${i}`,
-      name: `Phrase ${i}`,
-      phrase: 'Test phrase description'
-    })))
+    Promise.resolve(
+      Array(1)
+        .fill(null)
+        .map((_, i) => ({
+          id: `phrase-${i}`,
+          name: `Phrase ${i}`,
+          phrase: 'Test phrase description',
+        })),
+    ),
   ),
 }));
 
 // Now import everything
-import { seedInitialData, hasInitialData, getDataCounts, SeedingProgress } from '../dataSeedingService';
+import {
+  seedInitialData,
+  hasInitialData,
+  getDataCounts,
+  SeedingProgress,
+} from '../dataSeedingService';
 import { componentStore, elementStore, phraseStore, sectionStore } from '../../clients/Database';
 import { getCurrentTenantId } from '../../utils/tenant-utils';
-import { mapElementsToElementData, mapBodToComponentData, mapBodToPhraseData } from '../../settings/utils/mappers';
+import {
+  mapElementsToElementData,
+  mapBodToComponentData,
+  mapBodToPhraseData,
+} from '../../settings/utils/mappers';
 
 const mockGetCurrentTenantId = getCurrentTenantId as jest.MockedFunction<typeof getCurrentTenantId>;
 
@@ -127,8 +158,8 @@ const expectProgressSteps = (calls: SeedingProgress[], expectedSteps: string[]) 
         currentStep: expect.stringContaining(step),
         currentStepIndex: index,
         totalSteps: expectedSteps.length,
-        isComplete: false
-      })
+        isComplete: false,
+      }),
     );
   });
 
@@ -160,8 +191,8 @@ describe('dataSeedingService', () => {
           expect.objectContaining({
             id: `${section.id}#${mockTenant.tenantId}`,
             name: section.name,
-            order: section.order
-          })
+            order: section.order,
+          }),
         );
       });
 
@@ -170,17 +201,14 @@ describe('dataSeedingService', () => {
       expect(elementStore.add).toHaveBeenCalledTimes(mockElementData.length);
 
       // Verify components were processed and added
-      expect(mapBodToComponentData).toHaveBeenCalledWith(
-        mockBankOfDefects,
-        expect.any(Array)
-      );
+      expect(mapBodToComponentData).toHaveBeenCalledWith(mockBankOfDefects, expect.any(Array));
       expect(componentStore.add).toHaveBeenCalledTimes(expectedComponentCount);
 
       // Verify phrases were processed and added
       expect(mapBodToPhraseData).toHaveBeenCalledWith(
         mockBankOfDefects,
         expect.any(Array),
-        expect.any(Array)
+        expect.any(Array),
       );
       expect(phraseStore.add).toHaveBeenCalledTimes(expectedPhraseCount);
     });
@@ -190,12 +218,7 @@ describe('dataSeedingService', () => {
 
       await seedInitialData(callback);
 
-      const expectedSteps = [
-        'sections',
-        'elements',
-        'components',
-        'phrases'
-      ];
+      const expectedSteps = ['sections', 'elements', 'components', 'phrases'];
 
       expectProgressSteps(calls, expectedSteps);
     });
@@ -204,7 +227,7 @@ describe('dataSeedingService', () => {
       mockGetCurrentTenantId.mockResolvedValue(null);
 
       await expect(seedInitialData()).rejects.toThrow(
-        'No tenant context available for seeding data'
+        'No tenant context available for seeding data',
       );
     });
   });

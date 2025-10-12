@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Address, formatAddress } from "@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema";
+  Address,
+  formatAddress,
+} from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 
 interface AddressDisplayProps {
@@ -15,10 +14,10 @@ interface AddressDisplayProps {
 
 const shortAddress = (address: Address, maxLength: number) => {
   if (address.formatted.length > maxLength) {
-    return address.formatted.substring(0, maxLength) + "...";
+    return address.formatted.substring(0, maxLength) + '...';
   }
   return address.formatted;
-}
+};
 
 /**
  * Build a Google Maps URL for an address.
@@ -29,22 +28,20 @@ const shortAddress = (address: Address, maxLength: number) => {
  */
 const getGoogleMapsUrl = (address: Address, formattedAddress: string): string => {
   const hasLocation =
-    typeof address.location?.lat === 'number' &&
-    typeof address.location?.lng === 'number';
+    typeof address.location?.lat === 'number' && typeof address.location?.lng === 'number';
   if (hasLocation) {
     const { lat, lng } = address.location!;
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   }
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    formattedAddress
-  )}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formattedAddress)}`;
 };
 
 export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps) {
   const [open, setOpen] = useState(false);
   const formattedAddress = formatAddress(address);
   const shorterAddress = shortAddress(address, maxLength);
-  const hasLocation = typeof address.location?.lat === 'number' && typeof address.location?.lng === 'number';
+  const hasLocation =
+    typeof address.location?.lat === 'number' && typeof address.location?.lng === 'number';
   const googleMapsUrl = getGoogleMapsUrl(address, formattedAddress);
   const mapContainerStyle = {
     width: '260px',
@@ -56,8 +53,8 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="p-0 hover:bg-transparent"
           onMouseEnter={() => setOpen(true)}
           onMouseLeave={() => setOpen(false)}
@@ -67,18 +64,16 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
             window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
           }}
         >
-          <span className="cursor-pointer">
-            {shorterAddress}
-          </span>
+          <span className="cursor-pointer">{shorterAddress}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
+      <PopoverContent
         className="w-fit whitespace-pre-line"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
       >
         {hasLocation && (
-          <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}>
+          <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''}>
             <div style={mapContainerStyle} className="relative">
               <Map
                 zoom={15}
@@ -114,4 +109,4 @@ export function AddressDisplay({ address, maxLength = 15 }: AddressDisplayProps)
       </PopoverContent>
     </Popover>
   );
-} 
+}

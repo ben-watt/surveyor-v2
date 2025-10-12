@@ -1,17 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -28,23 +22,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { PlusCircle, Users, UserPlus, UserMinus, Trash2 } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { toast } from "react-hot-toast";
-import { 
-  createTenant, 
-  listUserTenants, 
-  addUserToTenant, 
-  removeUserFromTenant, 
+} from '@/components/ui/table';
+import { PlusCircle, Users, UserPlus, UserMinus, Trash2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { toast } from 'react-hot-toast';
+import {
+  createTenant,
+  listUserTenants,
+  addUserToTenant,
+  removeUserFromTenant,
   listTenantUsers,
   isGlobalAdmin,
   deleteTenant,
   Tenant,
-  TenantUser
-} from "../utils/tenant-utils";
-import { formatShortDate } from "../utils/dateFormatters";
+  TenantUser,
+} from '../utils/tenant-utils';
+import { formatShortDate } from '../utils/dateFormatters';
 
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -53,22 +47,27 @@ export default function TenantsPage() {
   const [tenantUsers, setTenantUsers] = useState<TenantUser[]>([]);
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isCreateTenantDialogOpen, setIsCreateTenantDialogOpen] = useState(false);
-  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState('');
   const [isGlobalAdminUser, setIsGlobalAdminUser] = useState(false);
-  
+
   // Zod schema for tenant validation
   const tenantSchema = z.object({
-    name: z.string().min(1, "Team name is required"),
-    description: z.string().optional()
+    name: z.string().min(1, 'Team name is required'),
+    description: z.string().optional(),
   });
 
   type TenantFormData = z.infer<typeof tenantSchema>;
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<TenantFormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<TenantFormData>({
     defaultValues: {
-      name: "",
-      description: "",
-    }
+      name: '',
+      description: '',
+    },
   });
 
   // Check if user is global admin on page load
@@ -94,7 +93,7 @@ export default function TenantsPage() {
       const isAdmin = await isGlobalAdmin();
       setIsGlobalAdminUser(isAdmin);
     } catch (error) {
-      console.error("Error checking admin status:", error);
+      console.error('Error checking admin status:', error);
       setIsGlobalAdminUser(false);
     }
   };
@@ -105,14 +104,14 @@ export default function TenantsPage() {
       setLoading(true);
       const userTenants = await listUserTenants();
       setTenants(userTenants);
-      
+
       // Select the first tenant by default if available
       if (userTenants.length > 0 && !selectedTenant) {
         setSelectedTenant(userTenants[0]);
       }
     } catch (error) {
-      console.error("Error loading tenants:", error);
-      toast.error("Failed to load tenants");
+      console.error('Error loading tenants:', error);
+      toast.error('Failed to load tenants');
     } finally {
       setLoading(false);
     }
@@ -124,8 +123,8 @@ export default function TenantsPage() {
       const users = await listTenantUsers(tenantId);
       setTenantUsers(users);
     } catch (error) {
-      console.error("Error loading tenant users:", error);
-      toast.error("Failed to load tenant users");
+      console.error('Error loading tenant users:', error);
+      toast.error('Failed to load tenant users');
     }
   };
 
@@ -133,14 +132,14 @@ export default function TenantsPage() {
   const handleCreateTenant = async (data: TenantFormData) => {
     try {
       setLoading(true);
-      await createTenant(data.name, data.description || "");
+      await createTenant(data.name, data.description || '');
       toast.success(`Tenant "${data.name}" created successfully`);
       reset();
       setIsCreateTenantDialogOpen(false);
       await loadTenants();
     } catch (error) {
-      console.error("Error creating tenant:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create tenant");
+      console.error('Error creating tenant:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create tenant');
     } finally {
       setLoading(false);
     }
@@ -149,17 +148,17 @@ export default function TenantsPage() {
   // Handle adding a user to the selected tenant
   const handleAddUser = async () => {
     if (!selectedTenant || !newUserEmail) return;
-    
+
     try {
       setLoading(true);
       await addUserToTenant(newUserEmail, selectedTenant.name);
       toast.success(`User ${newUserEmail} added to ${selectedTenant.name}`);
-      setNewUserEmail("");
+      setNewUserEmail('');
       setIsAddUserDialogOpen(false);
       await loadTenantUsers(selectedTenant.name);
     } catch (error) {
-      console.error("Error adding user to tenant:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to add user to tenant");
+      console.error('Error adding user to tenant:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to add user to tenant');
     } finally {
       setLoading(false);
     }
@@ -168,15 +167,15 @@ export default function TenantsPage() {
   // Handle removing a user from the selected tenant
   const handleRemoveUser = async (username: string) => {
     if (!selectedTenant) return;
-    
+
     try {
       setLoading(true);
       await removeUserFromTenant(username, selectedTenant.name);
       toast.success(`User removed from ${selectedTenant.name}`);
       await loadTenantUsers(selectedTenant.name);
     } catch (error) {
-      console.error("Error removing user from tenant:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to remove user from tenant");
+      console.error('Error removing user from tenant:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to remove user from tenant');
     } finally {
       setLoading(false);
     }
@@ -184,10 +183,14 @@ export default function TenantsPage() {
 
   // Add delete handler function
   const handleDeleteTenant = async (tenant: Tenant) => {
-    if (!confirm(`Are you sure you want to delete the team "${tenant.name}"? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete the team "${tenant.name}"? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
-    
+
     try {
       setLoading(true);
       await deleteTenant(tenant.name);
@@ -198,8 +201,8 @@ export default function TenantsPage() {
       }
       await loadTenants();
     } catch (error) {
-      console.error("Error deleting tenant:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to delete team");
+      console.error('Error deleting tenant:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete team');
     } finally {
       setLoading(false);
     }
@@ -207,11 +210,11 @@ export default function TenantsPage() {
 
   return (
     <div className="mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Team Management</h1>
           {!isGlobalAdminUser && (
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="mt-1 text-sm text-muted-foreground">
               You can view your assigned teams. Only administrators can create and manage teams.
             </p>
           )}
@@ -227,9 +230,7 @@ export default function TenantsPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Team</DialogTitle>
-                <DialogDescription>
-                  Create a new team that you can add users to.
-                </DialogDescription>
+                <DialogDescription>Create a new team that you can add users to.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit(handleCreateTenant)}>
                 <div className="grid gap-4 py-4">
@@ -237,26 +238,23 @@ export default function TenantsPage() {
                     <Label htmlFor="name">Team Name</Label>
                     <Input
                       id="name"
-                      {...register("name", {
-                        required: "Team name is required",
-                        validate: (value) => tenantSchema.shape.name.safeParse(value).success || "Team name is required"
+                      {...register('name', {
+                        required: 'Team name is required',
+                        validate: (value) =>
+                          tenantSchema.shape.name.safeParse(value).success ||
+                          'Team name is required',
                       })}
                     />
-                    {errors.name && (
-                      <p className="text-sm text-red-500">{errors.name.message}</p>
-                    )}
+                    {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      {...register("description")}
-                    />
+                    <Textarea id="description" {...register('description')} />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={loading}>
-                    {loading ? "Creating..." : "Create Team"}
+                    {loading ? 'Creating...' : 'Create Team'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -271,35 +269,31 @@ export default function TenantsPage() {
           <CardHeader>
             <CardTitle>Your Teams</CardTitle>
             <CardDescription>
-              {isGlobalAdminUser 
-                ? "Select a team to manage its users"
-                : "Select a team to view its details"}
+              {isGlobalAdminUser
+                ? 'Select a team to manage its users'
+                : 'Select a team to view its details'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading && <p>Loading tenants...</p>}
-            {!loading && tenants.length === 0 && (
-              <p>You don't have any teams assigned yet.</p>
-            )}
+            {!loading && tenants.length === 0 && <p>You don't have any teams assigned yet.</p>}
             {!loading && tenants.length > 0 && (
               <div className="space-y-2">
                 {tenants.map((tenant) => (
                   <div
                     key={tenant.name}
-                    className={`p-3 rounded-md flex justify-between items-center ${
+                    className={`flex items-center justify-between rounded-md p-3 ${
                       selectedTenant?.name === tenant.name
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary hover:bg-secondary/80"
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary hover:bg-secondary/80'
                     }`}
                   >
-                    <div 
+                    <div
                       className="flex-1 cursor-pointer"
                       onClick={() => setSelectedTenant(tenant)}
                     >
                       <h3 className="font-medium">{tenant.name}</h3>
-                      <p className="text-sm truncate">
-                        {tenant.description || "No description"}
-                      </p>
+                      <p className="truncate text-sm">{tenant.description || 'No description'}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
@@ -330,9 +324,7 @@ export default function TenantsPage() {
             <CardHeader>
               <CardTitle>Users in {selectedTenant.name}</CardTitle>
               <CardDescription>
-                {isGlobalAdminUser 
-                  ? "Manage users in this team"
-                  : "View users in this team"}
+                {isGlobalAdminUser ? 'Manage users in this team' : 'View users in this team'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -366,18 +358,16 @@ export default function TenantsPage() {
                       </div>
                       <DialogFooter>
                         <Button onClick={handleAddUser} disabled={loading || !newUserEmail}>
-                          {loading ? "Adding..." : "Add User"}
+                          {loading ? 'Adding...' : 'Add User'}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
                 </div>
               )}
-              
+
               {loading && <p>Loading users...</p>}
-              {!loading && tenantUsers.length === 0 && (
-                <p>No users in this team yet.</p>
-              )}
+              {!loading && tenantUsers.length === 0 && <p>No users in this team yet.</p>}
               {!loading && tenantUsers.length > 0 && (
                 <Table>
                   <TableHeader>
@@ -417,4 +407,4 @@ export default function TenantsPage() {
       </div>
     </div>
   );
-} 
+}

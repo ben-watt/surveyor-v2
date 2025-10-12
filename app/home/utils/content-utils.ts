@@ -35,4 +35,4 @@ export function validateJson(content: string): Result<void, Error> {
   } catch (error) {
     return Err(new Error('Invalid JSON content'));
   }
-} 
+}

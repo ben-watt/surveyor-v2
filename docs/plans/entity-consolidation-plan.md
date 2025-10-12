@@ -1,18 +1,22 @@
 # Entity Consolidation & Dynamic Entity System Plan
 
 ## Overview
+
 This document outlines a plan to consolidate the current entity types (Sections, Elements, Components, Phrases) into a generic, flexible entity system that allows users to create custom entity types and define their own data structures.
 
 ## Current Architecture Analysis
 
 ### Existing Entity Types
+
 Currently, the system has these hard-coded entity types:
+
 - **Sections**: Container entities with order
 - **Elements**: Items within sections with descriptions
 - **Components**: Sub-items of elements with materials
 - **Phrases**: Text snippets associated with various entities
 
 ### Current Limitations
+
 - Fixed entity types in the schema
 - Hard-coded relationships
 - Limited flexibility for custom fields
@@ -24,6 +28,7 @@ Currently, the system has these hard-coded entity types:
 ### Core Tables
 
 #### 1. Entities Table
+
 A single table for all entity data with flexible JSON storage:
 
 ```typescript
@@ -51,6 +56,7 @@ interface Entity {
 ```
 
 #### 2. EntityTypes Table
+
 Define custom entity types and their schemas:
 
 ```typescript
@@ -98,6 +104,7 @@ interface FieldDefinition {
 ```
 
 #### 3. Relationships Table
+
 Store all entity relationships in a dedicated table:
 
 ```typescript
@@ -120,6 +127,7 @@ interface Relationship {
 ```
 
 #### 4. RelationshipTypes Table
+
 Define relationship types and their rules:
 
 ```typescript
@@ -149,6 +157,7 @@ interface RelationshipType {
 ### Migration Strategy
 
 #### Phase 1: Database Schema Migration
+
 Map existing entities to the new structure:
 
 ```typescript
@@ -195,6 +204,7 @@ const migrateElementToSection = (element: OldElement): Relationship => ({
 ### Dynamic Entity Creation UI
 
 #### Entity Type Builder
+
 Allow users to create new entity types through UI:
 
 ```typescript
@@ -232,6 +242,7 @@ const EntityTypeBuilder = () => {
 ### Query System
 
 #### Generic Query Builder
+
 Flexible querying across entity types:
 
 ```typescript
@@ -270,14 +281,15 @@ const query: EntityQuery = {
 ### Sync Strategy Updates
 
 #### Enhanced Dexie Store
+
 Update the local store to handle generic entities:
 
 ```typescript
 const db = new Dexie('GenericEntities') as Dexie & {
-  entities: EntityTable<Entity, "id", "tenantId">;
-  entityTypes: EntityTable<EntityType, "id", "tenantId">;
-  relationships: EntityTable<Relationship, "id", "tenantId">;
-  relationshipTypes: EntityTable<RelationshipType, "id", "tenantId">;
+  entities: EntityTable<Entity, 'id', 'tenantId'>;
+  entityTypes: EntityTable<EntityType, 'id', 'tenantId'>;
+  relationships: EntityTable<Relationship, 'id', 'tenantId'>;
+  relationshipTypes: EntityTable<RelationshipType, 'id', 'tenantId'>;
 };
 
 db.version(1).stores({
@@ -301,30 +313,35 @@ db.version(1).stores({
 ### Implementation Phases
 
 #### Phase 1: Core Infrastructure (Weeks 1-2)
+
 - [ ] Design and create new database schema
 - [ ] Implement Entity and Relationship models
 - [ ] Create migration scripts for existing data
 - [ ] Update Amplify schema definitions
 
 #### Phase 2: Data Access Layer (Weeks 3-4)
+
 - [ ] Build generic CRUD operations for entities
 - [ ] Implement relationship management
 - [ ] Create query builder system
 - [ ] Update sync logic for generic entities
 
 #### Phase 3: Entity Type Management (Weeks 5-6)
+
 - [ ] Build EntityType CRUD operations
 - [ ] Create UI for entity type builder
 - [ ] Implement field type system
 - [ ] Add validation framework
 
 #### Phase 4: Migration & Testing (Weeks 7-8)
+
 - [ ] Migrate existing entities to new structure
 - [ ] Update all existing components to use new API
 - [ ] Comprehensive testing of all features
 - [ ] Performance optimization
 
 #### Phase 5: Advanced Features (Weeks 9-10)
+
 - [ ] Implement computed fields
 - [ ] Add advanced relationship types
 - [ ] Create template system for common entity types
@@ -333,6 +350,7 @@ db.version(1).stores({
 ### API Examples
 
 #### Creating a Custom Entity Type
+
 ```typescript
 const inspectionPointType = await entityTypeStore.create({
   typeName: 'inspection_point',
@@ -371,6 +389,7 @@ const inspectionPointType = await entityTypeStore.create({
 ```
 
 #### Creating an Entity Instance
+
 ```typescript
 const entity = await entityStore.create({
   entityType: 'inspection_point',
@@ -385,6 +404,7 @@ const entity = await entityStore.create({
 ```
 
 #### Creating Relationships
+
 ```typescript
 const relationship = await relationshipStore.create({
   relationshipType: 'inspection_contains',
@@ -399,11 +419,12 @@ const relationship = await relationshipStore.create({
 ### UI Component Architecture
 
 #### Generic Entity List Component
+
 ```typescript
 const EntityList = ({ entityType }: { entityType: string }) => {
   const [entities] = useEntities({ entityType });
   const typeDefinition = useEntityType(entityType);
-  
+
   return (
     <DataTable
       columns={generateColumns(typeDefinition)}
@@ -415,12 +436,13 @@ const EntityList = ({ entityType }: { entityType: string }) => {
 ```
 
 #### Generic Entity Form Component
+
 ```typescript
 const EntityForm = ({ entityType, entityId }: Props) => {
   const typeDefinition = useEntityType(entityType);
   const [entity] = useEntity(entityId);
   const form = useForm(generateSchema(typeDefinition));
-  
+
   return (
     <DynamicForm
       schema={typeDefinition.schema}
@@ -434,11 +456,13 @@ const EntityForm = ({ entityType, entityId }: Props) => {
 ### Performance Considerations
 
 1. **Indexing Strategy**
+
    - Index on entityType for type-specific queries
    - Composite index on tenantId + entityType
    - Index on commonly queried data fields
 
 2. **Query Optimization**
+
    - Implement query result caching
    - Use pagination for large datasets
    - Optimize relationship loading (N+1 prevention)
@@ -451,11 +475,13 @@ const EntityForm = ({ entityType, entityId }: Props) => {
 ### Security Considerations
 
 1. **Permission System**
+
    - Role-based access per entity type
    - Field-level permissions
    - Relationship permissions
 
 2. **Data Validation**
+
    - Schema validation on all CRUD operations
    - Sanitization of user-defined schemas
    - Prevention of injection attacks
@@ -468,11 +494,13 @@ const EntityForm = ({ entityType, entityId }: Props) => {
 ### Migration Path
 
 1. **Backward Compatibility**
+
    - Keep old tables during transition
    - Dual-write to both systems
    - Gradual migration of features
 
 2. **Data Migration**
+
    - Automated migration scripts
    - Validation of migrated data
    - Rollback capability
@@ -485,16 +513,19 @@ const EntityForm = ({ entityType, entityId }: Props) => {
 ### Future Enhancements
 
 1. **AI-Powered Features**
+
    - Auto-suggest entity types based on usage
    - Smart field recommendations
    - Relationship discovery
 
 2. **Advanced Querying**
+
    - GraphQL-like query language
    - Saved queries and views
    - Real-time query subscriptions
 
 3. **Workflow Integration**
+
    - Entity state machines
    - Approval workflows
    - Automated actions

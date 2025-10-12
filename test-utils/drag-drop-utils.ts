@@ -7,7 +7,7 @@ export const createMockTreeNode = (
   name: string,
   type: 'section' | 'element' | 'component' | 'condition',
   order: number,
-  children: TreeNode[] = []
+  children: TreeNode[] = [],
 ): TreeNode => ({
   id,
   name,
@@ -28,27 +28,28 @@ export const createMockTreeNode = (
 });
 
 // Helper to create drag events with proper types
-export const createDragStartEvent = (activeId: string): DragStartEvent => ({
-  active: {
-    id: activeId,
-    data: {
-      current: undefined,
-    },
-    rect: {
-      current: {
-        initial: null,
-        translated: null,
+export const createDragStartEvent = (activeId: string): DragStartEvent =>
+  ({
+    active: {
+      id: activeId,
+      data: {
+        current: undefined,
       },
-    },
-  } as Active,
-  activatorEvent: new MouseEvent('mousedown'),
-} as DragStartEvent);
+      rect: {
+        current: {
+          initial: null,
+          translated: null,
+        },
+      },
+    } as Active,
+    activatorEvent: new MouseEvent('mousedown'),
+  }) as DragStartEvent;
 
 export const createDragEndEvent = (
   activeId: string,
   overId: string,
   rect: { top: number; bottom: number; height: number; left: number; right: number; width: number },
-  clientY: number
+  clientY: number,
 ): DragEndEvent => ({
   active: {
     id: activeId,
@@ -79,7 +80,7 @@ export const createDragOverEvent = (
   activeId: string,
   overId: string,
   rect: { top: number; bottom: number; height: number; left: number; right: number; width: number },
-  clientY: number
+  clientY: number,
 ): DragOverEvent => ({
   active: {
     id: activeId,

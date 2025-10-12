@@ -11,7 +11,7 @@ export class PerformanceMonitor {
    */
   static startMeasure(category: string, label: string): string {
     if (!this.isEnabled) return '';
-    
+
     const markName = `${category}-${label}-start`;
     try {
       performance.mark(markName);
@@ -26,28 +26,28 @@ export class PerformanceMonitor {
    */
   static endMeasure(category: string, label: string): number {
     if (!this.isEnabled) return 0;
-    
+
     const startMark = `${category}-${label}-start`;
     const endMark = `${category}-${label}-end`;
     const measureName = `${category}-${label}`;
-    
+
     try {
       performance.mark(endMark);
       performance.measure(measureName, startMark, endMark);
-      
+
       const measures = performance.getEntriesByName(measureName);
       const duration = measures[measures.length - 1]?.duration || 0;
-      
+
       // Log significant durations in development
       if (process.env.NODE_ENV === 'development' && duration > 100) {
         console.log(`[Performance] ${category} ${label}: ${duration.toFixed(2)}ms`);
       }
-      
+
       // Clean up marks to avoid memory leaks
       performance.clearMarks(startMark);
       performance.clearMarks(endMark);
       performance.clearMeasures(measureName);
-      
+
       return duration;
     } catch (error) {
       console.debug('[PerformanceMonitor] Failed to measure:', error);
@@ -60,7 +60,7 @@ export class PerformanceMonitor {
    */
   static mark(category: string, label: string): void {
     if (!this.isEnabled) return;
-    
+
     const markName = `${category}-${label}`;
     try {
       performance.mark(markName);
@@ -74,10 +74,11 @@ export class PerformanceMonitor {
    */
   static getEntries(category: string): PerformanceEntry[] {
     if (!this.isEnabled) return [];
-    
+
     try {
-      return performance.getEntriesByType('measure')
-        .filter(entry => entry.name.startsWith(category));
+      return performance
+        .getEntriesByType('measure')
+        .filter((entry) => entry.name.startsWith(category));
     } catch (error) {
       console.debug('[PerformanceMonitor] Failed to get entries:', error);
       return [];
@@ -89,16 +90,18 @@ export class PerformanceMonitor {
    */
   static clear(category?: string): void {
     if (!this.isEnabled) return;
-    
+
     try {
       if (category) {
-        const marks = performance.getEntriesByType('mark')
-          .filter(entry => entry.name.startsWith(category));
-        marks.forEach(mark => performance.clearMarks(mark.name));
-        
-        const measures = performance.getEntriesByType('measure')
-          .filter(entry => entry.name.startsWith(category));
-        measures.forEach(measure => performance.clearMeasures(measure.name));
+        const marks = performance
+          .getEntriesByType('mark')
+          .filter((entry) => entry.name.startsWith(category));
+        marks.forEach((mark) => performance.clearMarks(mark.name));
+
+        const measures = performance
+          .getEntriesByType('measure')
+          .filter((entry) => entry.name.startsWith(category));
+        measures.forEach((measure) => performance.clearMeasures(measure.name));
       } else {
         performance.clearMarks();
         performance.clearMeasures();
@@ -119,7 +122,7 @@ export class PerformanceMonitor {
     minDuration: number;
   } {
     const entries = this.getEntries(category);
-    
+
     if (entries.length === 0) {
       return {
         count: 0,
@@ -129,10 +132,10 @@ export class PerformanceMonitor {
         minDuration: 0,
       };
     }
-    
-    const durations = entries.map(entry => entry.duration);
+
+    const durations = entries.map((entry) => entry.duration);
     const totalDuration = durations.reduce((sum, d) => sum + d, 0);
-    
+
     return {
       count: entries.length,
       totalDuration,

@@ -28,8 +28,12 @@ export class FormErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`[FormErrorBoundary${this.props.formName ? ` - ${this.props.formName}` : ''}] Error caught:`, error, errorInfo);
-    
+    console.error(
+      `[FormErrorBoundary${this.props.formName ? ` - ${this.props.formName}` : ''}] Error caught:`,
+      error,
+      errorInfo,
+    );
+
     // Call optional error handler
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -57,23 +61,19 @@ export class FormErrorBoundary extends Component<Props, State> {
           <AlertTitle>Form Error</AlertTitle>
           <AlertDescription className="mt-2">
             <p className="mb-2">
-              An error occurred while rendering {this.props.formName ? `the ${this.props.formName} form` : 'this form'}.
+              An error occurred while rendering{' '}
+              {this.props.formName ? `the ${this.props.formName} form` : 'this form'}.
             </p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mt-2">
                 <summary className="cursor-pointer text-sm font-medium">Error details</summary>
-                <pre className="mt-2 text-xs overflow-auto p-2 bg-destructive/10 rounded">
+                <pre className="mt-2 overflow-auto rounded bg-destructive/10 p-2 text-xs">
                   {this.state.error.toString()}
                   {this.state.error.stack}
                 </pre>
               </details>
             )}
-            <Button 
-              onClick={this.handleReset}
-              variant="outline"
-              size="sm"
-              className="mt-4"
-            >
+            <Button onClick={this.handleReset} variant="outline" size="sm" className="mt-4">
               Try Again
             </Button>
           </AlertDescription>
@@ -90,7 +90,7 @@ export class FormErrorBoundary extends Component<Props, State> {
  */
 export function withFormErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  formName?: string
+  formName?: string,
 ): React.ComponentType<P> {
   return function WrappedComponent(props: P) {
     return (

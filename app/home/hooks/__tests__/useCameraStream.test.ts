@@ -125,7 +125,7 @@ describe('useCameraStream', () => {
 
   it('handles camera permission denied error', async () => {
     const { result } = renderHook(() => useCameraStream());
-    
+
     const permissionError = new Error('Permission denied');
     permissionError.name = 'NotAllowedError';
     mockGetUserMedia.mockRejectedValue(permissionError);
@@ -141,7 +141,7 @@ describe('useCameraStream', () => {
 
   it('handles no camera found error', async () => {
     const { result } = renderHook(() => useCameraStream());
-    
+
     const notFoundError = new Error('No camera found');
     notFoundError.name = 'NotFoundError';
     mockGetUserMedia.mockRejectedValue(notFoundError);
@@ -155,7 +155,7 @@ describe('useCameraStream', () => {
 
   it('handles camera in use error', async () => {
     const { result } = renderHook(() => useCameraStream());
-    
+
     const inUseError = new Error('Camera in use');
     inUseError.name = 'NotReadableError';
     mockGetUserMedia.mockRejectedValue(inUseError);
@@ -169,12 +169,10 @@ describe('useCameraStream', () => {
 
   it('handles overconstrained error with fallback', async () => {
     const { result } = renderHook(() => useCameraStream());
-    
+
     const overconstrainedError = new Error('Overconstrained');
     overconstrainedError.name = 'OverconstrainedError';
-    mockGetUserMedia
-      .mockRejectedValueOnce(overconstrainedError)
-      .mockResolvedValueOnce(mockStream);
+    mockGetUserMedia.mockRejectedValueOnce(overconstrainedError).mockResolvedValueOnce(mockStream);
 
     await act(async () => {
       await result.current.startCamera();
@@ -197,9 +195,9 @@ describe('useCameraStream', () => {
     const testStream = {
       getTracks: jest.fn(() => [mockTrack]),
     } as unknown as MediaStream;
-    
+
     mockGetUserMedia.mockResolvedValue(testStream);
-    
+
     const { result } = renderHook(() => useCameraStream());
 
     // Start camera first
@@ -231,7 +229,7 @@ describe('useCameraStream', () => {
         video: expect.objectContaining({
           deviceId: { exact: 'device2' },
         }),
-      })
+      }),
     );
   });
 
@@ -369,7 +367,7 @@ describe('useCameraStream', () => {
 
   it('fails to capture when video dimensions are zero', async () => {
     const { result } = renderHook(() => useCameraStream());
-    
+
     const zeroSizeVideo = { ...mockVideoElement, videoWidth: 0, videoHeight: 0 };
 
     await act(async () => {
@@ -391,9 +389,9 @@ describe('useCameraStream', () => {
     const testStream = {
       getTracks: jest.fn(() => [mockTrack]),
     } as unknown as MediaStream;
-    
+
     mockGetUserMedia.mockResolvedValue(testStream);
-    
+
     const { result, unmount } = renderHook(() => useCameraStream());
 
     // Start camera to create a real stream

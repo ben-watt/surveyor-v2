@@ -19,10 +19,8 @@ describe('useAutoSave', () => {
 
   it('should initialize with idle status', () => {
     const mockSaveFunction = jest.fn();
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     expect(result.current.saveStatus).toBe('idle');
     expect(result.current.isSaving).toBe(false);
@@ -30,10 +28,8 @@ describe('useAutoSave', () => {
 
   it('should trigger manual save correctly', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     const testData = { name: 'Test' };
 
@@ -47,10 +43,8 @@ describe('useAutoSave', () => {
 
   it('should trigger autosave with delay', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { delay: 1000 })
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction, { delay: 1000 }));
 
     const testData = { name: 'Test' };
 
@@ -79,10 +73,8 @@ describe('useAutoSave', () => {
 
   it('should handle save errors correctly', async () => {
     const mockSaveFunction = jest.fn().mockRejectedValue(new Error('Save failed'));
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     const testData = { name: 'Test' };
 
@@ -95,10 +87,8 @@ describe('useAutoSave', () => {
 
   it('should reset status after timeout', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     const testData = { name: 'Test' };
 
@@ -118,10 +108,8 @@ describe('useAutoSave', () => {
 
   it('should not save when disabled', async () => {
     const mockSaveFunction = jest.fn();
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { enabled: false })
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction, { enabled: false }));
 
     const testData = { name: 'Test' };
 
@@ -134,10 +122,8 @@ describe('useAutoSave', () => {
 
   it('should not trigger autosave when disabled', () => {
     const mockSaveFunction = jest.fn();
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { enabled: false })
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction, { enabled: false }));
 
     const testData = { name: 'Test' };
 
@@ -154,13 +140,11 @@ describe('useAutoSave', () => {
   });
 
   it('should not trigger autosave when already saving', async () => {
-    const mockSaveFunction = jest.fn().mockImplementation(() => 
-      new Promise(resolve => setTimeout(resolve, 1000))
-    );
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { delay: 500 })
-    );
+    const mockSaveFunction = jest
+      .fn()
+      .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 1000)));
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction, { delay: 500 }));
 
     const testData = { name: 'Test' };
 
@@ -187,10 +171,8 @@ describe('useAutoSave', () => {
   it('should show toast for manual save when enabled', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
     const toast = require('react-hot-toast');
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { showToast: true })
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction, { showToast: true }));
 
     const testData = { name: 'Test' };
 
@@ -204,9 +186,9 @@ describe('useAutoSave', () => {
   it('should show toast for autosave when explicitly enabled', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
     const toast = require('react-hot-toast');
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { showToast: true, successMessage: 'Auto-saved!' })
+
+    const { result } = renderHook(() =>
+      useAutoSave(mockSaveFunction, { showToast: true, successMessage: 'Auto-saved!' }),
     );
 
     const testData = { name: 'Test' };
@@ -229,13 +211,11 @@ describe('useAutoSave', () => {
 
   it('should provide resetStatus function', () => {
     const mockSaveFunction = jest.fn();
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     expect(typeof result.current.resetStatus).toBe('function');
-    
+
     act(() => {
       result.current.resetStatus();
     });
@@ -245,10 +225,8 @@ describe('useAutoSave', () => {
 
   it('should track last saved timestamp', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     const testData = { name: 'Test' };
 
@@ -261,10 +239,8 @@ describe('useAutoSave', () => {
 
   it('should set pending status when triggerAutoSave is called', () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { delay: 1000 })
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction, { delay: 1000 }));
 
     const testData = { name: 'Test' };
 
@@ -278,10 +254,8 @@ describe('useAutoSave', () => {
 
   it('should clear pending status when save starts', async () => {
     const mockSaveFunction = jest.fn().mockResolvedValue(undefined);
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction, { delay: 1000 })
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction, { delay: 1000 }));
 
     const testData = { name: 'Test' };
 
@@ -306,10 +280,8 @@ describe('useAutoSave', () => {
 
   it('should expose hasPendingChanges property', () => {
     const mockSaveFunction = jest.fn();
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     expect(result.current.hasPendingChanges).toBe(false);
     expect(typeof result.current.hasPendingChanges).toBe('boolean');
@@ -317,10 +289,8 @@ describe('useAutoSave', () => {
 
   it('should clear pending changes when resetStatus is called', () => {
     const mockSaveFunction = jest.fn();
-    
-    const { result } = renderHook(() => 
-      useAutoSave(mockSaveFunction)
-    );
+
+    const { result } = renderHook(() => useAutoSave(mockSaveFunction));
 
     // Set pending status first
     act(() => {
@@ -337,4 +307,4 @@ describe('useAutoSave', () => {
     expect(result.current.hasPendingChanges).toBe(false);
     expect(result.current.saveStatus).toBe('idle');
   });
-}); 
+});

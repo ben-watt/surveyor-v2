@@ -1,6 +1,6 @@
-import { ClipboardList, Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { ClipboardList, Plus, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 interface EmptyStateProps {
   searchQuery: string;
@@ -13,8 +13,8 @@ export function EmptyState({ searchQuery, hasFilters }: EmptyStateProps) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
       <div className="w-full max-w-md rounded-lg border bg-card p-8 shadow-sm">
-        <div className="relative flex justify-center items-center max-w-[65px] m-auto">
-          <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary/10 to-primary/5 animate-pulse" />
+        <div className="relative m-auto flex max-w-[65px] items-center justify-center">
+          <div className="absolute -inset-4 animate-pulse rounded-full bg-gradient-to-r from-primary/10 to-primary/5" />
           <div className="relative rounded-full bg-background p-6 ring-8 ring-background">
             <ClipboardList className="h-12 w-12 text-primary" />
           </div>
@@ -27,11 +27,11 @@ export function EmptyState({ searchQuery, hasFilters }: EmptyStateProps) {
               No surveys match your current filters. Try adjusting your search or filters.
             </span>
           ) : (
-            "Get started by creating your first building survey."
+            'Get started by creating your first building survey.'
           )}
         </p>
         <Button
-          onClick={() => router.push("/home/surveys/create")}
+          onClick={() => router.push('/home/surveys/create')}
           className="mt-6 gap-2"
           size="lg"
         >
@@ -41,4 +41,4 @@ export function EmptyState({ searchQuery, hasFilters }: EmptyStateProps) {
       </div>
     </div>
   );
-} 
+}

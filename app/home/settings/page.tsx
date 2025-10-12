@@ -1,24 +1,34 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { JsonView, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
-import bankOfDefects from "./defects.json"; 
-import seedSectionData from "./sections.json";
-import seedElementData from "./elements.json";
-import { componentStore, elementStore, phraseStore, sectionStore, surveyStore } from "../clients/Database";
-import { SyncStatus } from "../clients/Dexie";
-import { getErrorMessage } from "../utils/handleError";
-import { EntityCard } from "./components/EntityCard";
-import { EntityDialog } from "./components/EntityDialog";
-import { EntityType, SyncingEntities, EntitiesToSync } from "./types";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { mapBodToComponentData, mapBodToPhraseData, mapElementsToElementData } from "./utils/mappers";
-import { getRawCounts } from "../clients/Database";
-import { withTenantId } from "../utils/tenant-utils";
-import { getCurrentTenantId } from "../utils/tenant-utils";
+import bankOfDefects from './defects.json';
+import seedSectionData from './sections.json';
+import seedElementData from './elements.json';
+import {
+  componentStore,
+  elementStore,
+  phraseStore,
+  sectionStore,
+  surveyStore,
+} from '../clients/Database';
+import { SyncStatus } from '../clients/Dexie';
+import { getErrorMessage } from '../utils/handleError';
+import { EntityCard } from './components/EntityCard';
+import { EntityDialog } from './components/EntityDialog';
+import { EntityType, SyncingEntities, EntitiesToSync } from './types';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import {
+  mapBodToComponentData,
+  mapBodToPhraseData,
+  mapElementsToElementData,
+} from './utils/mappers';
+import { getRawCounts } from '../clients/Database';
+import { withTenantId } from '../utils/tenant-utils';
+import { getCurrentTenantId } from '../utils/tenant-utils';
 
 function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -84,56 +94,82 @@ function SettingsPage() {
     surveys: 0,
   });
 
-  const filteredElements = elements.filter(e => !filters.elements || e.syncStatus === filters.elements);
-  const filteredComponents = components.filter(c => !filters.components || c.syncStatus === filters.components);
-  const filteredPhrases = phrases.filter(p => !filters.phrases || p.syncStatus === filters.phrases);
-  const filteredSurveys = surveys.filter(s => !filters.surveys || s.syncStatus === filters.surveys);
+  const filteredElements = elements.filter(
+    (e) => !filters.elements || e.syncStatus === filters.elements,
+  );
+  const filteredComponents = components.filter(
+    (c) => !filters.components || c.syncStatus === filters.components,
+  );
+  const filteredPhrases = phrases.filter(
+    (p) => !filters.phrases || p.syncStatus === filters.phrases,
+  );
+  const filteredSurveys = surveys.filter(
+    (s) => !filters.surveys || s.syncStatus === filters.surveys,
+  );
 
   const statusCounts = {
     elements: {
-      [SyncStatus.Draft]: elements.filter(item => item.syncStatus === SyncStatus.Draft).length,
-      [SyncStatus.Queued]: elements.filter(item => item.syncStatus === SyncStatus.Queued).length,
-      [SyncStatus.Failed]: elements.filter(item => item.syncStatus === SyncStatus.Failed).length,
-      [SyncStatus.Synced]: elements.filter(item => item.syncStatus === SyncStatus.Synced).length,
-      [SyncStatus.PendingDelete]: elements.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
-      [SyncStatus.Archived]: elements.filter(item => item.syncStatus === SyncStatus.Archived).length,
+      [SyncStatus.Draft]: elements.filter((item) => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: elements.filter((item) => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: elements.filter((item) => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: elements.filter((item) => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: elements.filter(
+        (item) => item.syncStatus === SyncStatus.PendingDelete,
+      ).length,
+      [SyncStatus.Archived]: elements.filter((item) => item.syncStatus === SyncStatus.Archived)
+        .length,
     },
     components: {
-      [SyncStatus.Draft]: components.filter(item => item.syncStatus === SyncStatus.Draft).length,
-      [SyncStatus.Queued]: components.filter(item => item.syncStatus === SyncStatus.Queued).length,
-      [SyncStatus.Failed]: components.filter(item => item.syncStatus === SyncStatus.Failed).length,
-      [SyncStatus.Synced]: components.filter(item => item.syncStatus === SyncStatus.Synced).length,
-      [SyncStatus.PendingDelete]: components.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
-      [SyncStatus.Archived]: components.filter(item => item.syncStatus === SyncStatus.Archived).length,
+      [SyncStatus.Draft]: components.filter((item) => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: components.filter((item) => item.syncStatus === SyncStatus.Queued)
+        .length,
+      [SyncStatus.Failed]: components.filter((item) => item.syncStatus === SyncStatus.Failed)
+        .length,
+      [SyncStatus.Synced]: components.filter((item) => item.syncStatus === SyncStatus.Synced)
+        .length,
+      [SyncStatus.PendingDelete]: components.filter(
+        (item) => item.syncStatus === SyncStatus.PendingDelete,
+      ).length,
+      [SyncStatus.Archived]: components.filter((item) => item.syncStatus === SyncStatus.Archived)
+        .length,
     },
     phrases: {
-      [SyncStatus.Draft]: phrases.filter(item => item.syncStatus === SyncStatus.Draft).length,
-      [SyncStatus.Queued]: phrases.filter(item => item.syncStatus === SyncStatus.Queued).length,
-      [SyncStatus.Failed]: phrases.filter(item => item.syncStatus === SyncStatus.Failed).length,
-      [SyncStatus.Synced]: phrases.filter(item => item.syncStatus === SyncStatus.Synced).length,
-      [SyncStatus.PendingDelete]: phrases.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
-      [SyncStatus.Archived]: phrases.filter(item => item.syncStatus === SyncStatus.Archived).length,
+      [SyncStatus.Draft]: phrases.filter((item) => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: phrases.filter((item) => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: phrases.filter((item) => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: phrases.filter((item) => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: phrases.filter(
+        (item) => item.syncStatus === SyncStatus.PendingDelete,
+      ).length,
+      [SyncStatus.Archived]: phrases.filter((item) => item.syncStatus === SyncStatus.Archived)
+        .length,
     },
     sections: {
-      [SyncStatus.Draft]: sections.filter(item => item.syncStatus === SyncStatus.Draft).length,
-      [SyncStatus.Queued]: sections.filter(item => item.syncStatus === SyncStatus.Queued).length,
-      [SyncStatus.Failed]: sections.filter(item => item.syncStatus === SyncStatus.Failed).length,
-      [SyncStatus.Synced]: sections.filter(item => item.syncStatus === SyncStatus.Synced).length,
-      [SyncStatus.PendingDelete]: sections.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
-      [SyncStatus.Archived]: sections.filter(item => item.syncStatus === SyncStatus.Archived).length,
+      [SyncStatus.Draft]: sections.filter((item) => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: sections.filter((item) => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: sections.filter((item) => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: sections.filter((item) => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: sections.filter(
+        (item) => item.syncStatus === SyncStatus.PendingDelete,
+      ).length,
+      [SyncStatus.Archived]: sections.filter((item) => item.syncStatus === SyncStatus.Archived)
+        .length,
     },
     surveys: {
-      [SyncStatus.Draft]: surveys.filter(item => item.syncStatus === SyncStatus.Draft).length,
-      [SyncStatus.Queued]: surveys.filter(item => item.syncStatus === SyncStatus.Queued).length,
-      [SyncStatus.Failed]: surveys.filter(item => item.syncStatus === SyncStatus.Failed).length,
-      [SyncStatus.Synced]: surveys.filter(item => item.syncStatus === SyncStatus.Synced).length,
-      [SyncStatus.PendingDelete]: surveys.filter(item => item.syncStatus === SyncStatus.PendingDelete).length,
-      [SyncStatus.Archived]: surveys.filter(item => item.syncStatus === SyncStatus.Archived).length,
+      [SyncStatus.Draft]: surveys.filter((item) => item.syncStatus === SyncStatus.Draft).length,
+      [SyncStatus.Queued]: surveys.filter((item) => item.syncStatus === SyncStatus.Queued).length,
+      [SyncStatus.Failed]: surveys.filter((item) => item.syncStatus === SyncStatus.Failed).length,
+      [SyncStatus.Synced]: surveys.filter((item) => item.syncStatus === SyncStatus.Synced).length,
+      [SyncStatus.PendingDelete]: surveys.filter(
+        (item) => item.syncStatus === SyncStatus.PendingDelete,
+      ).length,
+      [SyncStatus.Archived]: surveys.filter((item) => item.syncStatus === SyncStatus.Archived)
+        .length,
     },
   };
 
   const toggleFilter = (entityType: EntityType, status: SyncStatus) => {
-    setFilters(prev => {
+    setFilters((prev) => {
       const newFilters = { ...prev };
       if (prev[entityType] === status) {
         delete newFilters[entityType];
@@ -150,7 +186,7 @@ function SettingsPage() {
 
   const handleCardClick = (entityType: EntityType) => {
     setSelectedEntity(selectedEntity === entityType ? null : entityType);
-    setFilters(prev => {
+    setFilters((prev) => {
       const newFilters = { ...prev };
       delete newFilters[entityType];
       return newFilters;
@@ -163,12 +199,12 @@ function SettingsPage() {
       if (result.ok) {
         setServerCounts(result.val);
       } else {
-        console.error("Failed to fetch server counts:", result.val);
-        toast.error("Failed to fetch server counts");
+        console.error('Failed to fetch server counts:', result.val);
+        toast.error('Failed to fetch server counts');
       }
     } catch (error) {
-      console.error("Failed to fetch server counts:", error);
-      toast.error("Failed to fetch server counts");
+      console.error('Failed to fetch server counts:', error);
+      toast.error('Failed to fetch server counts');
     }
   }
 
@@ -180,22 +216,24 @@ function SettingsPage() {
     try {
       setIsLoading(true);
 
-      await Promise.all([
-        entitiesToSeed.elements && elementStore.removeAll(false),
-        entitiesToSeed.components && componentStore.removeAll(false),
-        entitiesToSeed.phrases && phraseStore.removeAll(false),
-        entitiesToSeed.sections && sectionStore.removeAll(false),
-        entitiesToSeed.surveys && surveyStore.removeAll(false)
-      ].filter(Boolean));
+      await Promise.all(
+        [
+          entitiesToSeed.elements && elementStore.removeAll(false),
+          entitiesToSeed.components && componentStore.removeAll(false),
+          entitiesToSeed.phrases && phraseStore.removeAll(false),
+          entitiesToSeed.sections && sectionStore.removeAll(false),
+          entitiesToSeed.surveys && surveyStore.removeAll(false),
+        ].filter(Boolean),
+      );
 
       if (entitiesToSeed.sections) {
         const tenantId = await getCurrentTenantId();
-        if (!tenantId) throw new Error("No tenant selected");
+        if (!tenantId) throw new Error('No tenant selected');
         for (const section of seedSectionData) {
           await sectionStore.add({
             id: `${section.id}#${tenantId}`,
             name: section.name,
-            order: section.order
+            order: section.order,
           } as any);
         }
       }
@@ -203,7 +241,7 @@ function SettingsPage() {
       if (entitiesToSeed.elements) {
         for (const element of seedElementData) {
           const mappedElement = await mapElementsToElementData([element]);
-          await elementStore.add(mappedElement[0]);  
+          await elementStore.add(mappedElement[0]);
         }
       }
 
@@ -227,12 +265,12 @@ function SettingsPage() {
       }
 
       setSeedDialog(false);
-      toast.success("Successfully seeded data");
+      toast.success('Successfully seeded data');
       // Note: seeding only updates local data. Server counts will update after sync.
       // Still, refresh to reflect any pre-existing server changes.
       await refreshServerCounts();
     } catch (error) {
-      console.error("Error seeding data:", error);
+      console.error('Error seeding data:', error);
       toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
@@ -251,55 +289,55 @@ function SettingsPage() {
       });
 
       const syncTasks = [];
-      
+
       if (entitiesToSync.elements) {
         syncTasks.push(
-          elementStore.forceSync()?.finally(() => 
-            setSyncingEntities(prev => ({ ...prev, elements: false }))
-          )
+          elementStore
+            .forceSync()
+            ?.finally(() => setSyncingEntities((prev) => ({ ...prev, elements: false }))),
         );
       }
       if (entitiesToSync.components) {
         syncTasks.push(
-          componentStore.forceSync()?.finally(() => 
-            setSyncingEntities(prev => ({ ...prev, components: false }))
-          )
+          componentStore
+            .forceSync()
+            ?.finally(() => setSyncingEntities((prev) => ({ ...prev, components: false }))),
         );
       }
       if (entitiesToSync.phrases) {
         syncTasks.push(
-          phraseStore.forceSync()?.finally(() => 
-            setSyncingEntities(prev => ({ ...prev, phrases: false }))
-          )
+          phraseStore
+            .forceSync()
+            ?.finally(() => setSyncingEntities((prev) => ({ ...prev, phrases: false }))),
         );
       }
       if (entitiesToSync.sections) {
         syncTasks.push(
-          sectionStore.forceSync()?.finally(() => 
-            setSyncingEntities(prev => ({ ...prev, sections: false }))
-          )
+          sectionStore
+            .forceSync()
+            ?.finally(() => setSyncingEntities((prev) => ({ ...prev, sections: false }))),
         );
       }
       if (entitiesToSync.surveys) {
         syncTasks.push(
-          surveyStore.forceSync()?.finally(() => 
-            setSyncingEntities(prev => ({ ...prev, surveys: false }))
-          )
+          surveyStore
+            .forceSync()
+            ?.finally(() => setSyncingEntities((prev) => ({ ...prev, surveys: false }))),
         );
       }
 
       const results = await Promise.all(syncTasks);
 
-      if(results.some(x => x && !x.ok)) {
-        toast.error("Failed to sync with server");  
+      if (results.some((x) => x && !x.ok)) {
+        toast.error('Failed to sync with server');
       } else {
-        toast.success("Successfully synced with server");
+        toast.success('Successfully synced with server');
       }
 
       await refreshServerCounts();
       setSyncDialog(false);
     } catch (error) {
-      console.error("Failed to sync with server", error);
+      console.error('Failed to sync with server', error);
       toast.error(getErrorMessage(error));
     } finally {
       setIsSyncing(false);
@@ -309,22 +347,24 @@ function SettingsPage() {
   async function removeSelectedData() {
     try {
       setIsLoading(true);
-      
-      await Promise.all([
-        entitiesToRemove.elements && elementStore.removeAll(!localOnly),
-        entitiesToRemove.components && componentStore.removeAll(!localOnly),
-        entitiesToRemove.phrases && phraseStore.removeAll(!localOnly),
-        entitiesToRemove.sections && sectionStore.removeAll(!localOnly),
-        entitiesToRemove.surveys && surveyStore.removeAll(!localOnly)
-      ].filter(Boolean));
+
+      await Promise.all(
+        [
+          entitiesToRemove.elements && elementStore.removeAll(!localOnly),
+          entitiesToRemove.components && componentStore.removeAll(!localOnly),
+          entitiesToRemove.phrases && phraseStore.removeAll(!localOnly),
+          entitiesToRemove.sections && sectionStore.removeAll(!localOnly),
+          entitiesToRemove.surveys && surveyStore.removeAll(!localOnly),
+        ].filter(Boolean),
+      );
 
       setRemoveDialog(false);
-      toast.success("Successfully removed selected data");
+      toast.success('Successfully removed selected data');
       if (!localOnly) {
         await refreshServerCounts();
       }
     } catch (error) {
-      console.error("Failed to remove data", error);
+      console.error('Failed to remove data', error);
       toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
@@ -332,7 +372,7 @@ function SettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8 p-6">
       <div>
         <h1 className="text-3xl font-semibold dark:text-white">Settings</h1>
       </div>
@@ -345,10 +385,7 @@ function SettingsPage() {
             <div className="flex gap-4">
               <Dialog open={seedDialog} onOpenChange={setSeedDialog}>
                 <DialogTrigger asChild>
-                  <Button
-                    variant="default"
-                    disabled={isLoading}
-                  >
+                  <Button variant="default" disabled={isLoading}>
                     Import Data
                   </Button>
                 </DialogTrigger>
@@ -367,7 +404,7 @@ function SettingsPage() {
               <Button
                 onClick={() => setRemoveDialog(true)}
                 variant="destructive"
-                disabled={isLoading || Object.values(entityCounts).every(count => count === 0)}
+                disabled={isLoading || Object.values(entityCounts).every((count) => count === 0)}
               >
                 Remove Data
               </Button>
@@ -389,13 +426,38 @@ function SettingsPage() {
             </Button>
           </div>
 
-          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-4 lg:gap-4">
+          <div className="space-y-4 lg:grid lg:grid-cols-4 lg:gap-4 lg:space-y-0">
             {[
-              { type: "elements" as const, title: "Elements", data: elements, hydrated: elementsHydrated },
-              { type: "components" as const, title: "Components", data: components, hydrated: componentsHydrated },
-              { type: "phrases" as const, title: "Phrases", data: phrases, hydrated: phrasesHydrated },
-              { type: "sections" as const, title: "Sections", data: sections, hydrated: sectionsHydrated },
-              { type: "surveys" as const, title: "Surveys", data: surveys, hydrated: surveysHydrated },
+              {
+                type: 'elements' as const,
+                title: 'Elements',
+                data: elements,
+                hydrated: elementsHydrated,
+              },
+              {
+                type: 'components' as const,
+                title: 'Components',
+                data: components,
+                hydrated: componentsHydrated,
+              },
+              {
+                type: 'phrases' as const,
+                title: 'Phrases',
+                data: phrases,
+                hydrated: phrasesHydrated,
+              },
+              {
+                type: 'sections' as const,
+                title: 'Sections',
+                data: sections,
+                hydrated: sectionsHydrated,
+              },
+              {
+                type: 'surveys' as const,
+                title: 'Surveys',
+                data: surveys,
+                hydrated: surveysHydrated,
+              },
             ].map(({ type, title, data, hydrated }) => (
               <EntityCard
                 key={type}
@@ -419,27 +481,28 @@ function SettingsPage() {
         {selectedEntity && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl dark:text-white capitalize">{selectedEntity} Data</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedEntity(null)}
-              >
+              <h3 className="text-xl capitalize dark:text-white">{selectedEntity} Data</h3>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedEntity(null)}>
                 Close
               </Button>
             </div>
-            <div className="border rounded-lg p-4 bg-white dark:bg-gray-800">
-              <JsonView 
+            <div className="rounded-lg border bg-white p-4 dark:bg-gray-800">
+              <JsonView
                 data={
-                  selectedEntity === "elements" ? filteredElements :
-                  selectedEntity === "components" ? filteredComponents :
-                  selectedEntity === "phrases" ? filteredPhrases :
-                  selectedEntity === "sections" ? sections :
-                  selectedEntity === "surveys" ? filteredSurveys :
-                  []
-                } 
-                style={defaultStyles} 
-                clickToExpandNode={true} 
+                  selectedEntity === 'elements'
+                    ? filteredElements
+                    : selectedEntity === 'components'
+                      ? filteredComponents
+                      : selectedEntity === 'phrases'
+                        ? filteredPhrases
+                        : selectedEntity === 'sections'
+                          ? sections
+                          : selectedEntity === 'surveys'
+                            ? filteredSurveys
+                            : []
+                }
+                style={defaultStyles}
+                clickToExpandNode={true}
               />
             </div>
           </div>
@@ -457,7 +520,7 @@ function SettingsPage() {
           entityCounts={entityCounts}
           isLoading={isLoading}
           extraContent={
-            <div className="flex items-center space-x-2 mt-4">
+            <div className="mt-4 flex items-center space-x-2">
               <input
                 type="checkbox"
                 id="localOnly"

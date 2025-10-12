@@ -1,12 +1,25 @@
-import { BuildingSurveyFormData, Inspection, ElementSection, Phrase, RagStatus, SurveySection, Costing, FormSectionStatus, FormStatus, SurveyImage, LocalComponentDef, LocalConditionDef } from "./BuildingSurveyReportSchema";
+import {
+  BuildingSurveyFormData,
+  Inspection,
+  ElementSection,
+  Phrase,
+  RagStatus,
+  SurveySection,
+  Costing,
+  FormSectionStatus,
+  FormStatus,
+  SurveyImage,
+  LocalComponentDef,
+  LocalConditionDef,
+} from './BuildingSurveyReportSchema';
 
 // Find or create a section
 function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string): SurveySection {
-  let section = survey.sections.find(s => s.id === sectionId);
+  let section = survey.sections.find((s) => s.id === sectionId);
   if (!section) {
     section = {
       id: sectionId,
-      name: "",
+      name: '',
       elementSections: [],
     };
     survey.sections.push(section);
@@ -18,24 +31,23 @@ function findOrCreateSection(survey: BuildingSurveyFormData, sectionId: string):
 function findOrCreateElementSection(
   survey: BuildingSurveyFormData,
   sectionId: string,
-  elementId: string
+  elementId: string,
 ): ElementSection {
   const section = findOrCreateSection(survey, sectionId);
-  let elementSection = section.elementSections.find(e => e.id === elementId);
-  
+  let elementSection = section.elementSections.find((e) => e.id === elementId);
+
   if (!elementSection) {
     elementSection = {
       id: elementId,
-      name: "",
+      name: '',
       isPartOfSurvey: true,
-      description: "",
+      description: '',
       components: [],
       images: [],
     };
     section.elementSections.push(elementSection);
   }
 
-  
   return elementSection;
 }
 
@@ -45,23 +57,23 @@ export function addOrUpdateComponent(
   sectionId: string,
   elementId: string,
   component: {
-    id: string,
-    inspectionId: string,
-    name: string,
-    nameOverride?: string,
-    useNameOverride?: boolean,
-    location?: string,
-    additionalDescription?: string,
-    images?: SurveyImage[],
-    conditions?: Phrase[],
-    ragStatus?: RagStatus,
-    costings?: Costing[],
-  }
+    id: string;
+    inspectionId: string;
+    name: string;
+    nameOverride?: string;
+    useNameOverride?: boolean;
+    location?: string;
+    additionalDescription?: string;
+    images?: SurveyImage[];
+    conditions?: Phrase[];
+    ragStatus?: RagStatus;
+    costings?: Costing[];
+  },
 ): BuildingSurveyFormData {
   const elementSection = findOrCreateElementSection(survey, sectionId, elementId);
-  
+
   const existingComponentIndex = elementSection.components.findIndex(
-    c => c.inspectionId === component.inspectionId
+    (c) => c.inspectionId === component.inspectionId,
   );
 
   const componentData: Inspection = {
@@ -70,15 +82,15 @@ export function addOrUpdateComponent(
     name: component.name,
     nameOverride: component.nameOverride || component.name,
     useNameOverride: component.useNameOverride || false,
-    location: component.location || "",
-    additionalDescription: component.additionalDescription || "",
+    location: component.location || '',
+    additionalDescription: component.additionalDescription || '',
     images: component.images || [],
-    conditions: (component.conditions || []).map(p => ({
+    conditions: (component.conditions || []).map((p) => ({
       id: p.id,
       name: p.name,
-      phrase: p.phrase || "",
+      phrase: p.phrase || '',
     })),
-    ragStatus: component.ragStatus || "N/I",
+    ragStatus: component.ragStatus || 'N/I',
     costings: component.costings || [],
   };
 
@@ -96,15 +108,17 @@ export function removeComponent(
   survey: BuildingSurveyFormData,
   sectionName: string,
   elementId: string,
-  inspectionId: string
+  inspectionId: string,
 ): BuildingSurveyFormData {
-  const section = survey.sections.find(s => s.name === sectionName);
+  const section = survey.sections.find((s) => s.name === sectionName);
   if (!section) return survey;
 
-  const elementSection = section.elementSections.find(e => e.id === elementId);
+  const elementSection = section.elementSections.find((e) => e.id === elementId);
   if (!elementSection) return survey;
 
-  elementSection.components = elementSection.components.filter(c => c.inspectionId !== inspectionId);
+  elementSection.components = elementSection.components.filter(
+    (c) => c.inspectionId !== inspectionId,
+  );
   return survey;
 }
 
@@ -113,12 +127,12 @@ export function updateElementDetails(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string,
-  updates: Partial<ElementSection>
+  updates: Partial<ElementSection>,
 ): BuildingSurveyFormData {
-  const section = survey.sections.find(s => s.id === sectionId);
+  const section = survey.sections.find((s) => s.id === sectionId);
   if (!section) return survey;
 
-  const elementSection = section.elementSections.find(e => e.id === elementId);
+  const elementSection = section.elementSections.find((e) => e.id === elementId);
   if (!elementSection) return survey;
 
   if (updates.description !== undefined) {
@@ -135,19 +149,19 @@ export function updateElementDetails(
 export function getElementSection(
   survey: BuildingSurveyFormData,
   sectionId: string,
-  elementId: string
+  elementId: string,
 ): ElementSection | null {
-  const section = survey.sections.find(s => s.id === sectionId);
+  const section = survey.sections.find((s) => s.id === sectionId);
   if (!section) return null;
 
-  return section.elementSections.find(e => e.id === elementId) || null;
+  return section.elementSections.find((e) => e.id === elementId) || null;
 }
 
 // Get all components for an element
 export function getElementComponents(
   survey: BuildingSurveyFormData,
   sectionId: string,
-  elementId: string
+  elementId: string,
 ): Inspection[] {
   const elementSection = getElementSection(survey, sectionId, elementId);
   return elementSection?.components || [];
@@ -156,22 +170,22 @@ export function getElementComponents(
 // Find a component by ID and return it along with its context
 export function findComponent(
   survey: BuildingSurveyFormData,
-  componentId: string
-): { 
-  component: Inspection | null,
-  elementSection: ElementSection | null,
-  section: SurveySection | null 
+  componentId: string,
+): {
+  component: Inspection | null;
+  elementSection: ElementSection | null;
+  section: SurveySection | null;
 } {
   for (const section of survey.sections) {
     for (const elementSection of section.elementSections) {
-      const component = elementSection.components.find(c => 
-        c.inspectionId === componentId || c.id === componentId
+      const component = elementSection.components.find(
+        (c) => c.inspectionId === componentId || c.id === componentId,
       );
       if (component) {
         return {
           component,
           elementSection,
-          section
+          section,
         };
       }
     }
@@ -179,7 +193,7 @@ export function findComponent(
   return {
     component: null,
     elementSection: null,
-    section: null
+    section: null,
   };
 }
 
@@ -187,55 +201,60 @@ export function findComponent(
 export function toggleElementSection(
   survey: BuildingSurveyFormData,
   sectionId: string,
-  elementId: string
+  elementId: string,
 ): BuildingSurveyFormData {
-  const section = survey.sections.find(s => s.id === sectionId);
+  const section = survey.sections.find((s) => s.id === sectionId);
   if (!section) return survey;
 
-  const elementSection = section.elementSections.find(e => e.id === elementId);
+  const elementSection = section.elementSections.find((e) => e.id === elementId);
   if (!elementSection) return survey;
 
   elementSection.isPartOfSurvey = !elementSection.isPartOfSurvey;
   return survey;
-
 }
 
-
 // Get all images from a survey
-export function getAllSurveyImages(survey: BuildingSurveyFormData): {path: string, isArchived: boolean}[] {
-    const allImages: {path: string, isArchived: boolean}[] = [];
+export function getAllSurveyImages(
+  survey: BuildingSurveyFormData,
+): { path: string; isArchived: boolean }[] {
+  const allImages: { path: string; isArchived: boolean }[] = [];
 
-    survey.reportDetails?.moneyShot?.forEach(image => {
-        allImages.push({path: image.path, isArchived: image.isArchived});
+  survey.reportDetails?.moneyShot?.forEach((image) => {
+    allImages.push({ path: image.path, isArchived: image.isArchived });
+  });
+
+  survey.reportDetails?.frontElevationImagesUri?.forEach((image) => {
+    allImages.push({ path: image.path, isArchived: image.isArchived });
+  });
+
+  survey.sections.forEach((section) => {
+    section.elementSections.forEach((elementSection) => {
+      if (elementSection.images) {
+        allImages.push(
+          ...elementSection.images.map((x) => ({ path: x.path, isArchived: x.isArchived })),
+        );
+      }
+
+      elementSection.components.forEach((component) => {
+        if (component.images) {
+          allImages.push(
+            ...component.images.map((x) => ({ path: x.path, isArchived: x.isArchived })),
+          );
+        }
+      });
     });
+  });
 
-    survey.reportDetails?.frontElevationImagesUri?.forEach(image => {
-        allImages.push({path: image.path, isArchived: image.isArchived});
-    });
-
-    survey.sections.forEach(section => {
-        section.elementSections.forEach(elementSection => {
-            if (elementSection.images) {
-                allImages.push(...elementSection.images.map(x => ({path: x.path, isArchived: x.isArchived})));
-            }
-
-            elementSection.components.forEach(component => {
-                if (component.images) {
-                    allImages.push(...component.images.map(x => ({path: x.path, isArchived: x.isArchived})));
-                }
-            });
-        });
-
-    });
-
-    return Array.from(new Set(allImages));
-} 
+  return Array.from(new Set(allImages));
+}
 
 export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionStatus {
-  const elementSections = survey.sections.flatMap(s => s.elementSections);
-  const activeElementSections = elementSections.filter(e => e.isPartOfSurvey);
+  const elementSections = survey.sections.flatMap((s) => s.elementSections);
+  const activeElementSections = elementSections.filter((e) => e.isPartOfSurvey);
 
-  const allElementsHaveAtLeastOneComponent = activeElementSections.every(e => e.components.length > 0)
+  const allElementsHaveAtLeastOneComponent = activeElementSections.every(
+    (e) => e.components.length > 0,
+  );
 
   if (allElementsHaveAtLeastOneComponent) {
     return {
@@ -254,10 +273,10 @@ export function getConditionStatus(survey: BuildingSurveyFormData): FormSectionS
 export function getLocalComponentDefs(
   survey: BuildingSurveyFormData,
   sectionId: string,
-  elementId: string
+  elementId: string,
 ): LocalComponentDef[] {
   const es = getElementSection(survey, sectionId, elementId);
-  console.log("local-component-defs", { es })
+  console.log('local-component-defs', { es });
   return es?.localComponentDefs || [];
 }
 
@@ -265,11 +284,11 @@ export function addOrUpdateLocalComponentDef(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string,
-  def: LocalComponentDef
+  def: LocalComponentDef,
 ): BuildingSurveyFormData {
   const es = findOrCreateElementSection(survey, sectionId, elementId);
   if (!es.localComponentDefs) es.localComponentDefs = [];
-  const idx = es.localComponentDefs.findIndex(d => d.id === def.id);
+  const idx = es.localComponentDefs.findIndex((d) => d.id === def.id);
   if (idx >= 0) {
     es.localComponentDefs[idx] = { ...es.localComponentDefs[idx], ...def };
   } else {
@@ -282,11 +301,11 @@ export function removeLocalComponentDef(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string,
-  defId: string
+  defId: string,
 ): BuildingSurveyFormData {
   const es = getElementSection(survey, sectionId, elementId);
   if (!es || !es.localComponentDefs) return survey;
-  es.localComponentDefs = es.localComponentDefs.filter(d => d.id !== defId);
+  es.localComponentDefs = es.localComponentDefs.filter((d) => d.id !== defId);
   return survey;
 }
 
@@ -294,7 +313,7 @@ export function removeLocalComponentDef(
 export function getLocalConditionDefs(
   survey: BuildingSurveyFormData,
   sectionId: string,
-  elementId: string
+  elementId: string,
 ): LocalConditionDef[] {
   const es = getElementSection(survey, sectionId, elementId);
   return es?.localConditionDefs || [];
@@ -304,11 +323,11 @@ export function addOrUpdateLocalConditionDef(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string,
-  def: LocalConditionDef
+  def: LocalConditionDef,
 ): BuildingSurveyFormData {
   const es = findOrCreateElementSection(survey, sectionId, elementId);
   if (!es.localConditionDefs) es.localConditionDefs = [];
-  const idx = es.localConditionDefs.findIndex(d => d.id === def.id);
+  const idx = es.localConditionDefs.findIndex((d) => d.id === def.id);
   if (idx >= 0) {
     es.localConditionDefs[idx] = { ...es.localConditionDefs[idx], ...def };
   } else {
@@ -321,10 +340,10 @@ export function removeLocalConditionDef(
   survey: BuildingSurveyFormData,
   sectionId: string,
   elementId: string,
-  defId: string
+  defId: string,
 ): BuildingSurveyFormData {
   const es = getElementSection(survey, sectionId, elementId);
   if (!es || !es.localConditionDefs) return survey;
-  es.localConditionDefs = es.localConditionDefs.filter(d => d.id !== defId);
+  es.localConditionDefs = es.localConditionDefs.filter((d) => d.id !== defId);
   return survey;
 }

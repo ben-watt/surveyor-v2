@@ -80,10 +80,13 @@ describe('S3ImageNodeView', () => {
         expect.objectContaining({
           'data-s3-path': expect.stringContaining('report-images/tenant-123/'),
           'data-uploading-id': null,
-        })
+        }),
       );
       // Should update to presigned URL
-      expect(screen.getByRole('img')).toHaveAttribute('src', 'https://test-bucket.s3.amazonaws.com/test.jpg');
+      expect(screen.getByRole('img')).toHaveAttribute(
+        'src',
+        'https://test-bucket.s3.amazonaws.com/test.jpg',
+      );
     });
   });
 
@@ -102,4 +105,4 @@ describe('S3ImageNodeView', () => {
       unmount();
     }
   });
-}); 
+});

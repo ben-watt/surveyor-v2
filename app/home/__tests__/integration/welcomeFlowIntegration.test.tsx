@@ -9,7 +9,13 @@ import userEvent from '@testing-library/user-event';
 import HomePage from '../../surveys/page';
 import { useWelcomeFlow } from '../../hooks/useWelcomeFlow';
 import { seedInitialData } from '../../services/dataSeedingService';
-import { elementStore, sectionStore, componentStore, phraseStore, surveyStore } from '../../clients/Database';
+import {
+  elementStore,
+  sectionStore,
+  componentStore,
+  phraseStore,
+  surveyStore,
+} from '../../clients/Database';
 import { getCurrentTenantId } from '../../utils/tenant-utils';
 
 // Mock all external dependencies
@@ -42,7 +48,7 @@ jest.mock('@/components/ui/welcome-dialog', () => ({
     onSkipSetup,
     isLoading,
     showSetupOptions,
-    progress
+    progress,
   }: any) => {
     if (!open) return null;
 
@@ -51,18 +57,10 @@ jest.mock('@/components/ui/welcome-dialog', () => ({
         {showSetupOptions && !progress && (
           <div data-testid="setup-options">
             <h2>Welcome to Survii!</h2>
-            <button
-              data-testid="setup-button"
-              onClick={onStartSetup}
-              disabled={isLoading}
-            >
+            <button data-testid="setup-button" onClick={onStartSetup} disabled={isLoading}>
               Set Up Sample Data
             </button>
-            <button
-              data-testid="skip-button"
-              onClick={onSkipSetup}
-              disabled={isLoading}
-            >
+            <button data-testid="skip-button" onClick={onSkipSetup} disabled={isLoading}>
               Start with Empty Account
             </button>
           </div>
@@ -81,10 +79,7 @@ jest.mock('@/components/ui/welcome-dialog', () => ({
         {progress && progress.isComplete && (
           <div data-testid="completion-view">
             <h3>Setup Complete!</h3>
-            <button
-              data-testid="get-started-button"
-              onClick={() => {}}
-            >
+            <button data-testid="get-started-button" onClick={() => {}}>
               Get Started
             </button>
           </div>

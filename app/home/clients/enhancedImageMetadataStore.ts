@@ -6,7 +6,7 @@ import {
   generateThumbnail,
   getImageDimensions,
   fileToArrayBuffer,
-  arrayBufferToFile
+  arrayBufferToFile,
 } from '../utils/imageResizer';
 import { generateImageHash } from '../utils/imageHashUtils';
 import { getCurrentTenantId } from '../utils/tenant-utils';
@@ -35,7 +35,7 @@ class EnhancedImageMetadataStore {
   async uploadImage(
     file: File,
     path: string,
-    options: UploadImageOptions = {}
+    options: UploadImageOptions = {},
   ): Promise<Result<string, Error>> {
     try {
       const tenantId = await getCurrentTenantId();
@@ -55,7 +55,7 @@ class EnhancedImageMetadataStore {
       const [thumbnailDataUrl, dimensions, fileBuffer] = await Promise.all([
         generateThumbnail(file),
         getImageDimensions(file),
-        fileToArrayBuffer(file)
+        fileToArrayBuffer(file),
       ]);
 
       // Create metadata entry with pending upload status
@@ -105,7 +105,7 @@ class EnhancedImageMetadataStore {
     id: string,
     file: File,
     path: string,
-    options: UploadImageOptions = {}
+    options: UploadImageOptions = {},
   ): Promise<Result<string, Error>> {
     try {
       const tenantId = await getCurrentTenantId();
@@ -126,7 +126,7 @@ class EnhancedImageMetadataStore {
       const [thumbnailDataUrl, dimensions, fileBuffer] = await Promise.all([
         generateThumbnail(file),
         getImageDimensions(file),
-        fileToArrayBuffer(file)
+        fileToArrayBuffer(file),
       ]);
 
       // Update existing record to revive and attach new file data
@@ -175,10 +175,15 @@ class EnhancedImageMetadataStore {
         return Err(new Error('No tenant ID available'));
       }
 
-      const match = await db.table<ImageMetadata>('imageMetadata')
+      const match = await db
+        .table<ImageMetadata>('imageMetadata')
         .where('tenantId')
         .equals(tenantId)
-        .and(item => item.contentHash === options.contentHash && item.imagePath.startsWith(options.pathPrefix))
+        .and(
+          (item) =>
+            item.contentHash === options.contentHash &&
+            item.imagePath.startsWith(options.pathPrefix),
+        )
         .first();
 
       return Ok(match ?? null);
@@ -195,7 +200,7 @@ class EnhancedImageMetadataStore {
     file: File,
     path: string,
     onProgress?: (progress: number) => void,
-    retryCount = 0
+    retryCount = 0,
   ): Promise<void> {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff, max 10s
@@ -216,11 +221,11 @@ class EnhancedImageMetadataStore {
 
               // Update progress in local store
               db.table<ImageMetadata>('imageMetadata').update(id, {
-                uploadProgress: progress
+                uploadProgress: progress,
               } as any);
             }
-          }
-        }
+          },
+        },
       });
 
       await uploadTask.result;
@@ -233,17 +238,19 @@ class EnhancedImageMetadataStore {
         // Clear local file data after successful upload
         localFileData: undefined,
         localFileType: undefined,
-        localFileName: undefined
+        localFileName: undefined,
       });
 
       // Trigger sync with DynamoDB
       imageMetadataStore.sync();
-
     } catch (error) {
       if ((error as any)?.name === 'AbortError') {
         console.log('Upload cancelled for', id);
       } else if (retryCount < MAX_RETRIES) {
-        console.warn(`Upload attempt ${retryCount + 1} failed for ${id}, retrying in ${RETRY_DELAY}ms:`, error);
+        console.warn(
+          `Upload attempt ${retryCount + 1} failed for ${id}, retrying in ${RETRY_DELAY}ms:`,
+          error,
+        );
 
         // Remove from current upload queue
         this.uploadQueue.delete(id);
@@ -255,10 +262,17 @@ class EnhancedImageMetadataStore {
 
         return;
       } else {
-        console.error('Upload failed permanently for', id, 'after', MAX_RETRIES, 'attempts:', error);
+        console.error(
+          'Upload failed permanently for',
+          id,
+          'after',
+          MAX_RETRIES,
+          'attempts:',
+          error,
+        );
         await db.table<ImageMetadata>('imageMetadata').update(id, {
           uploadStatus: 'failed',
-          syncError: `Failed after ${MAX_RETRIES} attempts: ${(error as Error).message}`
+          syncError: `Failed after ${MAX_RETRIES} attempts: ${(error as Error).message}`,
         } as any);
       }
     } finally {
@@ -285,7 +299,7 @@ class EnhancedImageMetadataStore {
       await db.table<ImageMetadata>('imageMetadata').update(id, {
         isArchived: true,
         updatedAt: new Date().toISOString(),
-        syncStatus: SyncStatus.Queued
+        syncStatus: SyncStatus.Queued,
       });
 
       // Trigger sync
@@ -309,7 +323,7 @@ class EnhancedImageMetadataStore {
       await db.table<ImageMetadata>('imageMetadata').update(id, {
         isArchived: false,
         updatedAt: new Date().toISOString(),
-        syncStatus: SyncStatus.Queued
+        syncStatus: SyncStatus.Queued,
       });
 
       // Trigger sync
@@ -362,10 +376,16 @@ class EnhancedImageMetadataStore {
         return Err(new Error('No tenant ID available'));
       }
 
-      const images = await db.table<ImageMetadata>('imageMetadata')
+      const images = await db
+        .table<ImageMetadata>('imageMetadata')
         .where('tenantId')
         .equals(tenantId)
-        .and(item => !item.isArchived && item.isDeleted !== true && item.syncStatus !== SyncStatus.PendingDelete)
+        .and(
+          (item) =>
+            !item.isArchived &&
+            item.isDeleted !== true &&
+            item.syncStatus !== SyncStatus.PendingDelete,
+        )
         .toArray();
 
       return Ok(images);
@@ -384,10 +404,16 @@ class EnhancedImageMetadataStore {
         return Err(new Error('No tenant ID available'));
       }
 
-      const images = await db.table<ImageMetadata>('imageMetadata')
+      const images = await db
+        .table<ImageMetadata>('imageMetadata')
         .where('tenantId')
         .equals(tenantId)
-        .and(item => item.isArchived === true && item.isDeleted !== true && item.syncStatus !== SyncStatus.PendingDelete)
+        .and(
+          (item) =>
+            item.isArchived === true &&
+            item.isDeleted !== true &&
+            item.syncStatus !== SyncStatus.PendingDelete,
+        )
         .toArray();
 
       return Ok(images);
@@ -399,7 +425,9 @@ class EnhancedImageMetadataStore {
   /**
    * Get image by path (for compatibility with old system)
    */
-  async getImageByPath(path: string): Promise<Result<{ href: string; metadata?: ImageMetadata }, Error>> {
+  async getImageByPath(
+    path: string,
+  ): Promise<Result<{ href: string; metadata?: ImageMetadata }, Error>> {
     try {
       const tenantId = await getCurrentTenantId();
       if (!tenantId) {
@@ -407,10 +435,11 @@ class EnhancedImageMetadataStore {
       }
 
       // First check if we have it locally with thumbnail
-      const localImage = await db.table<ImageMetadata>('imageMetadata')
+      const localImage = await db
+        .table<ImageMetadata>('imageMetadata')
         .where('imagePath')
         .equals(path)
-        .and(item => item.tenantId === tenantId)
+        .and((item) => item.tenantId === tenantId)
         .first();
 
       if (localImage && localImage.thumbnailDataUrl) {
@@ -437,10 +466,11 @@ class EnhancedImageMetadataStore {
     const tenantId = await getCurrentTenantId();
     if (!tenantId) return;
 
-    const failedUploads = await db.table<ImageMetadata>('imageMetadata')
+    const failedUploads = await db
+      .table<ImageMetadata>('imageMetadata')
       .where('uploadStatus')
       .equals('failed')
-      .and(item => item.tenantId === tenantId)
+      .and((item) => item.tenantId === tenantId)
       .toArray();
 
     for (const upload of failedUploads) {
@@ -448,7 +478,7 @@ class EnhancedImageMetadataStore {
         const file = arrayBufferToFile(
           upload.localFileData,
           upload.localFileName,
-          upload.localFileType
+          upload.localFileType,
         );
 
         await this.startBackgroundUpload(upload.id, file, upload.imagePath);
@@ -464,10 +494,11 @@ class EnhancedImageMetadataStore {
     if (!tenantId) return;
 
     // Handle pending uploads when back online
-    const pendingUploads = await db.table<ImageMetadata>('imageMetadata')
+    const pendingUploads = await db
+      .table<ImageMetadata>('imageMetadata')
       .where('uploadStatus')
       .equals('pending')
-      .and(item => item.tenantId === tenantId && !!item.localFileData)
+      .and((item) => item.tenantId === tenantId && !!item.localFileData)
       .toArray();
 
     for (const item of pendingUploads) {
@@ -475,11 +506,7 @@ class EnhancedImageMetadataStore {
 
       try {
         // Reconstruct file from stored data
-        const file = arrayBufferToFile(
-          item.localFileData,
-          item.localFileName,
-          item.localFileType
-        );
+        const file = arrayBufferToFile(item.localFileData, item.localFileName, item.localFileType);
 
         // Resume upload
         await this.startBackgroundUpload(item.id, file, item.imagePath);
@@ -496,7 +523,8 @@ class EnhancedImageMetadataStore {
     const tenantId = await getCurrentTenantId();
     if (!tenantId) return;
 
-    const allImages = await db.table<ImageMetadata>('imageMetadata')
+    const allImages = await db
+      .table<ImageMetadata>('imageMetadata')
       .where('tenantId')
       .equals(tenantId)
       .reverse()
@@ -510,7 +538,7 @@ class EnhancedImageMetadataStore {
     for (const image of toClean) {
       if (image.uploadStatus === 'uploaded' && image.thumbnailDataUrl) {
         await db.table<ImageMetadata>('imageMetadata').update(image.id, {
-          thumbnailDataUrl: undefined // Clear thumbnail for old uploaded images
+          thumbnailDataUrl: undefined, // Clear thumbnail for old uploaded images
         });
       }
     }
@@ -535,9 +563,17 @@ export const enhancedImageStore = {
   getImageByPath: enhancedImageMetadataStore.getImageByPath.bind(enhancedImageMetadataStore),
   getActiveImages: enhancedImageMetadataStore.getActiveImages.bind(enhancedImageMetadataStore),
   getArchivedImages: enhancedImageMetadataStore.getArchivedImages.bind(enhancedImageMetadataStore),
-  retryFailedUploads: enhancedImageMetadataStore.retryFailedUploads.bind(enhancedImageMetadataStore),
-  syncPendingUploads: enhancedImageMetadataStore.syncPendingUploads.bind(enhancedImageMetadataStore),
-  cleanupOldThumbnails: enhancedImageMetadataStore.cleanupOldThumbnails.bind(enhancedImageMetadataStore),
+  retryFailedUploads: enhancedImageMetadataStore.retryFailedUploads.bind(
+    enhancedImageMetadataStore,
+  ),
+  syncPendingUploads: enhancedImageMetadataStore.syncPendingUploads.bind(
+    enhancedImageMetadataStore,
+  ),
+  cleanupOldThumbnails: enhancedImageMetadataStore.cleanupOldThumbnails.bind(
+    enhancedImageMetadataStore,
+  ),
   findDuplicate: enhancedImageMetadataStore.findDuplicate.bind(enhancedImageMetadataStore),
-  replaceDeletedImage: enhancedImageMetadataStore.replaceDeletedImage.bind(enhancedImageMetadataStore),
+  replaceDeletedImage: enhancedImageMetadataStore.replaceDeletedImage.bind(
+    enhancedImageMetadataStore,
+  ),
 };

@@ -3,50 +3,49 @@ import { formMetaSchema } from './formMeta';
 
 // Address schema aligned with legacy TypeScript Address type
 const addressSchema = z.object({
-  formatted: z.string().min(1, "Address is required"),
-  line1: z.string().min(1, "Address line 1 is required"),
+  formatted: z.string().min(1, 'Address is required'),
+  line1: z.string().min(1, 'Address line 1 is required'),
   line2: z.string().optional(),
   line3: z.string().optional(),
-  city: z.string().min(1, "City is required"),
+  city: z.string().min(1, 'City is required'),
   county: z.string().optional(),
-  postcode: z.string().min(1, "Postcode is required"),
+  postcode: z.string().min(1, 'Postcode is required'),
   location: z.object({
     lat: z.number(),
-    lng: z.number()
-  })
+    lng: z.number(),
+  }),
 });
 
 // Survey image schema aligned with legacy SurveyImage type
 const surveyImageSchema = z.object({
   path: z.string(),
   isArchived: z.boolean(),
-  hasMetadata: z.boolean()
+  hasMetadata: z.boolean(),
 });
 
 // Custom validator that only counts non-archived images
-const nonArchivedImagesMin = (minCount: number, errorMessage: string) => 
-  z.array(surveyImageSchema).refine(
-    (images) => images.filter(img => !img.isArchived).length >= minCount,
-    errorMessage
-  );
+const nonArchivedImagesMin = (minCount: number, errorMessage: string) =>
+  z
+    .array(surveyImageSchema)
+    .refine((images) => images.filter((img) => !img.isArchived).length >= minCount, errorMessage);
 
 // Report details schema aligned with form requirements and legacy TypeScript types
 export const reportDetailsSchema = z.object({
   // Required fields for completion
-  clientName: z.string().min(1, "Client name is required"),
+  clientName: z.string().min(1, 'Client name is required'),
   address: addressSchema,
-  inspectionDate: z.coerce.date({ message: "Inspection date is required" }),
-  reportDate: z.coerce.date({ message: "Report date is required" }),
-  level: z.enum(['2', '3'], { message: "Survey level is required" }),
-  reference: z.string().min(1, "Reference is required"),
-  weather: z.string().min(1, "Weather is required"),
-  orientation: z.string().min(1, "Orientation is required"),
-  situation: z.string().min(1, "Situation is required"),
-  moneyShot: nonArchivedImagesMin(1, "Only one cover photo is required"),
-  frontElevationImagesUri: nonArchivedImagesMin(4, "At least four general photos are required"),
-  
+  inspectionDate: z.coerce.date({ message: 'Inspection date is required' }),
+  reportDate: z.coerce.date({ message: 'Report date is required' }),
+  level: z.enum(['2', '3'], { message: 'Survey level is required' }),
+  reference: z.string().min(1, 'Reference is required'),
+  weather: z.string().min(1, 'Weather is required'),
+  orientation: z.string().min(1, 'Orientation is required'),
+  situation: z.string().min(1, 'Situation is required'),
+  moneyShot: nonArchivedImagesMin(1, 'Only one cover photo is required'),
+  frontElevationImagesUri: nonArchivedImagesMin(4, 'At least four general photos are required'),
+
   // Form metadata for status tracking (eliminates need for runtime validation)
-  _meta: formMetaSchema.optional()
+  _meta: formMetaSchema.optional(),
 });
 
 // Schema for form fields only (without metadata) - useful for validation

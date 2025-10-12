@@ -20,8 +20,12 @@ jest.mock('../../clients/Database', () => ({
 
 const mockSeedInitialData = seedInitialData as jest.MockedFunction<typeof seedInitialData>;
 const mockHasInitialData = hasInitialData as jest.MockedFunction<typeof hasInitialData>;
-const mockElementStoreUseList = elementStore.useList as jest.MockedFunction<typeof elementStore.useList>;
-const mockSectionStoreUseList = sectionStore.useList as jest.MockedFunction<typeof sectionStore.useList>;
+const mockElementStoreUseList = elementStore.useList as jest.MockedFunction<
+  typeof elementStore.useList
+>;
+const mockSectionStoreUseList = sectionStore.useList as jest.MockedFunction<
+  typeof sectionStore.useList
+>;
 
 describe('useWelcomeFlow', () => {
   beforeEach(() => {
@@ -63,8 +67,27 @@ describe('useWelcomeFlow', () => {
     });
 
     it('should not show welcome for existing users with data', async () => {
-      const mockElements = [{ id: '1', name: 'Wall', createdAt: '2023-01-01', syncStatus: 'synced', updatedAt: '2023-01-01', tenantId: 'test', sectionId: '1' }];
-      const mockSections = [{ id: '1', name: 'Exterior', createdAt: '2023-01-01', syncStatus: 'synced', updatedAt: '2023-01-01', tenantId: 'test' }];
+      const mockElements = [
+        {
+          id: '1',
+          name: 'Wall',
+          createdAt: '2023-01-01',
+          syncStatus: 'synced',
+          updatedAt: '2023-01-01',
+          tenantId: 'test',
+          sectionId: '1',
+        },
+      ];
+      const mockSections = [
+        {
+          id: '1',
+          name: 'Exterior',
+          createdAt: '2023-01-01',
+          syncStatus: 'synced',
+          updatedAt: '2023-01-01',
+          tenantId: 'test',
+        },
+      ];
 
       mockElementStoreUseList.mockReturnValue([true, mockElements]);
       mockSectionStoreUseList.mockReturnValue([true, mockSections]);
@@ -89,7 +112,7 @@ describe('useWelcomeFlow', () => {
       const { result } = renderHook(() => useWelcomeFlow());
 
       // Give it time to potentially update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       expect(result.current.showWelcome).toBe(false);
       expect(mockHasInitialData).not.toHaveBeenCalled();
@@ -183,9 +206,12 @@ describe('useWelcomeFlow', () => {
         result.current.handleStartSetup();
       });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      }, { timeout: 2000 }); // Account for the 1.5s delay
+      await waitFor(
+        () => {
+          expect(result.current.isLoading).toBe(false);
+        },
+        { timeout: 2000 },
+      ); // Account for the 1.5s delay
 
       expect(mockSeedInitialData).toHaveBeenCalled();
     });
@@ -310,9 +336,12 @@ describe('useWelcomeFlow', () => {
       expect(result.current.showSetupOptions).toBe(false);
 
       // Complete setup
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(result.current.isLoading).toBe(false);
+        },
+        { timeout: 2000 },
+      );
     });
 
     it('should reset state properly after error', async () => {
@@ -347,7 +376,17 @@ describe('useWelcomeFlow', () => {
       });
 
       // Add elements
-      const mockElements = [{ id: '1', name: 'Wall', createdAt: '2023-01-01', syncStatus: 'synced', updatedAt: '2023-01-01', tenantId: 'test', sectionId: '1' }];
+      const mockElements = [
+        {
+          id: '1',
+          name: 'Wall',
+          createdAt: '2023-01-01',
+          syncStatus: 'synced',
+          updatedAt: '2023-01-01',
+          tenantId: 'test',
+          sectionId: '1',
+        },
+      ];
       mockElementStoreUseList.mockReturnValue([true, mockElements]);
       mockHasInitialData.mockReturnValue(true);
 

@@ -27,10 +27,9 @@ describe('ConfigTreeNode invalid badge', () => {
         onToggleExpand={() => {}}
         level={0}
         lastEditedEntity={null}
-      />
+      />,
     );
 
     expect(screen.getByText('Missing name')).toBeInTheDocument();
   });
 });
-

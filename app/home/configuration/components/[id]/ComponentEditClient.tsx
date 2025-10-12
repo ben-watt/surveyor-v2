@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useParams } from "next/navigation";
-import { DataForm } from "../../../building-components/form";
-import { PageHeader } from "@/components/page-header";
+import React from 'react';
+import { useParams } from 'next/navigation';
+import { DataForm } from '../../../building-components/form';
+import { PageHeader } from '@/components/page-header';
 
 export default function ComponentEditClient() {
   const params = useParams<{ id: string }>();

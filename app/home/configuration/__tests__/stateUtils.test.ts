@@ -34,7 +34,7 @@ describe('stateUtils', () => {
 
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
         'hierarchical-config-state',
-        JSON.stringify(state)
+        JSON.stringify(state),
       );
     });
 
@@ -73,24 +73,30 @@ describe('stateUtils', () => {
 
       // Should not throw
       expect(() => saveConfigurationState(state)).not.toThrow();
-      
+
       // Should log the warning
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to save configuration state:', expect.any(Error));
-      
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to save configuration state:',
+        expect.any(Error),
+      );
+
       consoleSpy.mockRestore();
     });
 
     it('should handle malformed JSON in localStorage', () => {
       // Spy on console.warn to capture the warning
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       mockLocalStorage.getItem.mockReturnValue('invalid json {');
 
       const loadedState = loadConfigurationState();
 
       expect(loadedState).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to load configuration state:', expect.any(SyntaxError));
-      
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to load configuration state:',
+        expect.any(SyntaxError),
+      );
+
       consoleSpy.mockRestore();
     });
 
@@ -137,7 +143,7 @@ describe('stateUtils', () => {
 
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
         'hierarchical-config-state',
-        expect.stringContaining(`"lastEditedEntity":{"id":"${entityId}","type":"${entityType}"`)
+        expect.stringContaining(`"lastEditedEntity":{"id":"${entityId}","type":"${entityType}"`),
       );
     });
 
@@ -160,7 +166,7 @@ describe('stateUtils', () => {
     });
 
     it('should clear old edited entity highlights after 5 minutes', () => {
-      const oldTimestamp = Date.now() - (6 * 60 * 1000); // 6 minutes ago
+      const oldTimestamp = Date.now() - 6 * 60 * 1000; // 6 minutes ago
       const state: ConfigurationState = {
         expandedNodes: ['section-1'],
         searchQuery: '',
@@ -180,7 +186,7 @@ describe('stateUtils', () => {
     });
 
     it('should preserve recent edited entity highlights', () => {
-      const recentTimestamp = Date.now() - (2 * 60 * 1000); // 2 minutes ago
+      const recentTimestamp = Date.now() - 2 * 60 * 1000; // 2 minutes ago
       const state: ConfigurationState = {
         expandedNodes: ['section-1'],
         searchQuery: '',
@@ -239,7 +245,12 @@ describe('stateUtils', () => {
 
       // Find path to condition (using display ID)
       const conditionPath = findPathToEntity(tree, 'element-1-condition-1');
-      expect(conditionPath).toEqual(['section-1', 'element-1', 'component-1', 'element-1-condition-1']);
+      expect(conditionPath).toEqual([
+        'section-1',
+        'element-1',
+        'component-1',
+        'element-1-condition-1',
+      ]);
     });
 
     it('should handle missing entities gracefully', () => {
@@ -254,7 +265,12 @@ describe('stateUtils', () => {
 
       // Component-level condition (only type supported now)
       const componentConditionPath = findPathToEntity(tree, 'element-1-condition-1');
-      expect(componentConditionPath).toEqual(['section-1', 'element-1', 'component-1', 'element-1-condition-1']);
+      expect(componentConditionPath).toEqual([
+        'section-1',
+        'element-1',
+        'component-1',
+        'element-1-condition-1',
+      ]);
     });
 
     it('should return empty path for non-existent entities', () => {

@@ -5,12 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Common Development Commands
 
 **Development:**
+
 ```bash
 npm run dev              # Start development server with Turbopack
 npm run sandbox          # Start Amplify sandbox with local environment
 ```
 
 **Building & Testing:**
+
 ```bash
 npm run build            # Build production application
 npm run test             # Run Jest tests
@@ -21,6 +23,7 @@ npm run fix              # Auto-fix linting issues
 ```
 
 **Pre-commit Checks (automated via Husky):**
+
 - TypeScript type checking (`npm run ts-lint`)
 - ESLint validation (`npm run lint`)
 - Jest tests (`npm run test`)
@@ -37,12 +40,14 @@ This is an offline-first surveyor application built with Next.js 15 and AWS Ampl
 ### Key Architectural Patterns
 
 1. **Offline-First with IndexedDB**
+
    - All data operations go through Dexie (IndexedDB wrapper) first
    - Sync engine reconciles local and remote changes every 30 seconds
    - Queue-based sync mechanism handles offline changes
    - Located in `app/home/clients/` directory
 
 2. **Multi-Tenant Data Isolation**
+
    - Composite keys: `tenantId#entityId` pattern throughout
    - Group-based authorization in Amplify schema
    - Tenant context provider manages current tenant
@@ -87,6 +92,7 @@ User Action → React Hook Form → Local Store (Dexie) → Sync Queue → AWS A
 ### Testing Approach
 
 Use Jest with React Testing Library. Run individual tests with:
+
 ```bash
 npm run test -- path/to/test.test.ts
 ```
@@ -94,6 +100,7 @@ npm run test -- path/to/test.test.ts
 ### Working with Amplify
 
 The backend is defined in `amplify/` directory:
+
 - `amplify/data/resource.ts` - Data schema and authorization
 - `amplify/auth/resource.ts` - Authentication configuration
 - `amplify/storage/resource.ts` - S3 bucket configuration
@@ -104,6 +111,7 @@ To modify backend resources, edit these files and the sandbox will hot-reload ch
 ### Image Upload Architecture
 
 Images are uploaded progressively:
+
 1. Added to local queue immediately
 2. Upload starts when online
 3. Metadata saved to DynamoDB after S3 upload
@@ -112,6 +120,7 @@ Images are uploaded progressively:
 ### Auto-save Implementation
 
 Forms auto-save after 2 seconds of inactivity:
+
 - Validation can be enforced before save
 - Visual indicators show save status
 - Works offline with sync queue

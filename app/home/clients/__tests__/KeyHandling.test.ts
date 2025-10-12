@@ -6,14 +6,14 @@ describe('Key Handling Logic', () => {
   describe('Composite Key Generation', () => {
     it('should create composite keys in the format originalId#tenantId', () => {
       const getId = (id: string, tenantId: string) => id + '#' + tenantId;
-      
+
       expect(getId('survey-123', 'tenant-abc')).toBe('survey-123#tenant-abc');
       expect(getId('component-456', 'tenant-xyz')).toBe('component-456#tenant-xyz');
     });
 
     it('should handle IDs that already contain hash symbols', () => {
       const getId = (id: string, tenantId: string) => id + '#' + tenantId;
-      
+
       expect(getId('survey#with#hashes', 'tenant-123')).toBe('survey#with#hashes#tenant-123');
     });
   });
@@ -21,14 +21,14 @@ describe('Key Handling Logic', () => {
   describe('Original ID Extraction', () => {
     it('should extract original ID from composite keys', () => {
       const getOriginalId = (compositeId: string) => compositeId.split('#')[0];
-      
+
       expect(getOriginalId('survey-123#tenant-abc')).toBe('survey-123');
       expect(getOriginalId('component-456#tenant-xyz')).toBe('component-456');
     });
 
     it('should handle IDs with multiple hash symbols correctly', () => {
       const getOriginalId = (compositeId: string) => compositeId.split('#')[0];
-      
+
       // The function extracts everything before the first hash
       // This may not be perfect for IDs that contain hashes, but it's the current implementation
       expect(getOriginalId('survey#with#hashes#tenant-123')).toBe('survey');
@@ -36,7 +36,7 @@ describe('Key Handling Logic', () => {
 
     it('should handle edge cases gracefully', () => {
       const getOriginalId = (compositeId: string) => compositeId.split('#')[0];
-      
+
       expect(getOriginalId('simple-id')).toBe('simple-id'); // No hash
       expect(getOriginalId('#starts-with-hash')).toBe(''); // Starts with hash
       expect(getOriginalId('')).toBe(''); // Empty string
@@ -48,20 +48,20 @@ describe('Key Handling Logic', () => {
       const content = {
         reportNumber: 'TEST-001',
         property: { address: '123 Test St' },
-        findings: [{ id: '1', description: 'Test finding' }]
+        findings: [{ id: '1', description: 'Test finding' }],
       };
 
       const serialized = typeof content === 'string' ? content : JSON.stringify(content);
-      
+
       expect(typeof serialized).toBe('string');
       expect(JSON.parse(serialized)).toEqual(content);
     });
 
     it('should not double-serialize string content', () => {
       const content = '{"reportNumber":"TEST-001","property":{"address":"123 Test St"}}';
-      
+
       const serialized = typeof content === 'string' ? content : JSON.stringify(content);
-      
+
       expect(serialized).toBe(content);
       expect(typeof serialized).toBe('string');
     });
@@ -73,14 +73,15 @@ describe('Key Handling Logic', () => {
           nested: {
             deeply: {
               value: 'test',
-              array: [1, 2, { inner: 'object' }]
-            }
-          }
-        }
+              array: [1, 2, { inner: 'object' }],
+            },
+          },
+        },
       };
 
-      const serialized = typeof complexContent === 'string' ? complexContent : JSON.stringify(complexContent);
-      
+      const serialized =
+        typeof complexContent === 'string' ? complexContent : JSON.stringify(complexContent);
+
       expect(typeof serialized).toBe('string');
       expect(JSON.parse(serialized)).toEqual(complexContent);
     });
@@ -90,7 +91,7 @@ describe('Key Handling Logic', () => {
     it('should have valid sync status values', () => {
       const SyncStatus = {
         Synced: 'synced',
-        Draft: 'draft', 
+        Draft: 'draft',
         Queued: 'queued',
         Failed: 'failed',
         PendingDelete: 'pending_delete',
@@ -109,10 +110,10 @@ describe('Key Handling Logic', () => {
       // This test documents the expected behavior:
       // When syncing remote data, we should use PUT instead of ADD
       // to avoid "Key already exists" constraint errors
-      
+
       const operations = {
         safeUpsert: 'put', // Safe - will insert or update
-        riskyInsert: 'add' // Risky - will fail if key exists
+        riskyInsert: 'add', // Risky - will fail if key exists
       };
 
       expect(operations.safeUpsert).toBe('put');
@@ -124,7 +125,7 @@ describe('Key Handling Logic', () => {
       const serverResponse = {
         id: 'survey-123',
         name: 'Test Survey',
-        tenantId: 'tenant-abc'
+        tenantId: 'tenant-abc',
       };
 
       const tenantId = 'tenant-abc';
@@ -132,7 +133,7 @@ describe('Key Handling Logic', () => {
 
       const localStorageFormat = {
         ...serverResponse,
-        id: getId(serverResponse.id, tenantId)
+        id: getId(serverResponse.id, tenantId),
       };
 
       expect(localStorageFormat.id).toBe('survey-123#tenant-abc');
@@ -145,14 +146,14 @@ describe('Key Handling Logic', () => {
       const localRecord = {
         id: 'survey-123#tenant-abc',
         name: 'Test Survey',
-        tenantId: 'tenant-abc'
+        tenantId: 'tenant-abc',
       };
 
       const getOriginalId = (compositeId: string) => compositeId.split('#')[0];
 
       const serverOperationFormat = {
         ...localRecord,
-        id: getOriginalId(localRecord.id)
+        id: getOriginalId(localRecord.id),
       };
 
       expect(serverOperationFormat.id).toBe('survey-123');
@@ -194,7 +195,7 @@ describe('Key Handling Logic', () => {
         originalId: string;
         tenantId: string;
       }> = [];
-      
+
       // Simulate tenant context changes
       const scenarios = [
         { tenantId: 'tenant-1', surveyId: 'survey-1' },
@@ -204,11 +205,11 @@ describe('Key Handling Logic', () => {
 
       const getId = (id: string, tenantId: string) => id + '#' + tenantId;
 
-      scenarios.forEach(scenario => {
+      scenarios.forEach((scenario) => {
         operations.push({
           compositeId: getId(scenario.surveyId, scenario.tenantId),
           originalId: scenario.surveyId,
-          tenantId: scenario.tenantId
+          tenantId: scenario.tenantId,
         });
       });
 
@@ -217,7 +218,7 @@ describe('Key Handling Logic', () => {
       expect(operations[2].compositeId).toBe('survey-2#tenant-1');
 
       // All should maintain proper isolation
-      expect(new Set(operations.map(op => op.compositeId)).size).toBe(3);
+      expect(new Set(operations.map((op) => op.compositeId)).size).toBe(3);
     });
   });
 });

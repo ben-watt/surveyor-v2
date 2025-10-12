@@ -19,7 +19,9 @@ export interface CapturedPhotoResult {
   height?: number;
 }
 
-export const capturePhoto = async (options: CapturePhotoOptions = {}): Promise<CapturedPhotoResult> => {
+export const capturePhoto = async (
+  options: CapturePhotoOptions = {},
+): Promise<CapturedPhotoResult> => {
   if (!isNativePlatform()) {
     throw new Error('Native camera not available on this platform');
   }
@@ -33,7 +35,7 @@ export const capturePhoto = async (options: CapturePhotoOptions = {}): Promise<C
       saveToGallery: options.saveToGallery ?? false,
       width: options.width,
       height: options.height,
-      direction: options.direction ?? CameraDirection.Rear
+      direction: options.direction ?? CameraDirection.Rear,
     });
 
     // Convert to blob for consistency with existing pipeline
@@ -47,7 +49,7 @@ export const capturePhoto = async (options: CapturePhotoOptions = {}): Promise<C
     return {
       blob,
       uri: photo.webPath,
-      format: photo.format
+      format: photo.format,
     };
   } catch (error) {
     console.error('Native camera capture error:', error);
@@ -55,12 +57,14 @@ export const capturePhoto = async (options: CapturePhotoOptions = {}): Promise<C
   }
 };
 
-export const pickFromGallery = async (options: {
-  quality?: number;
-  limit?: number;
-  width?: number;
-  height?: number;
-} = {}): Promise<CapturedPhotoResult[]> => {
+export const pickFromGallery = async (
+  options: {
+    quality?: number;
+    limit?: number;
+    width?: number;
+    height?: number;
+  } = {},
+): Promise<CapturedPhotoResult[]> => {
   if (!isNativePlatform()) {
     throw new Error('Native gallery not available on this platform');
   }
@@ -70,20 +74,20 @@ export const pickFromGallery = async (options: {
       quality: options.quality ?? 90,
       limit: options.limit ?? 1,
       width: options.width,
-      height: options.height
+      height: options.height,
     });
 
     const photos: CapturedPhotoResult[] = [];
-    
+
     for (const photo of result.photos) {
       if (photo.webPath) {
         const response = await fetch(photo.webPath);
         const blob = await response.blob();
-        
+
         photos.push({
           blob,
           uri: photo.webPath,
-          format: photo.format
+          format: photo.format,
         });
       }
     }
@@ -126,7 +130,7 @@ export const savePhotoToDevice = async (blob: Blob, filename: string): Promise<s
     const savedFile = await Filesystem.writeFile({
       path: filename,
       data: base64Data,
-      directory: Directory.Cache
+      directory: Directory.Cache,
     });
 
     return savedFile.uri;

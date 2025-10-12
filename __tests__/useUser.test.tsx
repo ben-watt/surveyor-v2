@@ -26,18 +26,16 @@ describe('useUser hooks caching and coalescing', () => {
   test('useUserAttributes coalesces concurrent calls and caches result', async () => {
     auth.fetchUserAttributes.mockImplementation(
       () =>
-        new Promise(resolve =>
-          setTimeout(() => resolve({ email: 'test@example.com' } as any), 10)
-        )
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ email: 'test@example.com' } as any), 10),
+        ),
     );
 
     const { useUserAttributes } = await import('@/app/home/utils/useUser');
 
     const Consumer = ({ id }: { id: number }) => {
       const [hydrated] = useUserAttributes();
-      return (
-        <div data-testid={`attrs-${id}`}>{hydrated ? 'hydrated' : 'loading'}</div>
-      );
+      return <div data-testid={`attrs-${id}`}>{hydrated ? 'hydrated' : 'loading'}</div>;
     };
 
     const ManyConsumers = () => (
@@ -71,22 +69,19 @@ describe('useUser hooks caching and coalescing', () => {
   test('useUserHook coalesces concurrent calls and caches result', async () => {
     auth.getCurrentUser.mockImplementation(
       () =>
-        new Promise(resolve =>
+        new Promise((resolve) =>
           setTimeout(
-            () =>
-              resolve({ username: 'john', userId: 'u-1', signInDetails: {} } as any),
-            10
-          )
-        )
+            () => resolve({ username: 'john', userId: 'u-1', signInDetails: {} } as any),
+            10,
+          ),
+        ),
     );
 
     const { useUserHook } = await import('@/app/home/utils/useUser');
 
     const Consumer = ({ id }: { id: number }) => {
       const [hydrated] = useUserHook();
-      return (
-        <div data-testid={`user-${id}`}>{hydrated ? 'hydrated' : 'loading'}</div>
-      );
+      return <div data-testid={`user-${id}`}>{hydrated ? 'hydrated' : 'loading'}</div>;
     };
 
     const ManyConsumers = () => (
@@ -117,5 +112,3 @@ describe('useUser hooks caching and coalescing', () => {
     expect(auth.getCurrentUser).toHaveBeenCalledTimes(1);
   });
 });
-
-

@@ -1,2 +1,1 @@
-declare module "pagedjs" {
-}
+declare module 'pagedjs' {}

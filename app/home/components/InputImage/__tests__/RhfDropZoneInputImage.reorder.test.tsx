@@ -8,7 +8,10 @@ import type { DropZoneInputFile } from '../index';
 // Mock the child DropZone to capture props and simulate reorder
 const mockDropZone = jest.fn((props: any) => {
   return (
-    <button data-testid="trigger-reorder" onClick={() => props.onReorder?.([{ path: 'p1', isArchived: false, hasMetadata: false }])}>
+    <button
+      data-testid="trigger-reorder"
+      onClick={() => props.onReorder?.([{ path: 'p1', isArchived: false, hasMetadata: false }])}
+    >
       trigger reorder
     </button>
   );
@@ -20,13 +23,18 @@ jest.mock('../index', () => ({
 }));
 
 const Wrapper: React.FC<{ defaultValue: DropZoneInputFile[] }> = ({ defaultValue }) => {
-  const methods = useForm<{ images: DropZoneInputFile[] }>({ defaultValues: { images: defaultValue } });
+  const methods = useForm<{ images: DropZoneInputFile[] }>({
+    defaultValues: { images: defaultValue },
+  });
   const { watch } = methods;
   const value = watch('images');
   return (
     <FormProvider {...methods}>
       <div data-testid="value">{JSON.stringify(value)}</div>
-      <RhfDropZoneInputImage path="surveys/x/photos" rhfProps={{ name: 'images', control: methods.control }} />
+      <RhfDropZoneInputImage
+        path="surveys/x/photos"
+        rhfProps={{ name: 'images', control: methods.control }}
+      />
     </FormProvider>
   );
 };
@@ -54,7 +62,9 @@ describe('RhfDropZoneInputImage reordering', () => {
 
     await waitFor(() => {
       // Wrapper shows updated JSON value
-      expect(screen.getByTestId('value')).toHaveTextContent('[{"path":"p1","isArchived":false,"hasMetadata":false}]');
+      expect(screen.getByTestId('value')).toHaveTextContent(
+        '[{"path":"p1","isArchived":false,"hasMetadata":false}]',
+      );
     });
 
     // Subsequent render passes updated value down
