@@ -1,5 +1,5 @@
 import { Archive } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { enhancedImageStore } from "@/app/home/clients/enhancedImageMetadataStore";
 import { ImageMetadata } from "@/app/home/clients/Database";
@@ -49,7 +49,59 @@ export type DropZoneInputFile = {
   preview?: string;
 };
 
- 
+// Memoized sortable thumbnail to avoid unnecessary re-renders
+const SortableThumb = React.memo(function SortableThumb({
+  filePath,
+  imageId,
+  enableReorder,
+  dragHandleAriaLabel,
+  features,
+  onDelete,
+  onArchive,
+  onMetadataChange,
+  isSingle,
+}: {
+  filePath: string;
+  imageId: string;
+  enableReorder: boolean;
+  dragHandleAriaLabel: string;
+  features: { archive?: boolean; metadata?: boolean } | undefined;
+  onDelete: (filePath: string) => void;
+  onArchive: (filePath: string) => void;
+  onMetadataChange: (filePath: string) => void;
+  isSingle: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: filePath });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    touchAction: 'none',
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      aria-roledescription="sortable-item"
+      className={isSingle ? 'w-full max-w-md' : undefined}
+    >
+      <div
+        aria-label={dragHandleAriaLabel}
+        style={{ cursor: enableReorder ? 'grab' as const : 'default' }}
+        {...(enableReorder ? { ...attributes, ...listeners } : {})}
+      >
+        <Thumbnail
+          imageId={imageId}
+          filePath={filePath}
+          onDelete={onDelete}
+          onArchive={onArchive}
+          features={features}
+          onMetadataChange={onMetadataChange}
+        />
+      </div>
+    </li>
+  );
+});
 
 export const DropZoneInputImageV2 = ({
   path,
@@ -70,6 +122,18 @@ export const DropZoneInputImageV2 = ({
 
   // Map of imagePath -> imageId for tracking
   const [pathToIdMap, setPathToIdMap] = useState<Map<string, string>>(new Map());
+
+  // Refs to stabilize callback identities
+  const pathToIdMapRef = useRef(pathToIdMap);
+  const filesRef = useRef(files);
+  const activeFilesOrderedRef = useRef<DropZoneInputFile[]>([]);
+  const onChangeRef = useRef(onChange);
+  const onReorderRef = useRef(onReorder);
+  const refreshFilesRef = useRef<(() => Promise<void>) | null>(null);
+  useEffect(() => { pathToIdMapRef.current = pathToIdMap; }, [pathToIdMap]);
+  useEffect(() => { filesRef.current = files; }, [files]);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+  useEffect(() => { onReorderRef.current = onReorder; }, [onReorder]);
 
   // Unified loader to populate files + mapping for the given path
   const refreshFiles = useCallback(async (): Promise<void> => {
@@ -120,6 +184,7 @@ export const DropZoneInputImageV2 = ({
       console.error("Error loading images:", error);
     }
   }, [path, onChange, value]);
+  useEffect(() => { refreshFilesRef.current = refreshFiles; }, [refreshFiles]);
 
   // Load existing images for this path
   useEffect(() => {
@@ -218,48 +283,45 @@ export const DropZoneInputImageV2 = ({
     },
   });
 
-  const handleDelete = async (filePath: string) => {
+  const handleDelete = useCallback(async (filePath: string) => {
     try {
-      const imageId = pathToIdMap.get(filePath);
+      const imageId = pathToIdMapRef.current.get(filePath);
       if (imageId) {
         await enhancedImageStore.markDeleted(imageId);
       }
-      await refreshFiles();
+      await (refreshFilesRef.current?.() ?? Promise.resolve());
       toast.success("Image deleted");
-      // Update parent value when controlled
-      const next = activeFilesOrdered.filter(f => f.path !== filePath);
-      onChange?.(next);
-      onReorder?.(next);
+      const ordered = activeFilesOrderedRef.current;
+      const next = ordered.filter(f => f.path !== filePath);
+      onChangeRef.current?.(next);
+      onReorderRef.current?.(next);
     } catch (error) {
       console.error("Error deleting image:", error);
       toast.error("Failed to delete image");
     }
-  };
+  }, []);
 
-  const handleArchive = async (filePath: string) => {
+  const handleArchive = useCallback(async (filePath: string) => {
     try {
-      const imageId = pathToIdMap.get(filePath);
+      const imageId = pathToIdMapRef.current.get(filePath);
       if (imageId) {
         await enhancedImageStore.archiveImage(imageId);
       }
-      await refreshFiles();
+      await (refreshFilesRef.current?.() ?? Promise.resolve());
       toast.success("Image archived");
-      // Update parent value when controlled (remove archived from active list)
-      const next = activeFilesOrdered.filter(f => f.path !== filePath);
-      onChange?.(next);
-      onReorder?.(next);
+      const ordered = activeFilesOrderedRef.current;
+      const next = ordered.filter(f => f.path !== filePath);
+      onChangeRef.current?.(next);
+      onReorderRef.current?.(next);
     } catch (error) {
       console.error("Error archiving image:", error);
       toast.error("Failed to archive image");
     }
-  };
+  }, []);
 
-  const handleMetadataChange = (filePath: string) => {
-    // Update hasMetadata flag
-    setFiles(prev => prev.map(f =>
-      f.path === filePath ? { ...f, hasMetadata: true } : f
-    ));
-  };
+  const handleMetadataChange = useCallback((filePath: string) => {
+    setFiles(prev => prev.map(f => (f.path === filePath ? { ...f, hasMetadata: true } : f)));
+  }, []);
 
   // Compute active files ordering (controlled vs internal)
   const activeFilesInternal = useMemo(() => files.filter(f => !f.isArchived), [files]);
@@ -274,6 +336,7 @@ export const DropZoneInputImageV2 = ({
     }
     return activeFilesInternal;
   }, [value, activeFilesInternal]);
+  useEffect(() => { activeFilesOrderedRef.current = activeFilesOrdered; }, [activeFilesOrdered]);
 
   // DnD setup
   const sensors = useSensors(
@@ -281,10 +344,10 @@ export const DropZoneInputImageV2 = ({
     useSensor(KeyboardSensor)
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const source = activeFilesOrdered;
+    const source = activeFilesOrderedRef.current;
     const oldIndex = source.findIndex(f => f.path === active.id);
     const newIndex = source.findIndex(f => f.path === over.id);
     if (oldIndex < 0 || newIndex < 0) return;
@@ -297,42 +360,16 @@ export const DropZoneInputImageV2 = ({
       const reorderedActive = next.map(f => byPath.get(f.path) || f);
       return [...reorderedActive, ...arc];
     });
-    onReorder?.(next);
-    onChange?.(next);
-  };
+    onReorderRef.current?.(next);
+    onChangeRef.current?.(next);
+  }, []);
 
-  const SortableThumb: React.FC<{ file: DropZoneInputFile; imageId: string }> = ({ file, imageId }) => {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: file.path });
-    const style: React.CSSProperties = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      touchAction: 'none',
-    };
-    return (
-      <li
-        ref={setNodeRef}
-        style={style}
-        aria-roledescription="sortable-item"
-        className={isSingle ? 'w-full max-w-md' : undefined}
-      >
-        <div
-          aria-label={dragHandleAriaLabel}
-          style={{ cursor: enableReorder ? 'grab' as const : 'default' }}
-          {...(enableReorder ? { ...attributes, ...listeners } : {})}
-        >
-          <Thumbnail
-            key={imageId}
-            imageId={imageId}
-            filePath={file.path}
-            onDelete={handleDelete}
-            onArchive={handleArchive}
-            features={features}
-            onMetadataChange={handleMetadataChange}
-          />
-        </div>
-      </li>
-    );
-  };
+  const activeFiles = activeFilesOrdered;
+  const archivedFiles = files.filter((f) => f.isArchived);
+  const featuresStable = useMemo(() => ({
+    archive: !!features?.archive,
+    metadata: !!features?.metadata,
+  }), [features?.archive, features?.metadata]);
 
 
   if (isLoading) {
@@ -342,9 +379,6 @@ export const DropZoneInputImageV2 = ({
       </div>
     );
   }
-
-  const activeFiles = activeFilesOrdered;
-  const archivedFiles = files.filter((f) => f.isArchived);
 
   return (
     <>
@@ -379,7 +413,20 @@ export const DropZoneInputImageV2 = ({
               {activeFiles.map((file) => {
                 const imageId = pathToIdMap.get(file.path);
                 if (!imageId) return null;
-                return <SortableThumb key={file.path} file={file} imageId={imageId} />;
+                return (
+                  <SortableThumb
+                    key={file.path}
+                    filePath={file.path}
+                    imageId={imageId}
+                    enableReorder={enableReorder}
+                    dragHandleAriaLabel={dragHandleAriaLabel}
+                    features={featuresStable}
+                    onDelete={handleDelete}
+                    onArchive={handleArchive}
+                    onMetadataChange={handleMetadataChange}
+                    isSingle={!!isSingle}
+                  />
+                );
               })}
             </ul>
           </SortableContext>
@@ -402,7 +449,7 @@ export const DropZoneInputImageV2 = ({
                       filePath={file.path}
                       onDelete={handleDelete}
                       onArchive={handleArchive}
-                      features={features}
+                      features={featuresStable}
                       onMetadataChange={handleMetadataChange}
                     />
                   </div>
