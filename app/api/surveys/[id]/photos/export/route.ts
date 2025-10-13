@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+// Use the Web Fetch API `Request` type; avoid narrowing Next's context type
 import archiver from 'archiver';
 import path from 'node:path';
 import { Readable } from 'node:stream';
@@ -116,9 +116,13 @@ function dataUrlToBuffer(dataUrl: string): { buffer: Buffer; ext: string } | nul
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  req: Request,
+  context: { params: Record<string, string | string[]> },
+) {
   try {
-    const surveyId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const idParam = context?.params?.id;
+    const surveyId = Array.isArray(idParam) ? idParam[0] : idParam;
     const { searchParams } = new URL(req.url);
     const includeArchived = searchParams.get('includeArchived') === 'true';
 
