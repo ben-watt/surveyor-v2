@@ -118,11 +118,15 @@ function dataUrlToBuffer(dataUrl: string): { buffer: Buffer; ext: string } | nul
 
 export async function POST(
   req: Request,
-  context: { params: Record<string, string | string[]> },
+  context: { params: Promise<Record<string, string | string[] | undefined>> },
 ) {
   try {
-    const idParam = context?.params?.id;
+    const params = await context.params;
+    const idParam = params?.id;
     const surveyId = Array.isArray(idParam) ? idParam[0] : idParam;
+    if (!surveyId) {
+      return new Response(JSON.stringify({ error: 'Missing survey id' }), { status: 400 });
+    }
     const { searchParams } = new URL(req.url);
     const includeArchived = searchParams.get('includeArchived') === 'true';
 
