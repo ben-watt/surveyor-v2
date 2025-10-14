@@ -6,7 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import InlineSelect from '@/app/home/components/TipTapExtensions/InlineSelect';
 import { tokensToDoc, docToTokens } from '@/lib/conditions/interop';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Code, Type } from 'lucide-react';
+import { Code, Type, Wand2 } from 'lucide-react';
 import TokenEditor, { type TokenEditorHandle } from './TokenEditor';
 
 const SAMPLE = `The electrical installation appears aged, with {{select+:electrical_findings|a dated consumer unit|older wiring|loose or surface-mounted cabling|dated fittings}} noted. No specialist electrical testing was undertaken as part of this inspection, so the safety and compliance of the installation cannot be confirmed. We recommend obtaining commissioning and testing certificates from the vendor to confirm that the installation was carried out by a suitably qualified electrician (NICEIC or equivalent). If documentation is unavailable, an Electrical Installation Condition Report (EICR) should be commissioned.
@@ -61,20 +61,6 @@ export default function InlineSelectDevPage() {
       console.error(e);
       alert('Failed to export tokens from editor.');
     }
-  }, [editor]);
-
-  const insertSampleSelect = React.useCallback(() => {
-    if (!editor) return;
-    editor.commands.insertInlineSelect({
-      key: `electrical_findings_${Math.random().toString(36).slice(2, 6)}`,
-      options: [
-        'a dated consumer unit',
-        'older wiring',
-        'loose or surface-mounted cabling',
-        'dated fittings',
-      ],
-      allowCustom: true,
-    });
   }, [editor]);
 
   const cancelScheduledVisualSync = React.useCallback(() => {
@@ -143,20 +129,6 @@ export default function InlineSelectDevPage() {
             {mode === 'tokens' ? 'Token view' : 'Visual view'}
           </span>
         </div>
-        <div className="flex justify-end">
-          {mode === 'tokens' ? (
-            <button
-              className="rounded border px-3 py-1.5"
-              onClick={() => tokenEditorRef.current?.insertSampleSelect()}
-            >
-              Insert sample token
-            </button>
-          ) : (
-            <button className="rounded border px-3 py-1.5" onClick={insertSampleSelect}>
-              Insert inline select
-            </button>
-          )}
-        </div>
         <div className="relative">
           <div className={mode === 'tokens' ? 'block' : 'hidden'}>
             <TokenEditor ref={tokenEditorRef} value={template} onChange={setTemplate} />
@@ -164,7 +136,26 @@ export default function InlineSelectDevPage() {
           <div className={`rounded border ${mode === 'visual' ? 'block' : 'hidden'}`}>
             <EditorContent editor={editor} className="min-h-[16rem] p-3" />
           </div>
-          <div className="pointer-events-none absolute bottom-3 right-3 z-10">
+          <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
+            {mode === 'tokens' && (
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => tokenEditorRef.current?.insertSampleSelect()}
+                      className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      aria-label="Insert sample token"
+                    >
+                      <Wand2 className="h-5 w-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="end">
+                    Insert sample token
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>
