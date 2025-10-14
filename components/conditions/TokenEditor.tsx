@@ -5,7 +5,13 @@ import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { Extension, RangeSetBuilder } from '@codemirror/state';
 
-type Props = { value: string; onChange: (v: string) => void };
+type Props = {
+  value: string;
+  onChange: (v: string) => void;
+  ariaLabel?: string;
+  ariaLabelledBy?: string;
+  ariaDescribedBy?: string;
+};
 
 export type TokenEditorHandle = {
   insertText: (text: string) => void;
@@ -80,7 +86,7 @@ function tokenHighlightExtension(): Extension {
 }
 
 const TokenEditor = forwardRef<TokenEditorHandle, Props>(function TokenEditor(
-  { value, onChange }: Props,
+  { value, onChange, ariaLabel, ariaLabelledBy, ariaDescribedBy }: Props,
   ref,
 ) {
   const cmRef = useRef<ReactCodeMirrorRef>(null);
@@ -119,6 +125,9 @@ const TokenEditor = forwardRef<TokenEditorHandle, Props>(function TokenEditor(
         basicSetup={{ lineNumbers: false }}
         onChange={(v) => onChange(v)}
         extensions={[tokenHighlightExtension(), EditorView.lineWrapping]}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        aria-describedby={ariaDescribedBy}
       />
     </div>
   );

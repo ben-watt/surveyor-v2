@@ -1,10 +1,10 @@
 'use client';
 
 import Input from '@/app/home/components/Input/InputText';
-import { FormProvider, useForm } from 'react-hook-form';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DynamicComboBox } from '@/app/home/components/Input';
 import { Phrase } from '../clients/Dexie';
 import TextAreaInput from '../components/Input/TextAreaInput';
@@ -14,6 +14,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { useAutoSaveForm } from '../hooks/useAutoSaveForm';
 import { LastSavedIndicator } from '../components/LastSavedIndicator';
 import { getAutoSaveTimings } from '../utils/autosaveTimings';
+import InlineTemplateComposer, {
+  type InlineTemplateComposerHandle,
+  type InlineTemplateComposerAction,
+} from '@/components/conditions/InlineTemplateComposer';
+import { Wand2 } from 'lucide-react';
 
 // Zod schema for condition/phrase validation
 const conditionSchema = z.object({
@@ -33,6 +38,13 @@ interface DataFormProps {
   defaultValues?: Partial<UpdateForm>;
   onSave?: () => void;
 }
+
+const SAMPLE_SELECT_OPTIONS = [
+  'a dated consumer unit',
+  'older wiring',
+  'loose or surface-mounted cabling',
+  'dated fittings',
+] as const;
 
 export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const idRef = useRef(id ?? uuidv4());
@@ -58,6 +70,8 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   } = methods;
   const [componentsHydrated, components] = componentStore.useList();
   const [phraseHydrated, phrase] = phraseStore.useGet(idRef.current);
+
+  const composerRef = useRef<InlineTemplateComposerHandle>(null);
 
   // Track if we've done the initial reset to prevent wiping user input on autosave
   const [hasInitialReset, setHasInitialReset] = useState(false);
@@ -131,6 +145,30 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     }
   }, [phraseHydrated, phrase, methods, hasInitialReset, skipNextChange]);
 
+  const handleInsertSampleSelect = useCallback(() => {
+    const composer = composerRef.current;
+    if (!composer) return;
+    const key = `select_${Math.random().toString(36).slice(2, 8)}`;
+    if (composer.getMode() === 'visual') {
+      composer.insertInlineSelect({
+        key,
+        options: [...SAMPLE_SELECT_OPTIONS],
+        allowCustom: true,
+      });
+      return;
+    }
+    composer.insertSampleToken();
+  }, []);
+
+  const insertSampleAction = useMemo<InlineTemplateComposerAction>(
+    () => ({
+      label: 'Insert sample select',
+      icon: <Wand2 className="h-5 w-5" />,
+      onSelect: handleInsertSampleSelect,
+    }),
+    [handleInsertSampleSelect],
+  );
+
   if (!componentsHydrated) {
     return <div>Loading...</div>;
   }
@@ -139,10 +177,29 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     <FormProvider {...methods}>
       <div className="grid gap-4">
         <Input labelTitle="Name" register={() => register('name')} errors={errors} />
-        <TextAreaInput
-          labelTitle="Phrase (Level 3)"
-          register={() => register('phrase')}
-          errors={errors}
+        <Controller
+          name="phrase"
+          control={control}
+          render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <InlineTemplateComposer
+                ref={composerRef}
+                label="Phrase (Level 3)"
+                value={field.value ?? ''}
+                onChange={(next) => {
+                  field.onChange(next);
+                  if (!fieldState.isTouched) {
+                    field.onBlur();
+                  }
+                }}
+                tokenModeAction={insertSampleAction}
+                visualModeAction={insertSampleAction}
+              />
+              {errors.phrase ? (
+                <p className="text-sm text-red-600">{errors.phrase.message as string}</p>
+              ) : null}
+            </div>
+          )}
         />
         <TextAreaInput
           labelTitle="Phrase (Level 2)"

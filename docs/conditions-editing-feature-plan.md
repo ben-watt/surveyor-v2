@@ -1,9 +1,9 @@
 ---
-title: Conditions Editing Feature – Approaches, Plan, and Tradeoffs
+title: Conditions Editing Feature - Approaches, Plan, and Tradeoffs
 description: Options to support selectable/editable placeholders in surveyor conditions, with schema, parsing, editor UX, and rollout strategy.
 owner: Product + Eng
-status: Draft
-last_updated: 2025-10-13
+status: In progress
+last_updated: 2025-10-14
 ---
 
 # Conditions Editing Feature – Approaches, Plan, and Tradeoffs
@@ -29,11 +29,20 @@ Scope decisions (current phase)
 - Maintainability: Configs are versioned, validated, and testable.
 - Extensibility: Easy to add other inline widgets later (e.g., dates, numbers, multi-select, conditional blocks).
 
-## Non‑Goals (Initial Phase)
+## Non-Goals (Initial Phase)
 
 - Full conditional templating language (nested conditionals, loops).
 - Arbitrary custom formatting in exports beyond what we already support.
-- WYSIWYG parity with a full word processor; we’ll scope to stable inline components.
+- WYSIWYG parity with a full word processor; we'll scope to stable inline components.
+
+---
+
+## Current Progress (October 2025)
+
+- Shared composer scaffolding shipped at `components/conditions/InlineTemplateComposer.tsx`, including the TipTap-backed visual view, token view fallback, and imperative helper surface for toolbar/slash commands.
+- Inline select implementation (TipTap node, React NodeView, input/paste rules) is live under `app/home/components/TipTapExtensions/InlineSelect*`, enabling inline dropdown UX with custom value capture.
+- Token ↔ TipTap interop plus resolver utilities landed in `lib/conditions`, with unit coverage for parsing and text resolution to keep exports aligned.
+- Dev playground (`app/dev/inline-select/page.tsx`) exercises the experience end-to-end and is the current integration entry point.
 
 ---
 
@@ -205,11 +214,11 @@ Unresolved state UX
 
 ## Integration Next Steps
 
-1. Embed `InlineTemplateComposer` inside the forthcoming conditions editor page (`app/home/...`) so surveyors edit real documents instead of the dev sandbox. Wire `value`/`onChange` to persisted TipTap JSON via the interop helpers.
-2. Replace ad-hoc token insertion affordances with feature-specific actions that call `insertInlineSelect`/`insertTokenText` on the composer ref (e.g., toolbar buttons, slash commands).
-3. Introduce validation UX (inline decorations + side panel summary) by subscribing to composer mode changes and running the schema checks described above.
-4. Hook the composer into save/publish flows: serialize to TipTap JSON for persistence, export to template strings where legacy systems still require tokenized text, and plug into the resolver used by PDF/HTML outputs.
-5. Add integration tests colocated with the consuming feature (see engineering testing conventions) to cover mode toggling, token insertion, and persistence round-trips.
+1. Embed the composer within configuration + survey condition editors (replace the level-3 phrase textarea in `app/home/conditions/form.tsx` first), persisting TipTap JSON alongside the legacy token field.
+2. Expose feature-facing insertion affordances (toolbar buttons, slash commands) that call the composer ref helpers instead of the playground-only “insert sample token”.
+3. Layer validation UX: schema checks, inline decorations, and a side panel summary that blocks save/export until issues resolve.
+4. Thread serialization through save/publish/export: store `doc`, regenerate normalized token strings for legacy consumers, and reuse the shared resolver for PDF/HTML output.
+5. Add colocated integration tests covering mode toggling, inline edits, validation states, and persistence round-trips to safeguard the new flows.
 
 ---
 
@@ -277,21 +286,21 @@ Phase 0 — Discovery (Short)
 - Confirm single vs multi‑select requirements per token.
 - Confirm need for admin authoring vs surveyor‑only selection.
 
-Phase 1 — MVP (TipTap Inline)
+Phase 1 - MVP Foundations (TipTap Inline) **in progress**
 
-- Implement TipTap InlineSelect node + NodeView (dropdown, add custom option, default indicator).
-- Add InputRule and PasteRule to transform `{{select:...}}` and `[a / b]` into nodes.
-- Add schema validation and inline error decorations; document linter panel.
-- Resolver to produce plain text for preview/export; unit tests.
-- Ship behind a feature flag for 1–2 conditions; gather feedback.
+- (done) Implement TipTap InlineSelect node + NodeView (dropdown, add custom option, default indicator).
+- (done) Add InputRule and PasteRule to transform `{{select:...}}` and `[a / b]` into nodes.
+- (in progress) Add schema validation and inline error decorations; document linter panel.
+- (done) Resolver to produce plain text for preview/export; unit tests.
+- (in progress) Ship behind a feature flag for 1-2 conditions; gather feedback.
 
 Deliverables
 
-- TipTap extension `InlineSelect` with schema, NodeView, input/paste rules.
-- Resolver function `resolveDocToText(doc, selections?)` with tests.
-- Importer `tokensToDoc(template: string)` and exporter `docToTokens(doc)` with tests.
-- Linter plugin with decorations and side panel integration.
-- Feature flag wiring; analytics events for option selection and custom usage.
+- (done) TipTap extension `InlineSelect` with schema, NodeView, input/paste rules.
+- (done) Resolver function `resolveDocToText(doc, selections?)` with tests.
+- (done) Importer `tokensToDoc(template: string)` and exporter `docToTokens(doc)` with tests.
+- (in progress) Linter plugin with decorations and side panel integration.
+- (in progress) Feature flag wiring; analytics events for option selection and custom usage.
 
 Phase 2 — Authoring Tools
 

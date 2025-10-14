@@ -1,7 +1,52 @@
 import '@testing-library/jest-dom';
-import { render, screen, act, waitFor, within } from '@testing-library/react';
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DataForm } from '../form';
+
+jest.mock('@uiw/react-codemirror', () => {
+  return React.forwardRef<HTMLTextAreaElement, any>(function MockCodeMirror(
+    { value, onChange, ...props },
+    ref,
+  ) {
+    return (
+      <textarea
+        ref={ref}
+        value={value}
+        onChange={(event) => onChange?.(event.target.value)}
+        {...props}
+      />
+    );
+  });
+});
+
+jest.mock('@tiptap/react', () => {
+  const React = require('react');
+  return {
+    useEditor: ({ content }: any) => {
+      const editor = {
+        getJSON: () => content ?? { type: 'doc', content: [] },
+        chain: () => ({
+          setContent: () => ({
+            focus: () => ({
+              run: () => undefined,
+            }),
+          }),
+        }),
+        commands: {
+          insertInlineSelect: jest.fn(),
+          focus: jest.fn(),
+        },
+        setEditable: jest.fn(),
+      };
+      return editor;
+    },
+    EditorContent: ({ 'aria-label': ariaLabel, ...props }: any) =>
+      React.createElement('div', { role: 'textbox', 'aria-label': ariaLabel, ...props }),
+    NodeViewWrapper: ({ children }: any) => React.createElement('span', null, children),
+    ReactNodeViewRenderer: (component: any) => component,
+  };
+});
 
 jest.mock('react-hot-toast', () => ({ success: jest.fn(), error: jest.fn() }));
 
@@ -66,9 +111,7 @@ describe('Condition DataForm autosave on create', () => {
   it('adds on first autosave then updates subsequently', async () => {
     render(<DataForm />);
 
-    // Type name (first textbox is name input)
-    const textboxes = screen.getAllByRole('textbox');
-    const nameInput = textboxes[0];
+    const nameInput = screen.getByRole('textbox', { name: /name/i });
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'Condition Name');
 
@@ -79,18 +122,21 @@ describe('Condition DataForm autosave on create', () => {
     const compOption = await screen.findByText('Component 1');
     await userEvent.click(compOption);
 
+    const sampleButton = screen.getByRole('button', { name: /insert sample select/i });
+    await userEvent.click(sampleButton);
+
     // Enter required phrase to satisfy validation before autosave
-    const phraseTextarea = screen.getByRole('textbox', { name: /phrase \(level 3\)/i });
-    await userEvent.clear(phraseTextarea);
-    await userEvent.type(phraseTextarea, 'Initial Phrase');
+    const phraseEditor = screen.getAllByRole('textbox', { name: /phrase \(level 3\)/i })[0];
+    await userEvent.clear(phraseEditor);
+    await userEvent.type(phraseEditor, 'Initial Phrase');
 
     // Wait for autosave
     await waitFor(() => expect(mockAdd).toHaveBeenCalled());
 
     // Wait 2 seconds for debounce
     await new Promise((resolve) => setTimeout(resolve, 2000));
-    await userEvent.clear(phraseTextarea);
-    await userEvent.type(phraseTextarea, 'Updated Phrase');
+    await userEvent.clear(phraseEditor);
+    await userEvent.type(phraseEditor, 'Updated Phrase');
 
     // Wait for autosave
     await waitFor(() => expect(mockUpdate).toHaveBeenCalled());

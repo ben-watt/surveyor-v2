@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -47,6 +48,7 @@ type InlineTemplateComposerProps = {
   tokenModeAction?: InlineTemplateComposerAction;
   visualModeAction?: InlineTemplateComposerAction;
   className?: string;
+  label?: string;
 };
 
 const InlineTemplateComposer = forwardRef<
@@ -61,9 +63,12 @@ const InlineTemplateComposer = forwardRef<
     tokenModeAction,
     visualModeAction,
     className,
+    label,
   },
   ref,
 ) {
+  const labelText = label ?? 'Template editor';
+  const labelId = useId();
   const [mode, setMode] = useState<InlineTemplateComposerMode>(defaultMode);
   const tokenEditorRef = useRef<TokenEditorHandle>(null);
   const pendingVisualSyncRef = useRef(false);
@@ -216,17 +221,30 @@ const InlineTemplateComposer = forwardRef<
     <div className={className}>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium">Template editor</label>
+          <span id={labelId} className="block text-sm font-medium">
+            {labelText}
+          </span>
           <span className="text-xs uppercase tracking-wide text-gray-500">
             {mode === 'tokens' ? 'Token view' : 'Visual view'}
           </span>
         </div>
         <div className="relative">
           <div className={mode === 'tokens' ? 'block' : 'hidden'}>
-            <TokenEditor ref={tokenEditorRef} value={value} onChange={onChange} />
+            <TokenEditor
+              ref={tokenEditorRef}
+              value={value}
+              onChange={onChange}
+              ariaLabel={labelText}
+              ariaLabelledBy={labelId}
+            />
           </div>
           <div className={`rounded border ${mode === 'visual' ? 'block' : 'hidden'}`}>
-            <EditorContent editor={editor} className="min-h-[16rem] p-3" />
+            <EditorContent
+              editor={editor}
+              className="min-h-[16rem] p-3"
+              aria-label={labelText}
+              aria-labelledby={labelId}
+            />
           </div>
           <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
             {activeAction ? (
