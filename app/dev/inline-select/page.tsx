@@ -5,6 +5,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import InlineSelect from '@/app/home/components/TipTapExtensions/InlineSelect';
 import { tokensToDoc, docToTokens } from '@/lib/conditions/interop';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Code, Type } from 'lucide-react';
 import TokenEditor, { type TokenEditorHandle } from './TokenEditor';
 
 const SAMPLE = `The electrical installation appears aged, with {{select+:electrical_findings|a dated consumer unit|older wiring|loose or surface-mounted cabling|dated fittings}} noted. No specialist electrical testing was undertaken as part of this inspection, so the safety and compliance of the installation cannot be confirmed. We recommend obtaining commissioning and testing certificates from the vendor to confirm that the installation was carried out by a suitably qualified electrician (NICEIC or equivalent). If documentation is unavailable, an Electrical Installation Condition Report (EICR) should be commissioned.
@@ -16,6 +18,7 @@ export default function InlineSelectDevPage() {
   const [mode, setMode] = React.useState<'tokens' | 'visual'>('tokens');
   const tokenEditorRef = React.useRef<TokenEditorHandle>(null);
   const pendingVisualSyncRef = React.useRef(false);
+  const visualSyncRafRef = React.useRef<number | null>(null);
 
   const modeRef = React.useRef(mode);
   React.useEffect(() => {
@@ -74,65 +77,73 @@ export default function InlineSelectDevPage() {
     });
   }, [editor]);
 
+  const cancelScheduledVisualSync = React.useCallback(() => {
+    if (visualSyncRafRef.current !== null) {
+      cancelAnimationFrame(visualSyncRafRef.current);
+      visualSyncRafRef.current = null;
+    }
+  }, []);
+
+  const scheduleVisualSync = React.useCallback(() => {
+    if (modeRef.current !== 'visual') return;
+    if (!editor) {
+      pendingVisualSyncRef.current = true;
+      return;
+    }
+    pendingVisualSyncRef.current = false;
+    cancelScheduledVisualSync();
+    visualSyncRafRef.current = requestAnimationFrame(() => {
+      if (modeRef.current !== 'visual') return;
+      loadIntoEditor();
+      visualSyncRafRef.current = null;
+    });
+  }, [cancelScheduledVisualSync, editor, loadIntoEditor]);
+
   const handleShowTokens = React.useCallback(() => {
     if (mode === 'tokens') return;
+    cancelScheduledVisualSync();
+    pendingVisualSyncRef.current = false;
     if (editor) syncFromEditor();
     setMode('tokens');
-  }, [editor, mode, syncFromEditor]);
+  }, [cancelScheduledVisualSync, editor, mode, syncFromEditor]);
 
   const handleShowVisual = React.useCallback(() => {
     if (mode === 'visual') return;
-    if (editor) {
-      setTimeout(() => {
-        if (modeRef.current !== 'visual') return;
-        loadIntoEditor();
-      }, 0);
-      pendingVisualSyncRef.current = false;
-    } else {
-      pendingVisualSyncRef.current = true;
-    }
+    pendingVisualSyncRef.current = true;
     setMode('visual');
-  }, [editor, loadIntoEditor, mode]);
+  }, [mode]);
 
   React.useEffect(() => {
-    if (!editor) return;
-    if (mode !== 'visual') return;
+    if (mode !== 'visual') {
+      cancelScheduledVisualSync();
+      return;
+    }
     if (!pendingVisualSyncRef.current) return;
-    pendingVisualSyncRef.current = false;
-    setTimeout(() => {
-      if (modeRef.current !== 'visual') return;
-      loadIntoEditor();
-    }, 0);
-  }, [editor, mode, loadIntoEditor]);
+    scheduleVisualSync();
+  }, [cancelScheduledVisualSync, editor, mode, scheduleVisualSync]);
 
   React.useEffect(() => {
     if (!editor) return;
     editor.setEditable(mode === 'visual');
   }, [editor, mode]);
 
+  React.useEffect(() => {
+    return () => {
+      cancelScheduledVisualSync();
+    };
+  }, [cancelScheduledVisualSync]);
+
   return (
     <div className="space-y-6 p-6">
       <h1 className="text-2xl font-semibold">InlineSelect Dev Tester</h1>
       <div className="space-y-3">
-        <label className="block text-sm font-medium">Tokenized Template</label>
-        <div className="flex w-full items-center gap-2">
-          <button
-            className={`rounded border px-3 py-1.5 ${
-              mode === 'tokens' ? 'bg-blue-600 text-white' : ''
-            }`}
-            onClick={handleShowTokens}
-          >
-            Token view
-          </button>
-          <button
-            className={`rounded border px-3 py-1.5 ${
-              mode === 'visual' ? 'bg-blue-600 text-white' : ''
-            }`}
-            onClick={handleShowVisual}
-          >
-            Visual view
-          </button>
-          <div className="flex-1" />
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium">Template editor</label>
+          <span className="text-xs uppercase tracking-wide text-gray-500">
+            {mode === 'tokens' ? 'Token view' : 'Visual view'}
+          </span>
+        </div>
+        <div className="flex justify-end">
           {mode === 'tokens' ? (
             <button
               className="rounded border px-3 py-1.5"
@@ -146,11 +157,34 @@ export default function InlineSelectDevPage() {
             </button>
           )}
         </div>
-        <div className={mode === 'tokens' ? 'block' : 'hidden'}>
-          <TokenEditor ref={tokenEditorRef} value={template} onChange={setTemplate} />
-        </div>
-        <div className={`rounded border ${mode === 'visual' ? 'block' : 'hidden'}`}>
-          <EditorContent editor={editor} className="min-h-[16rem] p-3" />
+        <div className="relative">
+          <div className={mode === 'tokens' ? 'block' : 'hidden'}>
+            <TokenEditor ref={tokenEditorRef} value={template} onChange={setTemplate} />
+          </div>
+          <div className={`rounded border ${mode === 'visual' ? 'block' : 'hidden'}`}>
+            <EditorContent editor={editor} className="min-h-[16rem] p-3" />
+          </div>
+          <div className="pointer-events-none absolute bottom-3 right-3 z-10">
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={mode === 'tokens' ? handleShowVisual : handleShowTokens}
+                    className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    aria-label={
+                      mode === 'tokens' ? 'Switch to visual view' : 'Switch to token view'
+                    }
+                  >
+                    {mode === 'tokens' ? <Type className="h-5 w-5" /> : <Code className="h-5 w-5" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="end">
+                  {mode === 'tokens' ? 'Switch to visual view' : 'Switch to token view'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </div>
 
