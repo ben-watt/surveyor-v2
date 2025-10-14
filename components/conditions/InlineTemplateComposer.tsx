@@ -12,6 +12,7 @@ import React, {
 } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
+import type { JSONContent } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import InlineSelect from '@/app/home/components/TipTapExtensions/InlineSelect';
 import { tokensToDoc, docToTokens } from '@/lib/conditions/interop';
@@ -24,7 +25,7 @@ export type InlineTemplateComposerMode = 'tokens' | 'visual';
 export type InlineTemplateComposerAction = {
   label: string;
   icon: React.ReactNode;
-  onSelect: () => void;
+  onSelect: (api: InlineTemplateComposerHandle) => void;
 };
 
 export type InlineTemplateComposerHandle = {
@@ -45,10 +46,13 @@ type InlineTemplateComposerProps = {
   onChange: (value: string) => void;
   defaultMode?: InlineTemplateComposerMode;
   onModeChange?: (mode: InlineTemplateComposerMode) => void;
-  tokenModeAction?: InlineTemplateComposerAction;
-  visualModeAction?: InlineTemplateComposerAction;
+  tokenModeActions?: InlineTemplateComposerAction[];
+  visualModeActions?: InlineTemplateComposerAction[];
   className?: string;
   label?: string;
+  readOnly?: boolean;
+  onDocChange?: (doc: JSONContent) => void;
+  onParseError?: (error: unknown) => void;
 };
 
 const InlineTemplateComposer = forwardRef<
@@ -60,10 +64,13 @@ const InlineTemplateComposer = forwardRef<
     onChange,
     defaultMode = 'tokens',
     onModeChange,
-    tokenModeAction,
-    visualModeAction,
+    tokenModeActions,
+    visualModeActions,
     className,
     label,
+    readOnly = false,
+    onDocChange,
+    onParseError,
   },
   ref,
 ) {
@@ -75,6 +82,7 @@ const InlineTemplateComposer = forwardRef<
   const visualSyncRafRef = useRef<number | null>(null);
   const modeRef = useRef(mode);
   const onChangeRef = useRef(onChange);
+  const onDocChangeRef = useRef(onDocChange);
   const editorInstanceRef = useRef<Editor | null>(null);
 
   useEffect(() => {
@@ -86,12 +94,28 @@ const InlineTemplateComposer = forwardRef<
     onChangeRef.current = onChange;
   }, [onChange]);
 
+  useEffect(() => {
+    onDocChangeRef.current = onDocChange;
+  }, [onDocChange]);
+
+  const handleParseError = useCallback(
+    (error: unknown) => {
+      if (onParseError) {
+        onParseError(error);
+      } else {
+        console.error(error);
+      }
+    },
+    [onParseError],
+  );
+
   const editor = useEditor({
     extensions: [StarterKit, InlineSelect],
     content: tokensToDoc(value) as any,
     onUpdate: ({ editor }) => {
       if (modeRef.current !== 'visual') return;
       const doc = editor.getJSON();
+      onDocChangeRef.current?.(doc as JSONContent);
       const tokens = docToTokens(doc as any);
       onChangeRef.current(tokens);
     },
@@ -118,22 +142,21 @@ const InlineTemplateComposer = forwardRef<
         .focus()
         .run();
     } catch (e) {
-      console.error(e);
-      alert('Failed to parse template – please check syntax.');
+      handleParseError(e);
     }
-  }, [value]);
+  }, [handleParseError, value]);
 
   const syncFromEditor = useCallback(() => {
     if (!editorInstanceRef.current) return;
     const doc = editorInstanceRef.current.getJSON();
+    onDocChangeRef.current?.(doc as JSONContent);
     try {
       const tokens = docToTokens(doc as any);
       onChangeRef.current(tokens);
     } catch (e) {
-      console.error(e);
-      alert('Failed to export tokens from editor.');
+      handleParseError(e);
     }
-  }, []);
+  }, [handleParseError]);
 
   const scheduleVisualSync = useCallback(() => {
     if (modeRef.current !== 'visual') return;
@@ -164,28 +187,7 @@ const InlineTemplateComposer = forwardRef<
     setMode('visual');
   }, []);
 
-  useEffect(() => {
-    if (mode !== 'visual') {
-      cancelScheduledVisualSync();
-      return;
-    }
-    if (!pendingVisualSyncRef.current) return;
-    scheduleVisualSync();
-  }, [cancelScheduledVisualSync, mode, scheduleVisualSync]);
-
-  useEffect(() => {
-    if (!editorInstanceRef.current) return;
-    editorInstanceRef.current.setEditable(mode === 'visual');
-  }, [mode]);
-
-  useEffect(() => {
-    return () => {
-      cancelScheduledVisualSync();
-    };
-  }, [cancelScheduledVisualSync]);
-
-  useImperativeHandle(
-    ref,
+  const handleApi = useMemo<InlineTemplateComposerHandle>(
     () => ({
       getMode: () => modeRef.current,
       setMode: (nextMode) => {
@@ -202,20 +204,44 @@ const InlineTemplateComposer = forwardRef<
         tokenEditorRef.current?.insertSampleSelect();
       },
       insertInlineSelect: ({ key, options, allowCustom = true }) => {
+        if (readOnly) return;
         const tiptap = editorInstanceRef.current;
         if (!tiptap) return;
         tiptap.commands.insertInlineSelect({ key, options, allowCustom });
+        tiptap.commands.focus?.();
       },
       getEditor: () => editorInstanceRef.current,
     }),
-    [handleShowTokens, handleShowVisual],
+    [handleShowTokens, handleShowVisual, readOnly],
   );
 
-  const activeAction = useMemo(() => {
-    if (mode === 'tokens') return tokenModeAction;
-    if (mode === 'visual') return visualModeAction;
-    return undefined;
-  }, [mode, tokenModeAction, visualModeAction]);
+  useEffect(() => {
+    if (mode !== 'visual') {
+      cancelScheduledVisualSync();
+      return;
+    }
+    if (!pendingVisualSyncRef.current) return;
+    scheduleVisualSync();
+  }, [cancelScheduledVisualSync, mode, scheduleVisualSync]);
+
+  useEffect(() => {
+    if (!editorInstanceRef.current) return;
+    editorInstanceRef.current.setEditable(mode === 'visual' && !readOnly);
+  }, [mode, readOnly]);
+
+  useEffect(() => {
+    return () => {
+      cancelScheduledVisualSync();
+    };
+  }, [cancelScheduledVisualSync]);
+
+  useImperativeHandle(ref, () => handleApi, [handleApi]);
+
+  const activeActions = useMemo(() => {
+    if (mode === 'tokens') return tokenModeActions ?? [];
+    if (mode === 'visual') return visualModeActions ?? [];
+    return [];
+  }, [mode, tokenModeActions, visualModeActions]);
 
   return (
     <div className={className}>
@@ -236,6 +262,7 @@ const InlineTemplateComposer = forwardRef<
               onChange={onChange}
               ariaLabel={labelText}
               ariaLabelledBy={labelId}
+              readOnly={readOnly}
             />
           </div>
           <div className={`rounded border ${mode === 'visual' ? 'block' : 'hidden'}`}>
@@ -244,28 +271,31 @@ const InlineTemplateComposer = forwardRef<
               className="min-h-[10rem] p-3"
               aria-label={labelText}
               aria-labelledby={labelId}
+              aria-readonly={readOnly}
             />
           </div>
           <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
-            {activeAction ? (
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={activeAction.onSelect}
-                      className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      aria-label={activeAction.label}
-                    >
-                      {activeAction.icon}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" align="end">
-                    {activeAction.label}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : null}
+            {!readOnly && activeActions.length
+              ? activeActions.map((action, index) => (
+                  <TooltipProvider delayDuration={100} key={`${mode}-action-${index}`}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => action.onSelect(handleApi)}
+                          className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          aria-label={action.label}
+                        >
+                          {action.icon}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" align="end">
+                        {action.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))
+              : null}
             <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>

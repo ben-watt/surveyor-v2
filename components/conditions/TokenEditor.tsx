@@ -11,6 +11,7 @@ type Props = {
   ariaLabel?: string;
   ariaLabelledBy?: string;
   ariaDescribedBy?: string;
+  readOnly?: boolean;
 };
 
 export type TokenEditorHandle = {
@@ -86,13 +87,14 @@ function tokenHighlightExtension(): Extension {
 }
 
 const TokenEditor = forwardRef<TokenEditorHandle, Props>(function TokenEditor(
-  { value, onChange, ariaLabel, ariaLabelledBy, ariaDescribedBy }: Props,
+  { value, onChange, ariaLabel, ariaLabelledBy, ariaDescribedBy, readOnly = false }: Props,
   ref,
 ) {
   const cmRef = useRef<ReactCodeMirrorRef>(null);
 
   useImperativeHandle(ref, () => ({
     insertText: (text: string) => {
+      if (readOnly) return;
       const view = cmRef.current?.view;
       if (!view) return;
       const { from, to } = view.state.selection.main;
@@ -102,6 +104,7 @@ const TokenEditor = forwardRef<TokenEditorHandle, Props>(function TokenEditor(
       view.focus();
     },
     insertSampleSelect: () => {
+      if (readOnly) return;
       const key = `electrical_findings_${Math.random().toString(36).slice(2, 6)}`;
       const token = `{{select+:${key}|a dated consumer unit|older wiring|loose or surface-mounted cabling|dated fittings}}`;
       const view = cmRef.current?.view;
@@ -125,6 +128,8 @@ const TokenEditor = forwardRef<TokenEditorHandle, Props>(function TokenEditor(
         basicSetup={{ lineNumbers: false }}
         onChange={(v) => onChange(v)}
         extensions={[tokenHighlightExtension(), EditorView.lineWrapping]}
+        editable={!readOnly}
+        readOnly={readOnly}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}

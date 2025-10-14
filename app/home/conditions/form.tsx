@@ -14,7 +14,6 @@ import { useAutoSaveForm } from '../hooks/useAutoSaveForm';
 import { LastSavedIndicator } from '../components/LastSavedIndicator';
 import { getAutoSaveTimings } from '../utils/autosaveTimings';
 import InlineTemplateComposer, {
-  type InlineTemplateComposerHandle,
   type InlineTemplateComposerAction,
 } from '@/components/conditions/InlineTemplateComposer';
 import { Wand2 } from 'lucide-react';
@@ -69,9 +68,6 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   } = methods;
   const [componentsHydrated, components] = componentStore.useList();
   const [phraseHydrated, phrase] = phraseStore.useGet(idRef.current);
-
-  const composerRef = useRef<InlineTemplateComposerHandle | null>(null);
-  const level2ComposerRef = useRef<InlineTemplateComposerHandle | null>(null);
 
   // Track if we've done the initial reset to prevent wiping user input on autosave
   const [hasInitialReset, setHasInitialReset] = useState(false);
@@ -145,39 +141,26 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     }
   }, [phraseHydrated, phrase, methods, hasInitialReset, skipNextChange]);
 
-  const buildInsertSampleAction = useCallback(
-    (
-      targetRef: React.RefObject<InlineTemplateComposerHandle | null>,
-    ): InlineTemplateComposerAction => ({
+  const insertSampleAction = useMemo<InlineTemplateComposerAction>(
+    () => ({
       label: 'Insert sample select',
       icon: <Wand2 className="h-5 w-5" />,
-      onSelect: () => {
-        const composer = targetRef?.current;
-        if (!composer) return;
+      onSelect: (api) => {
         const key = `select_${Math.random().toString(36).slice(2, 8)}`;
-        if (composer.getMode() === 'visual') {
-          composer.insertInlineSelect({
+        if (api.getMode() === 'visual') {
+          api.insertInlineSelect({
             key,
             options: [...SAMPLE_SELECT_OPTIONS],
             allowCustom: true,
           });
           return;
         }
-        composer.insertSampleToken();
+        api.insertSampleToken();
       },
     }),
     [],
   );
-
-  const insertSampleAction = useMemo(
-    () => buildInsertSampleAction(composerRef),
-    [buildInsertSampleAction],
-  );
-
-  const insertSampleLevel2Action = useMemo(
-    () => buildInsertSampleAction(level2ComposerRef),
-    [buildInsertSampleAction],
-  );
+  const insertSampleActions = useMemo(() => [insertSampleAction], [insertSampleAction]);
 
   if (!componentsHydrated) {
     return <div>Loading...</div>;
@@ -193,7 +176,6 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           render={({ field, fieldState }) => (
             <div className="space-y-2">
               <InlineTemplateComposer
-                ref={composerRef}
                 label="Phrase (Level 3)"
                 value={field.value ?? ''}
                 onChange={(next) => {
@@ -202,8 +184,8 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
                     field.onBlur();
                   }
                 }}
-                tokenModeAction={insertSampleAction}
-                visualModeAction={insertSampleAction}
+                tokenModeActions={insertSampleActions}
+                visualModeActions={insertSampleActions}
               />
               {errors.phrase ? (
                 <p className="text-sm text-red-600">{errors.phrase.message as string}</p>
@@ -217,7 +199,6 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           render={({ field, fieldState }) => (
             <div className="space-y-2">
               <InlineTemplateComposer
-                ref={level2ComposerRef}
                 label="Phrase (Level 2)"
                 value={field.value ?? ''}
                 onChange={(next) => {
@@ -226,8 +207,8 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
                     field.onBlur();
                   }
                 }}
-                tokenModeAction={insertSampleLevel2Action}
-                visualModeAction={insertSampleLevel2Action}
+                tokenModeActions={insertSampleActions}
+                visualModeActions={insertSampleActions}
               />
               {errors.phraseLevel2 ? (
                 <p className="text-sm text-red-600">{errors.phraseLevel2.message as string}</p>
