@@ -10,14 +10,14 @@ last_updated: 2025-10-14
 
 ## Summary
 
-- Goal: Let surveyors select from predefined choices inside condition text and add custom options where needed, while preserving safe formatting for export (PDF/HTML) and enabling future i18n.
+- Goal: Let surveyors select from predefined choices inside condition text (fixed options, no custom entries in MVP), while preserving safe formatting for export (PDF/HTML) and enabling future i18n.
 - Example: “The electrical installation appears aged, with [a dated consumer unit / older wiring / loose or surface-mounted cabling / dated fittings] noted.”
 - Key decisions: adopt a TipTap rich‑text document with custom inline nodes as the primary editing/preview model; retain a token syntax (`{{select:...}}`) for import/export and migration. Align persistence, validation, and rendering to this model.
 
 Scope decisions (current phase)
 
 - Single‑select only (no multi‑select).
-- Custom entries are always allowed for select tokens.
+- Custom entries are not allowed in MVP; selects are fixed lists.
 - Per‑token hints/descriptions optional and deferred; focus on clear defaults and intuitive UI.
 - Localization out of scope for MVP; keep future i18n in mind.
 
@@ -40,7 +40,7 @@ Scope decisions (current phase)
 ## Current Progress (October 2025)
 
 - Shared composer scaffolding shipped at `components/conditions/InlineTemplateComposer.tsx`, now with TipTap-backed visual view, token view fallback, and an upgraded action API for toolbar/slash integrations.
-- Inline select implementation (TipTap node, React NodeView, input/paste rules) is live under `app/home/components/TipTapExtensions/InlineSelect*`, enabling inline dropdown UX with custom value capture.
+- Inline select implementation (TipTap node, React NodeView, input/paste rules) is live under `app/home/components/TipTapExtensions/InlineSelect*`, enabling inline dropdown UX with a fixed option list (no custom values).
 - Token ↔ TipTap interop plus resolver utilities landed in `lib/conditions`, with unit coverage for parsing and text resolution to keep exports aligned.
 - Dev playground (`app/dev/inline-select/page.tsx`) exercises the experience end-to-end and is the current integration entry point.
 - Composer embedded in the configuration form (`app/home/conditions/form.tsx`) with shared sample-select actions; new unit tests (`components/conditions/__tests__/InlineTemplateComposer.test.tsx`) cover mode syncing, read-only behaviour, and action wiring.
@@ -98,7 +98,7 @@ Notes:
 
 - Delimiters: `{{ ... }}` are widely recognized; `|` is a clear option separator.
 - Options are literal text; escaping: `\|` for pipe, `\}` for closing brace, `\\` for backslash.
-- Key (`electrical_findings`) anchors analytics, persistence, and mapping to UX state.
+- Key (`electrical_findings`) anchors analytics, persistence, and mapping to UX state. Custom entries are not supported in MVP.
 
 Migration parser:
 
@@ -118,7 +118,7 @@ TipTap integration
 Approach A — Inline Rich Editor with TipTap
 
 - Render tokens as custom inline nodes (`InlineSelect`): shows a pill/dropdown inline within the sentence.
-- Interaction: Click to open dropdown; includes “Add custom…” entry that prompts and inserts.
+- Interaction: Click to open dropdown; fixed options only (no custom entry in MVP).
 - Pros: Best authoring UX; WYSIWYG; fewer context switches.
 - Cons: Higher build complexity (node schema, decorations, node views, clipboard handling, selection).
 
@@ -135,7 +135,7 @@ Approach C — Split Editor (Lite Inline + Side Panel)
 - Pros: Balanced complexity and UX; uses simple text rendering plus targeted controls.
 - Cons: More glue code than B; still less discoverable than A for power users.
 
-Decision: Use Approach A (TipTap inline editor) now to align with the existing previewer and provide first‑class inline selection UX. Keep token import/export to enable migration and external editing if needed.
+Decision: Use Approach A (TipTap inline editor) now to align with the existing previewer and provide first‑class inline selection UX. Keep token import/export to enable migration and external editing if needed. For surveyor fill flows, use a view‑only visual mode (no token/code toggle) to reduce complexity.
 
 - Prototype: the dev playground now wraps this experience inside `components/conditions/InlineTemplateComposer.tsx`, pairing the TipTap view with a token editor toggle. It’s ready to embed in feature work and exposes imperative helpers (insert token text, insert inline select, switch modes) for custom actions.
 
@@ -157,7 +157,6 @@ TokenMeta
 - `key: string` (e.g., `electrical_findings`)
 - `type: "select"` (future: `text`, `date`, `multi_select`, `bool`)
 - `options: string[]`
-- `allowCustom: boolean` (default true for current scope)
 - `default?: string`
 
 RenderedCondition (derived)
@@ -167,7 +166,7 @@ RenderedCondition (derived)
 
 Validation
 
-- Schema‑level: InlineSelect node requires `key`, non‑empty `options`, unique options, optional `default` ∈ options, and `allowCustom` boolean.
+- Schema‑level: InlineSelect node requires `key`, non‑empty `options`, unique options, and optional `default` ∈ options.
 - Input/paste: reject malformed tokens; surface inline errors with decorations and tooltips.
 - On save: validate the document against the schema and uniqueness of keys within a document.
 - On render: require a value for each token or fall back to default (if provided) or block completion with clear error.
@@ -187,9 +186,14 @@ Renderer (preview/export)
 - Preview: TipTap renders the document with InlineSelect node views; resolved text is shown in read‑only contexts.
 - Export (PDF/HTML): resolve InlineSelect nodes to selected values (or defaults) and render as plain text; identical resolution path for app preview and exports.
 
+Unresolved state rules (inspection view)
+
+- In inspection view, a condition is considered unresolved when its TipTap doc contains any InlineSelect node where `value` and `defaultValue` are both empty.
+- Items without a doc are not flagged in MVP. Optionally, parse tokenized text as a fallback later.
+
 Editor binding
 
-- InlineSelect NodeView: inline dropdown with options and “Add custom…” when allowed; emits transactions that update node attrs and a `selections` map.
+- InlineSelect NodeView: inline dropdown with a fixed option list (no custom entry); emits transactions that update node attrs.
 - Optional side panel: list all tokens with current values, validation state, and quick navigation.
 
 Edge cases & behaviors
@@ -231,10 +235,10 @@ Unresolved state UX
 
 Surveyor
 
-- Open a condition → sees text preview; tokens highlighted.
-- Inline dropdown for tokens; “Add custom…” available when allowed.
-- Choose option or add custom → preview updates; can reset to default.
-- Inspection form: read-only “view mode” renders with `resolveDocToText`. Provide an “Edit” action to navigate to the composer.
+- Open a condition → sees a list of condition names with validation state (no long preview text in the list).
+- Edit opens a view‑only visual composer (no token toggle) with fixed select options.
+- Choose option → saved to the doc; Done persists immediately and closes.
+- Inspection form uses the same resolver path for exports.
 
 Author/Admin
 
@@ -409,10 +413,21 @@ Output: The installation appears aged, with {{select:electrical_findings|a|b|c}}
 Implementation recommendations (detailed)
 
 - Keyboard UX: Enter to confirm dropdown selection; Esc to close; Arrow keys navigate; type‑ahead filter options.
-- Custom entry flow: include “Add custom…” at bottom of dropdown; open inline prompt; insert as selected value and persist as a user‑specific value (not added to global options).
+- Custom entry flow: removed in MVP; only fixed option lists are supported.
 - Error messages: concise, action‑oriented (“Default ‘X’ is not in options”).
 - Analytics: record only key + option index or “custom”; avoid sending raw custom text unless opted‑in.
 - Testing: snapshot NodeView rendering, schema attr validation, import/export round‑trip, and resolver output.
+
+Core behaviour tests to add (inspection integration)
+
+- Selection persistence: choose an option, click Done → reopen editor shows the same selection (via `initialDoc`).
+- Save on Done: verify persistence flow saves `doc` and `phrase` immediately.
+- Unresolved logic: doc with InlineSelect missing both `value` and `defaultValue` is flagged; setting value clears flag.
+- Reordering: Up/Down updates `conditions` order without data loss.
+- View‑only composer: mode toggle and actions hidden; selects remain interactive.
+- NodeView options: no “Add custom…” option; only fixed options present.
+- Resolver: `resolveDocToText` reflects selected values and normalizes spacing.
+- Local condition seeding: creating a local condition seeds `doc = tokensToDoc(text)` and editing works.
 
 ---
 

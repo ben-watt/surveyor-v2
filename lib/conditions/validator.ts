@@ -96,3 +96,20 @@ export function validateTemplate(template: string): ValidationResult {
 }
 
 
+// Returns true if any InlineSelect in the doc is missing both value and defaultValue
+export function isDocUnresolved(doc: JSONContent | undefined | null): boolean {
+  if (!doc) return false;
+  let unresolved = false;
+  const walk = (node: any) => {
+    if (!node || unresolved) return;
+    if (node.type === 'inlineSelect') {
+      const v = node.attrs?.value ?? node.attrs?.defaultValue ?? '';
+      if (!v) unresolved = true;
+    }
+    if (Array.isArray(node.content)) node.content.forEach(walk);
+  };
+  walk(doc as any);
+  return unresolved;
+}
+
+

@@ -36,7 +36,7 @@ import {
 import { useLocalDefs } from '@/app/home/surveys/hooks/useLocalDefs';
 import { ID_PREFIX, isLocalInstanceId } from '@/app/home/surveys/constants/localIds';
 import { instantiateLocalComponentDef } from '@/app/home/surveys/utils/localDefInstance';
-import ConditionsList from './DraggableConditions';
+import ConditionsList from './ConditionsList';
 import { FormPhrase, InspectionFormData, InspectionFormProps, RAG_OPTIONS } from './types';
 import InputMoney from '@/app/home/components/Input/InputMoney';
 import { useAutoSaveFormWithImages } from '@/app/home/hooks/useAutoSaveFormWithImages';
@@ -332,7 +332,7 @@ function InspectionFormContent({
         }
       })();
     }
-  }, [component, surveySection?.id, element?.id, elements]);
+  }, [component, surveySection?.id, element?.id, elements, setValue, surveyId, getValues]);
 
   function RenameLocalComponentPrompt({
     initialName,
@@ -515,7 +515,7 @@ function InspectionFormContent({
       }
     }
     return Array.from(byId.values());
-  }, [phrases, component, components, level, conditions, survey, surveySection?.id, element?.id]);
+  }, [phrases, component, components, level, conditions, element?.id, conditionDefs, derivedSectionId]);
 
   // Reset dependent fields when parent fields change
   useEffect(() => {
