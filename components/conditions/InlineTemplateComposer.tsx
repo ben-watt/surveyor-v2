@@ -58,6 +58,11 @@ type InlineTemplateComposerProps = {
    * and forces read-only editor behavior regardless of `readOnly`.
    */
   viewOnly?: boolean;
+  /**
+   * Optional: provide a starting TipTap doc to load (preserves selections).
+   * If provided, it is used as the initial editor content instead of parsing tokens.
+   */
+  initialDoc?: JSONContent;
 };
 
 const InlineTemplateComposer = forwardRef<
@@ -77,6 +82,7 @@ const InlineTemplateComposer = forwardRef<
     onDocChange,
     onParseError,
     viewOnly = false,
+    initialDoc,
   },
   ref,
 ) {
@@ -117,7 +123,7 @@ const InlineTemplateComposer = forwardRef<
 
   const editor = useEditor({
     extensions: [StarterKit, InlineSelect],
-    content: tokensToDoc(value) as any,
+    content: (initialDoc ?? (tokensToDoc(value) as any)) as any,
     onUpdate: ({ editor }) => {
       if (modeRef.current !== 'visual') return;
       const doc = editor.getJSON();
@@ -212,7 +218,7 @@ const InlineTemplateComposer = forwardRef<
         tokenEditorRef.current?.insertSampleSelect();
       },
       insertInlineSelect: ({ key, options, allowCustom = true }) => {
-        if (readOnly || viewOnly) return;
+        if (readOnly) return;
         const tiptap = editorInstanceRef.current;
         if (!tiptap) return;
         tiptap.commands.insertInlineSelect({ key, options, allowCustom });
@@ -220,7 +226,7 @@ const InlineTemplateComposer = forwardRef<
       },
       getEditor: () => editorInstanceRef.current,
     }),
-    [handleShowTokens, handleShowVisual, readOnly, viewOnly],
+    [handleShowTokens, handleShowVisual, readOnly],
   );
 
   useEffect(() => {
@@ -234,8 +240,8 @@ const InlineTemplateComposer = forwardRef<
 
   useEffect(() => {
     if (!editorInstanceRef.current) return;
-    editorInstanceRef.current.setEditable(mode === 'visual' && !readOnly && !viewOnly);
-  }, [mode, readOnly, viewOnly]);
+    editorInstanceRef.current.setEditable(mode === 'visual' && !readOnly);
+  }, [mode, readOnly]);
 
   useEffect(() => {
     return () => {
@@ -259,9 +265,11 @@ const InlineTemplateComposer = forwardRef<
           <span id={labelId} className="block text-sm font-medium">
             {labelText}
           </span>
-          <span className="text-xs uppercase tracking-wide text-gray-500">
-            {mode === 'tokens' ? 'Token view' : 'Visual view'}
-          </span>
+          {!viewOnly && (
+            <span className="text-xs uppercase tracking-wide text-gray-500">
+              {mode === 'tokens' ? 'Token view' : 'Visual view'}
+            </span>
+          )}
         </div>
         <div className="relative">
           <div className={mode === 'tokens' && !viewOnly ? 'block' : 'hidden'}>

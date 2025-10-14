@@ -22,7 +22,7 @@ export function InlineSelectNodeViewComponent(props: NodeViewProps) {
     value?: string;
   };
 
-  const { options, allowCustom = true, defaultValue } = attrs;
+  const { options, defaultValue } = attrs;
 
   const resolvedValue = attrs.value ?? defaultValue ?? '';
   const [customInputOpen, setCustomInputOpen] = useState(false);
@@ -122,9 +122,9 @@ export function InlineSelectNodeViewComponent(props: NodeViewProps) {
                 {opt}
               </option>
             ))}
-            {allowCustom && <option value="__add_custom__">Add custom…</option>}
+            {/* custom removed */}
           </select>
-          {allowCustom && customInputOpen && (
+          {false && customInputOpen && (
             <span className="inline-flex items-center gap-1">
               <input
                 autoFocus

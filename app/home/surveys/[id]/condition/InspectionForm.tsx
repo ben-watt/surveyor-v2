@@ -926,7 +926,7 @@ function InspectionFormContent({
                 isUnresolved={(index: number) => {
                   const item = (conditions || [])[index] as any;
                   const doc = (item && item.doc) as JSONContent | undefined;
-                  if (!doc) return true; // treat missing doc as unresolved
+                  if (!doc) return false; // no doc means no inline tokens to resolve
                   let unresolved = false;
                   const walk = (node?: any) => {
                     if (!node) return;
@@ -953,6 +953,7 @@ function InspectionFormContent({
                       <div className="p-2">
                         <InlineTemplateComposer
                           value={startValue}
+                          initialDoc={(item as any).doc}
                           onChange={() => {}}
                           onDocChange={(doc) => {
                             const next = [...getValues().conditions];
@@ -961,11 +962,17 @@ function InspectionFormContent({
                             setValue('conditions', next, { shouldValidate: true, shouldDirty: true });
                           }}
                           visualModeActions={[]}
-                          readOnly={true}
                           viewOnly={true}
                         />
                         <div className="mt-4 flex justify-end">
-                          <Button type="button" onClick={() => drawer.closeDrawer()}>
+                          <Button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await saveData(getValues(), { auto: false });
+                              } catch {}
+                            }}
+                          >
                             Done
                           </Button>
                         </div>
