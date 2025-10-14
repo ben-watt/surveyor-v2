@@ -43,20 +43,18 @@ jest.mock('@/app/home/clients/enhancedImageMetadataStore', () => ({
         },
       ],
     }),
-    getArchivedImages: jest
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        val: [
-          {
-            id: 'img4',
-            imagePath: 'report-images/survey-1/front-elevation/front.jpg',
-            thumbnailDataUrl: 'data:image/jpeg;base64,AAA',
-            isArchived: true,
-            fileName: 'front.jpg',
-          },
-        ],
-      }),
+    getArchivedImages: jest.fn().mockResolvedValue({
+      ok: true,
+      val: [
+        {
+          id: 'img4',
+          imagePath: 'report-images/survey-1/front-elevation/front.jpg',
+          thumbnailDataUrl: 'data:image/jpeg;base64,AAA',
+          isArchived: true,
+          fileName: 'front.jpg',
+        },
+      ],
+    }),
     getFullImageUrl: jest.fn().mockResolvedValue({ ok: true, val: 'https://example.com/full.jpg' }),
   },
 }));

@@ -272,6 +272,7 @@ class SurveyElementYjs {
    ```
 
 3. **Update Dexie schema for CRDT storage**
+
    ```typescript
    db.version(4).stores({
      // Existing tables
@@ -316,6 +317,7 @@ class SurveyElementYjs {
    ```
 
 2. **Update sync mechanism for CRDT**
+
    ```typescript
    // Enhanced sync to handle CRDT operations
    class CRDTSyncEngine extends SyncEngine {
@@ -372,6 +374,7 @@ class SurveyElementYjs {
    ```
 
 2. **Collaborative editing components**
+
    ```typescript
    function CollaborativeTextEditor({ entityId, field }: { entityId: string; field: string }) {
      const [yText, setYText] = useState<YText>();
