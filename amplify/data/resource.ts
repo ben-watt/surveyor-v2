@@ -110,7 +110,10 @@ const schema = a.schema({
     type: a.string().required(), // "Defect" or "Condition"
     associatedComponentIds:  a.string().required().array().required(),
     phrase: a.string().required(),
+    // TipTap/ProseMirror JSON documents for inline editing (optional for migration)
+    phraseDoc: a.json(),
     phraseLevel2: a.string(),
+    phraseLevel2Doc: a.json(),
     tenantId: a.string().required(),
   })
   .identifier(['tenantId', 'id'])

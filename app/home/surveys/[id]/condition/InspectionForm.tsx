@@ -24,6 +24,7 @@ import { DataForm as ElementDataForm } from '@/app/home/elements/form';
 // import { DataForm as ComponentDataForm } from "@/app/home/building-components/form";
 import { DataForm as PhraseDataForm } from '@/app/home/conditions/form';
 import Input from '@/app/home/components/Input/InputText';
+import { resolveDocToText } from '@/lib/conditions/resolver';
 import {
   addOrUpdateComponent,
   findComponent,
@@ -471,8 +472,17 @@ function InspectionFormContent({
         value: {
           id: p.id,
           name: p.name,
-          phrase:
-            level === '2' ? p.phraseLevel2 || 'No level 2 text' : p.phrase || 'No level 3 text',
+          phrase: (() => {
+            // Prefer resolving TipTap docs if available, otherwise fall back to template strings
+            const docL3 = (p as any).phraseDoc;
+            const docL2 = (p as any).phraseLevel2Doc;
+            if (level === '2') {
+              if (docL2) return resolveDocToText(docL2);
+              return p.phraseLevel2 || 'No level 2 text';
+            }
+            if (docL3) return resolveDocToText(docL3);
+            return p.phrase || 'No level 3 text';
+          })(),
         } as FormPhrase,
         label: p.name,
       }));

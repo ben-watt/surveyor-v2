@@ -44,6 +44,9 @@ Scope decisions (current phase)
 - Token ↔ TipTap interop plus resolver utilities landed in `lib/conditions`, with unit coverage for parsing and text resolution to keep exports aligned.
 - Dev playground (`app/dev/inline-select/page.tsx`) exercises the experience end-to-end and is the current integration entry point.
 - Composer embedded in the configuration form (`app/home/conditions/form.tsx`) with shared sample-select actions; new unit tests (`components/conditions/__tests__/InlineTemplateComposer.test.tsx`) cover mode syncing, read-only behaviour, and action wiring.
+-- Data/persistence: Amplify `Phrases` model updated with `phraseDoc` and `phraseLevel2Doc` JSON fields; form save regenerates normalized token strings via `docToTokens(doc)` and persists both.
+-- Validation: Centralized validator added at `lib/conditions/validator.ts` (`validateDoc`, `validateTemplate`, `validateInlineSelectAttrs`), wired into the form save guard; unit tests added in `lib/conditions/__tests__/validator.test.ts`.
+-- Export/preview: Inspection PDF/HTML flow now resolves via `resolveDocToText` when `phraseDoc` exists to keep preview and export paths unified.
 
 ---
 
@@ -216,10 +219,11 @@ Unresolved state UX
 ## Integration Next Steps
 
 1. ✅ Embed the composer within configuration + survey condition editors (replace the level-3 phrase textarea in `app/home/conditions/form.tsx` first), persisting TipTap JSON alongside the legacy token field.
-2. Expose feature-facing insertion affordances (toolbar buttons, slash commands) using the shared action API instead of playground-only helpers.
-3. Layer validation UX: schema checks, inline decorations, and a side panel summary that blocks save/export until issues resolve.
-4. Thread serialization through save/publish/export: store `doc`, regenerate normalized token strings for legacy consumers, and reuse the shared resolver for PDF/HTML output.
+2. ✅ Expose feature-facing insertion affordances (toolbar buttons, slash commands) using the shared action API instead of playground-only helpers.
+3. In-editor validation UX: add a small TipTap decoration plugin that consumes `validateDoc` to highlight invalid nodes and an optional side panel summary that blocks save/export until issues resolve.
+4. ✅ Thread serialization through save/publish/export: store `doc`, regenerate normalized token strings for legacy consumers, and reuse the shared resolver for PDF/HTML output.
 5. Add colocated integration tests covering mode toggling, inline edits, validation states, and persistence round-trips to safeguard the new flows.
+6. Render in inspection form using view mode: show read-only resolved text in inspection flows, with an affordance to jump to editor if needed.
 
 ---
 
@@ -230,6 +234,7 @@ Surveyor
 - Open a condition → sees text preview; tokens highlighted.
 - Inline dropdown for tokens; “Add custom…” available when allowed.
 - Choose option or add custom → preview updates; can reset to default.
+- Inspection form: read-only “view mode” renders with `resolveDocToText`. Provide an “Edit” action to navigate to the composer.
 
 Author/Admin
 

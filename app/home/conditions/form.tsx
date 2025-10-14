@@ -17,13 +17,18 @@ import InlineTemplateComposer, {
   type InlineTemplateComposerAction,
 } from '@/components/conditions/InlineTemplateComposer';
 import { Wand2 } from 'lucide-react';
+import type { JSONContent } from '@tiptap/core';
+import { docToTokens, tokensToDoc } from '@/lib/conditions/interop';
+import { validateDoc } from '@/lib/conditions/validator';
 
 // Zod schema for condition/phrase validation
 const conditionSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Name is required'),
   phrase: z.string().min(1, 'Phrase is required'),
+  phraseDoc: z.any().optional(),
   phraseLevel2: z.string().nullable().optional(),
+  phraseLevel2Doc: z.any().optional(),
   associatedComponentIds: z.array(z.string()).transform((val) => val || []),
 });
 
@@ -51,7 +56,9 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
       id: idRef.current,
       name: '',
       phrase: '',
+      phraseDoc: undefined as unknown as JSONContent,
       phraseLevel2: undefined,
+      phraseLevel2Doc: undefined as unknown as JSONContent,
       associatedComponentIds: [],
       ...defaultValues,
     },
@@ -61,6 +68,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const {
     register,
     control,
+    setValue,
     watch,
     getValues,
     trigger,
@@ -76,12 +84,42 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const savePhrase = useCallback(
     async (data: ConditionFormData, { auto = false }: { auto?: boolean } = {}) => {
       try {
+        // Ensure we have TipTap docs; backfill from tokens if missing
+        const ensureDoc = (tokens: string, doc?: JSONContent | null): JSONContent => {
+          if (doc && typeof doc === 'object') return doc as JSONContent;
+          try {
+            return tokensToDoc(tokens) as JSONContent;
+          } catch (e) {
+            return { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: tokens }]}] } as any;
+          }
+        };
+
+        const phraseDoc: JSONContent = ensureDoc(data.phrase ?? '', (data as any).phraseDoc as JSONContent);
+        const phraseLevel2Doc: JSONContent | undefined = data.phraseLevel2
+          ? ensureDoc(data.phraseLevel2, (data as any).phraseLevel2Doc as JSONContent)
+          : undefined;
+
+        // Basic validation using shared validator
+        const v1 = validateDoc(phraseDoc);
+        const v2 = phraseLevel2Doc ? validateDoc(phraseLevel2Doc) : { ok: true, issues: [] };
+        if (!v1.ok || !v2.ok) {
+          const first = [...v1.issues, ...v2.issues][0]?.message || 'Invalid template';
+          if (!auto) toast.error(first);
+          throw new Error(first);
+        }
+
+        // Normalize tokens from docs to keep template strings in sync
+        const normalizedPhrase = docToTokens(phraseDoc as any);
+        const normalizedPhraseLevel2 = phraseLevel2Doc ? docToTokens(phraseLevel2Doc as any) : data.phraseLevel2;
+
         if (phraseHydrated && phrase) {
           await phraseStore.update(idRef.current, (draft) => {
             draft.name = data.name;
             draft.type = 'condition';
-            draft.phrase = data.phrase;
-            draft.phraseLevel2 = data.phraseLevel2;
+            draft.phrase = normalizedPhrase;
+            (draft as any).phraseDoc = phraseDoc as any;
+            draft.phraseLevel2 = normalizedPhraseLevel2 as any;
+            (draft as any).phraseLevel2Doc = (phraseLevel2Doc as any) ?? undefined;
             draft.associatedComponentIds = data.associatedComponentIds ?? [];
           });
           if (!auto) toast.success('Phrase updated');
@@ -91,8 +129,10 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
             name: data.name,
             order: 0,
             type: 'condition',
-            phrase: data.phrase,
-            phraseLevel2: data.phraseLevel2,
+            phrase: normalizedPhrase,
+            phraseDoc: phraseDoc as any,
+            phraseLevel2: normalizedPhraseLevel2 as any,
+            phraseLevel2Doc: (phraseLevel2Doc as any) ?? undefined,
             associatedComponentIds: data.associatedComponentIds ?? [],
           });
           if (!auto) toast.success('Phrase created');
@@ -132,7 +172,9 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           id: phrase.id,
           name: phrase.name ?? '',
           phrase: phrase.phrase ?? '',
+          phraseDoc: (phrase as any).phraseDoc ?? undefined,
           phraseLevel2: phrase.phraseLevel2 ?? undefined,
+          phraseLevel2Doc: (phrase as any).phraseLevel2Doc ?? undefined,
           associatedComponentIds: phrase.associatedComponentIds ?? [],
         } as any,
         { keepDirtyValues: true },
@@ -184,6 +226,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
                     field.onBlur();
                   }
                 }}
+                onDocChange={(doc) => setValue('phraseDoc', doc as any, { shouldDirty: true })}
                 tokenModeActions={insertSampleActions}
                 visualModeActions={insertSampleActions}
               />
@@ -207,6 +250,7 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
                     field.onBlur();
                   }
                 }}
+                onDocChange={(doc) => setValue('phraseLevel2Doc', doc as any, { shouldDirty: true })}
                 tokenModeActions={insertSampleActions}
                 visualModeActions={insertSampleActions}
               />
