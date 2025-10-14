@@ -1,36 +1,77 @@
-import { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
-import { phraseStore } from '@/app/home/clients/Database';
+import { Button } from '@/components/ui/button';
 import { FormPhrase } from './types';
+import { ArrowUp, ArrowDown, PenLine, X } from 'lucide-react';
 
-interface DraggableConditionsProps {
+type ConditionsListProps = {
   conditions: FormPhrase[];
-  control: Control<any>;
-  setValue: UseFormSetValue<any>;
-  watch: UseFormWatch<any>;
-}
+  onEdit: (index: number) => void;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
+  onRemove: (index: number) => void;
+  isUnresolved?: (index: number) => boolean;
+};
 
-export function DraggableConditions({ conditions }: DraggableConditionsProps) {
-  const [phrasesHydrated, phrases] = phraseStore.useList();
-
-  const ordered = Array.isArray(conditions)
-    ? [...conditions].sort((a, b) => {
-        const aOrder = phrases.find((p) => p.id === a.id)?.order || 0;
-        const bOrder = phrases.find((p) => p.id === b.id)?.order || 0;
-        return aOrder - bOrder;
-      })
-    : conditions;
-
+export default function ConditionsList({
+  conditions,
+  onEdit,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+  isUnresolved,
+}: ConditionsListProps) {
+  const items = Array.isArray(conditions) ? conditions : [];
   return (
-    <div>
-      {ordered.map((condition) => (
-        <div
-          key={condition.id}
-          className="cursor-move space-y-2 rounded-md border-b border-gray-200 bg-white p-4 text-xs shadow-sm transition-shadow hover:shadow-md"
-        >
-          <p className="font-medium">{condition.name}</p>
-          <p className="text-gray-600">{condition.phrase}</p>
-        </div>
-      ))}
+    <div className="space-y-2">
+      {items.map((condition, index) => {
+        return (
+          <div
+            key={condition.id + '-' + index}
+            className={`space-y-2 rounded-md border bg-white p-4 text-xs shadow-sm ${
+              isUnresolved && isUnresolved(index) ? 'border-red-500' : 'border-gray-200'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-medium">{condition.name}</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={index === 0}
+                  onClick={() => onMoveUp(index)}
+                  aria-label="Move condition up"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={index === items.length - 1}
+                  onClick={() => onMoveDown(index)}
+                  aria-label="Move condition down"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onEdit(index)}
+                  aria-label="Edit condition"
+                >
+                  <PenLine className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onRemove(index)}
+                  aria-label="Remove condition"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

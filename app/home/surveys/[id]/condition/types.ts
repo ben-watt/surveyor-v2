@@ -3,11 +3,13 @@ import {
   RagStatus,
   SurveyImage,
 } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
+import type { JSONContent } from '@tiptap/core';
 
 export type FormPhrase = {
   id: string;
   name: string;
   phrase: string;
+  doc?: JSONContent;
 };
 
 export type InspectionFormData = {

@@ -89,7 +89,8 @@ export function addOrUpdateComponent(
       id: p.id,
       name: p.name,
       phrase: p.phrase || '',
-    })),
+      doc: (p as any).doc,
+    } as any)),
     ragStatus: component.ragStatus || 'N/I',
     costings: component.costings || [],
   };

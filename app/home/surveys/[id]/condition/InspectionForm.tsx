@@ -36,13 +36,16 @@ import {
 import { useLocalDefs } from '@/app/home/surveys/hooks/useLocalDefs';
 import { ID_PREFIX, isLocalInstanceId } from '@/app/home/surveys/constants/localIds';
 import { instantiateLocalComponentDef } from '@/app/home/surveys/utils/localDefInstance';
-import { DraggableConditions } from './DraggableConditions';
+import ConditionsList from './DraggableConditions';
 import { FormPhrase, InspectionFormData, InspectionFormProps, RAG_OPTIONS } from './types';
 import InputMoney from '@/app/home/components/Input/InputMoney';
 import { useAutoSaveFormWithImages } from '@/app/home/hooks/useAutoSaveFormWithImages';
 import { LastSavedIndicatorWithUploads } from '@/app/home/components/LastSavedIndicatorWithUploads';
 import { FormErrorBoundary } from '@/app/home/components/FormErrorBoundary';
 import { FORM_DEBOUNCE_DELAYS } from '@/app/home/config/formConstants';
+import InlineTemplateComposer from '@/components/conditions/InlineTemplateComposer';
+import { docToTokens, tokensToDoc } from '@/lib/conditions/interop';
+import type { JSONContent } from '@tiptap/core';
 
 function CostingsFieldArray() {
   const {
@@ -468,24 +471,25 @@ function InspectionFormContent({
       .filter((p) => String(p.type).toLowerCase() === 'condition')
       .filter((p) => (isLocalSelected ? true : p.associatedComponentIds.includes(component.id)))
       .sort((a, b) => (a.order || 0) - (b.order || 0))
-      .map((p) => ({
-        value: {
-          id: p.id,
-          name: p.name,
-          phrase: (() => {
-            // Prefer resolving TipTap docs if available, otherwise fall back to template strings
-            const docL3 = (p as any).phraseDoc;
-            const docL2 = (p as any).phraseLevel2Doc;
-            if (level === '2') {
-              if (docL2) return resolveDocToText(docL2);
-              return p.phraseLevel2 || 'No level 2 text';
-            }
-            if (docL3) return resolveDocToText(docL3);
-            return p.phrase || 'No level 3 text';
-          })(),
-        } as FormPhrase,
-        label: p.name,
-      }));
+      .map((p) => {
+        const docL3 = (p as any).phraseDoc;
+        const docL2 = (p as any).phraseLevel2Doc;
+        const isLevel2 = level === '2';
+        const chosenDoc = isLevel2 ? docL2 : docL3;
+        const phraseText = (() => {
+          if (chosenDoc) return resolveDocToText(chosenDoc);
+          return isLevel2 ? p.phraseLevel2 || 'No level 2 text' : p.phrase || 'No level 3 text';
+        })();
+        return {
+          value: {
+            id: p.id,
+            name: p.name,
+            phrase: phraseText,
+            doc: chosenDoc || undefined,
+          } as FormPhrase,
+          label: p.name,
+        };
+      });
 
     const localDefs = (() => {
       if (!element?.id || !derivedSectionId) return [] as { value: FormPhrase; label: string }[];
@@ -497,7 +501,7 @@ function InspectionFormContent({
     })();
 
     const current = (Array.isArray(conditions) ? conditions : []).map((c) => ({
-      value: { id: c.id, name: c.name, phrase: c.phrase || '' } as FormPhrase,
+      value: { id: c.id, name: c.name, phrase: c.phrase || '', doc: (c as any).doc } as FormPhrase,
       label:
         String(c.id).startsWith(ID_PREFIX.condDef) || String(c.id).startsWith(ID_PREFIX.instance)
           ? `${c.name} - (survey only)`
@@ -573,6 +577,7 @@ function InspectionFormContent({
               id: x.id,
               name: x.name,
               phrase: x.phrase || '',
+              doc: (x as any).doc,
             })),
             ragStatus: data.ragStatus,
             costings: data.costings.map((x) => ({
@@ -864,7 +869,7 @@ function InspectionFormContent({
                           ...(Array.isArray(current.conditions) ? current.conditions : []),
                         ];
                         // Append selected condition instance to the form
-                        next.push({ id: defId, name, phrase: text });
+                        next.push({ id: defId, name, phrase: text, doc: tokensToDoc(text) as any });
                         try {
                           await surveyStore.update(surveyId, (draft) => {
                             // Create local condition definition for reuse
@@ -916,11 +921,79 @@ function InspectionFormContent({
             />
 
             {Array.isArray(conditions) && (
-              <DraggableConditions
+              <ConditionsList
                 conditions={conditions}
-                control={control}
-                setValue={setValue}
-                watch={watch}
+                isUnresolved={(index: number) => {
+                  const item = (conditions || [])[index] as any;
+                  const doc = (item && item.doc) as JSONContent | undefined;
+                  if (!doc) return true; // treat missing doc as unresolved
+                  let unresolved = false;
+                  const walk = (node?: any) => {
+                    if (!node) return;
+                    if (node.type === 'inlineSelect') {
+                      const v = node.attrs?.value ?? node.attrs?.defaultValue ?? '';
+                      if (!v) unresolved = true;
+                    }
+                    if (Array.isArray(node.content)) node.content.forEach(walk);
+                  };
+                  walk(doc as any);
+                  return unresolved;
+                }}
+                onEdit={(index: number) => {
+                  const current = getValues();
+                  const item = current.conditions[index];
+                  const startValue = (item as any).doc
+                    ? docToTokens((item as any).doc)
+                    : item.phrase || '';
+                  drawer.openDrawer({
+                    id: surveyId + '/edit-condition-' + index,
+                    title: `Edit Condition – ${item.name}`,
+                    description: 'Choose options via dropdowns or edit text as needed.',
+                    content: (
+                      <div className="p-2">
+                        <InlineTemplateComposer
+                          value={startValue}
+                          onChange={() => {}}
+                          onDocChange={(doc) => {
+                            const next = [...getValues().conditions];
+                            (next[index] as any).doc = doc as any;
+                            (next[index] as any).phrase = resolveDocToText(doc as any);
+                            setValue('conditions', next, { shouldValidate: true, shouldDirty: true });
+                          }}
+                          visualModeActions={[]}
+                          readOnly={true}
+                          viewOnly={true}
+                        />
+                        <div className="mt-4 flex justify-end">
+                          <Button type="button" onClick={() => drawer.closeDrawer()}>
+                            Done
+                          </Button>
+                        </div>
+                      </div>
+                    ),
+                  });
+                }}
+                onMoveUp={(index: number) => {
+                  const list = [...(getValues().conditions || [])];
+                  if (index <= 0) return;
+                  const tmp = list[index - 1];
+                  list[index - 1] = list[index];
+                  list[index] = tmp;
+                  setValue('conditions', list, { shouldValidate: true, shouldDirty: true });
+                }}
+                onMoveDown={(index: number) => {
+                  const list = [...(getValues().conditions || [])];
+                  if (index >= list.length - 1) return;
+                  const tmp = list[index + 1];
+                  list[index + 1] = list[index];
+                  list[index] = tmp;
+                  setValue('conditions', list, { shouldValidate: true, shouldDirty: true });
+                }}
+                onRemove={(index: number) => {
+                  const list = [...(getValues().conditions || [])];
+                  list.splice(index, 1);
+                  setValue('conditions', list, { shouldValidate: true, shouldDirty: true });
+                }}
               />
             )}
 
@@ -942,6 +1015,31 @@ function InspectionFormContent({
             lastSavedAt={lastSavedAt}
             className="justify-center text-sm"
           />
+          {Array.isArray(conditions) && conditions.length > 0 && (
+            (() => {
+              const unresolvedCount = conditions.reduce((acc, _c, i) => {
+                const item = (conditions || [])[i] as any;
+                const doc = item?.doc as JSONContent | undefined;
+                if (!doc) return acc + 1;
+                let unresolved = false;
+                const walk = (node?: any) => {
+                  if (!node) return;
+                  if (node.type === 'inlineSelect') {
+                    const v = node.attrs?.value ?? node.attrs?.defaultValue ?? '';
+                    if (!v) unresolved = true;
+                  }
+                  if (Array.isArray(node.content)) node.content.forEach(walk);
+                };
+                walk(doc as any);
+                return acc + (unresolved ? 1 : 0);
+              }, 0);
+              return unresolvedCount > 0 ? (
+                <div className="rounded-md border border-red-400 bg-red-50 p-2 text-xs text-red-700">
+                  {unresolvedCount} condition{unresolvedCount === 1 ? '' : 's'} need selection(s)
+                </div>
+              ) : null;
+            })()
+          )}
         </div>
       </FormErrorBoundary>
     </FormProvider>

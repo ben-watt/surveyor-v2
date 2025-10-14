@@ -1,4 +1,5 @@
 import { DropZoneInputFile } from '@/app/home/components/InputImage';
+import type { JSONContent } from '@tiptap/core';
 
 export type SurveyStatus = 'draft' | 'ready_for_qa' | 'issued_to_client' | 'archived';
 
@@ -185,6 +186,7 @@ export type Phrase = {
   id: string;
   name: string;
   phrase: string;
+  doc?: JSONContent; // TipTap JSON for per-inspection instance editing
 };
 
 export type Material = {

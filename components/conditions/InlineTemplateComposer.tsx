@@ -53,6 +53,11 @@ type InlineTemplateComposerProps = {
   readOnly?: boolean;
   onDocChange?: (doc: JSONContent) => void;
   onParseError?: (error: unknown) => void;
+  /**
+   * When true, renders only the visual view, hides the mode switch and actions,
+   * and forces read-only editor behavior regardless of `readOnly`.
+   */
+  viewOnly?: boolean;
 };
 
 const InlineTemplateComposer = forwardRef<
@@ -71,12 +76,13 @@ const InlineTemplateComposer = forwardRef<
     readOnly = false,
     onDocChange,
     onParseError,
+    viewOnly = false,
   },
   ref,
 ) {
   const labelText = label ?? 'Template editor';
   const labelId = useId();
-  const [mode, setMode] = useState<InlineTemplateComposerMode>(defaultMode);
+  const [mode, setMode] = useState<InlineTemplateComposerMode>(viewOnly ? 'visual' : defaultMode);
   const tokenEditorRef = useRef<TokenEditorHandle>(null);
   const pendingVisualSyncRef = useRef(false);
   const visualSyncRafRef = useRef<number | null>(null);
@@ -174,12 +180,13 @@ const InlineTemplateComposer = forwardRef<
   }, [cancelScheduledVisualSync, loadIntoEditor]);
 
   const handleShowTokens = useCallback(() => {
+    if (viewOnly) return; // disallow switching in view-only
     if (modeRef.current === 'tokens') return;
     cancelScheduledVisualSync();
     pendingVisualSyncRef.current = false;
     syncFromEditor();
     setMode('tokens');
-  }, [cancelScheduledVisualSync, syncFromEditor]);
+  }, [cancelScheduledVisualSync, syncFromEditor, viewOnly]);
 
   const handleShowVisual = useCallback(() => {
     if (modeRef.current === 'visual') return;
@@ -191,6 +198,7 @@ const InlineTemplateComposer = forwardRef<
     () => ({
       getMode: () => modeRef.current,
       setMode: (nextMode) => {
+        if (viewOnly) return;
         if (nextMode === 'visual') {
           handleShowVisual();
         } else {
@@ -204,7 +212,7 @@ const InlineTemplateComposer = forwardRef<
         tokenEditorRef.current?.insertSampleSelect();
       },
       insertInlineSelect: ({ key, options, allowCustom = true }) => {
-        if (readOnly) return;
+        if (readOnly || viewOnly) return;
         const tiptap = editorInstanceRef.current;
         if (!tiptap) return;
         tiptap.commands.insertInlineSelect({ key, options, allowCustom });
@@ -212,7 +220,7 @@ const InlineTemplateComposer = forwardRef<
       },
       getEditor: () => editorInstanceRef.current,
     }),
-    [handleShowTokens, handleShowVisual, readOnly],
+    [handleShowTokens, handleShowVisual, readOnly, viewOnly],
   );
 
   useEffect(() => {
@@ -226,8 +234,8 @@ const InlineTemplateComposer = forwardRef<
 
   useEffect(() => {
     if (!editorInstanceRef.current) return;
-    editorInstanceRef.current.setEditable(mode === 'visual' && !readOnly);
-  }, [mode, readOnly]);
+    editorInstanceRef.current.setEditable(mode === 'visual' && !readOnly && !viewOnly);
+  }, [mode, readOnly, viewOnly]);
 
   useEffect(() => {
     return () => {
@@ -238,10 +246,11 @@ const InlineTemplateComposer = forwardRef<
   useImperativeHandle(ref, () => handleApi, [handleApi]);
 
   const activeActions = useMemo(() => {
+    if (viewOnly) return [];
     if (mode === 'tokens') return tokenModeActions ?? [];
     if (mode === 'visual') return visualModeActions ?? [];
     return [];
-  }, [mode, tokenModeActions, visualModeActions]);
+  }, [mode, tokenModeActions, visualModeActions, viewOnly]);
 
   return (
     <div className={className}>
@@ -255,7 +264,7 @@ const InlineTemplateComposer = forwardRef<
           </span>
         </div>
         <div className="relative">
-          <div className={mode === 'tokens' ? 'block' : 'hidden'}>
+          <div className={mode === 'tokens' && !viewOnly ? 'block' : 'hidden'}>
             <TokenEditor
               ref={tokenEditorRef}
               value={value}
@@ -271,10 +280,11 @@ const InlineTemplateComposer = forwardRef<
               className="min-h-[10rem] p-3"
               aria-label={labelText}
               aria-labelledby={labelId}
-              aria-readonly={readOnly}
+              aria-readonly={readOnly || viewOnly}
             />
           </div>
-          <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
+          {!viewOnly && (
+            <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
             {!readOnly && activeActions.length
               ? activeActions.map((action, index) => (
                   <TooltipProvider delayDuration={100} key={`${mode}-action-${index}`}>
@@ -313,7 +323,8 @@ const InlineTemplateComposer = forwardRef<
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
