@@ -124,6 +124,8 @@ Approach C — Split Editor (Lite Inline + Side Panel)
 
 Decision: Use Approach A (TipTap inline editor) now to align with the existing previewer and provide first‑class inline selection UX. Keep token import/export to enable migration and external editing if needed.
 
+- Prototype: the dev playground now wraps this experience inside `components/conditions/InlineTemplateComposer.tsx`, pairing the TipTap view with a token editor toggle. It’s ready to embed in feature work and exposes imperative helpers (insert token text, insert inline select, switch modes) for custom actions.
+
 ---
 
 ## Data Schema (Initial)
@@ -197,7 +199,17 @@ Edge cases & behaviors
 Unresolved state UX
 
 - If no selection is made and no default is provided, show a subtle unresolved style (chip with dot/outline) and include in linter.
-- Optional config to auto‑select first option on insert for speed; keep as a setting per token insert action.
+- Optional config to auto-select first option on insert for speed; keep as a setting per token insert action.
+
+---
+
+## Integration Next Steps
+
+1. Embed `InlineTemplateComposer` inside the forthcoming conditions editor page (`app/home/...`) so surveyors edit real documents instead of the dev sandbox. Wire `value`/`onChange` to persisted TipTap JSON via the interop helpers.
+2. Replace ad-hoc token insertion affordances with feature-specific actions that call `insertInlineSelect`/`insertTokenText` on the composer ref (e.g., toolbar buttons, slash commands).
+3. Introduce validation UX (inline decorations + side panel summary) by subscribing to composer mode changes and running the schema checks described above.
+4. Hook the composer into save/publish flows: serialize to TipTap JSON for persistence, export to template strings where legacy systems still require tokenized text, and plug into the resolver used by PDF/HTML outputs.
+5. Add integration tests colocated with the consuming feature (see engineering testing conventions) to cover mode toggling, token insertion, and persistence round-trips.
 
 ---
 
