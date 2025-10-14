@@ -61,6 +61,7 @@ export function useAutoSaveFormWithImages<T extends FieldValues>(
   const combinedStatus = isUploading ? 'uploading' : autoSave.saveStatus;
 
   // Listen for upload completion using the imageUploadStatusStore directly
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- listener only depends on stable store + RHF refs
   useEffect(() => {
     if (!saveOnImageUpload || imagePaths.length === 0) return;
 

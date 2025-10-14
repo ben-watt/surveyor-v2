@@ -70,7 +70,7 @@ export function LastSavedIndicator({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 text-sm transition-all duration-300 ease-in-out',
+        'flex items-center gap-2 text-sm transition-all duration-300 ease-in-out min-h-10',
         config.className,
         className,
       )}

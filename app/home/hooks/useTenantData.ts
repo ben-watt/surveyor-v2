@@ -35,6 +35,7 @@ export function useTenantData<T>(
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- dependencies array is user-provided for flexibility
   useEffect(() => {
     fetchData();
 

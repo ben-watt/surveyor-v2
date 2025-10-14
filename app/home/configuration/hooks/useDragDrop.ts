@@ -65,6 +65,57 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
     [nodes],
   );
 
+  const determineDropPosition = useCallback(
+    (event: DragOverEvent | DragEndEvent, overNode: TreeNode): DropPosition => {
+      const activeNode = dragState.activeNode;
+      if (!activeNode) return 'after';
+
+      const overRect = event.over?.rect;
+      const activeRect =
+        (event as any).active?.rect?.current?.translated ||
+        (event as any).active?.rect?.current?.initial;
+      const pointerY = activeRect
+        ? activeRect.top + activeRect.height / 2
+        : ((event as any).activatorEvent?.clientY as number | undefined);
+
+      const activeParent = getParentNode(activeNode.id);
+      const overParent = getParentNode(overNode.id);
+      const areSiblings = activeParent?.id === overParent?.id && activeNode.type === overNode.type;
+      const areRootSiblings =
+        !activeParent && !overParent && activeNode.type === 'section' && overNode.type === 'section';
+
+      if ((areSiblings || areRootSiblings) && overRect) {
+        const overMidY = overRect.top + overRect.height / 2;
+        if (pointerY !== undefined) {
+          return pointerY < overMidY ? 'before' : 'after';
+        }
+      }
+
+      if (
+        (activeNode.type === 'element' && overNode.type === 'section') ||
+        (activeNode.type === 'component' && overNode.type === 'element') ||
+        (activeNode.type === 'condition' && overNode.type === 'component')
+      ) {
+        return 'inside';
+      }
+
+      if (
+        (overNode.type === 'section' ||
+          overNode.type === 'element' ||
+          (overNode.type === 'component' && activeNode.type === 'condition')) &&
+        overRect
+      ) {
+        const overMidY = overRect.top + overRect.height / 2;
+        if (pointerY !== undefined && pointerY > overMidY) {
+          return 'inside';
+        }
+      }
+
+      return 'after';
+    },
+    [dragState.activeNode, getParentNode],
+  );
+
   // Handle drag start
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
@@ -110,6 +161,7 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
   );
 
   // Handle drag over
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- drag handler relies on mutable DnD event state
   const handleDragOver = useCallback(
     (event: DragOverEvent) => {
       const { over } = event;
@@ -148,10 +200,11 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
         dropPosition,
       }));
     },
-    [dragState.activeNode, findNode],
+    [determineDropPosition, dragState.activeNode, findNode],
   );
 
   // Handle drag end
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- drag handler relies on mutable DnD event state
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
@@ -287,7 +340,8 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
   );
 
   // Handle dropping on a drop zone
-  const handleDropZoneDrop = async (source: TreeNode, dropZoneData: any) => {
+  const handleDropZoneDrop = useCallback(
+    async (source: TreeNode, dropZoneData: any) => {
     const { position, parentType, parentId } = dropZoneData;
 
     // Calculate the order based on position and existing siblings
@@ -369,33 +423,35 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
     } else {
       // No-op for unknown types
     }
-  };
+    },
+    [findNode, nodes, onMove, onReorder],
+  );
 
   // Handle moving to a new parent
-  const handleMoveToNewParent = async (source: TreeNode, target: TreeNode) => {
-    const newParentId = target.id;
+  const handleMoveToNewParent = useCallback(
+    async (source: TreeNode, target: TreeNode) => {
+      const newParentId = target.id;
 
-    // Get existing children of target to calculate order
-    const existingChildren = target.children.filter((child) => child.type === source.type);
-    const newOrder =
+      // Get existing children of target to calculate order
+      const existingChildren = target.children.filter((child) => child.type === source.type);
+      const newOrder =
       existingChildren.length > 0
         ? Math.max(...existingChildren.map((c) => (c.data as any).order || 0)) + 1000
         : 1000;
 
-    await onMove(source.id, newParentId, newOrder);
-  };
+      await onMove(source.id, newParentId, newOrder);
+    },
+    [onMove],
+  );
 
   // Handle reordering siblings
-  const handleReorderSiblings = async (
-    source: TreeNode,
-    target: TreeNode,
-    position: 'before' | 'after',
-  ) => {
-    const sourceParent = getParentNode(source.id);
-    const targetParent = getParentNode(target.id);
+  const handleReorderSiblings = useCallback(
+    async (source: TreeNode, target: TreeNode, position: 'before' | 'after') => {
+      const sourceParent = getParentNode(source.id);
+      const targetParent = getParentNode(target.id);
 
-    // Get siblings of the same type
-    let siblings: TreeNode[];
+      // Get siblings of the same type
+      let siblings: TreeNode[];
     if (source.type === 'section') {
       siblings = nodes.filter((n) => n.type === 'section');
     } else if (sourceParent) {
@@ -412,10 +468,12 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
 
     const updates = calculateReorderedItems(items, source.id, target.id, position);
     await onReorder(updates);
-  };
+    },
+    [getParentNode, nodes, onReorder],
+  );
 
   // Reset drag state
-  const resetDragState = () => {
+  const resetDragState = useCallback(() => {
     setDragState({
       isDragging: false,
       activeId: null,
@@ -425,77 +483,9 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
       dropPosition: null,
       validDropTargets: new Set(),
     });
-  };
+  }, []);
 
   // Determine drop position based on cursor position
-  const determineDropPosition = (
-    event: DragOverEvent | DragEndEvent,
-    overNode: TreeNode,
-  ): DropPosition => {
-    const activeNode = dragState.activeNode;
-    if (!activeNode) return 'after';
-
-    // Prefer rects provided by DnD Kit to avoid relying on the initial activator event
-    const overRect = event.over?.rect;
-    const activeRect =
-      (event as any).active?.rect?.current?.translated ||
-      (event as any).active?.rect?.current?.initial;
-    const pointerY = activeRect
-      ? activeRect.top + activeRect.height / 2
-      : ((event as any).activatorEvent?.clientY as number | undefined);
-
-    // Check if dragging over a sibling (same parent and type)
-    const activeParent = getParentNode(activeNode.id);
-    const overParent = getParentNode(overNode.id);
-    const areSiblings = activeParent?.id === overParent?.id && activeNode.type === overNode.type;
-
-    // For root-level sections, they are siblings if both are sections
-    const areRootSiblings =
-      !activeParent && !overParent && activeNode.type === 'section' && overNode.type === 'section';
-
-    if ((areSiblings || areRootSiblings) && overRect) {
-      const overMidY = overRect.top + overRect.height / 2;
-      if (pointerY !== undefined) {
-        return pointerY < overMidY ? 'before' : 'after';
-      }
-    }
-
-    // Force 'inside' when dragging into valid container headers to avoid invalid before/after
-    if (
-      (activeNode.type === 'element' && overNode.type === 'section') ||
-      (activeNode.type === 'component' && overNode.type === 'element') ||
-      (activeNode.type === 'condition' && overNode.type === 'component')
-    ) {
-      return 'inside';
-    }
-
-    // For non-siblings, check if can drop inside containers
-    if (
-      (overNode.type === 'section' ||
-        overNode.type === 'element' ||
-        (overNode.type === 'component' && activeNode.type === 'condition')) &&
-      overRect
-    ) {
-      const validation = canDrop(activeNode, overNode, 'inside');
-      if (validation.isValid) {
-        const threshold = overRect.height * 0.25;
-        if (pointerY !== undefined) {
-          if (pointerY < overRect.top + threshold) return 'before';
-          if (pointerY > overRect.bottom - threshold) return 'after';
-          return 'inside';
-        }
-      }
-    }
-
-    // Fallback to before/after based on midpoints
-    if (overRect && pointerY !== undefined) {
-      const overMidY = overRect.top + overRect.height / 2;
-      return pointerY < overMidY ? 'before' : 'after';
-    }
-
-    return 'after';
-  };
-
   return {
     dragState,
     handleDragStart,

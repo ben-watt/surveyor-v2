@@ -122,7 +122,7 @@ describe('Condition DataForm autosave on create', () => {
     const compOption = await screen.findByText('Component 1');
     await userEvent.click(compOption);
 
-    const sampleButton = screen.getByRole('button', { name: /insert sample select/i });
+    const sampleButton = screen.getAllByRole('button', { name: /insert sample select/i })[0];
     await userEvent.click(sampleButton);
 
     // Enter required phrase to satisfy validation before autosave

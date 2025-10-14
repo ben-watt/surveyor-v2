@@ -21,6 +21,7 @@ export function useWelcomeFlow() {
   const [elementsHydrated, elements] = elementStore.useList();
   const [sectionsHydrated, sections] = sectionStore.useList();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- derived counts accessed for change detection only
   useEffect(() => {
     if (elementsHydrated && sectionsHydrated) {
       const userHasData = hasInitialData(elementsHydrated, elements, sectionsHydrated, sections);

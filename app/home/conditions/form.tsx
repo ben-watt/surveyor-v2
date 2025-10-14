@@ -7,7 +7,6 @@ import { z } from 'zod';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DynamicComboBox } from '@/app/home/components/Input';
 import { Phrase } from '../clients/Dexie';
-import TextAreaInput from '../components/Input/TextAreaInput';
 import { componentStore, elementStore, phraseStore } from '../clients/Database';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -71,7 +70,8 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
   const [componentsHydrated, components] = componentStore.useList();
   const [phraseHydrated, phrase] = phraseStore.useGet(idRef.current);
 
-  const composerRef = useRef<InlineTemplateComposerHandle>(null);
+  const composerRef = useRef<InlineTemplateComposerHandle | null>(null);
+  const level2ComposerRef = useRef<InlineTemplateComposerHandle | null>(null);
 
   // Track if we've done the initial reset to prevent wiping user input on autosave
   const [hasInitialReset, setHasInitialReset] = useState(false);
@@ -145,28 +145,38 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
     }
   }, [phraseHydrated, phrase, methods, hasInitialReset, skipNextChange]);
 
-  const handleInsertSampleSelect = useCallback(() => {
-    const composer = composerRef.current;
-    if (!composer) return;
-    const key = `select_${Math.random().toString(36).slice(2, 8)}`;
-    if (composer.getMode() === 'visual') {
-      composer.insertInlineSelect({
-        key,
-        options: [...SAMPLE_SELECT_OPTIONS],
-        allowCustom: true,
-      });
-      return;
-    }
-    composer.insertSampleToken();
-  }, []);
-
-  const insertSampleAction = useMemo<InlineTemplateComposerAction>(
-    () => ({
+  const buildInsertSampleAction = useCallback(
+    (
+      targetRef: React.RefObject<InlineTemplateComposerHandle | null>,
+    ): InlineTemplateComposerAction => ({
       label: 'Insert sample select',
       icon: <Wand2 className="h-5 w-5" />,
-      onSelect: handleInsertSampleSelect,
+      onSelect: () => {
+        const composer = targetRef?.current;
+        if (!composer) return;
+        const key = `select_${Math.random().toString(36).slice(2, 8)}`;
+        if (composer.getMode() === 'visual') {
+          composer.insertInlineSelect({
+            key,
+            options: [...SAMPLE_SELECT_OPTIONS],
+            allowCustom: true,
+          });
+          return;
+        }
+        composer.insertSampleToken();
+      },
     }),
-    [handleInsertSampleSelect],
+    [],
+  );
+
+  const insertSampleAction = useMemo(
+    () => buildInsertSampleAction(composerRef),
+    [buildInsertSampleAction],
+  );
+
+  const insertSampleLevel2Action = useMemo(
+    () => buildInsertSampleAction(level2ComposerRef),
+    [buildInsertSampleAction],
   );
 
   if (!componentsHydrated) {
@@ -201,11 +211,29 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
             </div>
           )}
         />
-        <TextAreaInput
-          labelTitle="Phrase (Level 2)"
-          placeholder="Simpler wording for Level 2 surveys"
-          register={() => register('phraseLevel2')}
-          errors={errors}
+        <Controller
+          name="phraseLevel2"
+          control={control}
+          render={({ field, fieldState }) => (
+            <div className="space-y-2">
+              <InlineTemplateComposer
+                ref={level2ComposerRef}
+                label="Phrase (Level 2)"
+                value={field.value ?? ''}
+                onChange={(next) => {
+                  field.onChange(next);
+                  if (!fieldState.isTouched) {
+                    field.onBlur();
+                  }
+                }}
+                tokenModeAction={insertSampleLevel2Action}
+                visualModeAction={insertSampleLevel2Action}
+              />
+              {errors.phraseLevel2 ? (
+                <p className="text-sm text-red-600">{errors.phraseLevel2.message as string}</p>
+              ) : null}
+            </div>
+          )}
         />
         <DynamicComboBox
           labelTitle="Associated Components"

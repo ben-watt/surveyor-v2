@@ -18,13 +18,14 @@ console.log('[S3ImageNodeView] file loaded');
  */
 const S3ImageNodeView = (props: any) => {
   console.log('[S3ImageNodeView] rendered', props);
-  const { node, selected } = props;
-  const s3Path = node.attrs['data-s3-path'];
-  const src = node.attrs.src;
+  const { node, selected, updateAttributes } = props;
+  const attrs = node.attrs ?? {};
+  const s3Path = attrs['data-s3-path'];
+  const src = attrs.src;
   const [url, setUrl] = useState<string | undefined>(undefined);
-  const width = node.attrs.width;
-  const height = node.attrs.height;
-  const align = node.attrs.align;
+  const width = attrs.width;
+  const height = attrs.height;
+  const align = attrs.align;
   const imgRef = useRef<HTMLImageElement>(null);
   const [isResizing, setIsResizing] = useState<null | string>(null); // 'nw', 'ne', 'sw', 'se'
   const startPos = useRef<{ x: number; y: number; width: number; height: number }>({
@@ -36,6 +37,8 @@ const S3ImageNodeView = (props: any) => {
   const [aspectLocked, setAspectLocked] = useState(true);
   const aspectRatio = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const uploadingId = attrs['data-uploading-id'];
+  const altText = attrs.alt ?? 'image';
 
   // Compute style for alignment (block-level)
   let wrapperAlignmentStyle: React.CSSProperties = {};
@@ -59,6 +62,7 @@ const S3ImageNodeView = (props: any) => {
   if (height) style.height = height;
   else style.height = 'auto';
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- synchronises upload lifecycle tied to mutable TipTap node attrs
   useEffect(() => {
     let cancelled = false;
     if (s3Path) {
@@ -124,7 +128,7 @@ const S3ImageNodeView = (props: any) => {
             ? Math.max(20, newWidth / aspectRatio.current)
             : Math.max(20, startPos.current.height - dy);
       }
-      props.updateAttributes({ width: newWidth + 'px', height: newHeight + 'px' });
+      updateAttributes({ width: `${newWidth}px`, height: `${newHeight}px` });
     };
     const handleMouseUp = () => {
       setIsResizing(null);
@@ -138,7 +142,7 @@ const S3ImageNodeView = (props: any) => {
       window.removeEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = '';
     };
-  }, [isResizing, props, aspectLocked]);
+  }, [aspectLocked, isResizing, updateAttributes]);
 
   const handleResizeMouseDown = (corner: string) => (e: React.MouseEvent) => {
     e.preventDefault();
@@ -164,34 +168,26 @@ const S3ImageNodeView = (props: any) => {
 
   useEffect(() => {
     // Only upload if we have a blob src, no s3 path, and a data-uploading-id
-    if (
-      src &&
-      src.startsWith('blob:') &&
-      !s3Path &&
-      node.attrs['data-uploading-id'] &&
-      !node.attrs['data-s3-path']
-    ) {
-      (async () => {
-        setIsLoading(true);
-        const tenantId = await getCurrentTenantId();
-        const s3Path = `report-images/${tenantId}/${uuidv4()}-${sanitizeFileName(node.attrs.alt || 'image')}`;
-        // Fetch the blob from the src
-        const response = await fetch(src);
-        const blob = await response.blob();
-        await uploadData({ path: s3Path, data: blob, options: { contentType: blob.type } });
-        console.log('[S3ImageNodeView] uploaded image to', s3Path);
-        const presigned = await getImageHref(s3Path);
-        console.log('[S3ImageNodeView] presigned', presigned);
-        // Update node attributes: set S3 path, remove uploading id, update src to presigned
-        props.updateAttributes({
-          'data-s3-path': s3Path,
-          'data-uploading-id': null,
-        });
-        setUrl(presigned); // Show the image immediately after upload
-        console.log('[S3ImageNodeView] updated attributes', props.node.attrs);
-      })();
-    }
-  }, [src, s3Path, node.attrs['data-uploading-id']]);
+    if (!src || !src.startsWith('blob:') || s3Path || !uploadingId) return;
+    (async () => {
+      setIsLoading(true);
+      const tenantId = await getCurrentTenantId();
+      const newPath = `report-images/${tenantId}/${uuidv4()}-${sanitizeFileName(altText)}`;
+      // Fetch the blob from the src
+      const response = await fetch(src);
+      const blob = await response.blob();
+      await uploadData({ path: newPath, data: blob, options: { contentType: blob.type } });
+      console.log('[S3ImageNodeView] uploaded image to', newPath);
+      const presigned = await getImageHref(newPath);
+      console.log('[S3ImageNodeView] presigned', presigned);
+      // Update node attributes: set S3 path, remove uploading id, update src to presigned
+      updateAttributes({
+        'data-s3-path': newPath,
+        'data-uploading-id': null,
+      });
+      setUrl(presigned); // Show the image immediately after upload
+    })();
+  }, [altText, src, s3Path, updateAttributes, uploadingId]);
 
   console.log('[S3ImageNodeView] <img> will render with url:', url, 'src:', src, 's3Path:', s3Path);
 
@@ -249,7 +245,7 @@ const S3ImageNodeView = (props: any) => {
               }}
               onMouseDown={handleResizeMouseDown(corner)}
               aria-label={`Resize image ${corner}`}
-              role="slider"
+              role="button"
               tabIndex={0}
             />
           ))}

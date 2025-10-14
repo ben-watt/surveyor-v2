@@ -20,6 +20,7 @@ export const useDocumentStorage = ({ documentId, getDocumentPath }: UseDocumentS
   const [isUserHydrated, user] = useUserHook();
   const [isTenantHydrated, tenantId] = useCurrentTenantId();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- loadDocument is stable in practice for this hook
   useEffect(() => {
     if (isUserHydrated && isTenantHydrated && user?.userId && tenantId) {
       loadDocument();
