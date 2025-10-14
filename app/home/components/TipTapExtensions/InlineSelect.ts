@@ -220,4 +220,3 @@ export const InlineSelect = Node.create({
 });
 
 export default InlineSelect;
-

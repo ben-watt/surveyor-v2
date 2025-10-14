@@ -33,11 +33,7 @@ export type InlineTemplateComposerHandle = {
   setMode: (mode: InlineTemplateComposerMode) => void;
   insertTokenText: (text: string) => void;
   insertSampleToken: () => void;
-  insertInlineSelect: (config: {
-    key: string;
-    options: string[];
-    allowCustom?: boolean;
-  }) => void;
+  insertInlineSelect: (config: { key: string; options: string[]; allowCustom?: boolean }) => void;
   getEditor: () => Editor | null;
 };
 
@@ -293,44 +289,50 @@ const InlineTemplateComposer = forwardRef<
           </div>
           {!viewOnly && (
             <div className="pointer-events-none absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
-            {!readOnly && activeActions.length
-              ? activeActions.map((action, index) => (
-                  <TooltipProvider delayDuration={100} key={`${mode}-action-${index}`}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={() => action.onSelect(handleApi)}
-                          className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                          aria-label={action.label}
-                        >
-                          {action.icon}
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" align="end">
-                        {action.label}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ))
-              : null}
-            <TooltipProvider delayDuration={100}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={mode === 'tokens' ? handleShowVisual : handleShowTokens}
-                    className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    aria-label={mode === 'tokens' ? 'Switch to visual view' : 'Switch to token view'}
-                  >
-                    {mode === 'tokens' ? <Type className="h-5 w-5" /> : <Code className="h-5 w-5" />}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" align="end">
-                  {mode === 'tokens' ? 'Switch to visual view' : 'Switch to token view'}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+              {!readOnly && activeActions.length
+                ? activeActions.map((action, index) => (
+                    <TooltipProvider delayDuration={100} key={`${mode}-action-${index}`}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => action.onSelect(handleApi)}
+                            className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            aria-label={action.label}
+                          >
+                            {action.icon}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="end">
+                          {action.label}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ))
+                : null}
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={mode === 'tokens' ? handleShowVisual : handleShowTokens}
+                      className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center rounded-full border bg-white text-gray-700 shadow transition hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      aria-label={
+                        mode === 'tokens' ? 'Switch to visual view' : 'Switch to token view'
+                      }
+                    >
+                      {mode === 'tokens' ? (
+                        <Type className="h-5 w-5" />
+                      ) : (
+                        <Code className="h-5 w-5" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="end">
+                    {mode === 'tokens' ? 'Switch to visual view' : 'Switch to token view'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </div>

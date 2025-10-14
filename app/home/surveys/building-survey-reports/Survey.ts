@@ -85,12 +85,15 @@ export function addOrUpdateComponent(
     location: component.location || '',
     additionalDescription: component.additionalDescription || '',
     images: component.images || [],
-    conditions: (component.conditions || []).map((p) => ({
-      id: p.id,
-      name: p.name,
-      phrase: p.phrase || '',
-      doc: (p as any).doc,
-    } as any)),
+    conditions: (component.conditions || []).map(
+      (p) =>
+        ({
+          id: p.id,
+          name: p.name,
+          phrase: p.phrase || '',
+          doc: (p as any).doc,
+        }) as any,
+    ),
     ragStatus: component.ragStatus || 'N/I',
     costings: component.costings || [],
   };

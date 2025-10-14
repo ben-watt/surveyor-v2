@@ -1,12 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2018",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext",
-      "webworker"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,18 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "$amplify/*": [
-        "../.amplify/generated/*"
-      ]
+      "@/*": ["./*"],
+      "$amplify/*": ["../.amplify/generated/*"]
     },
-    "types": [
-      "@serwist/next/typings",
-      "jest",
-      "@testing-library/jest-dom"
-    ]
+    "types": ["@serwist/next/typings", "jest", "@testing-library/jest-dom"]
   },
   "include": [
     "next-env.d.ts",
@@ -47,9 +34,5 @@
     "**/*.test.ts",
     "**/*.test.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "public/sw.js",
-    "amplify/**/*"
-  ]
+  "exclude": ["node_modules", "public/sw.js", "amplify/**/*"]
 }

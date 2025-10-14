@@ -153,4 +153,3 @@ export function InlineSelectNodeViewComponent(props: NodeViewProps) {
 }
 
 export const InlineSelectNodeView = ReactNodeViewRenderer(InlineSelectNodeViewComponent);
-

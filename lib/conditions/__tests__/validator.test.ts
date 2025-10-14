@@ -1,10 +1,17 @@
 import '@testing-library/jest-dom';
 import type { JSONContent } from '@tiptap/core';
-import { validateDoc, validateInlineSelectAttrs, validateTemplate } from '@/lib/conditions/validator';
+import {
+  validateDoc,
+  validateInlineSelectAttrs,
+  validateTemplate,
+} from '@/lib/conditions/validator';
 
 describe('conditions validator', () => {
   test('validateInlineSelectAttrs flags missing key, empty options, dup, invalid default', () => {
-    const issues = validateInlineSelectAttrs({ key: '', options: ['a', 'a', ''], defaultValue: 'z' }, ['doc']);
+    const issues = validateInlineSelectAttrs(
+      { key: '', options: ['a', 'a', ''], defaultValue: 'z' },
+      ['doc'],
+    );
     const codes = issues.map((i) => i.code).sort();
     expect(codes).toEqual(['DUP_OPTION', 'EMPTY_OPTIONS', 'INVALID_DEFAULT', 'MISSING_KEY'].sort());
     // messages present and path preserved
@@ -63,5 +70,3 @@ describe('conditions validator', () => {
     expect(invalid.issues.some((i) => i.code === 'INVALID_DEFAULT')).toBe(true);
   });
 });
-
-

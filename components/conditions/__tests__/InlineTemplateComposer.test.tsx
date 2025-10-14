@@ -111,11 +111,7 @@ describe('InlineTemplateComposer', () => {
     mockGetJSON.mockReturnValue(doc);
 
     render(
-      <InlineTemplateComposer
-        value="Initial"
-        onChange={onChange}
-        onDocChange={onDocChange}
-      />,
+      <InlineTemplateComposer value="Initial" onChange={onChange} onDocChange={onDocChange} />,
     );
 
     const toggle = screen.getByRole('button', { name: /switch to visual view/i });

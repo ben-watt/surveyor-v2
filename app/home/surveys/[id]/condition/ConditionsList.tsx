@@ -24,7 +24,9 @@ export default function ConditionsList({
   return (
     <div className="space-y-2">
       {items.map((condition, index) => {
-        const unresolved = (isUnresolved ? isUnresolved(index) : isDocUnresolved((condition as any).doc));
+        const unresolved = isUnresolved
+          ? isUnresolved(index)
+          : isDocUnresolved((condition as any).doc);
         return (
           <div
             key={condition.id + '-' + index}
@@ -84,5 +86,3 @@ export default function ConditionsList({
     </div>
   );
 }
-
-

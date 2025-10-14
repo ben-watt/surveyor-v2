@@ -44,9 +44,9 @@ Scope decisions (current phase)
 - Token ↔ TipTap interop plus resolver utilities landed in `lib/conditions`, with unit coverage for parsing and text resolution to keep exports aligned.
 - Dev playground (`app/dev/inline-select/page.tsx`) exercises the experience end-to-end and is the current integration entry point.
 - Composer embedded in the configuration form (`app/home/conditions/form.tsx`) with shared sample-select actions; new unit tests (`components/conditions/__tests__/InlineTemplateComposer.test.tsx`) cover mode syncing, read-only behaviour, and action wiring.
--- Data/persistence: Amplify `Phrases` model updated with `phraseDoc` and `phraseLevel2Doc` JSON fields; form save regenerates normalized token strings via `docToTokens(doc)` and persists both.
--- Validation: Centralized validator added at `lib/conditions/validator.ts` (`validateDoc`, `validateTemplate`, `validateInlineSelectAttrs`), wired into the form save guard; unit tests added in `lib/conditions/__tests__/validator.test.ts`.
--- Export/preview: Inspection PDF/HTML flow now resolves via `resolveDocToText` when `phraseDoc` exists to keep preview and export paths unified.
+  -- Data/persistence: Amplify `Phrases` model updated with `phraseDoc` and `phraseLevel2Doc` JSON fields; form save regenerates normalized token strings via `docToTokens(doc)` and persists both.
+  -- Validation: Centralized validator added at `lib/conditions/validator.ts` (`validateDoc`, `validateTemplate`, `validateInlineSelectAttrs`), wired into the form save guard; unit tests added in `lib/conditions/__tests__/validator.test.ts`.
+  -- Export/preview: Inspection PDF/HTML flow now resolves via `resolveDocToText` when `phraseDoc` exists to keep preview and export paths unified.
 
 ---
 
@@ -438,4 +438,3 @@ Core behaviour tests to add (inspection integration)
 - Mustache/Handlebars: https://handlebarsjs.com/guide/
 - ICU MessageFormat: https://formatjs.io/docs/icu-syntax
 - UK Electrical Reporting (contextual): NICEIC — https://www.niceic.com
-

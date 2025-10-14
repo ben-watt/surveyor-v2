@@ -515,7 +515,16 @@ function InspectionFormContent({
       }
     }
     return Array.from(byId.values());
-  }, [phrases, component, components, level, conditions, element?.id, conditionDefs, derivedSectionId]);
+  }, [
+    phrases,
+    component,
+    components,
+    level,
+    conditions,
+    element?.id,
+    conditionDefs,
+    derivedSectionId,
+  ]);
 
   // Reset dependent fields when parent fields change
   useEffect(() => {
@@ -959,7 +968,10 @@ function InspectionFormContent({
                             const next = [...getValues().conditions];
                             (next[index] as any).doc = doc as any;
                             (next[index] as any).phrase = resolveDocToText(doc as any);
-                            setValue('conditions', next, { shouldValidate: true, shouldDirty: true });
+                            setValue('conditions', next, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
                           }}
                           visualModeActions={[]}
                           viewOnly={true}
@@ -1022,7 +1034,8 @@ function InspectionFormContent({
             lastSavedAt={lastSavedAt}
             className="justify-center text-sm"
           />
-          {Array.isArray(conditions) && conditions.length > 0 && (
+          {Array.isArray(conditions) &&
+            conditions.length > 0 &&
             (() => {
               const unresolvedCount = conditions.reduce((acc, _c, i) => {
                 const item = (conditions || [])[i] as any;
@@ -1045,8 +1058,7 @@ function InspectionFormContent({
                   {unresolvedCount} condition{unresolvedCount === 1 ? '' : 's'} need selection(s)
                 </div>
               ) : null;
-            })()
-          )}
+            })()}
         </div>
       </FormErrorBoundary>
     </FormProvider>

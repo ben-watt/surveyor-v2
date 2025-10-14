@@ -90,11 +90,17 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
           try {
             return tokensToDoc(tokens) as JSONContent;
           } catch (e) {
-            return { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: tokens }]}] } as any;
+            return {
+              type: 'doc',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: tokens }] }],
+            } as any;
           }
         };
 
-        const phraseDoc: JSONContent = ensureDoc(data.phrase ?? '', (data as any).phraseDoc as JSONContent);
+        const phraseDoc: JSONContent = ensureDoc(
+          data.phrase ?? '',
+          (data as any).phraseDoc as JSONContent,
+        );
         const phraseLevel2Doc: JSONContent | undefined = data.phraseLevel2
           ? ensureDoc(data.phraseLevel2, (data as any).phraseLevel2Doc as JSONContent)
           : undefined;
@@ -110,7 +116,9 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
 
         // Normalize tokens from docs to keep template strings in sync
         const normalizedPhrase = docToTokens(phraseDoc as any);
-        const normalizedPhraseLevel2 = phraseLevel2Doc ? docToTokens(phraseLevel2Doc as any) : data.phraseLevel2;
+        const normalizedPhraseLevel2 = phraseLevel2Doc
+          ? docToTokens(phraseLevel2Doc as any)
+          : data.phraseLevel2;
 
         if (phraseHydrated && phrase) {
           await phraseStore.update(idRef.current, (draft) => {
@@ -250,7 +258,9 @@ export function DataForm({ id, defaultValues, onSave }: DataFormProps) {
                     field.onBlur();
                   }
                 }}
-                onDocChange={(doc) => setValue('phraseLevel2Doc', doc as any, { shouldDirty: true })}
+                onDocChange={(doc) =>
+                  setValue('phraseLevel2Doc', doc as any, { shouldDirty: true })
+                }
                 tokenModeActions={insertSampleActions}
                 visualModeActions={insertSampleActions}
               />

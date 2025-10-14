@@ -23,14 +23,10 @@ describe('Inspection conditions - unresolved logic', () => {
       content: [
         {
           type: 'paragraph',
-          content: [
-            { type: 'inlineSelect', attrs: { key: 'k', options: ['a', 'b'], value: 'a' } },
-          ],
+          content: [{ type: 'inlineSelect', attrs: { key: 'k', options: ['a', 'b'], value: 'a' } }],
         },
       ],
     };
     expect(isDocUnresolved(doc)).toBe(false);
   });
 });
-
-

@@ -82,7 +82,10 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
       const overParent = getParentNode(overNode.id);
       const areSiblings = activeParent?.id === overParent?.id && activeNode.type === overNode.type;
       const areRootSiblings =
-        !activeParent && !overParent && activeNode.type === 'section' && overNode.type === 'section';
+        !activeParent &&
+        !overParent &&
+        activeNode.type === 'section' &&
+        overNode.type === 'section';
 
       if ((areSiblings || areRootSiblings) && overRect) {
         const overMidY = overRect.top + overRect.height / 2;
@@ -342,87 +345,87 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
   // Handle dropping on a drop zone
   const handleDropZoneDrop = useCallback(
     async (source: TreeNode, dropZoneData: any) => {
-    const { position, parentType, parentId } = dropZoneData;
+      const { position, parentType, parentId } = dropZoneData;
 
-    // Calculate the order based on position and existing siblings
-    let siblings: TreeNode[] = [];
-    let newParentId: string | undefined = parentId;
-    let order: number;
+      // Calculate the order based on position and existing siblings
+      let siblings: TreeNode[] = [];
+      let newParentId: string | undefined = parentId;
+      let order: number;
 
-    if (parentType === 'root') {
-      // Dropping at root level (sections)
-      if (source.type !== 'section') {
-        throw new Error('Only sections can be placed at root level');
+      if (parentType === 'root') {
+        // Dropping at root level (sections)
+        if (source.type !== 'section') {
+          throw new Error('Only sections can be placed at root level');
+        }
+        siblings = nodes.filter((n) => n.type === 'section');
+      } else if (parentType === 'section') {
+        // Dropping in a section (elements)
+        if (source.type !== 'element') {
+          throw new Error('Only elements can be placed in sections');
+        }
+        const parentNode = findNode(parentId);
+        if (parentNode) {
+          siblings = parentNode.children.filter((child) => child.type === 'element');
+        }
+      } else if (parentType === 'element') {
+        // Dropping in an element (components)
+        if (source.type !== 'component') {
+          throw new Error('Only components can be placed in elements');
+        }
+        const parentNode = findNode(parentId);
+        if (parentNode) {
+          siblings = parentNode.children.filter((child) => child.type === 'component');
+        }
+      } else if (parentType === 'component') {
+        // Dropping in a component (conditions)
+        if (source.type !== 'condition') {
+          throw new Error('Only conditions can be placed in components');
+        }
+        const parentNode = findNode(parentId);
+        if (parentNode) {
+          siblings = parentNode.children.filter((child) => child.type === 'condition');
+        }
       }
-      siblings = nodes.filter((n) => n.type === 'section');
-    } else if (parentType === 'section') {
-      // Dropping in a section (elements)
-      if (source.type !== 'element') {
-        throw new Error('Only elements can be placed in sections');
-      }
-      const parentNode = findNode(parentId);
-      if (parentNode) {
-        siblings = parentNode.children.filter((child) => child.type === 'element');
-      }
-    } else if (parentType === 'element') {
-      // Dropping in an element (components)
-      if (source.type !== 'component') {
-        throw new Error('Only components can be placed in elements');
-      }
-      const parentNode = findNode(parentId);
-      if (parentNode) {
-        siblings = parentNode.children.filter((child) => child.type === 'component');
-      }
-    } else if (parentType === 'component') {
-      // Dropping in a component (conditions)
-      if (source.type !== 'condition') {
-        throw new Error('Only conditions can be placed in components');
-      }
-      const parentNode = findNode(parentId);
-      if (parentNode) {
-        siblings = parentNode.children.filter((child) => child.type === 'condition');
-      }
-    }
 
-    // Calculate order based on position
-    if (position === 'top' || siblings.length === 0) {
-      order =
-        siblings.length > 0
-          ? Math.min(...siblings.map((s) => (s.data as any).order || 0)) - 1000
-          : 1000;
-    } else if (position === 'bottom') {
-      order =
-        siblings.length > 0
-          ? Math.max(...siblings.map((s) => (s.data as any).order || 0)) + 1000
-          : 1000;
-    } else {
-      // 'inside' → append to end of container
-      order =
-        siblings.length > 0
-          ? Math.max(...siblings.map((s) => (s.data as any).order || 0)) + 1000
-          : 1000;
-    }
+      // Calculate order based on position
+      if (position === 'top' || siblings.length === 0) {
+        order =
+          siblings.length > 0
+            ? Math.min(...siblings.map((s) => (s.data as any).order || 0)) - 1000
+            : 1000;
+      } else if (position === 'bottom') {
+        order =
+          siblings.length > 0
+            ? Math.max(...siblings.map((s) => (s.data as any).order || 0)) + 1000
+            : 1000;
+      } else {
+        // 'inside' → append to end of container
+        order =
+          siblings.length > 0
+            ? Math.max(...siblings.map((s) => (s.data as any).order || 0)) + 1000
+            : 1000;
+      }
 
-    // Ensure order is positive
-    if (order <= 0) {
-      order = 1000;
-    }
+      // Ensure order is positive
+      if (order <= 0) {
+        order = 1000;
+      }
 
-    // Execute the move
-    if (source.type === 'section') {
-      // Reorder section
-      const updates = [{ id: source.id, order, type: 'section' as const }];
-      await onReorder(updates);
-    } else if (
-      source.type === 'element' ||
-      source.type === 'component' ||
-      source.type === 'condition'
-    ) {
-      // Move to new parent
-      await onMove(source.id, newParentId, order);
-    } else {
-      // No-op for unknown types
-    }
+      // Execute the move
+      if (source.type === 'section') {
+        // Reorder section
+        const updates = [{ id: source.id, order, type: 'section' as const }];
+        await onReorder(updates);
+      } else if (
+        source.type === 'element' ||
+        source.type === 'component' ||
+        source.type === 'condition'
+      ) {
+        // Move to new parent
+        await onMove(source.id, newParentId, order);
+      } else {
+        // No-op for unknown types
+      }
     },
     [findNode, nodes, onMove, onReorder],
   );
@@ -435,9 +438,9 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
       // Get existing children of target to calculate order
       const existingChildren = target.children.filter((child) => child.type === source.type);
       const newOrder =
-      existingChildren.length > 0
-        ? Math.max(...existingChildren.map((c) => (c.data as any).order || 0)) + 1000
-        : 1000;
+        existingChildren.length > 0
+          ? Math.max(...existingChildren.map((c) => (c.data as any).order || 0)) + 1000
+          : 1000;
 
       await onMove(source.id, newParentId, newOrder);
     },
@@ -452,22 +455,22 @@ export function useDragDrop({ nodes, onReorder, onMove }: UseDragDropProps) {
 
       // Get siblings of the same type
       let siblings: TreeNode[];
-    if (source.type === 'section') {
-      siblings = nodes.filter((n) => n.type === 'section');
-    } else if (sourceParent) {
-      siblings = sourceParent.children.filter((child) => child.type === source.type);
-    } else {
-      return;
-    }
+      if (source.type === 'section') {
+        siblings = nodes.filter((n) => n.type === 'section');
+      } else if (sourceParent) {
+        siblings = sourceParent.children.filter((child) => child.type === source.type);
+      } else {
+        return;
+      }
 
-    // Calculate new orders
-    const items = siblings.map((s) => ({
-      id: s.id,
-      order: (s.data as any).order || 0,
-    }));
+      // Calculate new orders
+      const items = siblings.map((s) => ({
+        id: s.id,
+        order: (s.data as any).order || 0,
+      }));
 
-    const updates = calculateReorderedItems(items, source.id, target.id, position);
-    await onReorder(updates);
+      const updates = calculateReorderedItems(items, source.id, target.id, position);
+      await onReorder(updates);
     },
     [getParentNode, nodes, onReorder],
   );

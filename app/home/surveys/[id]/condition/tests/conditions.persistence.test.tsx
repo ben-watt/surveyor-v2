@@ -26,5 +26,3 @@ describe('Inspection conditions - persistence', () => {
     expect(out).toBe('The installation appears aged, with older wiring noted.');
   });
 });
-
-

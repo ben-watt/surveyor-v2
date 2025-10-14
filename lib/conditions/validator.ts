@@ -1,11 +1,7 @@
 import type { JSONContent } from '@tiptap/core';
 import { tokensToDoc } from '@/lib/conditions/interop';
 
-export type ValidationCode =
-  | 'MISSING_KEY'
-  | 'EMPTY_OPTIONS'
-  | 'DUP_OPTION'
-  | 'INVALID_DEFAULT';
+export type ValidationCode = 'MISSING_KEY' | 'EMPTY_OPTIONS' | 'DUP_OPTION' | 'INVALID_DEFAULT';
 
 export type ValidationIssue = {
   code: ValidationCode;
@@ -25,7 +21,11 @@ export function validateInlineSelectAttrs(attrs: any, path: string[] = []): Vali
     issues.push({ code: 'MISSING_KEY', message: 'InlineSelect is missing a key', path });
   }
   if (!options.length) {
-    issues.push({ code: 'EMPTY_OPTIONS', message: `InlineSelect ${key || '(no key)'} has no options`, path });
+    issues.push({
+      code: 'EMPTY_OPTIONS',
+      message: `InlineSelect ${key || '(no key)'} has no options`,
+      path,
+    });
   }
   // Duplicate/empty option checks
   const seen = new Set<string>();
@@ -68,7 +68,9 @@ export function validateDoc(doc: JSONContent): ValidationResult {
       issues.push(...validateInlineSelectAttrs(node.attrs || {}, path));
     }
     if (node.content && Array.isArray(node.content)) {
-      node.content.forEach((child: any, index: number) => walk(child, [...path, 'content', String(index)]));
+      node.content.forEach((child: any, index: number) =>
+        walk(child, [...path, 'content', String(index)]),
+      );
     }
   };
 
@@ -95,7 +97,6 @@ export function validateTemplate(template: string): ValidationResult {
   }
 }
 
-
 // Returns true if any InlineSelect in the doc is missing both value and defaultValue
 export function isDocUnresolved(doc: JSONContent | undefined | null): boolean {
   if (!doc) return false;
@@ -111,5 +112,3 @@ export function isDocUnresolved(doc: JSONContent | undefined | null): boolean {
   walk(doc as any);
   return unresolved;
 }
-
-
