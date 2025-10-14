@@ -39,10 +39,11 @@ Scope decisions (current phase)
 
 ## Current Progress (October 2025)
 
-- Shared composer scaffolding shipped at `components/conditions/InlineTemplateComposer.tsx`, including the TipTap-backed visual view, token view fallback, and imperative helper surface for toolbar/slash commands.
+- Shared composer scaffolding shipped at `components/conditions/InlineTemplateComposer.tsx`, now with TipTap-backed visual view, token view fallback, and an upgraded action API for toolbar/slash integrations.
 - Inline select implementation (TipTap node, React NodeView, input/paste rules) is live under `app/home/components/TipTapExtensions/InlineSelect*`, enabling inline dropdown UX with custom value capture.
 - Token ↔ TipTap interop plus resolver utilities landed in `lib/conditions`, with unit coverage for parsing and text resolution to keep exports aligned.
 - Dev playground (`app/dev/inline-select/page.tsx`) exercises the experience end-to-end and is the current integration entry point.
+- Composer embedded in the configuration form (`app/home/conditions/form.tsx`) with shared sample-select actions; new unit tests (`components/conditions/__tests__/InlineTemplateComposer.test.tsx`) cover mode syncing, read-only behaviour, and action wiring.
 
 ---
 
@@ -214,8 +215,8 @@ Unresolved state UX
 
 ## Integration Next Steps
 
-1. Embed the composer within configuration + survey condition editors (replace the level-3 phrase textarea in `app/home/conditions/form.tsx` first), persisting TipTap JSON alongside the legacy token field.
-2. Expose feature-facing insertion affordances (toolbar buttons, slash commands) that call the composer ref helpers instead of the playground-only “insert sample token”.
+1. ✅ Embed the composer within configuration + survey condition editors (replace the level-3 phrase textarea in `app/home/conditions/form.tsx` first), persisting TipTap JSON alongside the legacy token field.
+2. Expose feature-facing insertion affordances (toolbar buttons, slash commands) using the shared action API instead of playground-only helpers.
 3. Layer validation UX: schema checks, inline decorations, and a side panel summary that blocks save/export until issues resolve.
 4. Thread serialization through save/publish/export: store `doc`, regenerate normalized token strings for legacy consumers, and reuse the shared resolver for PDF/HTML output.
 5. Add colocated integration tests covering mode toggling, inline edits, validation states, and persistence round-trips to safeguard the new flows.
@@ -417,3 +418,4 @@ Implementation recommendations (detailed)
 - Mustache/Handlebars: https://handlebarsjs.com/guide/
 - ICU MessageFormat: https://formatjs.io/docs/icu-syntax
 - UK Electrical Reporting (contextual): NICEIC — https://www.niceic.com
+
