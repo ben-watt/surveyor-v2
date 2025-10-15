@@ -61,7 +61,7 @@ function withProviders(children: React.ReactElement) {
   return <DynamicDrawerProvider>{children}</DynamicDrawerProvider>;
 }
 
-describe('InspectionForm - unresolved banner', () => {
+describe('InspectionForm - unresolved indicators (no banner)', () => {
   beforeEach(() => {
     (global as any).__currentSurveyRef = baseSurvey();
   });
@@ -87,7 +87,7 @@ describe('InspectionForm - unresolved banner', () => {
     );
   }
 
-  test('counts unresolved via isConditionUnresolved (doc or phrase fallback)', async () => {
+  test('no banner is rendered; per-item indicators are used instead', async () => {
     const unresolvedDoc = {
       type: 'doc',
       content: [
@@ -122,8 +122,8 @@ describe('InspectionForm - unresolved banner', () => {
       ],
     });
 
-    const banner = await screen.findByText(/2 conditions need selection/);
-    expect(banner).toBeInTheDocument();
+    const bannerQuery = screen.queryByText(/conditions need selection|condition needs selection/);
+    expect(bannerQuery).toBeNull();
   });
 });
 

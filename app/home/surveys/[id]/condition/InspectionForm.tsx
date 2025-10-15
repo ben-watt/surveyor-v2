@@ -44,7 +44,7 @@ import { LastSavedIndicatorWithUploads } from '@/app/home/components/LastSavedIn
 import { FormErrorBoundary } from '@/app/home/components/FormErrorBoundary';
 import { FORM_DEBOUNCE_DELAYS } from '@/app/home/config/formConstants';
 import InlineTemplateComposer from '@/components/conditions/InlineTemplateComposer';
-import { docToTokens, tokensToDoc } from '@/lib/conditions/interop';
+import { docToTokens, tokensToDoc, stripInlineSelectChoices } from '@/lib/conditions/interop';
 import type { JSONContent } from '@tiptap/core';
 import { isConditionUnresolved } from '@/lib/conditions/validator';
 import LocalComponentNamePrompt from './components/LocalComponentNamePrompt';
@@ -722,8 +722,13 @@ function InspectionFormContent({
                         const next = [
                           ...(Array.isArray(current.conditions) ? current.conditions : []),
                         ];
-                        // Append selected condition instance to the form
-                        next.push({ id: defId, name, phrase: text, doc: tokensToDoc(text) as any });
+                        // Append selected condition instance to the form (strip defaults/selections)
+                        next.push({
+                          id: defId,
+                          name,
+                          phrase: text,
+                          doc: stripInlineSelectChoices(tokensToDoc(text) as any) as any,
+                        });
                         try {
                           await surveyStore.update(surveyId, (draft) => {
                             // Create local condition definition for reuse
@@ -863,19 +868,7 @@ function InspectionFormContent({
             lastSavedAt={lastSavedAt}
             className="justify-center text-sm"
           />
-          {Array.isArray(conditions) && conditions.length > 0 && (() => {
-            const unresolvedCount = conditions.reduce(
-              (acc, c) => acc + (isConditionUnresolved(c as any) ? 1 : 0),
-              0,
-            );
-            return unresolvedCount > 0 ? (
-              <div className="rounded-md border border-red-400 bg-red-50 p-2 text-xs text-red-700">
-                {unresolvedCount === 1
-                  ? '1 condition needs selection'
-                  : `${unresolvedCount} conditions need selection`}
-              </div>
-            ) : null;
-          })()}
+          {/* Removed unresolved banner; rely on per-item indicators (red outline + icon) */}
         </div>
       </FormErrorBoundary>
     </FormProvider>

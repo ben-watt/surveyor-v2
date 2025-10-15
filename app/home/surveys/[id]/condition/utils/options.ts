@@ -1,4 +1,5 @@
 import { resolveDocToText } from '@/lib/conditions/resolver';
+import { stripInlineSelectChoices } from '@/lib/conditions/interop';
 import { ID_PREFIX } from '@/app/home/surveys/constants/localIds';
 import { FormPhrase } from '../types';
 
@@ -65,16 +66,13 @@ export function buildPhrasesOptions(
       const docL2 = (p as any).phraseLevel2Doc;
       const isLevel2 = level === '2';
       const chosenDoc = isLevel2 ? docL2 : docL3;
-      const phraseText = (() => {
-        if (chosenDoc) return resolveDocToText(chosenDoc);
-        return isLevel2 ? p.phraseLevel2 || 'No level 2 text' : p.phrase || 'No level 3 text';
-      })();
+      const phraseText = isLevel2 ? p.phraseLevel2 || 'No level 2 text' : p.phrase || 'No level 3 text';
       return {
         value: {
           id: p.id,
           name: p.name,
           phrase: phraseText,
-          doc: chosenDoc || undefined,
+          doc: stripInlineSelectChoices(chosenDoc) || undefined,
         } as FormPhrase,
         label: p.name,
       };

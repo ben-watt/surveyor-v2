@@ -52,3 +52,28 @@ export function docToTokens(doc: JSONContent): string {
   walk(doc);
   return parts.join('');
 }
+
+/**
+ * Returns a deep-cloned doc with any InlineSelect `value` cleared but preserves `defaultValue`.
+ * Use when instantiating a condition for an inspection so user selections are not pre-filled,
+ * while allowing configured defaults (from templates) to still appear.
+ */
+export function stripInlineSelectChoices(doc: JSONContent | undefined | null): JSONContent | undefined {
+  if (!doc) return undefined;
+  const clone = (node: any): any => {
+    if (!node) return node;
+    if (Array.isArray(node)) return node.map(clone);
+    if (typeof node !== 'object') return node;
+    const next: any = { ...node };
+    if (node.type === 'inlineSelect') {
+      next.attrs = { ...(node.attrs || {}), value: null };
+    } else if (node.attrs) {
+      next.attrs = { ...node.attrs };
+    }
+    if (Array.isArray(node.content)) {
+      next.content = node.content.map(clone);
+    }
+    return next;
+  };
+  return clone(doc);
+}
