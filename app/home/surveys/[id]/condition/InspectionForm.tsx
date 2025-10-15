@@ -46,7 +46,7 @@ import { FORM_DEBOUNCE_DELAYS } from '@/app/home/config/formConstants';
 import InlineTemplateComposer from '@/components/conditions/InlineTemplateComposer';
 import { docToTokens, tokensToDoc } from '@/lib/conditions/interop';
 import type { JSONContent } from '@tiptap/core';
-import { isDocUnresolved } from '@/lib/conditions/validator';
+import { isConditionUnresolved } from '@/lib/conditions/validator';
 import LocalComponentNamePrompt from './components/LocalComponentNamePrompt';
 import RenameLocalComponentPrompt from './components/RenameLocalComponentPrompt';
 import LocalConditionPrompt from './components/LocalConditionPrompt';
@@ -864,10 +864,10 @@ function InspectionFormContent({
             className="justify-center text-sm"
           />
           {Array.isArray(conditions) && conditions.length > 0 && (() => {
-            const unresolvedCount = conditions.reduce((acc, c) => {
-              const doc = (c as any)?.doc as JSONContent | undefined;
-              return acc + (isDocUnresolved(doc) ? 1 : 0);
-            }, 0);
+            const unresolvedCount = conditions.reduce(
+              (acc, c) => acc + (isConditionUnresolved(c as any) ? 1 : 0),
+              0,
+            );
             return unresolvedCount > 0 ? (
               <div className="rounded-md border border-red-400 bg-red-50 p-2 text-xs text-red-700">
                 {unresolvedCount === 1

@@ -87,7 +87,7 @@ describe('InspectionForm - unresolved banner', () => {
     );
   }
 
-  test('counts only docs with unresolved inline selects; ignores items without doc', async () => {
+  test('counts unresolved via isConditionUnresolved (doc or phrase fallback)', async () => {
     const unresolvedDoc = {
       type: 'doc',
       content: [
@@ -118,10 +118,11 @@ describe('InspectionForm - unresolved banner', () => {
         { id: 'c1', name: 'No Doc', phrase: 'plain text' } as any,
         { id: 'c2', name: 'Unresolved', phrase: '', doc: unresolvedDoc } as any,
         { id: 'c3', name: 'Resolved', phrase: '', doc: resolvedDoc } as any,
+        { id: 'c4', name: 'Phrase token unresolved', phrase: 'Has {{select:state|A|B}}' } as any,
       ],
     });
 
-    const banner = await screen.findByText(/1 condition needs selection/);
+    const banner = await screen.findByText(/2 conditions need selection/);
     expect(banner).toBeInTheDocument();
   });
 });

@@ -1,7 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { FormPhrase } from './types';
-import { isDocUnresolved } from '@/lib/conditions/validator';
-import { ArrowDown, ArrowUp, PenLine, X } from 'lucide-react';
+import { isConditionUnresolved } from '@/lib/conditions/validator';
+import { AlertCircle, ArrowDown, ArrowUp, MoreHorizontal, PenLine, X } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 type ConditionsListProps = {
   conditions: FormPhrase[];
@@ -26,7 +33,7 @@ export default function ConditionsList({
       {items.map((condition, index) => {
         const unresolved = isUnresolved
           ? isUnresolved(index)
-          : isDocUnresolved((condition as any).doc);
+          : isConditionUnresolved(condition as any);
         return (
           <div
             key={condition.id + '-' + index}
@@ -38,12 +45,20 @@ export default function ConditionsList({
               <div className="flex items-center gap-2">
                 <p className="font-medium">{condition.name}</p>
                 {unresolved && (
-                  <span className="rounded-sm bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-700">
-                    Needs selection
-                  </span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertCircle
+                          aria-label="Condition needs selection"
+                          className="h-3.5 w-3.5 text-red-600"
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>Needs selection</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-1">
                 <Button
                   type="button"
                   variant="ghost"
@@ -62,22 +77,39 @@ export default function ConditionsList({
                 >
                   <ArrowDown className="h-4 w-4" />
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onEdit(index)}
-                  aria-label="Edit condition"
-                >
-                  <PenLine className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onRemove(index)}
-                  aria-label="Remove condition"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                {/* md+: inline Edit/Remove */}
+                <div className="hidden md:flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onEdit(index)}
+                    aria-label="Edit condition"
+                  >
+                    <PenLine className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onRemove(index)}
+                    aria-label="Remove condition"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {/* <md: overflow menu for Edit/Remove */}
+                <div className="md:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" variant="ghost" aria-label="More actions">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEdit(index)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onRemove(index)}>Remove</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
           </div>

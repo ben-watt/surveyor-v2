@@ -112,3 +112,25 @@ export function isDocUnresolved(doc: JSONContent | undefined | null): boolean {
   walk(doc as any);
   return unresolved;
 }
+
+// Heuristic check when only a tokenized phrase is available. Flags unresolved when
+// a select token exists without an explicit default (e.g. `{{select:key|opt1|opt2}}`).
+export function isPhraseLikelyUnresolved(phrase: string | undefined | null): boolean {
+  if (!phrase) return false;
+  // Quick scan: any `{{select` token without `default=` inside
+  const tokenPattern = /\{\{\s*select\*?:[^}]+\}\}/g; // matches select or select*
+  const matches = phrase.match(tokenPattern);
+  if (!matches) return false;
+  for (const token of matches) {
+    const hasDefault = /default\s*=\s*[^|}]+/i.test(token);
+    // If token was `select*:` but still lacks default, treat as unresolved too
+    if (!hasDefault) return true;
+  }
+  return false;
+}
+
+// Preferred helper for UI: use `doc` if present; otherwise fall back to tokenized `phrase`.
+export function isConditionUnresolved(condition: { doc?: JSONContent | null; phrase?: string }): boolean {
+  if (condition && condition.doc) return isDocUnresolved(condition.doc);
+  return isPhraseLikelyUnresolved(condition?.phrase ?? '');
+}
