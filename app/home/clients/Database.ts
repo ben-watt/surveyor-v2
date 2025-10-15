@@ -51,6 +51,37 @@ const mapToSurvey = (data: any): DexieSurvey => ({
   tenantId: data.tenantId,
 });
 
+// Safely parse JSON strings coming from the API (AWSJSON often returns as string)
+function safeJsonParse<T = any>(input: unknown): T | undefined {
+  if (input === null || input === undefined) return undefined as unknown as T;
+  if (typeof input !== 'string') return input as T;
+  try {
+    return JSON.parse(input) as T;
+  } catch {
+    return undefined as unknown as T;
+  }
+}
+
+// Ensure AWSJSON fields are properly serialized as strings for the API
+function serializeAwsJsonFields<T extends Record<string, any>>(data: T, keys: string[]): T {
+  const result: Record<string, any> = { ...data };
+  for (const key of keys) {
+    if (!(key in result)) continue;
+    const value = result[key];
+    if (value === undefined || value === null) {
+      delete result[key];
+    } else if (typeof value !== 'string') {
+      try {
+        result[key] = JSON.stringify(value);
+      } catch {
+        // If serialization fails, drop the field to avoid invalid GraphQL variable
+        delete result[key];
+      }
+    }
+  }
+  return result as T;
+}
+
 type UpdateSurvey = Partial<DexieSurvey> & { id: string };
 type CreateSurvey = Schema['Surveys']['createType'];
 
@@ -321,9 +352,10 @@ const mapToPhrase = (data: any): Phrase => ({
   type: data.type,
   associatedComponentIds: data.associatedComponentIds,
   phrase: data.phrase,
-  phraseDoc: data.phraseDoc,
+  // Parse AWSJSON fields that may come back as strings
+  phraseDoc: safeJsonParse(data.phraseDoc),
   phraseLevel2: data.phraseLevel2,
-  phraseLevel2Doc: data.phraseLevel2Doc,
+  phraseLevel2Doc: safeJsonParse(data.phraseLevel2Doc),
   owner: data.owner,
   tenantId: data.tenantId,
 });
@@ -341,7 +373,9 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
   },
   create: async (data): Promise<Result<Phrase, Error>> => {
     // Add tenant ID to new phrase
-    const serverData = await withTenantId(data);
+    // Ensure AWSJSON fields are serialized as strings per AppSync expectations
+    const serialized = serializeAwsJsonFields(data, ['phraseDoc', 'phraseLevel2Doc']);
+    const serverData = await withTenantId(serialized);
     const response = await client.models.Phrases.create(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map((e) => e.message).join(', ')));
@@ -350,7 +384,9 @@ export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(
   },
   update: async (data): Promise<Result<Phrase, Error>> => {
     // Add tenant ID to update
-    const serverData = await withTenantId(data);
+    // Ensure AWSJSON fields are serialized as strings per AppSync expectations
+    const serialized = serializeAwsJsonFields(data, ['phraseDoc', 'phraseLevel2Doc']);
+    const serverData = await withTenantId(serialized);
     const response = await client.models.Phrases.update(serverData);
     if (response.errors) {
       return Err(new Error(response.errors.map((e) => e.message).join(', ')));
