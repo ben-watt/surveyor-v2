@@ -46,6 +46,11 @@ import { FORM_DEBOUNCE_DELAYS } from '@/app/home/config/formConstants';
 import InlineTemplateComposer from '@/components/conditions/InlineTemplateComposer';
 import { docToTokens, tokensToDoc } from '@/lib/conditions/interop';
 import type { JSONContent } from '@tiptap/core';
+import { isDocUnresolved } from '@/lib/conditions/validator';
+import LocalComponentNamePrompt from './components/LocalComponentNamePrompt';
+import RenameLocalComponentPrompt from './components/RenameLocalComponentPrompt';
+import LocalConditionPrompt from './components/LocalConditionPrompt';
+import { buildComponentOptions, buildPhrasesOptions } from './utils/options';
 
 function CostingsFieldArray() {
   const {
@@ -250,34 +255,7 @@ function InspectionFormContent({
     addConditionDef,
   } = useLocalDefs(survey as any, elements, element?.id, surveySection?.id);
 
-  function LocalComponentNamePrompt({ onCreate }: { onCreate: (name: string) => void }) {
-    const [name, setName] = useState('');
-    const canCreate = name.trim().length > 0;
-    return (
-      <div className="space-y-4 p-2">
-        <div>
-          <label className="mb-2 block text-sm font-medium">Component Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter component name"
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="default"
-            onClick={() => onCreate(name.trim())}
-            disabled={!canCreate}
-          >
-            Create
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  
 
   // If a user selects a local definition from the combobox, create an instance and switch selection
   useEffect(() => {
@@ -334,80 +312,9 @@ function InspectionFormContent({
     }
   }, [component, surveySection?.id, element?.id, elements, setValue, surveyId, getValues]);
 
-  function RenameLocalComponentPrompt({
-    initialName,
-    onRename,
-  }: {
-    initialName: string;
-    onRename: (name: string) => void;
-  }) {
-    const [name, setName] = useState(initialName || '');
-    const canSave = name.trim().length > 0 && name.trim() !== initialName;
-    return (
-      <div className="space-y-4 p-2">
-        <div>
-          <label className="mb-2 block text-sm font-medium">Rename Local Component</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter new component name"
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="default"
-            onClick={() => onRename(name.trim())}
-            disabled={!canSave}
-          >
-            Save
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  
 
-  function LocalConditionPrompt({ onCreate }: { onCreate: (name: string, text: string) => void }) {
-    const [name, setName] = useState('');
-    const [text, setText] = useState('');
-    const canCreate = name.trim().length > 0 && text.trim().length > 0;
-    return (
-      <div className="space-y-4 p-2">
-        <div>
-          <label className="mb-2 block text-sm font-medium">Condition Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Deteriorated mortar"
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="mb-2 block text-sm font-medium">Condition Text</label>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Describe the condition"
-            rows={5}
-            className="w-full rounded-md border px-3 py-2"
-          />
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="default"
-            onClick={() => onCreate(name.trim(), text.trim())}
-            disabled={!canCreate}
-          >
-            Create & Add
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  
 
   // Memoized options for select fields
   const surveySectionOptions = useMemo(() => {
@@ -428,103 +335,41 @@ function InspectionFormContent({
     [elements, surveySection.id],
   );
 
-  const componentOptions = useMemo(() => {
-    const globalOptions = components
-      .filter((c) => c.elementId === element.id)
-      .map((c) => ({ value: { id: c.id, name: c.name }, label: c.name }));
+  const componentOptions = useMemo(
+    () =>
+      buildComponentOptions(
+        components,
+        element.id,
+        component,
+        derivedSectionId,
+        componentDefs,
+      ),
+    [components, element.id, component, derivedSectionId, componentDefs],
+  );
 
-    const localDefOptions = (() => {
-      if (!element?.id || !derivedSectionId) return [] as any[];
-      const defs = componentDefs;
-      return defs.map((d) => ({
-        value: { localDefId: d.id, name: d.name },
-        label: `${d.name} - (survey only)`,
-      }));
-    })();
-
-    const isLocalSelected =
-      component &&
-      component.id &&
-      (isLocalInstanceId(String(component.id)) || !components.some((gc) => gc.id === component.id));
-
-    if (isLocalSelected) {
-      const label = `${component.name || '(unnamed)'} - (survey only)`;
-      const exists = globalOptions.some((o) => o.value.id === component.id);
-      if (!exists) {
-        return [
-          ...globalOptions,
-          ...localDefOptions,
-          { value: { id: component.id, name: component.name }, label },
-        ];
-      }
-    }
-    return [...globalOptions, ...localDefOptions];
-  }, [components, element.id, component, derivedSectionId, componentDefs]);
-
-  const phrasesOptions = useMemo((): { value: FormPhrase; label: string }[] => {
-    const isLocalSelected =
-      component &&
-      component.id &&
-      (isLocalInstanceId(String(component.id)) || !components.some((gc) => gc.id === component.id));
-
-    const globals = (phrases || [])
-      .filter((p) => String(p.type).toLowerCase() === 'condition')
-      .filter((p) => (isLocalSelected ? true : p.associatedComponentIds.includes(component.id)))
-      .sort((a, b) => (a.order || 0) - (b.order || 0))
-      .map((p) => {
-        const docL3 = (p as any).phraseDoc;
-        const docL2 = (p as any).phraseLevel2Doc;
-        const isLevel2 = level === '2';
-        const chosenDoc = isLevel2 ? docL2 : docL3;
-        const phraseText = (() => {
-          if (chosenDoc) return resolveDocToText(chosenDoc);
-          return isLevel2 ? p.phraseLevel2 || 'No level 2 text' : p.phrase || 'No level 3 text';
-        })();
-        return {
-          value: {
-            id: p.id,
-            name: p.name,
-            phrase: phraseText,
-            doc: chosenDoc || undefined,
-          } as FormPhrase,
-          label: p.name,
-        };
-      });
-
-    const localDefs = (() => {
-      if (!element?.id || !derivedSectionId) return [] as { value: FormPhrase; label: string }[];
-      const defs = conditionDefs;
-      return defs.map((d) => ({
-        value: { id: d.id, name: d.name, phrase: d.text } as FormPhrase,
-        label: `${d.name} - (survey only)`,
-      }));
-    })();
-
-    const current = (Array.isArray(conditions) ? conditions : []).map((c) => ({
-      value: { id: c.id, name: c.name, phrase: c.phrase || '', doc: (c as any).doc } as FormPhrase,
-      label:
-        String(c.id).startsWith(ID_PREFIX.condDef) || String(c.id).startsWith(ID_PREFIX.instance)
-          ? `${c.name} - (survey only)`
-          : c.name,
-    }));
-
-    const byId = new Map<string, { value: FormPhrase; label: string }>();
-    for (const list of [current, localDefs, globals]) {
-      for (const opt of list) {
-        if (!byId.has(opt.value.id)) byId.set(opt.value.id, opt);
-      }
-    }
-    return Array.from(byId.values());
-  }, [
-    phrases,
-    component,
-    components,
-    level,
-    conditions,
-    element?.id,
-    conditionDefs,
-    derivedSectionId,
-  ]);
+  const phrasesOptions = useMemo(
+    () =>
+      buildPhrasesOptions(
+        phrases,
+        level,
+        component,
+        components,
+        conditions,
+        element?.id,
+        conditionDefs,
+        derivedSectionId,
+      ),
+    [
+      phrases,
+      level,
+      component,
+      components,
+      conditions,
+      element?.id,
+      conditionDefs,
+      derivedSectionId,
+    ],
+  );
 
   // Reset dependent fields when parent fields change
   useEffect(() => {
@@ -932,22 +777,6 @@ function InspectionFormContent({
             {Array.isArray(conditions) && (
               <ConditionsList
                 conditions={conditions}
-                isUnresolved={(index: number) => {
-                  const item = (conditions || [])[index] as any;
-                  const doc = (item && item.doc) as JSONContent | undefined;
-                  if (!doc) return false; // no doc means no inline tokens to resolve
-                  let unresolved = false;
-                  const walk = (node?: any) => {
-                    if (!node) return;
-                    if (node.type === 'inlineSelect') {
-                      const v = node.attrs?.value ?? node.attrs?.defaultValue ?? '';
-                      if (!v) unresolved = true;
-                    }
-                    if (Array.isArray(node.content)) node.content.forEach(walk);
-                  };
-                  walk(doc as any);
-                  return unresolved;
-                }}
                 onEdit={(index: number) => {
                   const current = getValues();
                   const item = current.conditions[index];
@@ -1034,31 +863,19 @@ function InspectionFormContent({
             lastSavedAt={lastSavedAt}
             className="justify-center text-sm"
           />
-          {Array.isArray(conditions) &&
-            conditions.length > 0 &&
-            (() => {
-              const unresolvedCount = conditions.reduce((acc, _c, i) => {
-                const item = (conditions || [])[i] as any;
-                const doc = item?.doc as JSONContent | undefined;
-                if (!doc) return acc + 1;
-                let unresolved = false;
-                const walk = (node?: any) => {
-                  if (!node) return;
-                  if (node.type === 'inlineSelect') {
-                    const v = node.attrs?.value ?? node.attrs?.defaultValue ?? '';
-                    if (!v) unresolved = true;
-                  }
-                  if (Array.isArray(node.content)) node.content.forEach(walk);
-                };
-                walk(doc as any);
-                return acc + (unresolved ? 1 : 0);
-              }, 0);
-              return unresolvedCount > 0 ? (
-                <div className="rounded-md border border-red-400 bg-red-50 p-2 text-xs text-red-700">
-                  {unresolvedCount} condition{unresolvedCount === 1 ? '' : 's'} need selection(s)
-                </div>
-              ) : null;
-            })()}
+          {Array.isArray(conditions) && conditions.length > 0 && (() => {
+            const unresolvedCount = conditions.reduce((acc, c) => {
+              const doc = (c as any)?.doc as JSONContent | undefined;
+              return acc + (isDocUnresolved(doc) ? 1 : 0);
+            }, 0);
+            return unresolvedCount > 0 ? (
+              <div className="rounded-md border border-red-400 bg-red-50 p-2 text-xs text-red-700">
+                {unresolvedCount === 1
+                  ? '1 condition needs selection'
+                  : `${unresolvedCount} conditions need selection`}
+              </div>
+            ) : null;
+          })()}
         </div>
       </FormErrorBoundary>
     </FormProvider>

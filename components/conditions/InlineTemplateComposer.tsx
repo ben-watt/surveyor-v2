@@ -281,7 +281,7 @@ const InlineTemplateComposer = forwardRef<
           <div className={`rounded border ${mode === 'visual' ? 'block' : 'hidden'}`}>
             <EditorContent
               editor={editor}
-              className="min-h-[10rem] p-3"
+              className="min-h-[10rem]"
               aria-label={labelText}
               aria-labelledby={labelId}
               aria-readonly={readOnly || viewOnly}
