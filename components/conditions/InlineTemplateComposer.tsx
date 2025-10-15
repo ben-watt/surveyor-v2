@@ -82,7 +82,7 @@ const InlineTemplateComposer = forwardRef<
   },
   ref,
 ) {
-  const labelText = label ?? 'Template editor';
+  const labelText = label ?? 'Condition text';
   const labelId = useId();
   const [mode, setMode] = useState<InlineTemplateComposerMode>(viewOnly ? 'visual' : defaultMode);
   const tokenEditorRef = useRef<TokenEditorHandle>(null);
@@ -222,7 +222,7 @@ const InlineTemplateComposer = forwardRef<
       },
       getEditor: () => editorInstanceRef.current,
     }),
-    [handleShowTokens, handleShowVisual, readOnly],
+    [handleShowTokens, handleShowVisual, readOnly, viewOnly],
   );
 
   useEffect(() => {
