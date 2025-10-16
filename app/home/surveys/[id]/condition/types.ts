@@ -8,8 +8,10 @@ import type { JSONContent } from '@tiptap/core';
 export type FormPhrase = {
   id: string;
   name: string;
-  phrase: string;
-  doc?: JSONContent;
+  phrase: string; // Level 3 text
+  doc?: JSONContent; // Level 3 doc
+  phraseLevel2?: string; // Level 2 text
+  docLevel2?: JSONContent; // Level 2 doc
 };
 
 export type InspectionFormData = {

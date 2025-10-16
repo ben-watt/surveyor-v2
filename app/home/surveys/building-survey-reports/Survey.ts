@@ -92,6 +92,8 @@ export function addOrUpdateComponent(
           name: p.name,
           phrase: p.phrase || '',
           doc: (p as any).doc,
+          phraseLevel2: (p as any).phraseLevel2,
+          docLevel2: (p as any).docLevel2,
         }) as any,
     ),
     ragStatus: component.ragStatus || 'N/I',

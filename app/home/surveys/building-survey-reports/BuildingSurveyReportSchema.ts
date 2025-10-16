@@ -185,8 +185,10 @@ export type Costing = {
 export type Phrase = {
   id: string;
   name: string;
-  phrase: string;
-  doc?: JSONContent; // TipTap JSON for per-inspection instance editing
+  phrase: string; // Level 3 resolved text (backward compatibility)
+  doc?: JSONContent; // Level 3 TipTap doc (backward compatibility)
+  phraseLevel2?: string; // Level 2 resolved text
+  docLevel2?: JSONContent; // Level 2 TipTap doc
 };
 
 export type Material = {

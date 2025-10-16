@@ -46,7 +46,11 @@ import { FORM_DEBOUNCE_DELAYS } from '@/app/home/config/formConstants';
 import InlineTemplateComposer from '@/components/conditions/InlineTemplateComposer';
 import { docToTokens, tokensToDoc, stripInlineSelectChoices } from '@/lib/conditions/interop';
 import type { JSONContent } from '@tiptap/core';
-import { isConditionUnresolved } from '@/lib/conditions/validator';
+import {
+  isConditionUnresolved,
+  isConditionUnresolvedForLevel,
+  isMissingLevel2Content,
+} from '@/lib/conditions/validator';
 import LocalComponentNamePrompt from './components/LocalComponentNamePrompt';
 import RenameLocalComponentPrompt from './components/RenameLocalComponentPrompt';
 import LocalConditionPrompt from './components/LocalConditionPrompt';
@@ -757,6 +761,9 @@ function InspectionFormContent({
                                 id: x.id,
                                 name: x.name,
                                 phrase: x.phrase || '',
+                                doc: x.doc,
+                                phraseLevel2: x.phraseLevel2,
+                                docLevel2: x.docLevel2,
                               })),
                               ragStatus: current.ragStatus,
                               costings: (current.costings || []).map((x: any) => ({
@@ -782,12 +789,32 @@ function InspectionFormContent({
             {Array.isArray(conditions) && (
               <ConditionsList
                 conditions={conditions}
+                surveyLevel={level as '2' | '3'}
+                isUnresolved={(index) => {
+                  const condition = conditions[index];
+                  // Check for unresolved inline selections
+                  const hasUnresolvedSelections = isConditionUnresolvedForLevel(
+                    condition as any,
+                    level as '2' | '3',
+                  );
+                  // For Level 2 surveys, also check if Level 2 content is missing
+                  const missingLevel2Content =
+                    level === '2' && isMissingLevel2Content(condition as any);
+                  return hasUnresolvedSelections || missingLevel2Content;
+                }}
                 onEdit={(index: number) => {
                   const current = getValues();
                   const item = current.conditions[index];
-                  const startValue = (item as any).doc
-                    ? docToTokens((item as any).doc)
-                    : item.phrase || '';
+                  const isLevel2 = level === '2';
+
+                  // Load doc for current level
+                  const currentDoc = isLevel2 ? (item as any).docLevel2 : (item as any).doc;
+                  const startValue = currentDoc
+                    ? docToTokens(currentDoc)
+                    : isLevel2
+                      ? (item as any).phraseLevel2 || ''
+                      : item.phrase || '';
+
                   drawer.openDrawer({
                     id: surveyId + '/edit-condition-' + index,
                     title: `Edit Condition – ${item.name}`,
@@ -796,12 +823,15 @@ function InspectionFormContent({
                       <div className="p-2">
                         <InlineTemplateComposer
                           value={startValue}
-                          initialDoc={(item as any).doc}
+                          initialDoc={currentDoc}
                           onChange={() => {}}
                           onDocChange={(doc) => {
                             const next = [...getValues().conditions];
+                            // Update BOTH levels with the same doc (per user req 1.b)
                             (next[index] as any).doc = doc as any;
                             (next[index] as any).phrase = resolveDocToText(doc as any);
+                            (next[index] as any).docLevel2 = doc as any;
+                            (next[index] as any).phraseLevel2 = resolveDocToText(doc as any);
                             setValue('conditions', next, {
                               shouldValidate: true,
                               shouldDirty: true,

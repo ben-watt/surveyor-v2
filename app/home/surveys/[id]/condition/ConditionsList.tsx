@@ -1,6 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { FormPhrase } from './types';
-import { isConditionUnresolved } from '@/lib/conditions/validator';
+import {
+  isConditionUnresolved,
+  isConditionUnresolvedForLevel,
+  isMissingLevel2Content,
+} from '@/lib/conditions/validator';
 import { AlertCircle, ArrowDown, ArrowUp, MoreHorizontal, PenLine, X } from 'lucide-react';
 import {
   DropdownMenu,
@@ -17,6 +21,7 @@ type ConditionsListProps = {
   onMoveDown: (index: number) => void;
   onRemove: (index: number) => void;
   isUnresolved?: (index: number) => boolean;
+  surveyLevel?: '2' | '3'; // Optional: Used to show specific warning messages
 };
 
 export default function ConditionsList({
@@ -26,6 +31,7 @@ export default function ConditionsList({
   onMoveDown,
   onRemove,
   isUnresolved,
+  surveyLevel,
 }: ConditionsListProps) {
   const items = Array.isArray(conditions) ? conditions : [];
   return (
@@ -34,6 +40,23 @@ export default function ConditionsList({
         const unresolved = isUnresolved
           ? isUnresolved(index)
           : isConditionUnresolved(condition as any);
+
+        // Determine specific warning message
+        let warningMessage = 'Needs selection';
+        if (unresolved && surveyLevel) {
+          const hasUnresolvedSelections = isConditionUnresolvedForLevel(
+            condition as any,
+            surveyLevel,
+          );
+          const missingLevel2 = surveyLevel === '2' && isMissingLevel2Content(condition as any);
+
+          if (missingLevel2 && !hasUnresolvedSelections) {
+            warningMessage = 'Missing Level 2 content';
+          } else if (missingLevel2 && hasUnresolvedSelections) {
+            warningMessage = 'Needs selection & missing Level 2 content';
+          }
+        }
+
         return (
           <div
             key={condition.id + '-' + index}
@@ -49,11 +72,11 @@ export default function ConditionsList({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <AlertCircle
-                          aria-label="Condition needs selection"
+                          aria-label={warningMessage}
                           className="h-3.5 w-3.5 text-red-600"
                         />
                       </TooltipTrigger>
-                      <TooltipContent>Needs selection</TooltipContent>
+                      <TooltipContent>{warningMessage}</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}

@@ -32,7 +32,7 @@ describe('ConditionsList UI', () => {
     const nameEl = screen.getByText('C1');
     const item = nameEl.closest('div')?.parentElement?.parentElement as HTMLElement;
     expect(item).toHaveClass('border-red-500');
-    expect(screen.getByLabelText('Condition needs selection')).toBeInTheDocument();
+    expect(screen.getByLabelText('Needs selection')).toBeInTheDocument();
   });
 
   test('shows overflow menu on small screens while up/down stay visible', async () => {

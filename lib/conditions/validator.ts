@@ -134,3 +134,25 @@ export function isConditionUnresolved(condition: { doc?: JSONContent | null; phr
   if (condition && condition.doc) return isDocUnresolved(condition.doc);
   return isPhraseLikelyUnresolved(condition?.phrase ?? '');
 }
+
+// Level-aware validation helper: checks the appropriate doc/phrase based on survey level
+export function isConditionUnresolvedForLevel(
+  condition: { phrase?: string; doc?: any; phraseLevel2?: string; docLevel2?: any },
+  level: '2' | '3',
+): boolean {
+  const doc = level === '2' ? condition.docLevel2 : condition.doc;
+  const phrase = level === '2' ? condition.phraseLevel2 : condition.phrase;
+
+  if (doc) return isDocUnresolved(doc);
+  if (phrase) return isPhraseLikelyUnresolved(phrase);
+  return false;
+}
+
+// Helper to check if a condition is missing Level 2 content
+// Returns true if the condition lacks Level 2 text (empty or undefined)
+// Useful for flagging library phrases that need Level 2 content added
+export function isMissingLevel2Content(
+  condition: { phraseLevel2?: string },
+): boolean {
+  return !condition.phraseLevel2 || condition.phraseLevel2.trim().length === 0;
+}

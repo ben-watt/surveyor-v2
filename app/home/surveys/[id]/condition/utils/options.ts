@@ -64,15 +64,14 @@ export function buildPhrasesOptions(
     .map((p) => {
       const docL3 = (p as any).phraseDoc;
       const docL2 = (p as any).phraseLevel2Doc;
-      const isLevel2 = level === '2';
-      const chosenDoc = isLevel2 ? docL2 : docL3;
-      const phraseText = isLevel2 ? p.phraseLevel2 || 'No level 2 text' : p.phrase || 'No level 3 text';
       return {
         value: {
           id: p.id,
           name: p.name,
-          phrase: phraseText,
-          doc: stripInlineSelectChoices(chosenDoc) || undefined,
+          phrase: p.phrase || '', // Level 3
+          doc: stripInlineSelectChoices(docL3) || undefined,
+          phraseLevel2: p.phraseLevel2 || '', // Don't fallback - empty will trigger validation
+          docLevel2: stripInlineSelectChoices(docL2) || undefined,
         } as FormPhrase,
         label: p.name,
       };
@@ -82,13 +81,25 @@ export function buildPhrasesOptions(
     if (!elementId || !derivedSectionId) return [] as { value: FormPhrase; label: string }[];
     const defs = conditionDefs;
     return defs.map((d: any) => ({
-      value: { id: d.id, name: d.name, phrase: d.text } as FormPhrase,
+      value: {
+        id: d.id,
+        name: d.name,
+        phrase: d.text,
+        phraseLevel2: d.text, // Same text for both levels
+      } as FormPhrase,
       label: `${d.name} - (survey only)`,
     }));
   })();
 
   const current = (Array.isArray(conditions) ? conditions : []).map((c: any) => ({
-    value: { id: c.id, name: c.name, phrase: c.phrase || '', doc: (c as any).doc } as FormPhrase,
+    value: {
+      id: c.id,
+      name: c.name,
+      phrase: c.phrase || '',
+      doc: (c as any).doc,
+      phraseLevel2: (c as any).phraseLevel2,
+      docLevel2: (c as any).docLevel2,
+    } as FormPhrase,
     label:
       String(c.id).startsWith(ID_PREFIX.condDef) || String(c.id).startsWith(ID_PREFIX.instance)
         ? `${c.name} - (survey only)`

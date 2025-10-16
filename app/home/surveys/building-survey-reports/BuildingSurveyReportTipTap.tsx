@@ -962,12 +962,16 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 <strong>Condition / Defect</strong>
               </p>
               <div>
-                {mc.conditions.map((d) => (
-                  <React.Fragment key={d.name}>
-                    <p style={{ textAlign: 'justify' }}>{d.phrase}</p>
-                    <p style={{ fontSize: '6pt' }}></p>
-                  </React.Fragment>
-                ))}
+                {mc.conditions.map((d) => {
+                  const phraseText =
+                    form.reportDetails.level === '2' ? d.phraseLevel2 || d.phrase : d.phrase;
+                  return (
+                    <React.Fragment key={d.name}>
+                      <p style={{ textAlign: 'justify' }}>{phraseText}</p>
+                      <p style={{ fontSize: '6pt' }}></p>
+                    </React.Fragment>
+                  );
+                })}
                 {mc.additionalDescription && (
                   <p style={{ textAlign: 'justify' }}>{mc.additionalDescription}</p>
                 )}
