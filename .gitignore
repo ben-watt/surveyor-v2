@@ -36,6 +36,7 @@ amplifytools.xcconfig
 
 #ts
 *.tsbuildinfo
+.eslintcache
 
 # Serwist
 public/sw*
