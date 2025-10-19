@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { render, screen } from '@/test-utils';
+import { render, screen } from '@testing-library/react';
 import ConditionsList from '../ConditionsList';
 import { isMissingLevel2Content } from '@/lib/conditions/validator';
 

@@ -87,7 +87,7 @@ User Action → React Hook Form → Local Store (Dexie) → Sync Queue → AWS A
 - TypeScript strict mode enabled
 - React components in PascalCase
 - Event handlers prefixed with `handle`
-- Test files: `*.test.ts` in `__tests__/`
+- Test files: `*.test.ts` in `tests/`
 
 ### Testing Approach
 

@@ -493,7 +493,7 @@ export function usePhrasesCompat() {
 
 #### 1. Unit Tests
 
-Create `app/home/clients/legendState/__tests__/phrasesStore.test.ts`:
+Create `app/home/clients/legendState/tests/phrasesStore.test.ts`:
 
 ```typescript
 import { phrases$, phrasesSyncStatus$, forceSyncPhrases } from '../phrasesStore';

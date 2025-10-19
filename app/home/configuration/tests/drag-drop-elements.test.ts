@@ -8,7 +8,7 @@ import {
   createDragStartEvent,
   createDragEndEvent,
   createDragOverEvent,
-} from '@/test-utils/drag-drop-utils';
+} from './utils/drag-drop-utils';
 
 // Mock toast to avoid errors
 jest.mock('react-hot-toast', () => ({

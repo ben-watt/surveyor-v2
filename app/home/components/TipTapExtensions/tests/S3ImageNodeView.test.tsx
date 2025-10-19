@@ -1,21 +1,20 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { S3ImageNodeView } from './S3ImageNodeView';
-import userEvent from '@testing-library/user-event';
+import { S3ImageNodeView } from '../S3ImageNodeView';
 
 // Mock getImageHref
-jest.mock('../../editor/utils/image', () => ({
+jest.mock('../../../editor/utils/image', () => ({
   getImageHref: jest.fn().mockResolvedValue('https://test-bucket.s3.amazonaws.com/test.jpg'),
 }));
 
 jest.mock('aws-amplify/storage', () => ({
   uploadData: jest.fn().mockResolvedValue({}),
 }));
-jest.mock('../../utils/tenant-utils', () => ({
+jest.mock('../../../utils/tenant-utils', () => ({
   getCurrentTenantId: jest.fn().mockResolvedValue('tenant-123'),
 }));
-jest.mock('../../utils/file-utils', () => ({
+jest.mock('../../../utils/file-utils', () => ({
   sanitizeFileName: jest.fn((name) => name),
 }));
 
@@ -55,7 +54,7 @@ describe('S3ImageNodeView', () => {
       expect(img).not.toHaveAttribute('data-s3-path');
     });
     // getImageHref should not be called
-    const { getImageHref } = require('../../editor/utils/image');
+    const { getImageHref } = require('../../../editor/utils/image');
     expect(getImageHref).not.toHaveBeenCalled();
   });
 

@@ -624,7 +624,7 @@ export const syncEngine = new EnhancedSyncEngine();
 
 ### 4.1 Unit Tests
 
-Create `__tests__/yjsTextFieldManager.test.ts`:
+Create `tests/yjsTextFieldManager.test.ts`:
 
 ```typescript
 import { yjsTextManager } from '../app/home/clients/yjsTextFieldManager';
@@ -665,7 +665,7 @@ describe('YjsTextFieldManager', () => {
 
 ### 4.2 Integration Tests
 
-Create `__tests__/integration/collaborative-editing.test.tsx`:
+Create `tests/integration/collaborative-editing.test.tsx`:
 
 ```typescript
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'

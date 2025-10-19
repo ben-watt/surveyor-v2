@@ -27,8 +27,8 @@ Element rows in `app/home/surveys/[id]/condition/page.tsx` show subtle outline b
 
 ### Tests
 
-- `__tests__/element-completeness.test.ts`
-- `__tests__/element-list-badges.test.tsx`
+- `tests/element-completeness.test.ts`
+- `tests/element-list-badges.test.tsx`
 
 ### Future
 

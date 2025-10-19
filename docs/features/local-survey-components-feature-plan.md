@@ -144,9 +144,9 @@ function MyElementPanel({ survey, elements, sectionId, elementId }: any) {
 
 Files:
 
-- `__tests__/inspection-form-local-components.test.tsx`
-- `__tests__/inspection-form-local-conditions.test.tsx`
-- `__tests__/inspection-form-local-component-defs.test.tsx`
+- `tests/inspection-form-local-components.test.tsx`
+- `tests/inspection-form-local-conditions.test.tsx`
+- `tests/inspection-form-local-component-defs.test.tsx`
 
 ### Phrases Association Consideration
 

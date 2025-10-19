@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import DraggableTreeNode from '@/app/home/configuration/components/DraggableTreeNode';
-import { createMockTreeNode } from '@/test-utils/drag-drop-utils';
+import { createMockTreeNode } from './utils/drag-drop-utils';
 import { DragState } from '@/app/home/configuration/hooks/useDragDrop';
 
 // Mock Next.js app router hooks used by ConfigTreeNode

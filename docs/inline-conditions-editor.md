@@ -151,11 +151,11 @@ When editing a condition's inline selections:
 - **Local conditions**: Survey-only conditions use same text for both levels
 
 ### Test Files
-- `lib/conditions/__tests__/validator.test.ts` – 25 tests including Level 2 validation
-- `app/home/surveys/[id]/condition/__tests__/level-aware-conditions.test.tsx` – 9 tests
-- `app/home/surveys/[id]/condition/__tests__/inspection-form-level-aware.test.tsx` – 5 tests
-- `app/home/surveys/[id]/condition/__tests__/level-2-content-warning.test.tsx` – 6 tests
-- `app/home/surveys/building-survey-reports/__tests__/level-aware-pdf-rendering.test.tsx` – 6 tests
+- `lib/conditions/tests/validator.test.ts` – 25 tests including Level 2 validation
+- `app/home/surveys/[id]/condition/tests/level-aware-conditions.test.tsx` – 9 tests
+- `app/home/surveys/[id]/condition/tests/inspection-form-level-aware.test.tsx` – 5 tests
+- `app/home/surveys/[id]/condition/tests/level-2-content-warning.test.tsx` – 6 tests
+- `app/home/surveys/building-survey-reports/tests/level-aware-pdf-rendering.test.tsx` – 6 tests
 
 ## Changelog
 

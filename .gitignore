@@ -7,6 +7,11 @@ node_modules
 
 # next generated files
 .next
+out/
+
+# native platform build artifacts
+android/
+ios/
 
 # amplify
 .env*.local

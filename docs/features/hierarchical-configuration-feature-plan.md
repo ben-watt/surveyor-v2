@@ -262,9 +262,9 @@ interface SearchOptions {
 
 ### Testing Files
 
-- `app/home/configuration/__tests__/HierarchicalConfigView.test.tsx`
-- `app/home/configuration/__tests__/treeOperations.test.ts`
-- `app/home/configuration/__tests__/useHierarchicalData.test.ts`
+- `app/home/configuration/tests/HierarchicalConfigView.test.tsx`
+- `app/home/configuration/tests/treeOperations.test.ts`
+- `app/home/configuration/tests/useHierarchicalData.test.ts`
 
 This feature will significantly improve the user experience by providing a comprehensive overview of the configuration hierarchy while maintaining all existing functionality in a more intuitive interface.
 

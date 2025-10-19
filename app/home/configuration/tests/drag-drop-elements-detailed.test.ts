@@ -7,7 +7,7 @@ import {
   createMockTreeNode,
   createDragStartEvent,
   createDragEndEvent,
-} from '@/test-utils/drag-drop-utils';
+} from './utils/drag-drop-utils';
 
 // Mock toast to capture error messages
 jest.mock('react-hot-toast', () => ({

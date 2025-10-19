@@ -166,7 +166,7 @@ const handleDragEnd = ({ active, over }) => {
 
 1. Add sortable behavior to `DropZoneInputImageV2` with new props and DnD wiring.
 2. Wire `RhfDropZoneInputImage` to pass `value` and handle `onReorder`.
-3. Add unit tests for reorder logic and RHF integration under `app/home/components/InputImage/__tests__`.
+3. Add unit tests for reorder logic and RHF integration under `app/home/components/InputImage/tests`.
 4. Add an integration test to verify editor preview reflects the new order.
 
 ## Acceptance Criteria

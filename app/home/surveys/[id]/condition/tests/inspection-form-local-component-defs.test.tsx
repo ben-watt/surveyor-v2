@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@/test-utils';
+import { render, screen, fireEvent } from '@testing-library/react';
 import InspectionForm from '@/app/home/surveys/[id]/condition/InspectionForm';
 import { DynamicDrawerProvider } from '@/app/home/components/Drawer';
 
