@@ -331,12 +331,12 @@ function PhotoGallery() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between lg:items-center">
+        <div className="space-y-1">
           <h1 className="text-2xl dark:text-white">Photo Gallery</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {visibleTotal} photos
-            <span className="ml-2">
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <span className="font-medium text-gray-900 dark:text-gray-100">{visibleTotal} photos</span>
+            <span>
               {showArchived
                 ? `(${activeTotal} active, ${archivedTotal} archived)`
                 : archivedTotal > 0
@@ -345,8 +345,8 @@ function PhotoGallery() {
             </span>
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <label className="flex cursor-pointer items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <label className="flex w-full cursor-pointer items-center gap-2 sm:w-auto">
             <input
               type="checkbox"
               checked={showArchived}
@@ -358,7 +358,7 @@ function PhotoGallery() {
           <button
             onClick={handleExportZip}
             disabled={isExporting || photoSections.length === 0}
-            className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors ${isExporting ? 'bg-gray-200 text-gray-500 dark:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'}`}
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-3 py-1.5 transition-colors sm:w-auto ${isExporting ? 'bg-gray-200 text-gray-500 dark:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'}`}
           >
             {isExporting ? (
               <>
@@ -374,7 +374,7 @@ function PhotoGallery() {
           </button>
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 sm:w-auto"
           >
             <ArrowLeft size={18} />
             <span>Back</span>
