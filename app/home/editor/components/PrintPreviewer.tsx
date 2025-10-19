@@ -9,24 +9,80 @@ interface PrintPreviewerProps {
   onBack: () => void;
 }
 
-async function resolveAllS3ImagesInContainer(container: HTMLElement | Document) {
-  const images = Array.from(container.querySelectorAll('img[data-s3-path]'));
-  await Promise.all(
-    images.map(async (img) => {
-      const s3Path = img.getAttribute('data-s3-path');
-      if (s3Path) {
-        const url = await getImageHref(s3Path);
-        img.setAttribute('src', url);
-      }
-    }),
-  );
+type PreparedContent = {
+  html: string;
+  failedPaths: string[];
+};
+
+async function prepareContentWithResolvedImages(content: string): Promise<PreparedContent> {
+  try {
+    const parser = new DOMParser();
+    const parsedDocument = parser.parseFromString(content, 'text/html');
+    const images = Array.from(parsedDocument.querySelectorAll('img[data-s3-path]'));
+    const failedPaths: string[] = [];
+
+    await Promise.all(
+      images.map(async (img) => {
+        const s3Path = img.getAttribute('data-s3-path');
+        if (!s3Path) return;
+
+        try {
+          const url = await getImageHref(s3Path);
+          if (url) {
+            img.setAttribute('src', url);
+          } else {
+            failedPaths.push(s3Path);
+            img.setAttribute('data-image-error', 'true');
+            img.setAttribute('alt', img.getAttribute('alt') || 'Image unavailable');
+          }
+        } catch (error) {
+          failedPaths.push(s3Path);
+          img.setAttribute('data-image-error', 'true');
+          img.setAttribute('alt', img.getAttribute('alt') || 'Image unavailable');
+        }
+      }),
+    );
+
+    const hasHtmlRoot =
+      /<html[\s>]/i.test(content) || /^<!doctype\s+html>/i.test(content.trim());
+    const serializedHtml = hasHtmlRoot
+      ? parsedDocument.documentElement.outerHTML
+      : parsedDocument.body?.innerHTML || content;
+
+    // Serialize updated markup; prefer body children to avoid wrapping html/head tags.
+    return {
+      html: serializedHtml,
+      failedPaths,
+    };
+  } catch (error) {
+    console.error('[PrintPreviewer] Failed to prepare content HTML:', error);
+    return {
+      html: content,
+      failedPaths: [],
+    };
+  }
+}
+
+async function waitForImages(container: HTMLElement | Document) {
+  const images = Array.from(container.querySelectorAll('img'));
   await Promise.all(
     images.map(
       (img) =>
         new Promise((resolve) => {
           const image = img as HTMLImageElement;
-          if (image.complete) resolve(null);
-          else image.onload = () => resolve(null);
+          if (image.complete) {
+            resolve(null);
+            return;
+          }
+
+          const handleResolve = () => {
+            image.removeEventListener('load', handleResolve);
+            image.removeEventListener('error', handleResolve);
+            resolve(null);
+          };
+
+          image.addEventListener('load', handleResolve, { once: true });
+          image.addEventListener('error', handleResolve, { once: true });
         }),
     ),
   );
@@ -59,12 +115,17 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
         prev.innerHTML = '';
         setIsRendering(true);
 
+        const { html: preparedHtml, failedPaths } = await prepareContentWithResolvedImages(content);
+        if (failedPaths.length) {
+          console.warn('[PrintPreviewer] Failed to resolve image paths:', failedPaths);
+        }
+
         // Create new previewer instance for each update
         currentPreviewer = new Previewer({});
-        await currentPreviewer.preview(content, ['/pagedstyles.css', '/interface.css'], prev);
+        await currentPreviewer.preview(preparedHtml, ['/pagedstyles.css', '/interface.css'], prev);
 
-        // Resolve S3 images in the preview container
-        await resolveAllS3ImagesInContainer(prev);
+        // Ensure images finish loading before allowing print
+        await waitForImages(prev);
 
         console.log('[PrintPreviewer] Preview generation complete');
         setIsRendering(false);
