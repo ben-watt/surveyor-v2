@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Previewer } from 'pagedjs';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download } from 'lucide-react';
 import { getImageHref } from '../utils/image';
@@ -12,6 +13,11 @@ interface PrintPreviewerProps {
 type PreparedContent = {
   html: string;
   failedPaths: string[];
+};
+
+const arraysEqual = (a: string[], b: string[]): boolean => {
+  if (a.length !== b.length) return false;
+  return a.every((value, index) => value === b[index]);
 };
 
 async function prepareContentWithResolvedImages(content: string): Promise<PreparedContent> {
@@ -90,6 +96,9 @@ async function waitForImages(container: HTMLElement | Document) {
 
 export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack }) => {
   const previewRef = React.useRef<HTMLDivElement>(null);
+  const previewerRef = React.useRef<Previewer | null>(null);
+  const generationTokenRef = React.useRef(0);
+  const lastFailedPathsRef = React.useRef<string[]>([]);
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isRendering, setIsRendering] = React.useState(true);
 
@@ -104,34 +113,60 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
 
     const prev = previewRef.current;
     let timeoutId: NodeJS.Timeout;
-    let currentPreviewer: Previewer | null = null;
+    const currentToken = ++generationTokenRef.current;
 
     const generatePreview = async () => {
       try {
         console.log('[PrintPreviewer] Starting preview generation');
         if (!prev.isConnected) return;
 
-        // Clear previous content
+        if (generationTokenRef.current !== currentToken) return;
+
+        // Clear previous content and show spinner for the active generation
         prev.innerHTML = '';
         setIsRendering(true);
 
         const { html: preparedHtml, failedPaths } = await prepareContentWithResolvedImages(content);
         if (failedPaths.length) {
-          console.warn('[PrintPreviewer] Failed to resolve image paths:', failedPaths);
-        }
+          const normalized = [...failedPaths].sort();
+          const previous = lastFailedPathsRef.current;
+          const shouldToast = !arraysEqual(normalized, previous);
+          lastFailedPathsRef.current = normalized;
 
-        // Create new previewer instance for each update
-        currentPreviewer = new Previewer({});
-        await currentPreviewer.preview(preparedHtml, ['/pagedstyles.css', '/interface.css'], prev);
+          if (shouldToast) {
+            console.warn('[PrintPreviewer] Failed to resolve image paths:', failedPaths);
+            const count = normalized.length;
+            const message =
+              count === 1
+                ? '1 image could not be loaded for the preview.'
+                : `${count} images could not be loaded for the preview.`;
+            toast.error(message, { id: 'print-preview-image-error' });
+          }
+        } else {
+          lastFailedPathsRef.current = [];
+        }
+        if (generationTokenRef.current !== currentToken) return;
+
+        // Create or reuse previewer instance
+        const previewer =
+          previewerRef.current ?? (previewerRef.current = new Previewer({}));
+        await previewer.preview(preparedHtml, ['/pagedstyles.css', '/interface.css'], prev);
+        if (generationTokenRef.current !== currentToken) return;
 
         // Ensure images finish loading before allowing print
         await waitForImages(prev);
+        if (generationTokenRef.current !== currentToken) return;
 
         console.log('[PrintPreviewer] Preview generation complete');
         setIsRendering(false);
       } catch (error) {
         console.error('[PrintPreviewer] Preview generation failed:', error);
-        setIsRendering(false);
+        toast.error('Failed to generate the print preview. Please try again.', {
+          id: 'print-preview-generate-error',
+        });
+        if (generationTokenRef.current === currentToken) {
+          setIsRendering(false);
+        }
       }
     };
 
@@ -141,8 +176,9 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
-      if (currentPreviewer) {
-        currentPreviewer = null;
+      // Invalidate this generation so late async work is ignored
+      if (generationTokenRef.current === currentToken) {
+        generationTokenRef.current++;
       }
       if (prev.isConnected) {
         prev.innerHTML = '';

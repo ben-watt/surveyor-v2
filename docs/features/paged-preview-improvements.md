@@ -29,12 +29,18 @@
 - Maintain a `generationToken` (`useRef(0)`) and increment it before each render; capture the token locally and exit early if it no longer matches when async work resolves.
 - Wrap `preview()` in `try/finally` and only mutate the container or flip `isRendering` when the token matches, preventing stale renders from racing.
 - On cleanup, bump the token and clear the container so in-flight renders become no-ops.
+- **Status:** ✅ Implemented in `app/home/editor/components/PrintPreviewer.tsx`.
 
 ### Pre-resolve Image Sources
 - Parse the HTML string into a detached DOM (`new DOMParser().parseFromString(content, 'text/html')`).
 - Resolve each `img[data-s3-path]` in parallel, set the resulting `src`, and attach `load`/`error` listeners that resolve either way.
 - On errors, inject a placeholder element and emit a toast/console warning so users know a photo is missing while the spinner still clears.
 - Serialize the updated DOM back to a string and feed that HTML to Paged.js, ensuring pagination reflects the actual image dimensions.
+- **Status:** ✅ Implemented in `app/home/editor/components/PrintPreviewer.tsx`.
+
+### Error Handling & User Feedback
+- Surface toast notifications when preview generation fails or images cannot be loaded, and prevent duplicate alerts across rapid edits.
+- Ensure rendering state clears even on failure so users can retry.
 - **Status:** ✅ Implemented in `app/home/editor/components/PrintPreviewer.tsx`.
 
 ### Reliable Print Trigger
@@ -53,7 +59,5 @@
 - Validate TypeScript definitions via `import('pagedjs').Previewer` to preserve type safety.
 
 ## Next Steps
-1. Implement guarded preview lifecycle (token/ref reuse) behind a feature flag and validate on representative surveys.
-2. Add user-facing error handling (image load failures, preview exceptions) and automated coverage to ensure the spinner clears.
-3. Introduce cached stylesheet handling plus dynamic `pagedjs` import; measure bundle size and preview latency before/after.
-4. Update developer documentation and add regression tests (unit + E2E) covering print button disablement and image error fallbacks.
+1. Introduce cached stylesheet handling plus dynamic `pagedjs` import; measure bundle size and preview latency before/after.
+2. Update developer documentation and add regression tests (unit + E2E) covering print button disablement and image error fallbacks.
