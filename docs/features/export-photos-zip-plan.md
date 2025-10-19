@@ -155,3 +155,47 @@ Phase 2 — Export ZIP
 - [ ] Scalable: add API route, stream ZIP with `archiver`, mirror folder structure.
 - [ ] Wire button to route; handle auth; show progress/disabled state.
 - [ ] Test with small and large surveys.
+
+## Phase 3 — Large Export UX Enhancements (Investigated)
+
+### Problem
+
+The current export flow blocks on a single client request (`app/home/surveys/[id]/photos/page.tsx`) with no progress feedback, so users must stay on the page and cannot see status if they navigate away. Large surveys risk timeouts, failed downloads, or confusing silent failures.
+
+### Investigated Approach (On Hold)
+
+- Spin up an async server-side export job in Amplify Gen 2:
+  - `POST /api/surveys/:id/photos/export` enqueues a job via a Gen 2 function (pattern similar to `amplify/data/tenant-admin/resource.ts`) and returns `{ jobId }`.
+  - Worker (Amplify function) streams files to object storage, updates progress, and reuses the folder resolver shared with the photos page.
+  - Persist metadata (status, processedCount, totalCount, startedAt, finishedAt, downloadUrl, skippedCount) in an Amplify Data/queue model (multi-tenant scoped).
+- Status API:
+  - `GET /api/surveys/:id/photos/export/:jobId` for polling progress and retrieving the download URL when ready.
+  - Cancellation handled by letting jobs run to completion/failure; no explicit cancel endpoint planned.
+- Shared utilities:
+  - Extract resolvers from `app/home/surveys/[id]/photos/page.tsx` into `/app/home/surveys/utils/exportPath.ts` for consistent folder naming.
+  - Implement paged reads from the enhanced image store to avoid memory blowups.
+- UI enhancements in `app/home/surveys/[id]/photos/page.tsx`:
+  - Export button triggers the async job and opens a progress drawer/modal that lists active and recent exports with progress bars and error states.
+  - Persist lightweight job context to localStorage so refreshing or navigating away retains awareness of in-flight jobs.
+  - Surface completion via toast/snackbar with direct download and “view details” links.
+  - Mobile UX: use full-width sheet layout, ensure keyboard/focus accessibility, and `aria-live` announcements.
+
+### Investigation Notes & Outstanding Items
+
+- Backend
+  - Use Amplify Gen 2 to define both the job queue model and worker function; aligns with existing `defineFunction` pattern in `amplify/data/tenant-admin/resource.ts`.
+  - Store job metadata in Amplify Data (Dynamo) with TTL (~7 days). Include idempotent keys to avoid duplicate jobs.
+  - Paged reads from enhanced image store are required to manage memory.
+- API Contracts
+  - Status response shape: `{ jobId, status, processedCount, totalCount, percentComplete, downloadUrl?, expiresAt?, message? }`.
+  - Error handling: 401 unauthorized, 403 tenant mismatch, 404 job missing, 429 when throttled, 5xx for worker failures.
+  - No cancel endpoint currently; long-running jobs should auto-fail/reset if exceeding max duration. Surface alert/toast if a timeout occurs.
+- Front-End
+  - Polling: start ~1s interval, exponential backoff; pause on hidden tab; resume on focus.
+  - Local persistence via `localStorage` for job ids/status; cleanup after expiry.
+  - Progress drawer integrates with global notifications to show export status across pages.
+- Monitoring
+  - Track job duration, failure rate, and timeouts; alert if jobs exceed SLA or fail repeatedly.
+  - Ensure partial archives (in case of failure) are cleaned up to avoid orphaned objects.
+
+> Status: Phase 3 remains de-prioritized; revisit once higher-priority work ships. Investigation above captures current decisions and open tasks for when we resume.
