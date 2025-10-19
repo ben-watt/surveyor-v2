@@ -144,7 +144,13 @@ async function getTemplateInitialContent(surveyId: string, templateId: TemplateI
   };
 }
 
-export function useEditorState(id: string, templateId?: string) {
+export function useEditorState(
+  id: string,
+  templateId?: string,
+  options?: {
+    enabled?: boolean;
+  },
+) {
   const [editorContent, setEditorContent] = React.useState<string>('');
   const [previewContent, setPreviewContent] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState(true);
@@ -153,8 +159,13 @@ export function useEditorState(id: string, templateId?: string) {
   const [titlePage, setTitlePage] = React.useState<string>('');
   const [addTitleHeaderFooter, setAddTitleHeaderFooter] = React.useState<any>(null);
   const [getDocName, setGetDocName] = React.useState<any>(() => async () => id);
+  const enabled = options?.enabled ?? true;
 
   React.useEffect(() => {
+    if (!enabled) {
+      setIsLoading(true);
+      return;
+    }
     let cancelled = false;
     async function load() {
       setIsLoading(true);
@@ -241,7 +252,7 @@ export function useEditorState(id: string, templateId?: string) {
     return () => {
       cancelled = true;
     };
-  }, [id, templateId]);
+  }, [id, templateId, enabled]);
 
   return {
     editorContent,

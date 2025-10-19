@@ -13,12 +13,15 @@ import { useTemplateId } from '@/app/home/editor/hooks/useTemplateId';
 import { useVersionHistory, Version } from '@/app/home/editor/hooks/useVersionHistory';
 import { VersionPreview } from '../components/VersionPreview';
 import { useParams, useSearchParams } from 'next/navigation';
+import { useCurrentTenantId } from '@/app/home/utils/tenant-utils';
 
 export default function EditorClient() {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const searchParams = useSearchParams();
   const initialTemplateId = searchParams.get('templateId') || undefined;
+  const [isTenantHydrated, tenantId] = useCurrentTenantId();
+  const tenantReady = isTenantHydrated && !!tenantId;
 
   // Use custom hook for templateId
   const templateId = useTemplateId(id, initialTemplateId);
@@ -34,7 +37,7 @@ export default function EditorClient() {
 
   // Always call useEditorState, but pass undefined for templateId if not available
   const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } =
-    useEditorState(id, templateId);
+    useEditorState(id, templateId, { enabled: tenantReady });
   const effectiveLoading = !templateId || isLoading;
 
   const editorRef = useRef<any>(null);
@@ -89,6 +92,21 @@ export default function EditorClient() {
   const updateHandler = ({ editor }: { editor: any }) => {
     if (addTitleHeaderFooter) addTitleHeaderFooter({ editor });
   };
+
+  if (!isTenantHydrated) {
+    return <div className="m-auto w-[962px]">Loading...</div>;
+  }
+
+  if (!tenantId) {
+    return (
+      <div className="m-auto flex w-[962px] flex-col items-center gap-2 text-center">
+        <h2 className="text-lg font-semibold">Select a tenant to edit documents</h2>
+        <p className="text-sm text-muted-foreground">
+          Choose a tenant from the switcher in the top bar to enable document editing and saving.
+        </p>
+      </div>
+    );
+  }
 
   if (effectiveLoading) {
     return <div className="m-auto w-[962px]">Loading...</div>;

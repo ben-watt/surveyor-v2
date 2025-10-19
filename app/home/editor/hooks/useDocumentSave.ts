@@ -51,9 +51,16 @@ export function useDocumentSave({
       setTimeout(() => setSaveStatus('idle'), 10000);
       if (!auto) toast.success('Document saved successfully');
     } catch (error) {
+      const defaultErrorMessage = 'Failed to save document';
+      const message = error instanceof Error ? error.message : defaultErrorMessage;
+      const isMissingTenant = message === 'No tenant ID found';
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 10000);
-      if (!auto) toast.error('Failed to save document');
+      if (isMissingTenant) {
+        toast.error('Select a tenant to save documents');
+      } else if (!auto) {
+        toast.error(defaultErrorMessage);
+      }
     } finally {
       setIsSaving(false);
     }
