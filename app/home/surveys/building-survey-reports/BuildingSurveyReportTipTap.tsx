@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 
-import React, { Component, Fragment, isValidElement } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import {
   mapAddress,
@@ -39,79 +39,9 @@ import {
   CONCLUSION_PARAGRAPHS,
   CONCLUSION_CLOSING,
 } from './content';
+import { TableBlock, Page, Heading, RiskRow } from '../report-primitives';
 
-const TableBlock = ({
-  children,
-  widths,
-}: {
-  children: React.ReactNode;
-  widths: readonly number[];
-}) => {
-  if (widths.reduce((a, b) => a + b, 0) !== 100) throw new Error('Widths must add up to 100');
-
-  if (children === null || children === undefined)
-    throw new Error('Children must not be null or undefined or invalid');
-
-  const createTableRows = (elements: React.ReactNode): React.JSX.Element[] => {
-    const elementsArr = React.Children.toArray(elements);
-
-    if (elementsArr.length % widths.length !== 0)
-      console.warn(
-        '[Table Block]',
-        'Number of children should be a multiple of widths',
-        elementsArr.length,
-        widths.length,
-      );
-
-    const landscapeWidth = LANDSCAPE_WIDTH;
-    let tableRows = [];
-    for (let i = 0; i < elementsArr.length; i = i + widths.length) {
-      const firstChildInRow = elementsArr[i];
-      if (isValidElement<any>(firstChildInRow) && firstChildInRow.type === Fragment) {
-        tableRows.push(
-          ...createTableRows(
-            (firstChildInRow as React.ReactElement<{ children: React.ReactNode }>).props.children,
-          ),
-        );
-        i = i - widths.length + 1;
-        continue;
-      }
-
-      let rows = widths.map((w, j) => {
-        if (j === widths.length - 1) {
-          return (
-            <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
-              {elementsArr[i + j]}
-            </td>
-          );
-        } else {
-          return (
-            <td key={j} colwidth={`${landscapeWidth * (widths[j] / 100)}`}>
-              {elementsArr[i + j]}
-            </td>
-          );
-        }
-      });
-
-      tableRows.push(<tr key={i}>{rows}</tr>);
-    }
-
-    return tableRows;
-  };
-
-  return (
-    <table>
-      <tbody>{createTableRows(children)}</tbody>
-    </table>
-  );
-};
-
-const Page = (props: React.PropsWithChildren<any>) => (
-  <>
-    {props.children}
-    <hr />
-  </>
-);
+// Component definitions moved to app/home/surveys/report-primitives/
 
 export type ImageWithMetadata = {
   uri: string;
@@ -153,23 +83,7 @@ interface PdfProps {
   form: BuildingSurveyReportTipTap;
 }
 
-interface H2Props {
-  id: string;
-}
-
-const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
-  return (
-    <TableBlock widths={TABLE_LAYOUTS.threeColumnCentered}>
-      <p id={id} style={REPORT_STYLES.heading3}></p>
-      <h2 data-add-toc-here-id={id} style={REPORT_STYLES.heading2}>
-        {children}
-      </h2>
-      <p></p>
-    </TableBlock>
-  );
-};
-
-// Note: fallback function moved to utils.ts
+// Note: H2 component moved to report-primitives as Heading component
 
 /// This must be a sync function
 /// It needs to be rendered to a basic string rather than a react component
@@ -439,9 +353,13 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={REPORT_STYLES.heading1}>Issues for your Legal Advisor</h1>
-        <H2 id="planning-building-regulations">Planning & Building Regulations</H2>
+        <Heading id="planning-building-regulations" centered>
+          Planning & Building Regulations
+        </Heading>
         <p style={REPORT_STYLES.justified}>{PLANNING_BUILDING_REGULATIONS_CONTENT}</p>
-        <H2 id="statutory">Statutory</H2>
+        <Heading id="statutory" centered>
+          Statutory
+        </Heading>
         {STATUTORY_ITEMS.map((item, index) => (
           <TableBlock key={item.id} widths={TABLE_LAYOUTS.twoColumnLabelValue}>
             {index === 0 ? <h3>&nbsp;</h3> : <p></p>}
@@ -454,7 +372,9 @@ export default function PDF({ form }: PdfProps) {
         ))}
       </Page>
       <Page>
-        <H2 id="thermal-insulation-energy-efficiency">Thermal Insulation & Energy Efficiency</H2>
+        <Heading id="thermal-insulation-energy-efficiency" centered>
+          Thermal Insulation & Energy Efficiency
+        </Heading>
         <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <h3>&nbsp;</h3>
           <p style={REPORT_STYLES.justified}>{THERMAL_INSULATION_CONTENT[0]}</p>
@@ -464,17 +384,23 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={REPORT_STYLES.heading1}>Risks</h1>
-        <H2 id="risks-to-the-building">Risks to the building</H2>
+        <Heading id="risks-to-the-building" centered>
+          Risks to the building
+        </Heading>
         {Object.values(BUILDING_RISKS).map(risk => (
           <RiskRow key={risk.id} id={risk.id} risk={risk.title} description={risk.description} />
         ))}
         <p></p>
-        <H2 id="risks-to-the-grounds">Risks to the grounds</H2>
+        <Heading id="risks-to-the-grounds" centered>
+          Risks to the grounds
+        </Heading>
         {Object.values(GROUNDS_RISKS).map(risk => (
           <RiskRow key={risk.id} id={risk.id} risk={risk.title} description={risk.description} />
         ))}
         <p></p>
-        <H2 id="risks-to-the-people">Risks to the people</H2>
+        <Heading id="risks-to-the-people" centered>
+          Risks to the people
+        </Heading>
         {Object.values(PEOPLE_RISKS).map(risk => (
           <RiskRow key={risk.id} id={risk.id} risk={risk.title} description={risk.description} />
         ))}
@@ -581,7 +507,9 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   return (
     <>
       <Page>
-        <H2 id={es.id}>{es.name}</H2>
+        <Heading id={es.id} centered>
+          {es.name}
+        </Heading>
         <TableBlock widths={[10, 20, 70]}>
           <p></p>
           <p>
@@ -651,19 +579,4 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
   );
 };
 
-interface RiskRowProps {
-  id: string;
-  risk: string;
-  description?: string;
-}
-
-const RiskRow = ({ id, risk, description }: RiskRowProps) => {
-  return (
-    <TableBlock widths={TABLE_LAYOUTS.fourColumnReport}>
-      <p id={id}></p>
-      <h3 data-add-toc-here-id={id}>{risk}</h3>
-      <p style={REPORT_STYLES.justified}>{description}</p>
-      <p></p>
-    </TableBlock>
-  );
-};
+// Note: RiskRow component moved to report-primitives

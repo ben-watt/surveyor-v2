@@ -1,5 +1,19 @@
 # Building Survey Report Refactoring Plan
 
+> **⚠️ ARCHIVED DOCUMENT**  
+> This document has been superseded by [building-survey-report-refactoring.md](./building-survey-report-refactoring.md)  
+> 
+> **Status:** Phases 1, 2, and 3 are complete ✅  
+> All information has been consolidated into the main refactoring document.
+>
+> This file is kept for historical reference only.
+
+---
+
+**Original Planning Document Below (Archived)**
+
+---
+
 ## Overview
 
 This document outlines an incremental refactoring strategy for `BuildingSurveyReportTipTap.tsx` that moves toward the templated report system described in [survey-report-templates-proposal.md](./survey-report-templates-proposal.md).
