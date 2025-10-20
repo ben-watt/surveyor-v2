@@ -12,8 +12,24 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { formatDateWithSuffix } from '@/app/home/utils/dateFormatters';
 import { ImageMetadata } from '../../clients/Database';
+import {
+  LANDSCAPE_WIDTH,
+  IMAGE_MAX_HEIGHT,
+  SIGNATURE_HEIGHT,
+  REPORT_STYLES,
+  TABLE_LAYOUTS,
+  IMAGE_DIMENSIONS,
+} from './constants';
+import { DEFAULT_ORG_CONFIG, formatOrgAddress, getOrgContactEmail } from './org-config';
+import { mapRagToColor, fallback } from './utils';
 
-const TableBlock = ({ children, widths }: { children: React.ReactNode; widths: number[] }) => {
+const TableBlock = ({
+  children,
+  widths,
+}: {
+  children: React.ReactNode;
+  widths: readonly number[];
+}) => {
   if (widths.reduce((a, b) => a + b, 0) !== 100) throw new Error('Widths must add up to 100');
 
   if (children === null || children === undefined)
@@ -30,7 +46,7 @@ const TableBlock = ({ children, widths }: { children: React.ReactNode; widths: n
         widths.length,
       );
 
-    const landscapeWidth = 928; // Width of the page in landscape
+    const landscapeWidth = LANDSCAPE_WIDTH;
     let tableRows = [];
     for (let i = 0; i < elementsArr.length; i = i + widths.length) {
       const firstChildInRow = elementsArr[i];
@@ -126,12 +142,9 @@ interface H2Props {
 
 const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
   return (
-    <TableBlock widths={[6, 88, 6]}>
-      <p id={id} style={{ fontWeight: 'bold' }}></p>
-      <h2
-        data-add-toc-here-id={id}
-        style={{ fontWeight: 'bold', fontSize: '14pt', textAlign: 'center' }}
-      >
+    <TableBlock widths={TABLE_LAYOUTS.threeColumnCentered}>
+      <p id={id} style={REPORT_STYLES.heading3}></p>
+      <h2 data-add-toc-here-id={id} style={REPORT_STYLES.heading2}>
         {children}
       </h2>
       <p></p>
@@ -139,18 +152,7 @@ const H2 = ({ id, children }: React.PropsWithChildren<H2Props>) => {
   );
 };
 
-const fallback = (value: any, fallbackValue: any) => {
-  if (value === undefined || value === null) return fallbackValue;
-
-  switch (typeof value) {
-    case 'string':
-      return value.length > 0 ? value : fallbackValue;
-    case 'number':
-      return value === 0 ? value : fallbackValue;
-    default:
-      return fallbackValue;
-  }
-};
+// Note: fallback function moved to utils.ts
 
 /// This must be a sync function
 /// It needs to be rendered to a basic string rather than a react component
@@ -165,91 +167,85 @@ export default function PDF({ form }: PdfProps) {
   return (
     <>
       <Page>
-        <TableBlock widths={[55, 45]}>
+        <TableBlock widths={TABLE_LAYOUTS.coverPageLayout}>
           <div>
             <img
-              style={{ margin: '0 auto' }}
+              style={REPORT_STYLES.centeredImage}
               src={undefined}
               data-s3-path={form.reportDetails.moneyShot[0].uri}
               alt="main page image"
-              width="700"
-              height="480"
+              width={IMAGE_DIMENSIONS.moneyShot.width}
+              height={IMAGE_DIMENSIONS.moneyShot.height}
             />
           </div>
           <div>
-            <p style={{ textAlign: 'right', fontSize: '14pt', fontWeight: 'bold' }}>
+            <p style={{ ...REPORT_STYLES.rightAligned, ...REPORT_STYLES.heading1 }}>
               Level {form.reportDetails.level} Building Survey Report
             </p>
-            <p style={{ textAlign: 'right' }}></p>
-            <p style={{ textAlign: 'right' }}>Of the premises known as</p>
-            <p style={{ textAlign: 'right' }}></p>
-            <p style={{ textAlign: 'right' }} className="m-0">
+            <p style={REPORT_STYLES.rightAligned}></p>
+            <p style={REPORT_STYLES.rightAligned}>Of the premises known as</p>
+            <p style={REPORT_STYLES.rightAligned}></p>
+            <p style={REPORT_STYLES.rightAligned} className="m-0">
               {address &&
-                mapAddress(address, (line) => (
-                  <p style={{ textAlign: 'right' }} key={line}>
+                mapAddress(address, line => (
+                  <p style={REPORT_STYLES.rightAligned} key={line}>
                     <strong>{line}</strong>
                   </p>
                 ))}
             </p>
-            <p style={{ textAlign: 'right' }}></p>
-            <p style={{ textAlign: 'right' }}>For and on behalf of</p>
-            <p style={{ textAlign: 'right' }}></p>
-            <p style={{ textAlign: 'right' }}>
+            <p style={REPORT_STYLES.rightAligned}></p>
+            <p style={REPORT_STYLES.rightAligned}>For and on behalf of</p>
+            <p style={REPORT_STYLES.rightAligned}></p>
+            <p style={REPORT_STYLES.rightAligned}>
               <strong>{clientName}</strong>
             </p>
-            <p style={{ textAlign: 'right' }}></p>
-            <p style={{ textAlign: 'right' }}>Prepared by</p>
-            <p style={{ textAlign: 'right' }}>Clarke & Watt Building Consultancy Ltd</p>
-            <p style={{ textAlign: 'right' }}>Suite D</p>
-            <p style={{ textAlign: 'right' }}>The Towers</p>
-            <p style={{ textAlign: 'right' }}>Towers Business Park</p>
-            <p style={{ textAlign: 'right' }}>Wilmslow Road</p>
-            <p style={{ textAlign: 'right' }}>Manchester</p>
-            <p style={{ textAlign: 'right' }}>M20 2RY</p>
-            <p style={{ textAlign: 'right' }}></p>
-            <p style={{ textAlign: 'right', fontSize: '8pt' }}>Email: admin@cwbc.co.uk</p>
-
-            <p style={{ textAlign: 'right', fontSize: '8pt' }}>Date: {reportDate.toDateString()}</p>
-
-            <p style={{ textAlign: 'right', fontSize: '8pt' }}>
-              Ref: {form.reportDetails.reference}
-            </p>
+            <p style={REPORT_STYLES.rightAligned}></p>
+            <p style={REPORT_STYLES.rightAligned}>Prepared by</p>
+            {formatOrgAddress(DEFAULT_ORG_CONFIG).map(line => (
+              <p key={line} style={REPORT_STYLES.rightAligned}>
+                {line}
+              </p>
+            ))}
+            <p style={REPORT_STYLES.rightAligned}></p>
+            <p style={REPORT_STYLES.rightAlignedSmall}>{getOrgContactEmail(DEFAULT_ORG_CONFIG)}</p>
+            <p style={REPORT_STYLES.rightAlignedSmall}>Date: {reportDate.toDateString()}</p>
+            <p style={REPORT_STYLES.rightAlignedSmall}>Ref: {form.reportDetails.reference}</p>
           </div>
         </TableBlock>
       </Page>
       <Page>
-        <TableBlock widths={[40, 60]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnUnequal}>
           <p>Prepared by:</p>
           <p>{form.owner.name}</p>
         </TableBlock>
         <p>
-          This document has been prepared and checked in accordance with the CWBC's Quality
+          This document has been prepared and checked in accordance with the {DEFAULT_ORG_CONFIG.name}'s Quality
           Assurance procedures and authorised for release.
         </p>
         <p></p>
         <p>Signed:</p>
-        <TableBlock widths={[50, 50]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnEqual}>
           <img
-            style={{ height: '30mm' }}
+            style={{ height: SIGNATURE_HEIGHT }}
             src={undefined}
             alt="signature"
             data-s3-path={form.owner.signaturePath[0]}
-            width={400}
-            height={200}
+            width={IMAGE_DIMENSIONS.signature.width}
+            height={IMAGE_DIMENSIONS.signature.height}
           />
           <img
-            style={{ height: '30mm' }}
+            style={{ height: SIGNATURE_HEIGHT }}
             src="data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3Ctext x='300' y='200' font-family='Arial' font-size='24' fill='%23666666' text-anchor='middle' dominant-baseline='middle'%3EPlaceholder%3C/text%3E%3C/svg%3E"
             alt="signature"
-            width="400"
-            height="200"
+            width={IMAGE_DIMENSIONS.signature.width}
+            height={IMAGE_DIMENSIONS.signature.height}
           />
           <p>{form.owner.name}</p>
           <p>Jordan Clarke BSc (Hons) MRICS</p>
         </TableBlock>
         <p></p>
-        <p>For and on behalf of Clarke & Watt Building Consultancy Limited</p>
-        <TableBlock widths={[40, 60]}>
+        <p>For and on behalf of {DEFAULT_ORG_CONFIG.legalName}</p>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnUnequal}>
           <p>
             <strong>Inspection Date:</strong>
           </p>
@@ -276,8 +272,8 @@ export default function PDF({ form }: PdfProps) {
         <div id="toc" data-type="table-of-contents" data-toc-data="[]"></div>
       </Page>
       <Page>
-        <h1 style={{ fontWeight: 'bold', fontSize: '14pt' }}>Definitions</h1>
-        <h2 style={{ fontWeight: 'bold', fontSize: '14pt' }}>Key</h2>
+        <h1 style={REPORT_STYLES.heading1}>Definitions</h1>
+        <h2 style={REPORT_STYLES.heading1}>Key</h2>
         <TableBlock widths={[94, 6]}>
           <ul>
             <li>
@@ -285,7 +281,7 @@ export default function PDF({ form }: PdfProps) {
               as usual.
             </li>
           </ul>
-          <p style={{ textAlign: 'center', fontSize: '18pt' }}>
+          <p style={REPORT_STYLES.markerText}>
             <mark style={{ backgroundColor: 'green' }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
           </p>
           <ul>
@@ -294,7 +290,7 @@ export default function PDF({ form }: PdfProps) {
               to be maintained as usual.
             </li>
           </ul>
-          <p style={{ textAlign: 'center', fontSize: '18pt' }}>
+          <p style={REPORT_STYLES.markerText}>
             <mark style={{ backgroundColor: 'orange' }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
           </p>
           <ul>
@@ -303,20 +299,20 @@ export default function PDF({ form }: PdfProps) {
               replace or investigated urgently.
             </li>
           </ul>
-          <p style={{ textAlign: 'center', fontSize: '18pt' }}>
+          <p style={REPORT_STYLES.markerText}>
             <mark style={{ backgroundColor: 'red' }}>&nbsp;&nbsp;&nbsp;&nbsp;</mark>
           </p>
           <ul>
             <li>Not inspected</li>
           </ul>
-          <p style={{ textAlign: 'center', fontSize: '18pt' }}>
+          <p style={REPORT_STYLES.markerText}>
             <strong>NI</strong>
           </p>
         </TableBlock>
         <p></p>
-        <TableBlock widths={[50, 50]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnEqual}>
           <div>
-            <h2 style={{ fontWeight: 'bold', fontSize: '14pt' }}>Glossary of Terms</h2>
+            <h2 style={REPORT_STYLES.heading1}>Glossary of Terms</h2>
             <ul>
               <li>Immediate: Within 1 year</li>
               <li>Short Term: Within the next 1 to 3 years</li>
@@ -325,32 +321,32 @@ export default function PDF({ form }: PdfProps) {
             </ul>
           </div>
           <div>
-            <h2 style={{ fontWeight: 'bold', fontSize: '14pt' }}>
+            <h2 style={REPORT_STYLES.heading1}>
               Crack Definitions (BRE Digest 251)
             </h2>
             <ul>
-              <li>Category 0: Negligible (&gt; 0.1mm)</li>
+              <li>Category 0: Negligible (&lt; 0.1mm)</li>
               <li>Category 1: Very slight (Up to 1mm)</li>
               <li>Category 2: Slight (Up to 5mm)</li>
               <li>Category 3: Moderate (5 - 15mm)</li>
               <li>Category 4: Severe (15 - 25mm)</li>
-              <li>Category 5: Very severe (&lt; 25 mm)</li>
+              <li>Category 5: Very severe (&gt; 25mm)</li>
             </ul>
           </div>
         </TableBlock>
       </Page>
       <Page>
-        <h2 style={{ fontSize: '14pt', fontWeight: 'bold' }}>Typical House Diagram</h2>
+        <h2 style={REPORT_STYLES.heading1}>Typical House Diagram</h2>
         <img
-          style={{ margin: '0 auto' }}
+          style={REPORT_STYLES.centeredImage}
           src="/typical-house.webp"
           alt="typical house"
-          width={800}
+          width={IMAGE_DIMENSIONS.typicalHouse.width}
         />
       </Page>
       <Page>
-        <h1 style={{ fontSize: '14pt', fontWeight: 'bold' }}>Description Of the Property</h1>
-        <TableBlock widths={[30, 70]}>
+        <h1 style={REPORT_STYLES.heading1}>Description Of the Property</h1>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnNarrowLeft}>
           <h2>
             <strong>Property Type</strong>
           </h2>
@@ -404,29 +400,28 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <h2 style={{ fontSize: '14pt', fontWeight: 'bold' }}>Location Plan</h2>
-        <p style={{ textAlign: 'justify' }}>
+        <h2 style={REPORT_STYLES.heading1}>Location Plan</h2>
+        <p style={REPORT_STYLES.justified}>
           Red line demarcations do not represent the legal boundary of the property and are to
           indicate the approximate areas of the property subject to inspection.
         </p>
         <p></p>
         <img
-          style={{ margin: '0 auto', width: '175mm' }}
+          style={REPORT_STYLES.locationPlanImage}
           src="data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3Ctext x='300' y='200' font-family='Arial' font-size='24' fill='%23666666' text-anchor='middle' dominant-baseline='middle'%3ELocation Plan Placeholder%3C/text%3E%3C/svg%3E"
           alt="placeholder"
-          width="600"
-          height="400"
+          width={IMAGE_DIMENSIONS.placeholder.width}
+          height={IMAGE_DIMENSIONS.placeholder.height}
         />
       </Page>
       <Page>
-        <TableBlock widths={[50, 50]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnEqual}>
           {form.reportDetails.frontElevationImagesUri.map((image, i) => (
             <div key={`frontElevation_img_${i}`}>
               <img
                 src={undefined}
                 data-s3-path={image.uri}
-                style={{ maxHeight: '75mm', margin: '0 auto' }}
-                key={`frontElevation_img_${i}`}
+                style={{ maxHeight: IMAGE_MAX_HEIGHT, margin: '0 auto' }}
                 alt={`frontElevation_img_${i}`}
               />
               {image.hasMetadata && <p>{image.metadata?.caption}</p>}
@@ -437,7 +432,7 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         {form.sections.map((s, i) => (
           <div key={`section.${s.name}.${i}`}>
-            <h1 style={{ fontSize: '14pt', fontWeight: 'bold' }}>{s.name}</h1>
+            <h1 style={REPORT_STYLES.heading1}>{s.name}</h1>
             {s.elementSections.map((cs, j) => (
               <ConditionSection key={`${s.name}.${cs.name}.${j}`} elementSection={cs} form={form} />
             ))}
@@ -445,42 +440,42 @@ export default function PDF({ form }: PdfProps) {
         ))}
       </Page>
       <Page>
-        <h1 style={{ fontWeight: 'bold', fontSize: '14pt' }}>Issues for your Legal Advisor</h1>
+        <h1 style={REPORT_STYLES.heading1}>Issues for your Legal Advisor</h1>
         <H2 id="planning-building-regulations">Planning & Building Regulations</H2>
-        <p style={{ textAlign: 'justify' }}>
+        <p style={REPORT_STYLES.justified}>
           As mentioned within the body of this report, we strongly recommend that you obtain
           certificates and warranties from the Vendor relating to the electrical and gas
           installations, extensions, etc. to confirm that all fully comply with the Building
           Regulations.
         </p>
         <H2 id="statutory">Statutory</H2>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <h3>&nbsp;</h3>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Confirm all Statutory Approvals for all alteration and construction work. Obtain
                 copies of all Approved Plans for any alterations or extensions to the property.
               </p>
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Any rights or responsibilities for the maintenance and upkeep of jointly used
                 services including drainage, gutters, downpipes and chimneys should be established.
               </p>
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 The right for you to enter the adjacent property to maintain any structure situated
                 on or near the boundary and any similar rights your neighbour may have to enter onto
                 your property.
@@ -488,22 +483,22 @@ export default function PDF({ form }: PdfProps) {
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Any responsibilities to maintain access roads and driveways, which may not be
                 adopted by the Local Authority, should be established.
               </p>
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Obtain any certificates or guarantees, accompanying reports and plans for works that
                 may have been carried out on the property. The guarantees should be formally
                 assigned to you and preferably indemnified against eventualities such as contractors
@@ -512,33 +507,33 @@ export default function PDF({ form }: PdfProps) {
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Investigate if any fire, public health or other requirements or regulations are
                 satisfied and that up-to-date certificates are available.
               </p>
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Investigate any proposed use of adjoining land and clarify the likelihood of any
                 future type of development, which could adversely affect this property.
               </p>
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Where there are trees in the adjacent gardens, which are growing sufficiently close
                 to the property to cause possible damage, we would suggest that the owners are
                 notified of the situation.
@@ -546,11 +541,11 @@ export default function PDF({ form }: PdfProps) {
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Whilst there were clearly defined physical boundaries to the site, these may not
                 necessarily lie on the legal boundaries. These matters should be checked through
                 your Solicitors.
@@ -558,22 +553,22 @@ export default function PDF({ form }: PdfProps) {
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 The tenure is assumed to be Freehold, or Long Leasehold subject to nil or nominal
                 Chief or Ground Rent. Your legal adviser should confirm all details.
               </p>
             </li>
           </ul>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <p></p>
           <ul>
             <li>
-              <p style={{ textAlign: 'justify' }}>
+              <p style={REPORT_STYLES.justified}>
                 Confirmation should be obtained that all main services are indeed connected.
                 Confirmation should be obtained by the provision of service documentation, of when
                 the electric and gas installations were last tested.
@@ -584,9 +579,9 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <H2 id="thermal-insulation-energy-efficiency">Thermal Insulation & Energy Efficiency</H2>
-        <TableBlock widths={[10, 90]}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             As part of the marketing process, current regulations require the provision of an Energy
             Performance Certificate. Legal enquiries are advised to confirm that such a Certificate
             has been obtained. This document provides the usual information regarding advice on
@@ -596,7 +591,7 @@ export default function PDF({ form }: PdfProps) {
             considering making the improvements listed therein
           </p>
           <p></p>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             From 1 April 2018, under the Minimum Energy Efficiency Standards (MEES) 2015, it became
             illegal to lease a property with an F or G Energy Performance Certificate Rating. In the
             residential market, the regulations extend to all properties with a valid EPC on 1 April
@@ -608,7 +603,7 @@ export default function PDF({ form }: PdfProps) {
         </TableBlock>
       </Page>
       <Page>
-        <h1 style={{ fontWeight: 'bold', fontSize: '14pt' }}>Risks</h1>
+        <h1 style={REPORT_STYLES.heading1}>Risks</h1>
         <H2 id="risks-to-the-building">Risks to the building</H2>
         <RiskRow
           id={'timber-rot'}
@@ -662,9 +657,7 @@ concealed. Under the Control of Asbestos Regulations 2012, you are required to c
         <RiskRow
           id={'radon-risk'}
           risk={'Radon risk'}
-          description={`Given the age of the property, there is a likelihood that there are areas of ACMs within the property which have been
-concealed. Under the Control of Asbestos Regulations 2012, you are required to commission a Refurbishment and Demolition
-(R&D) Asbestos survey before commencing any refurbishment works.`}
+          description={`Radon is a naturally occurring radioactive gas that can accumulate in buildings. The UK Health Security Agency provides information on radon risk areas. We recommend consulting their website and considering a radon test if the property is in a designated radon affected area. This is particularly important for properties with basements or ground floor living spaces.`}
         />
         <RiskRow
           id={'electromagnetic-fields'}
@@ -680,15 +673,15 @@ Board's website. We have not undertaken any separate inquiries with the relevant
         />
       </Page>
       <Page>
-        <h1 style={{ fontWeight: 'bold', fontSize: '14pt' }}>Conclusion</h1>
-        <TableBlock widths={[10, 90]}>
+        <h1 style={REPORT_STYLES.heading1}>Conclusion</h1>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             The property is in sound structural condition with no significant structural defects
             noted.
           </p>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             External repairs were identified which have generally resulted from a lack of
             maintenance and ill-conceived repairs. These include slipped and damaged roof tiles,
             aged and poorly installed lead flashings, cement render to presumed solid masonry walls
@@ -697,30 +690,30 @@ Board's website. We have not undertaken any separate inquiries with the relevant
             the long term.
           </p>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             Internally, the property exhibits reasonable condition. We noted that chimney breasts
             would benefit from having air vents installed.
           </p>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             We recommend that you obtain all testing and commissioning certificates relating to the
             electrical and gas installations etc. and obtain Final Certificates and engineer's
             calculations for the structural alterations and extensions to confirm that they were
             designed and installed in compliance with the Building Regulations.
           </p>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             Furthermore, we recommend a CCTV drainage survey to ascertain the condition of the
             underground drainage pipework and the septic tank.
           </p>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             The property should remain in reasonable condition should all repairs recommended be
             undertaken, however, you should fully consider the financial implications associated
             with the repairs identified before proceeding with the purchase of the property.
           </p>
           <h3>&nbsp;</h3>
-          <p style={{ textAlign: 'justify' }}>
+          <p style={REPORT_STYLES.justified}>
             We recommend that your solicitor reviews legal information and information returned from
             local searches to ascertain whether there are any elements of concern.
           </p>
@@ -737,18 +730,18 @@ Board's website. We have not undertaken any separate inquiries with the relevant
         </p>
       </Page>
       <Page>
-        <h1 style={{ fontWeight: 'bold', fontSize: '14pt' }}>APPENDIX 1 - Limitations</h1>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <h1 style={REPORT_STYLES.heading1}>APPENDIX 1 - Limitations</h1>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             Our Report concentrates on the general standard and condition of the building and any
             principal defects or shortcomings and is not intended to be a report listing all items
             of repair, redecoration or reinstatement works.
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             This report is based on a visual inspection of the readily accessible areas of the
             property only and in accordance with the limitations contained in our Scope of Service
             provided previously. No steps were taken to expose elements of the structure otherwise
@@ -757,9 +750,9 @@ Board's website. We have not undertaken any separate inquiries with the relevant
             free from defects.
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             We were not instructed to make arrangements for specialist surveys of the drainage
             installations, the water distribution systems, the mechanical systems or the electrical
             systems or for these to be tested by a specialist. We have, however, made
@@ -768,39 +761,39 @@ Board's website. We have not undertaken any separate inquiries with the relevant
             defective.
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             We have not been instructed to organise a structural assessment to determine floor
             loadings.
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             We have not been instructed to establish the capacity of the electrical incoming supply
             nor to ascertain whether any other live services are connected to the premises.
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             We have not carried out any geological survey or site investigation and cannot confirm
             the nature or characteristics of the soil with regards to fill or possible
             contamination. Normal legal searches should confirm the past use of the site and if
             instructed, we will advise further.
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             Our examination of the roof covering and roof features such as chimneys, skylights, etc.
             were confined to an inspection from ground level
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             Subject to the client's requirements, they may not wish to proceed with all works, but
             do so that their own risk. The list of works is by no means exhaustive. The works listed
             are considered necessary to prevent further deterioration of the property. Further
@@ -810,9 +803,9 @@ Board's website. We have not undertaken any separate inquiries with the relevant
             expressly stated.
           </p>
         </TableBlock>
-        <TableBlock widths={[10, 90]}>
-          <h2 style={{ fontWeight: 'bold' }}>&nbsp;</h2>
-          <p style={{ textAlign: 'justify' }}>
+        <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
+          <h2 style={REPORT_STYLES.heading3}>&nbsp;</h2>
+          <p style={REPORT_STYLES.justified}>
             This Report has been prepared for the sole use of {clientName}.
           </p>
         </TableBlock>
@@ -820,14 +813,14 @@ Board's website. We have not undertaken any separate inquiries with the relevant
       <Page>
         <p>Important Note:</p>
         <p></p>
-        <p style={{ textAlign: 'justify' }}>
+        <p style={REPORT_STYLES.justified}>
           We carry out a desktop study and make oral enquiries for information about matters
           affecting the property. We carefully and thoroughly inspect the property using our best
           endeavours to see as much of it as is physically accessible. Where this is not possible an
           explanation will be provided.
         </p>
         <p></p>
-        <p style={{ textAlign: 'justify' }}>
+        <p style={REPORT_STYLES.justified}>
           We visually inspect roofs, chimneys and other surfaces on the outside of the building from
           ground level and, if necessary, from neighbouring public property and with the help of
           binoculars. Flat roofs no more than 3m above ground level are inspected using a ladder
@@ -835,7 +828,7 @@ Board's website. We have not undertaken any separate inquiries with the relevant
           there is safe access.
         </p>
         <p></p>
-        <p style={{ textAlign: 'justify' }}>
+        <p style={REPORT_STYLES.justified}>
           We examine floor surfaces and under-floor spaces so far as there is safe access and
           permission from the owner. We are not able to assess the condition of the inside of any
           chimney, boiler or other flues. We do not lift fitted carpets or coverings without the
@@ -843,7 +836,7 @@ Board's website. We have not undertaken any separate inquiries with the relevant
           inspection.
         </p>
         <p></p>
-        <p style={{ textAlign: 'justify' }}>
+        <p style={REPORT_STYLES.justified}>
           If we are concerned about parts of the property that the inspection cannot cover, the
           report will tell you about any further investigations that are needed. Where practicable
           and agreed we report on the cost of any work for identified repairs and make
@@ -894,7 +887,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                   data-s3-path={allImages[i + 1].uri}
                   src={undefined}
                   alt={elementSection.name + '.image.' + i}
-                  style={{ maxHeight: '75mm', margin: '0 auto' }}
+                  style={{ maxHeight: IMAGE_MAX_HEIGHT, margin: '0 auto' }}
                 />
               )}
               {allImages[i + 1]?.hasMetadata && (
@@ -909,18 +902,7 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
     );
   }
 
-  function mapRagToBackgroundColour(ragStatus: string): string {
-    switch (ragStatus) {
-      case 'Green':
-        return 'green';
-      case 'Amber':
-        return 'orange';
-      case 'Red':
-        return 'red';
-      default:
-        return 'white';
-    }
-  }
+  // Note: mapRagToColor moved to utils.ts
 
   return (
     <>
@@ -934,25 +916,19 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
           <p>{es.description}</p>
         </TableBlock>
         {es.components
-          .map((mc) => ({ mc: mc, id: uuidv4() }))
+          .map(mc => ({ mc: mc, id: uuidv4() }))
           .map(({ mc, id }, i) => (
-            <TableBlock widths={[10, 20, 64, 6]} key={`${elementSection.id}.${i}`}>
+            <TableBlock widths={TABLE_LAYOUTS.fourColumnReport} key={`${elementSection.id}.${i}`}>
               <p id={id}></p>
               <h3 data-add-toc-here-id={id}>
                 <strong>Component</strong>
               </h3>
               <p>{mc.useNameOverride ? mc.nameOverride : mc.name}</p>
-              <p
-                style={{
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                  fontSize: '18pt',
-                }}
-              >
+              <p style={REPORT_STYLES.ragMarker}>
                 {mc.ragStatus === 'N/I' ? (
                   'NI'
                 ) : (
-                  <mark style={{ backgroundColor: mapRagToBackgroundColour(mc.ragStatus) }}>
+                  <mark style={{ backgroundColor: mapRagToColor(mc.ragStatus) }}>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                   </mark>
                 )}
@@ -962,18 +938,18 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
                 <strong>Condition / Defect</strong>
               </p>
               <div>
-                {mc.conditions.map((d) => {
+                {mc.conditions.map(d => {
                   const phraseText =
                     form.reportDetails.level === '2' ? d.phraseLevel2 || d.phrase : d.phrase;
                   return (
                     <React.Fragment key={d.name}>
-                      <p style={{ textAlign: 'justify' }}>{phraseText}</p>
-                      <p style={{ fontSize: '6pt' }}></p>
+                      <p style={REPORT_STYLES.justified}>{phraseText}</p>
+                      <p style={REPORT_STYLES.tinyText}></p>
                     </React.Fragment>
                   );
                 })}
                 {mc.additionalDescription && (
-                  <p style={{ textAlign: 'justify' }}>{mc.additionalDescription}</p>
+                  <p style={REPORT_STYLES.justified}>{mc.additionalDescription}</p>
                 )}
               </div>
               <p></p>
@@ -1009,10 +985,10 @@ interface RiskRowProps {
 
 const RiskRow = ({ id, risk, description }: RiskRowProps) => {
   return (
-    <TableBlock widths={[10, 20, 64, 6]}>
+    <TableBlock widths={TABLE_LAYOUTS.fourColumnReport}>
       <p id={id}></p>
       <h3 data-add-toc-here-id={id}>{risk}</h3>
-      <p style={{ textAlign: 'justify' }}>{description}</p>
+      <p style={REPORT_STYLES.justified}>{description}</p>
       <p></p>
     </TableBlock>
   );

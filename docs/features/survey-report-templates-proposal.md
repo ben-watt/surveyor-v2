@@ -50,3 +50,12 @@
 - Do we need translation/localisation support in v1, or is org-level copy sufficient?
 - Should template selection be scoped per organisation, per survey type, or per document?
 
+## Implementation Plan
+
+See [building-survey-report-refactoring-plan.md](./building-survey-report-refactoring-plan.md) for detailed, incremental refactoring steps including:
+- Phase 1: Quick wins (constants, org config, utilities)
+- Phase 2: Content extraction (static text separation)
+- Phase 3: Reusable primitives (component library)
+- Phase 4: Data binding strategies (multiple options evaluated)
+- Testing strategy and migration safety measures
+
