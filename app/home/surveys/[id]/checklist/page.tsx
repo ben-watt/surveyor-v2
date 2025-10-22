@@ -2,9 +2,8 @@
 
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormStatus } from '../../building-survey-reports/BuildingSurveyReportSchema';
 import { surveyStore } from '@/app/home/clients/Database';
-import { mapToInputType } from '../../building-survey-reports/Utils';
+import { mapToInputType } from '@/app/home/surveys/building-survey-reports/tsx-utils';
 import { useRouter } from 'next/navigation';
 import { DynamicDrawer } from '@/app/home/components/Drawer';
 import { useAutoSaveForm } from '../../../hooks/useAutoSaveForm';
