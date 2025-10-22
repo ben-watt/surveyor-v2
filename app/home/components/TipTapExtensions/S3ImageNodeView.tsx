@@ -318,12 +318,12 @@ export const S3ImageExtension = Image.extend({
   parseHTML() {
     return [
       {
-        tag: 'img[data-s3-path]',
+        tag: 'img',
         getAttrs: (el: any) => {
           return {
             src: el.getAttribute('src'),
             alt: el.getAttribute('alt'),
-            'data-s3-path': el.getAttribute('data-s3-path'),
+            'data-s3-path': el.getAttribute('data-s3-path') || null,
             title: el.getAttribute('title'),
             width: el.getAttribute('width'),
             height: el.getAttribute('height'),

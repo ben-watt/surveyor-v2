@@ -2,6 +2,9 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { S3ImageNodeView } from '../S3ImageNodeView';
+import S3ImageExtension from '../S3ImageNodeView';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
 // Mock getImageHref
 jest.mock('../../../editor/utils/image', () => ({
@@ -103,5 +106,81 @@ describe('S3ImageNodeView', () => {
       expect(wrapper).toHaveStyle(`text-align: ${expected}`);
       unmount();
     }
+  });
+});
+
+describe('S3ImageExtension parseHTML', () => {
+  const TestEditor = ({ html }: { html: string }) => {
+    const editor = useEditor({
+      extensions: [StarterKit, S3ImageExtension],
+      content: html,
+    });
+
+    return <EditorContent editor={editor} />;
+  };
+
+  it('parses images with data-s3-path attribute', () => {
+    const html = '<img src="/test.jpg" alt="Test" data-s3-path="report-images/test.jpg" width="800" />';
+    const { container } = render(<TestEditor html={html} />);
+    
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('data-s3-path', 'report-images/test.jpg');
+    expect(img).toHaveAttribute('alt', 'Test');
+  });
+
+  it('parses images with public URLs (no data-s3-path)', () => {
+    const html = '<img src="/typical-house.webp" alt="typical house" width="800" />';
+    const { container } = render(<TestEditor html={html} />);
+    
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('alt', 'typical house');
+    // data-s3-path should be null/undefined since it wasn't in the HTML
+  });
+
+  it('parses images with data URLs', () => {
+    const dataUrl =
+      "data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3C/svg%3E";
+    const html = `<img src="${dataUrl}" alt="placeholder" width="600" height="400" />`;
+    const { container } = render(<TestEditor html={html} />);
+    
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('alt', 'placeholder');
+  });
+
+  it('parses images with width and height attributes', () => {
+    const html = '<img src="/test.jpg" alt="Test" width="800" height="600" />';
+    const { container } = render(<TestEditor html={html} />);
+    
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+  });
+
+  it('parses images with align attribute', () => {
+    const html = '<img src="/test.jpg" alt="Test" align="center" />';
+    const { container } = render(<TestEditor html={html} />);
+    
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+  });
+
+  it('parses template images exactly as they appear in BuildingSurveyReport', () => {
+    // Test the actual HTML from the template
+    const typicalHouseHtml =
+      '<img src="/typical-house.webp" alt="typical house" width="800" />';
+    const locationPlanHtml =
+      "<img src=\"data:image/svg+xml,%3Csvg width='600' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='600' height='400' fill='%23cccccc'/%3E%3Ctext x='300' y='200' font-family='Arial' font-size='24' fill='%23666666' text-anchor='middle' dominant-baseline='middle'%3ELocation Plan Placeholder%3C/text%3E%3C/svg%3E\" alt=\"placeholder\" width=\"600\" height=\"400\" />";
+
+    const { container: container1 } = render(<TestEditor html={typicalHouseHtml} />);
+    const img1 = container1.querySelector('img');
+    expect(img1).toBeInTheDocument();
+    expect(img1).toHaveAttribute('alt', 'typical house');
+
+    const { container: container2 } = render(<TestEditor html={locationPlanHtml} />);
+    const img2 = container2.querySelector('img');
+    expect(img2).toBeInTheDocument();
+    expect(img2).toHaveAttribute('alt', 'placeholder');
   });
 });
