@@ -100,7 +100,7 @@ export const TABLE_LAYOUTS = {
   threeColumnCentered: [6, 88, 6] as const,
   fourColumnReport: [10, 20, 64, 6] as const,
   fourColumnEqual: [25, 25, 25, 25] as const,
-  twoColumnLabelValue: [10, 90] as const,
+  twoColumnLabelValue: [6, 94] as const,
   coverPageLayout: [55, 45] as const,
 } as const;
 

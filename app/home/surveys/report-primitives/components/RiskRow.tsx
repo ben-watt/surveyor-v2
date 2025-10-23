@@ -33,7 +33,7 @@ export const RiskRow = ({ id, risk, description, reportStyles }: RiskRowProps) =
   const justifiedStyle = reportStyles?.justified || { textAlign: 'justify' as const };
 
   return (
-    <TableBlock widths={[10, 20, 64, 6]}>
+    <TableBlock widths={[6, 20, 68, 6]}>
       <p id={id}></p>
       <h3 data-add-toc-here-id={id}>{risk}</h3>
       <p style={justifiedStyle}>{description}</p>

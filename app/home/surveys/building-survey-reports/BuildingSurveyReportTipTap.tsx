@@ -259,55 +259,55 @@ export default function PDF({ form }: PdfProps) {
       <Page>
         <h1 style={REPORT_STYLES.heading1}>Description Of the Property</h1>
         <TableBlock widths={TABLE_LAYOUTS.twoColumnNarrowLeft}>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Property Type</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.propertyType}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Construction Details</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.constructionDetails}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Year of Construction</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.yearOfConstruction}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Year of Extensions</strong>
-          </h2>
+          </h3>
           <p>{fallback(form.propertyDescription.yearOfExtensions, 'N/A')}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Year of Conversions</strong>
-          </h2>
+          </h3>
           <p>{fallback(form.propertyDescription.yearOfConversions, 'N/A')}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Grounds</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.grounds}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Services</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.services}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Other Services</strong>
-          </h2>
+          </h3>
           <p>{fallback(form.propertyDescription.otherServices, 'N/A')}</p>
 
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Energy Rating</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.energyRating}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Number of Bedrooms</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.numberOfBedrooms}</p>
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Number of Bathrooms</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.numberOfBathrooms}</p>
 
-          <h2>
+          <h3 style={{ lineHeight: '2.5' }}>
             <strong>Tenure</strong>
-          </h2>
+          </h3>
           <p>{form.propertyDescription.tenure}</p>
         </TableBlock>
       </Page>
@@ -353,11 +353,11 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={REPORT_STYLES.heading1}>Issues for your Legal Advisor</h1>
-        <Heading id="planning-building-regulations" centered>
+        <Heading id="planning-building-regulations" style={{ lineHeight: '2.0' }} centered>
           Planning & Building Regulations
         </Heading>
         <p style={REPORT_STYLES.justified}>{PLANNING_BUILDING_REGULATIONS_CONTENT}</p>
-        <Heading id="statutory" centered>
+        <Heading id="statutory" style={{ lineHeight: '2.0' }} centered>
           Statutory
         </Heading>
         {STATUTORY_ITEMS.map((item, index) => (
@@ -372,7 +372,7 @@ export default function PDF({ form }: PdfProps) {
         ))}
       </Page>
       <Page>
-        <Heading id="thermal-insulation-energy-efficiency" centered>
+        <Heading id="thermal-insulation-energy-efficiency" style={{ lineHeight: '2.0' }} centered>
           Thermal Insulation & Energy Efficiency
         </Heading>
         <TableBlock widths={TABLE_LAYOUTS.twoColumnLabelValue}>
@@ -384,21 +384,21 @@ export default function PDF({ form }: PdfProps) {
       </Page>
       <Page>
         <h1 style={REPORT_STYLES.heading1}>Risks</h1>
-        <Heading id="risks-to-the-building" centered>
+        <Heading id="risks-to-the-building" style={{ lineHeight: '2.0' }} centered>
           Risks to the building
         </Heading>
         {Object.values(BUILDING_RISKS).map(risk => (
           <RiskRow key={risk.id} id={risk.id} risk={risk.title} description={risk.description} />
         ))}
         <p></p>
-        <Heading id="risks-to-the-grounds" centered>
+        <Heading id="risks-to-the-grounds" style={{ lineHeight: '2.0' }} centered>
           Risks to the grounds
         </Heading>
         {Object.values(GROUNDS_RISKS).map(risk => (
           <RiskRow key={risk.id} id={risk.id} risk={risk.title} description={risk.description} />
         ))}
         <p></p>
-        <Heading id="risks-to-the-people" centered>
+        <Heading id="risks-to-the-people" style={{ lineHeight: '2.0' }} centered>
           Risks to the people
         </Heading>
         {Object.values(PEOPLE_RISKS).map(risk => (
@@ -502,15 +502,13 @@ const ConditionSection = ({ elementSection, form }: ConditionSectionProps) => {
     );
   }
 
-  // Note: mapRagToColor moved to utils.ts
-
   return (
     <>
       <Page>
-        <Heading id={es.id} centered>
+        <Heading id={es.id} style={{ lineHeight: '2.0' }} centered>
           {es.name}
         </Heading>
-        <TableBlock widths={[10, 20, 70]}>
+        <TableBlock widths={[6, 15, 79]}>
           <p></p>
           <p>
             <strong>Description</strong>
