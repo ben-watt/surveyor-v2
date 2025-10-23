@@ -17,6 +17,7 @@ import Section from '../TipTapExtensions/Section';
 import FileHandler from '@tiptap-pro/extension-file-handler';
 import Highlight from '@tiptap/extension-highlight';
 import { FontSize } from '../TipTapExtensions/FontSize';
+import { LineHeight } from '../TipTapExtensions/LineHeight';
 import BlockMenuBar from './BlockMenuBar';
 import { getHierarchicalIndexes, TableOfContents } from '@tiptap-pro/extension-table-of-contents';
 import { v4 } from 'uuid';
@@ -103,6 +104,7 @@ export const NewEditor = forwardRef(
       }),
       TextStyle,
       FontSize,
+      LineHeight,
       Highlight.configure({
         multicolor: true,
       }),

@@ -1,6 +1,6 @@
 import { type Editor } from '@tiptap/react';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import MenuItem, { MenuItemProps } from './BlockMenuItem';
 import {
@@ -33,6 +33,7 @@ import {
   ImagePlus,
   Save,
   History,
+  AlignVerticalSpaceAround,
 } from 'lucide-react';
 import {
   Select,
@@ -174,6 +175,10 @@ export default function MenuBar({
     {
       type: 'font-size',
       render: () => <MenuFontSize editor={editor} />,
+    },
+    {
+      type: 'line-spacing',
+      render: () => <MenuLineHeight editor={editor} />,
     },
     {
       type: 'divider',
@@ -497,6 +502,121 @@ const MenuFontSize = ({ editor }: MenuFontSizeProps) => {
       <button className="p-1">
         <Plus onClick={() => increaseFontSize()} />
       </button>
+    </div>
+  );
+};
+
+interface MenuLineHeightProps {
+  editor: Editor;
+}
+
+const MenuLineHeight = ({ editor }: MenuLineHeightProps) => {
+  const DEFAULT_LINE_HEIGHT = '1.15';
+  const [lineHeight, setLineHeight] = useState<string>(DEFAULT_LINE_HEIGHT);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const lineHeightOptions = [
+    { value: '1.0', label: 'Single' },
+    { value: '1.15', label: '1.15' },
+    { value: '1.5', label: '1.5' },
+    { value: '2.0', label: 'Double' },
+    { value: '2.5', label: '2.5' },
+    { value: '3.0', label: '3.0' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
+  useEffect(() => {
+    editor.on('selectionUpdate', () => {
+      const setFromNode = (nodeType: string) => {
+        const lineHeight = editor.getAttributes(nodeType).lineHeight as string;
+        if (lineHeight) {
+          setLineHeight(lineHeight);
+        } else {
+          setLineHeight(DEFAULT_LINE_HEIGHT);
+        }
+      };
+
+      if (editor.isActive('heading')) {
+        setFromNode('heading');
+      } else if (editor.isActive('paragraph')) {
+        setFromNode('paragraph');
+      } else {
+        // If no specific node is active, try to get from the current node
+        const { state } = editor;
+        const { selection } = state;
+        const node = state.doc.nodeAt(selection.from);
+        if (node && (node.type.name === 'paragraph' || node.type.name === 'heading')) {
+          const lineHeight = node.attrs.lineHeight as string;
+          if (lineHeight) {
+            setLineHeight(lineHeight);
+          } else {
+            setLineHeight(DEFAULT_LINE_HEIGHT);
+          }
+        } else {
+          setLineHeight(DEFAULT_LINE_HEIGHT);
+        }
+      }
+    });
+  });
+
+  const changeLineHeight = (height: string) => {
+    editor.chain().focus().setLineHeight(height).run();
+    setLineHeight(height);
+    setDropdownOpen(false);
+  };
+
+  const handleButtonClick = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  return (
+    <div className="relative flex items-center" ref={dropdownRef}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleButtonClick}
+        className={cn('h-full w-8 p-0', dropdownOpen && 'bg-muted')}
+        title="Line Spacing"
+      >
+        <AlignVerticalSpaceAround className="h-4 w-4" />
+      </Button>
+      {dropdownOpen && (
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-[140px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+            Line Spacing
+          </div>
+          {lineHeightOptions.map((option) => (
+            <button
+              key={option.value}
+              className={cn(
+                'relative flex w-full cursor-default select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm outline-none',
+                'hover:bg-accent hover:text-accent-foreground',
+                'focus:bg-accent focus:text-accent-foreground',
+                lineHeight === option.value && 'bg-accent'
+              )}
+              onClick={() => changeLineHeight(option.value)}
+            >
+              <span>{option.label}</span>
+              {lineHeight === option.value && <span className="text-blue-600">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
