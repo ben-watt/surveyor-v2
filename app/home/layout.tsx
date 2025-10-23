@@ -95,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <TooltipProvider>
         <TenantProvider>
           <SidebarProvider>
-            <AppSidebar className="print:!hidden" />
+            <AppSidebar className="print:!hidden z-[200]" />
             <SidebarInset className="print:!m-0 print:!w-0 print:!p-0">
               <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 print:!hidden">
                 <div className="flex w-full items-center gap-2 px-4">

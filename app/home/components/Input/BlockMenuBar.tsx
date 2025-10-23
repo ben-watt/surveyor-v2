@@ -30,11 +30,7 @@ import {
   BetweenVerticalStart,
   TableCellsMergeIcon,
   TableCellsSplitIcon,
-  TableOfContents,
-  Image,
   ImagePlus,
-  Brush,
-  Highlighter,
   Save,
   History,
 } from 'lucide-react';
@@ -332,7 +328,7 @@ export default function MenuBar({
   };
 
   return (
-    <div className="editor__header sticky top-0 z-10 border-b border-l bg-white p-2">
+    <div className="editor__header sticky top-0 z-[100] border-b border-l bg-white p-2">
       <div className="flex-shrink-1 no-scrollbar flex items-center justify-between">
         <div className="flex">
           {items.map((item, index) => (
