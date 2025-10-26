@@ -417,3 +417,89 @@ export function searchVariables(query: string): SchemaVariable[] {
   return results;
 }
 
+/**
+ * Calculate match score for fuzzy search
+ */
+function calculateMatchScore(path: string, label: string, query: string): number {
+  if (!query) return 0;
+
+  const lowerPath = path.toLowerCase();
+  const lowerLabel = label.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+
+  // Exact match gets highest score
+  if (lowerPath === lowerQuery || lowerLabel === lowerQuery) {
+    return 1000;
+  }
+
+  // Starts with query gets high score
+  if (lowerPath.startsWith(lowerQuery)) {
+    return 900;
+  }
+  if (lowerLabel.startsWith(lowerQuery)) {
+    return 850;
+  }
+
+  // Contains query after dot (word boundary)
+  const afterDot = lowerPath.split('.').some(part => part.startsWith(lowerQuery));
+  if (afterDot) {
+    return 700;
+  }
+
+  // Contains query anywhere in path
+  const pathIndex = lowerPath.indexOf(lowerQuery);
+  if (pathIndex !== -1) {
+    // Closer to start = higher score
+    return 500 - pathIndex;
+  }
+
+  // Contains query in label
+  const labelIndex = lowerLabel.indexOf(lowerQuery);
+  if (labelIndex !== -1) {
+    return 400 - labelIndex;
+  }
+
+  // Fuzzy match: all characters of query appear in order
+  let queryIndex = 0;
+  for (let i = 0; i < lowerPath.length && queryIndex < lowerQuery.length; i++) {
+    if (lowerPath[i] === lowerQuery[queryIndex]) {
+      queryIndex++;
+    }
+  }
+  if (queryIndex === lowerQuery.length) {
+    return 200;
+  }
+
+  return 0;
+}
+
+/**
+ * Fuzzy search variables with scoring and ranking
+ */
+export function fuzzySearchVariables(
+  query: string,
+  maxResults: number = 10
+): SchemaVariable[] {
+  if (!query) {
+    // Return top-level commonly used variables when no query
+    const leaves = getLeafVariables();
+    return leaves.slice(0, maxResults);
+  }
+
+  const lowerQuery = query.toLowerCase();
+  const allVars = getLeafVariables();
+
+  // Score each variable by relevance
+  const scored = allVars.map(v => ({
+    variable: v,
+    score: calculateMatchScore(v.path, v.label, lowerQuery),
+  }));
+
+  // Sort by score and return top results
+  return scored
+    .filter(s => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxResults)
+    .map(s => s.variable);
+}
+

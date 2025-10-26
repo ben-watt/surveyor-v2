@@ -127,6 +127,7 @@
     "react-lottie-player": "^2.1.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "tippy.js": "^6.3.7",
     "tiptap-extension-resize-image": "^1.2.1",
     "ts-debounce": "^4.0.0",
     "ts-results": "^3.3.0",

@@ -265,6 +265,7 @@ export function TemplateForm({ id, defaultValues, onSave }: TemplateFormProps) {
                         onSave={() => {}}
                         isSaving={false}
                         saveStatus="idle"
+                        enableHandlebarsHighlight={true}
                       />
                       {errors.content && (
                         <p className="mt-2 text-sm text-red-600">{errors.content.message as string}</p>

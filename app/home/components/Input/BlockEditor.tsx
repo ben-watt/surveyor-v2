@@ -18,6 +18,8 @@ import FileHandler from '@tiptap-pro/extension-file-handler';
 import Highlight from '@tiptap/extension-highlight';
 import { FontSize } from '../TipTapExtensions/FontSize';
 import { LineHeight } from '../TipTapExtensions/LineHeight';
+import { HandlebarsHighlight } from '../TipTapExtensions/HandlebarsHighlight';
+import { HandlebarsAutocomplete } from '../TipTapExtensions/HandlebarsAutocomplete';
 import BlockMenuBar from './BlockMenuBar';
 import { getHierarchicalIndexes, TableOfContents } from '@tiptap-pro/extension-table-of-contents';
 import { v4 } from 'uuid';
@@ -35,6 +37,7 @@ interface NewEditorProps {
   isSaving: boolean;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
   onOpenVersionHistory?: () => void;
+  enableHandlebarsHighlight?: boolean;
 }
 
 export const NewEditor = forwardRef(
@@ -49,6 +52,7 @@ export const NewEditor = forwardRef(
       isSaving,
       saveStatus,
       onOpenVersionHistory,
+      enableHandlebarsHighlight = false,
     }: NewEditorProps,
     ref,
   ) => {
@@ -135,6 +139,7 @@ export const NewEditor = forwardRef(
       TocNode.configure({
         repo: tocRepo ?? null,
       }),
+      ...(enableHandlebarsHighlight ? [HandlebarsHighlight, HandlebarsAutocomplete] : []),
     ];
 
     const editor = useEditor(
@@ -160,7 +165,11 @@ export const NewEditor = forwardRef(
         />
         <TocContext.Provider value={tocData}>
           <div className="m-auto mb-6 mt-6 w-[962px] bg-white">
-            <EditorContent id={editorIdentifier} editor={editor} />
+            <EditorContent 
+              id={editorIdentifier} 
+              editor={editor}
+              spellCheck={!enableHandlebarsHighlight}
+            />
           </div>
         </TocContext.Provider>
       </div>
