@@ -7,6 +7,7 @@ import {
   CreateDexieHooks,
   Phrase,
   Section,
+  Template,
 } from './Dexie';
 import client from './AmplifyDataClient';
 import { Schema } from '@/amplify/data/resource';
@@ -539,6 +540,34 @@ export const imageMetadataStore = CreateDexieHooks<
     return Ok(id);
   },
 });
+
+// Template Store (local-only, no server sync for MVP)
+export type UpdateTemplate = Partial<Template> & { id: string };
+export type CreateTemplate = Omit<Template, 'syncStatus' | 'createdAt' | 'updatedAt' | 'tenantId'>;
+
+export const templateStore = CreateDexieHooks<Template, CreateTemplate, UpdateTemplate>(
+  db,
+  'templates',
+  {
+    // Templates are local-only for MVP, so remote handlers just return empty/success
+    list: async (): Promise<Result<Template[], Error>> => {
+      // No server sync for templates in MVP
+      return Ok([]);
+    },
+    create: async (data): Promise<Result<Template, Error>> => {
+      // No server sync for templates in MVP
+      return Ok(data as Template);
+    },
+    update: async (data): Promise<Result<Template, Error>> => {
+      // No server sync for templates in MVP
+      return Ok(data as Template);
+    },
+    delete: async (id): Promise<Result<string, Error>> => {
+      // No server sync for templates in MVP
+      return Ok(id);
+    },
+  },
+);
 
 export async function getRawCounts(): Promise<Result<{ [key: string]: number }, Error>> {
   try {

@@ -34,6 +34,22 @@ export type Element = Omit<Schema['Elements']['type'], 'components' | 'section'>
 export type Phrase = Schema['Phrases']['type'];
 export type Section = Omit<Schema['Sections']['type'], 'elements'> & TableEntity;
 
+// Template type for survey report templates
+export type Template = {
+  id: string;
+  name: string;
+  description: string;
+  category: 'level2' | 'level3' | 'summary' | 'custom';
+  content: string; // Handlebars template string
+  version: number;
+  createdBy: string;
+  tags: string[];
+  metadata?: {
+    usageCount?: number;
+    lastUsed?: string;
+  };
+} & TableEntity;
+
 type TableEntity = {
   id: string;
   updatedAt: string;
@@ -548,6 +564,7 @@ const db = new Dexie('Surveys') as Dexie & {
   phrases: EntityTable<Phrase, 'id', 'tenantId'>;
   sections: EntityTable<Section, 'id', 'tenantId'>;
   imageMetadata: EntityTable<ImageMetadata, 'id', 'tenantId'>;
+  templates: EntityTable<Template, 'id', 'tenantId'>;
 };
 
 // Version 2: Initial schema (kept for upgrade path)
@@ -605,6 +622,18 @@ db.version(24).stores({
   sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
   imageMetadata:
     'id, tenantId, imagePath, uploadStatus, isArchived, isDeleted, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived], [tenantId+isDeleted]',
+});
+
+// Version 25: Add templates table for report templates
+db.version(25).stores({
+  surveys: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  components: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  elements: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  phrases: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  sections: 'id, tenantId, updatedAt, syncStatus, [tenantId+updatedAt]',
+  imageMetadata:
+    'id, tenantId, imagePath, uploadStatus, isArchived, isDeleted, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+uploadStatus], [tenantId+isArchived], [tenantId+isDeleted]',
+  templates: 'id, tenantId, category, updatedAt, syncStatus, [tenantId+updatedAt], [tenantId+category]',
 });
 
 export { db, CreateDexieHooks };
