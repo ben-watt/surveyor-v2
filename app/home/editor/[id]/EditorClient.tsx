@@ -14,6 +14,7 @@ import { useVersionHistory, Version } from '@/app/home/editor/hooks/useVersionHi
 import { VersionPreview } from '../components/VersionPreview';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCurrentTenantId } from '@/app/home/utils/tenant-utils';
+import { type PageLayoutSnapshot } from '@/app/home/components/Input/PageLayoutContext';
 
 export default function EditorClient() {
   const params = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export default function EditorClient() {
   const { versions, isLoading: isVersionsLoading, fetchVersions } = useVersionHistory(id);
 
   const [preview, setPreview] = useState<boolean>(false);
+  const [pageLayout, setPageLayout] = useState<PageLayoutSnapshot | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [versionPreviewContent, setVersionPreviewContent] = useState<string>('');
@@ -123,7 +125,10 @@ export default function EditorClient() {
               content={editorContent}
               onCreate={updateHandler}
               onUpdate={updateHandler}
-              onPrint={() => setPreview(true)}
+              onPrint={(layout) => {
+                setPageLayout(layout);
+                setPreview(true);
+              }}
               onSave={(options) => save(editorContent, options)}
               isSaving={documentSaveIsSaving}
               saveStatus={saveStatus}
@@ -138,7 +143,13 @@ export default function EditorClient() {
             onReturn={handleReturnToLatest}
           />
         )}
-        {preview && <PrintPreviewer content={previewContent} onBack={() => setPreview(false)} />}
+        {preview && pageLayout && (
+          <PrintPreviewer
+            content={previewContent}
+            layout={pageLayout}
+            onBack={() => setPreview(false)}
+          />
+        )}
         <VersionHistorySidebar
           versions={versions as any}
           onSelect={handleSelectVersion}

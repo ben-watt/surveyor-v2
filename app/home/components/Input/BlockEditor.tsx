@@ -12,7 +12,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 
-import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import Section from '../TipTapExtensions/Section';
 import FileHandler from '@tiptap-pro/extension-file-handler';
 import Highlight from '@tiptap/extension-highlight';
@@ -26,13 +26,19 @@ import { v4 } from 'uuid';
 import { createTocRepo, TocContext, TocNode, TocRepo } from '../TipTapExtensions/Toc';
 import S3ImageExtension from '../TipTapExtensions/S3ImageNodeView';
 import { insertImageFromFile } from '../../editor/utils/imageUpload';
+import {
+  INCH_TO_PX,
+  PageLayoutProvider,
+  type PageLayoutSnapshot,
+  usePageLayout,
+} from './PageLayoutContext';
 
 interface NewEditorProps {
   editorId?: string;
   content: Content;
   onUpdate?: (props: EditorEvents['update']) => void;
   onCreate?: (props: EditorEvents['create']) => void;
-  onPrint: () => void;
+  onPrint: (layout: PageLayoutSnapshot) => void;
   onSave: (options?: { auto?: boolean }) => void;
   isSaving: boolean;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
@@ -154,27 +160,99 @@ export const NewEditor = forwardRef(
 
     useImperativeHandle(ref, () => editor, [editor]);
     return (
-      <div className="border-grey-200 border bg-gray-100 print:hidden">
-        <BlockMenuBar
-          editor={editor}
-          onPrint={onPrint}
-          onSave={onSave}
-          isSaving={isSaving}
-          saveStatus={saveStatus}
-          onOpenVersionHistory={onOpenVersionHistory}
-        />
-        <TocContext.Provider value={tocData}>
-          <div className="m-auto mb-6 mt-6 w-[962px] bg-white">
-            <EditorContent 
-              id={editorIdentifier} 
+      <PageLayoutProvider>
+        <div className="border-grey-200 border bg-gray-100 print:hidden">
+          <BlockMenuBar
+            editor={editor}
+            onPrint={onPrint}
+            onSave={onSave}
+            isSaving={isSaving}
+            saveStatus={saveStatus}
+            onOpenVersionHistory={onOpenVersionHistory}
+          />
+          <TocContext.Provider value={tocData}>
+            <EditorSurface
               editor={editor}
-              spellCheck={!enableHandlebarsHighlight}
+              editorIdentifier={editorIdentifier}
+              enableHandlebarsHighlight={enableHandlebarsHighlight}
             />
-          </div>
-        </TocContext.Provider>
-      </div>
+          </TocContext.Provider>
+        </div>
+      </PageLayoutProvider>
     );
   },
 );
 
 NewEditor.displayName = 'NewEditor';
+
+type EditorSurfaceProps = {
+  editor: ReturnType<typeof useEditor>;
+  editorIdentifier: string;
+  enableHandlebarsHighlight: boolean;
+};
+
+const EditorSurface: React.FC<EditorSurfaceProps> = ({
+  editor,
+  editorIdentifier,
+  enableHandlebarsHighlight,
+}) => {
+  const { pageDimensionsPx, margins, zoom } = usePageLayout();
+
+  const pageStyle = useMemo(() => {
+    return {
+      width: `${pageDimensionsPx.width}px`,
+      minHeight: `${pageDimensionsPx.height}px`,
+    };
+  }, [pageDimensionsPx.height, pageDimensionsPx.width]);
+
+  const scaledWrapperStyle = useMemo(() => {
+    return {
+      width: `${pageDimensionsPx.width * zoom}px`,
+      minHeight: `${pageDimensionsPx.height * zoom}px`,
+    };
+  }, [pageDimensionsPx.height, pageDimensionsPx.width, zoom]);
+
+  const marginOverlayStyles = useMemo(() => {
+    return {
+      top: `${margins.top * INCH_TO_PX}px`,
+      right: `${margins.right * INCH_TO_PX}px`,
+      bottom: `${margins.bottom * INCH_TO_PX}px`,
+      left: `${margins.left * INCH_TO_PX}px`,
+    };
+  }, [margins.bottom, margins.left, margins.right, margins.top]);
+
+  const editorPaddingStyles = useMemo(() => {
+    return {
+      paddingTop: `${margins.top * INCH_TO_PX}px`,
+      paddingRight: `${margins.right * INCH_TO_PX}px`,
+      paddingBottom: `${margins.bottom * INCH_TO_PX}px`,
+      paddingLeft: `${margins.left * INCH_TO_PX}px`,
+    };
+  }, [margins.bottom, margins.left, margins.right, margins.top]);
+
+  return (
+    <div className="flex justify-center px-6 py-6">
+      <div className="relative" style={scaledWrapperStyle}>
+        <div
+          className="relative h-full w-full bg-white shadow-sm"
+          style={{ ...pageStyle, transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+        >
+          <div className="pointer-events-none absolute inset-0 print:hidden">
+            <div
+              className="absolute border border-dashed border-gray-300/80"
+              style={marginOverlayStyles}
+            />
+          </div>
+          <div className="relative h-full w-full" style={editorPaddingStyles}>
+            <EditorContent
+              id={editorIdentifier}
+              editor={editor}
+              spellCheck={!enableHandlebarsHighlight}
+              className="min-h-full"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

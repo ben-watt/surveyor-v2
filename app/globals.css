@@ -270,13 +270,7 @@
 /* Basic editor styles */
 .tiptap {
   outline: none;
-  padding: 1rem;
-}
-
-@media print {
-  .tiptap {
-    padding: 0px;
-  }
+  padding: 0;
 }
 
 .tiptap :first-child {

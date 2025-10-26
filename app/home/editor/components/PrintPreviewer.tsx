@@ -4,9 +4,11 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download } from 'lucide-react';
 import { getImageHref } from '../utils/image';
+import { type PageLayoutSnapshot } from '@/app/home/components/Input/PageLayoutContext';
 
 interface PrintPreviewerProps {
   content: string;
+  layout: PageLayoutSnapshot;
   onBack: () => void;
 }
 
@@ -94,7 +96,40 @@ async function waitForImages(container: HTMLElement | Document) {
   );
 }
 
-export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack }) => {
+const createLayoutStylesheet = (layout: PageLayoutSnapshot) => {
+  const {
+    pageDimensionsIn: { width, height },
+    margins,
+  } = layout;
+
+  const css = `@page {
+  size: ${width.toFixed(2)}in ${height.toFixed(2)}in;
+  margin: ${margins.top}in ${margins.right}in ${margins.bottom}in ${margins.left}in;
+}
+
+:root {
+  --editor-page-width: ${width.toFixed(2)}in;
+  --editor-page-height: ${height.toFixed(2)}in;
+  --editor-margin-top: ${margins.top}in;
+  --editor-margin-right: ${margins.right}in;
+  --editor-margin-bottom: ${margins.bottom}in;
+  --editor-margin-left: ${margins.left}in;
+}
+
+body {
+  margin: 0;
+}
+
+.pagedjs_page {
+  width: ${width.toFixed(2)}in !important;
+  height: ${height.toFixed(2)}in !important;
+}
+`;
+
+  return `data:text/css,${encodeURIComponent(css)}`;
+};
+
+export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, layout, onBack }) => {
   const previewRef = React.useRef<HTMLDivElement>(null);
   const previewerRef = React.useRef<Previewer | null>(null);
   const generationTokenRef = React.useRef(0);
@@ -150,7 +185,12 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
         // Create or reuse previewer instance
         const previewer =
           previewerRef.current ?? (previewerRef.current = new Previewer({}));
-        await previewer.preview(preparedHtml, ['/pagedstyles.css', '/interface.css'], prev);
+        const layoutStylesheetHref = createLayoutStylesheet(layout);
+        await previewer.preview(
+          preparedHtml,
+          ['/pagedstyles.css', '/interface.css', layoutStylesheetHref],
+          prev,
+        );
         if (generationTokenRef.current !== currentToken) return;
 
         // Ensure images finish loading before allowing print
@@ -184,7 +224,7 @@ export const PrintPreviewer: React.FC<PrintPreviewerProps> = ({ content, onBack 
         prev.innerHTML = '';
       }
     };
-  }, [content]); // Re-run when content changes
+  }, [content, layout]); // Re-run when content or layout changes
 
   return (
     <div className="absolute inset-0 bg-white">

@@ -261,7 +261,7 @@ export function TemplateForm({ id, defaultValues, onSave }: TemplateFormProps) {
                         onCreate={({ editor }) => {
                           editorRef.current = editor;
                         }}
-                        onPrint={() => {}}
+                        onPrint={(_layout) => {}}
                         onSave={() => {}}
                         isSaving={false}
                         saveStatus="idle"
@@ -300,7 +300,7 @@ export function TemplateForm({ id, defaultValues, onSave }: TemplateFormProps) {
                 <NewEditor
                   editorId={`template-preview-${idRef.current}`}
                   content={previewHtml}
-                  onPrint={() => {}}
+                  onPrint={(_layout) => {}}
                   onSave={() => {}}
                   isSaving={false}
                   saveStatus="idle"

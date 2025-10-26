@@ -34,6 +34,7 @@ import {
   Save,
   History,
   AlignVerticalSpaceAround,
+  Settings2,
 } from 'lucide-react';
 import {
   Select,
@@ -46,13 +47,24 @@ import {
 } from '@/components/ui/select';
 import { Level } from '@tiptap/extension-heading';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useLocalStorage } from '@uidotdev/usehooks';
 import { insertImageFromFile } from '../../editor/utils/imageUpload';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  PAGE_SIZE_OPTIONS,
+  type PageLayoutSnapshot,
+  type Margins,
+  type PageSizeId,
+  type Orientation,
+  usePageLayout,
+} from './PageLayoutContext';
 
 interface MenuBarProps {
   editor: Editor | null;
-  onPrint: () => void;
+  onPrint: (layout: PageLayoutSnapshot) => void;
   onSave: () => void;
   isSaving: boolean;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
@@ -70,6 +82,32 @@ export default function MenuBar({
   onOpenVersionHistory,
 }: MenuBarProps) {
   if (!editor) return null;
+
+  const layoutContext = usePageLayout();
+  const {
+    setPageSize,
+    setOrientation,
+    setMargins,
+    setZoom,
+    setShowBreaks,
+    pageSize,
+    orientation,
+    margins,
+    zoom,
+    showBreaks,
+    pageDimensionsPx,
+    pageDimensionsIn,
+  } = layoutContext;
+
+  const layoutSnapshot: PageLayoutSnapshot = {
+    pageSize,
+    orientation,
+    margins,
+    zoom,
+    showBreaks,
+    pageDimensionsPx,
+    pageDimensionsIn,
+  };
 
   const setImageAlignIfImageSelected = (align: 'left' | 'center' | 'right' | 'justify') => {
     const { state } = editor;
@@ -272,6 +310,23 @@ export default function MenuBar({
       action: () => onOpenVersionHistory && onOpenVersionHistory(),
     },
     {
+      type: 'divider',
+      render: () => <Divider />,
+    },
+    {
+      type: 'page-layout',
+      render: () => (
+        <MenuPageLayout
+          layout={layoutSnapshot}
+          setPageSize={setPageSize}
+          setOrientation={setOrientation}
+          setMargins={setMargins}
+          setZoom={setZoom}
+          setShowBreaks={setShowBreaks}
+        />
+      ),
+    },
+    {
       icon: isSaving ? (
         <span className="mr-1 inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
       ) : (
@@ -285,7 +340,7 @@ export default function MenuBar({
       icon: <Printer />,
       title: 'Print',
       action: async () => {
-        onPrint();
+        onPrint(layoutSnapshot);
       },
     },
   ];
@@ -618,6 +673,144 @@ const MenuLineHeight = ({ editor }: MenuLineHeightProps) => {
         </div>
       )}
     </div>
+  );
+};
+
+type MenuPageLayoutProps = {
+  layout: PageLayoutSnapshot;
+  setPageSize: (pageSize: PageSizeId) => void;
+  setOrientation: (orientation: Orientation) => void;
+  setMargins: (margins: Margins) => void;
+  setZoom: (zoom: number) => void;
+  setShowBreaks: (show: boolean) => void;
+};
+
+const MenuPageLayout = ({
+  layout,
+  setPageSize,
+  setOrientation,
+  setMargins,
+  setZoom,
+  setShowBreaks,
+}: MenuPageLayoutProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleMarginChange = (key: keyof Margins, value: string) => {
+    const parsed = Number.parseFloat(value);
+    setMargins({
+      ...layout.margins,
+      [key]: Number.isNaN(parsed) ? 0 : Math.max(0, parsed),
+    });
+  };
+
+  const pageSizeEntries = Object.entries(PAGE_SIZE_OPTIONS);
+  const zoomOptions = ['0.75', '1', '1.25', '1.5', '2'];
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn('h-full w-8 p-0', open && 'bg-muted')}
+          title="Page Layout"
+        >
+          <Settings2 className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        className="w-72 space-y-3 rounded-md border bg-popover p-3 text-popover-foreground shadow-md"
+      >
+        <div className="text-xs font-semibold uppercase text-muted-foreground">Page Layout</div>
+        <div className="grid grid-cols-1 gap-2 text-sm">
+          <label className="flex flex-col gap-1 text-xs font-medium uppercase text-muted-foreground">
+            Page Size
+            <Select value={layout.pageSize} onValueChange={(value) => setPageSize(value as PageSizeId)}>
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {pageSizeEntries.map(([key, definition]) => (
+                    <SelectItem key={key} value={key}>
+                      {definition.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium uppercase text-muted-foreground">
+            Orientation
+            <Select value={layout.orientation} onValueChange={(value) => setOrientation(value as Orientation)}>
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="portrait">Portrait</SelectItem>
+                <SelectItem value="landscape">Landscape</SelectItem>
+              </SelectContent>
+            </Select>
+          </label>
+        </div>
+        <div>
+          <div className="text-xs font-semibold uppercase text-muted-foreground">Margins (in)</div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <MarginInput label="Top" value={layout.margins.top} onChange={(val) => handleMarginChange('top', val)} />
+            <MarginInput label="Bottom" value={layout.margins.bottom} onChange={(val) => handleMarginChange('bottom', val)} />
+            <MarginInput label="Left" value={layout.margins.left} onChange={(val) => handleMarginChange('left', val)} />
+            <MarginInput label="Right" value={layout.margins.right} onChange={(val) => handleMarginChange('right', val)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-2">
+          <label className="flex flex-col gap-1 text-xs font-medium uppercase text-muted-foreground">
+            Zoom
+            <Select
+              value={layout.zoom.toString()}
+              onValueChange={(value) => setZoom(Number.parseFloat(value))}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {zoomOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {Math.round(Number.parseFloat(option) * 100)}%
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium uppercase text-muted-foreground">Show page breaks</span>
+          <Switch checked={layout.showBreaks} onCheckedChange={(checked) => setShowBreaks(checked)} />
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+type MarginInputProps = {
+  label: string;
+  value: number;
+  onChange: (value: string) => void;
+};
+
+const MarginInput = ({ label, value, onChange }: MarginInputProps) => {
+  return (
+    <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+      {label}
+      <Input
+        type="number"
+        step="0.25"
+        min="0"
+        value={value.toString()}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   );
 };
 
