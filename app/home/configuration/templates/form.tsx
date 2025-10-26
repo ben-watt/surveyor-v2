@@ -20,6 +20,7 @@ import { mockSurveyData } from '@/app/home/surveys/mocks/mockSurveyData';
 import { AlertCircle, Eye, Edit } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { NewEditor } from '@/app/home/components/Input/BlockEditor';
+import { VariableBrowser } from './components/VariableBrowser';
 
 // Zod schema for template validation
 const templateSchema = z.object({
@@ -43,6 +44,7 @@ interface TemplateFormProps {
 
 export function TemplateForm({ id, defaultValues, onSave }: TemplateFormProps) {
   const idRef = useRef(id ?? uuidv4());
+  const editorRef = useRef<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -177,85 +179,99 @@ export function TemplateForm({ id, defaultValues, onSave }: TemplateFormProps) {
     }
   }, [templateHydrated, template, methods, hasInitialReset, skipNextChange]);
 
+  // Handle variable insertion from VariableBrowser
+  const handleInsertVariable = useCallback((path: string) => {
+    if (editorRef.current?.commands) {
+      editorRef.current.commands.insertContent(`{{${path}}}`);
+      editorRef.current.commands.focus();
+    }
+  }, []);
+
   if (!templateHydrated) {
     return <div>Loading...</div>;
   }
 
   return (
     <FormProvider {...methods}>
-      <div className="grid gap-6">
-        {/* Basic Info Section */}
-        <div className="grid gap-4">
-          <Input labelTitle="Template Name" register={() => register('name')} errors={errors} />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr,320px] gap-6">
+        {/* Main Content Column */}
+        <div className="grid gap-6">
+          {/* Basic Info Section */}
+          <div className="grid gap-4">
+            <Input labelTitle="Template Name" register={() => register('name')} errors={errors} />
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <Textarea
-                  id="description"
-                  placeholder="Describe what this template is for..."
-                  className="min-h-[80px]"
-                  {...field}
-                />
-              )}
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description.message as string}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Template Content Section */}
-        <div className="grid gap-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="content">Template Content</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(!showPreview)}
-            >
-              {showPreview ? (
-                <>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </>
-              ) : (
-                <>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Preview
-                </>
-              )}
-            </Button>
-          </div>
-
-          {!showPreview && (
-            <div className="space-y-2">
+            <div>
+              <Label htmlFor="description">Description</Label>
               <Controller
-                name="content"
+                name="description"
                 control={control}
                 render={({ field }) => (
-                  <div className="space-y-2">
-                    <NewEditor
-                      editorId={`template-editor-${idRef.current}`}
-                      content={field.value || ''}
-                      onUpdate={({ editor }) => {
-                        field.onChange(editor.getHTML());
-                      }}
-                      onPrint={() => {}}
-                      onSave={() => {}}
-                      isSaving={false}
-                      saveStatus="idle"
-                    />
-                    {errors.content && (
-                      <p className="mt-2 text-sm text-red-600">{errors.content.message as string}</p>
-                    )}
-                  </div>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe what this template is for..."
+                    className="min-h-[80px]"
+                    {...field}
+                  />
                 )}
               />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-600">{errors.description.message as string}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Template Content Section */}
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="content">Template Content</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                {showPreview ? (
+                  <>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </>
+                ) : (
+                  <>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {!showPreview && (
+              <div className="space-y-2">
+                <Controller
+                  name="content"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <NewEditor
+                        ref={editorRef}
+                        editorId={`template-editor-${idRef.current}`}
+                        content={field.value || ''}
+                        onUpdate={({ editor }) => {
+                          field.onChange(editor.getHTML());
+                        }}
+                        onCreate={({ editor }) => {
+                          editorRef.current = editor;
+                        }}
+                        onPrint={() => {}}
+                        onSave={() => {}}
+                        isSaving={false}
+                        saveStatus="idle"
+                      />
+                      {errors.content && (
+                        <p className="mt-2 text-sm text-red-600">{errors.content.message as string}</p>
+                      )}
+                    </div>
+                  )}
+                />
 
               {/* Helper text */}
               <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
@@ -293,13 +309,23 @@ export function TemplateForm({ id, defaultValues, onSave }: TemplateFormProps) {
           )}
         </div>
 
-        {/* Save Status */}
-        <LastSavedIndicator
-          status={saveStatus}
-          lastSavedAt={lastSavedAt || undefined}
-          entityUpdatedAt={template?.updatedAt}
-          className="justify-center text-sm"
-        />
+          {/* Save Status */}
+          <LastSavedIndicator
+            status={saveStatus}
+            lastSavedAt={lastSavedAt || undefined}
+            entityUpdatedAt={template?.updatedAt}
+            className="justify-center text-sm"
+          />
+        </div>
+
+        {/* Variable Browser Column */}
+        {!showPreview && (
+          <div className="hidden lg:block">
+            <div className="sticky top-4 h-[calc(100vh-8rem)] border rounded-lg p-4 bg-white shadow-sm">
+              <VariableBrowser onInsert={handleInsertVariable} className="h-full" />
+            </div>
+          </div>
+        )}
       </div>
     </FormProvider>
   );

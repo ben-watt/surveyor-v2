@@ -14,7 +14,10 @@
 4. [User Guide](#user-guide)
 5. [Technical Implementation](#technical-implementation)
 6. [API Reference](#api-reference)
-7. [Future Enhancements](#future-enhancements)
+7. [What's Next - Implementation Roadmap](#whats-next---implementation-roadmap)
+8. [Performance & Quality](#performance--quality)
+9. [Troubleshooting](#troubleshooting)
+10. [Support & Resources](#support--resources)
 
 ---
 
@@ -732,59 +735,654 @@ Red issues: {{countByStatus sections "Red"}}
 
 ---
 
-## Future Enhancements
+## What's Next - Implementation Roadmap
 
-### Phase 2: Advanced Features (Planned)
+This section outlines the practical next steps for evolving the template builder from MVP to production-grade feature.
 
-**Variable Browser Side Panel**:
-- Tree view of all available variables
-- Search/filter
-- Click to insert
-- Type indicators
+### Phase 2a: Immediate Enhancements (1-2 weeks)
 
-**More Helpers**:
-- Image insertion helpers
-- Table generation helpers
-- Advanced array operations (filter, sort, groupBy)
+#### 1. Variable Browser Side Panel ✅ COMPLETE
 
-**Template Management**:
-- Template search and filtering
-- Template categories with icons
-- Template duplication
-- Template export/import (JSON)
-- Template versioning with history
+**Status**: ✅ Implemented (October 26, 2025)
 
-### Phase 3: Integration (Planned)
+**Why**: Reduce cognitive load when creating templates. Users shouldn't memorize schema paths.
 
-**Apply to Surveys**:
-- "Use Template" button in survey creation
-- Select template from list
-- Generate report content
-- Insert into BlockEditor
-- Continue editing
+**What**:
+- ✅ Collapsible side panel showing available variables
+- ✅ Tree structure matching schema hierarchy
+- ✅ Type indicators (string, number, array, object)
+- ✅ Search/filter functionality
+- ✅ Click to insert variable at cursor
 
-**Template Library**:
-- Pre-built templates (Level 2, Level 3, Summary)
-- Industry-standard templates
-- Template marketplace (share with community)
+**Implementation Details**:
 
-### Phase 4: Power Features (Future)
+**Files Created**:
+1. `app/home/surveys/templates/schemaParser.ts` - Schema parsing utility with all variable definitions
+2. `app/home/configuration/templates/components/VariableBrowser.tsx` - Interactive tree component
+3. `app/home/configuration/templates/components/README.md` - Component documentation
 
-**AI Integration**:
-- AI-generated templates
-- AI suggestions for improvements
-- Auto-complete template sections
+**Files Modified**:
+1. `app/home/configuration/templates/form.tsx` - Updated layout and added editor integration
 
-**Collaboration**:
-- Multi-user template editing
-- Comments on templates
-- Template approval workflow
+**Key Features**:
+- Two-column grid layout (1fr + 320px fixed width)
+- Recursive tree rendering with Collapsible components
+- Color-coded type badges (string=blue, number=green, date=red, array=orange, etc.)
+- Debounced search with highlighting
+- Helper hints showing recommended Handlebars functions
+- Toast notifications on insert and copy
+- Sticky positioning for persistent visibility
+- Hidden on mobile/tablet screens (lg:block)
+- Only visible in edit mode (hidden during preview)
+- Editor ref integration using `insertContent()` command
+- Copy to clipboard functionality per variable
 
-**Advanced Rendering**:
-- Template partials (reusable components)
-- Template inheritance
-- Conditional formatting rules
-- Dynamic images
+**User Experience**:
+- Click any leaf variable to insert at cursor
+- Search filters variables by path, label, or description
+- Expandable sections for nested objects
+- Helper hints show which Handlebars helpers work with each variable
+- Context descriptions for arrays (e.g., "Use with {{#each}}")
+
+**Key File**: `app/home/configuration/templates/form.tsx` (lines 1-332)
+
+#### 2. Template Library (Default Templates)
+
+**Why**: Users need starting points. Provide industry-standard templates out of the box.
+
+**What**:
+- 3-5 pre-built templates:
+  - Level 2 HomeBuyer Report (standard)
+  - Level 3 Building Survey (comprehensive)
+  - Executive Summary (brief)
+  - Costings Summary (financial focus)
+  - Property Description (front section only)
+
+**Code Changes**:
+
+**New File**: `app/home/surveys/templates/library.ts`
+
+```typescript
+import { Template } from '@/app/home/clients/Dexie';
+
+export const templateLibrary: Omit<Template, 'id' | 'createdBy' | 'tenantId' | 'createdAt' | 'updatedAt' | 'syncStatus'>[] = [
+  {
+    name: 'Level 3 Building Survey - Full Report',
+    description: 'Comprehensive building survey report with all sections',
+    category: 'level3',
+    content: `
+      <h1>Building Survey Report</h1>
+      <p><strong>Client:</strong> {{reportDetails.clientName}}</p>
+      <p><strong>Property:</strong> {{formatAddress reportDetails.address}}</p>
+      <p><strong>Report Date:</strong> {{formatDate reportDetails.reportDate "DD MMMM YYYY"}}</p>
+      
+      {{#each sections}}
+      <h2>{{this.name}}</h2>
+      {{#each this.elementSections}}
+      {{#if this.isPartOfSurvey}}
+      <h3>{{this.name}}</h3>
+      <p>{{this.description}}</p>
+      {{#each this.components}}
+      <h4>{{this.name}} ({{this.location}})</h4>
+      <p><strong>Status:</strong> <span class="{{ragColor this.ragStatus}}">{{this.ragStatus}}</span></p>
+      {{#each this.conditions}}
+      <p>{{this.phrase}}</p>
+      {{/each}}
+      {{/each}}
+      {{/if}}
+      {{/each}}
+      {{/each}}
+    `,
+    version: 1,
+    tags: ['level3', 'comprehensive', 'default'],
+  },
+  {
+    name: 'Executive Summary',
+    description: 'Brief overview of key findings',
+    category: 'summary',
+    content: `
+      <h1>Executive Summary</h1>
+      <p><strong>Property:</strong> {{reportDetails.address.formatted}}</p>
+      <p><strong>Inspection Date:</strong> {{formatDate reportDetails.inspectionDate "DD/MM/YYYY"}}</p>
+      
+      <h2>Key Findings</h2>
+      <p>Red issues identified: {{countByStatus sections "Red"}}</p>
+      <p>Amber issues identified: {{countByStatus sections "Amber"}}</p>
+      
+      <h2>Estimated Costs</h2>
+      <p><strong>Total:</strong> {{formatCurrency (totalCostings sections)}}</p>
+    `,
+    version: 1,
+    tags: ['summary', 'brief', 'default'],
+  },
+  // Add more templates...
+];
+
+export const seedTemplateLibrary = async (userId: string, tenantId: string) => {
+  const { templateStore } = await import('@/app/home/clients/Database');
+  
+  for (const template of templateLibrary) {
+    await templateStore.add({
+      ...template,
+      id: uuidv4(),
+      createdBy: userId,
+      tenantId,
+    });
+  }
+};
+```
+
+**Update**: `app/home/configuration/templates/page.tsx`
+
+Add "Import Default Templates" button for first-time users.
+
+#### 3. Template Duplication
+
+**Why**: Users often want variations of existing templates.
+
+**What**:
+- "Duplicate" button on template list
+- Creates copy with " (Copy)" suffix
+- Opens in edit mode
+
+**Code Changes**:
+
+**File**: `app/home/configuration/templates/page.tsx`
+
+Add to action menu:
+```typescript
+const handleDuplicate = async (template: Template) => {
+  const newTemplate = await templateStore.add({
+    ...template,
+    id: uuidv4(),
+    name: `${template.name} (Copy)`,
+    version: 1,
+    metadata: {},
+  });
+  
+  router.push(`/home/configuration/templates/${newTemplate.id}`);
+};
+```
+
+**Key File**: `app/home/configuration/templates/page.tsx` (lines 1-115)
+
+---
+
+### Phase 2b: Enhanced Template Management (2-3 weeks)
+
+#### 4. Template Search & Filtering
+
+**Why**: As template count grows, users need to find them quickly.
+
+**What**:
+- Search by name/description
+- Filter by category
+- Filter by tags
+- Sort by usage, date, name
+
+**Code Changes**:
+
+**File**: `app/home/configuration/templates/page.tsx`
+
+```typescript
+const [searchTerm, setSearchTerm] = useState('');
+const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+const [sortBy, setSortBy] = useState<'name' | 'updated' | 'usage'>('updated');
+
+const filteredTemplates = useMemo(() => {
+  return templates
+    .filter(t => 
+      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(t => categoryFilter ? t.category === categoryFilter : true)
+    .sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'updated') return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      if (sortBy === 'usage') return (b.metadata?.usageCount || 0) - (a.metadata?.usageCount || 0);
+      return 0;
+    });
+}, [templates, searchTerm, categoryFilter, sortBy]);
+```
+
+#### 5. More Handlebars Helpers
+
+**Why**: Enable richer templates with more formatting options.
+
+**What**:
+- **Array operations**: `filter`, `sort`, `groupBy`, `first`, `last`, `slice`
+- **Math operations**: `round`, `ceil`, `floor`, `percentage`
+- **String operations**: `replace`, `split`, `trim`
+- **Conditional classes**: `classNames` helper for dynamic CSS
+
+**Code Changes**:
+
+**File**: `app/home/surveys/templates/renderer.ts`
+
+Add new helpers (after line 362):
+```typescript
+// Array operations
+Handlebars.registerHelper('filter', function(array: any[], key: string, value: any) {
+  return array.filter(item => item[key] === value);
+});
+
+Handlebars.registerHelper('sort', function(array: any[], key: string, order: 'asc' | 'desc' = 'asc') {
+  const sorted = [...array].sort((a, b) => {
+    if (a[key] < b[key]) return order === 'asc' ? -1 : 1;
+    if (a[key] > b[key]) return order === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return sorted;
+});
+
+Handlebars.registerHelper('groupBy', function(array: any[], key: string) {
+  return array.reduce((acc, item) => {
+    const groupKey = item[key];
+    if (!acc[groupKey]) acc[groupKey] = [];
+    acc[groupKey].push(item);
+    return acc;
+  }, {} as Record<string, any[]>);
+});
+
+// Math operations
+Handlebars.registerHelper('round', (num: number, decimals: number = 0) => {
+  return Number(num.toFixed(decimals));
+});
+
+Handlebars.registerHelper('percentage', (value: number, total: number) => {
+  return ((value / total) * 100).toFixed(1) + '%';
+});
+
+// Conditional classes
+Handlebars.registerHelper('classNames', function(...args: any[]) {
+  return args.filter(Boolean).join(' ');
+});
+```
+
+**Key File**: `app/home/surveys/templates/renderer.ts` (lines 1-362)
+
+---
+
+### Phase 3: Survey Integration (3-4 weeks)
+
+#### 6. Apply Template to Survey
+
+**Why**: This is the primary use case - create reports from templates.
+
+**What**:
+- "Use Template" button in survey creation workflow
+- Modal to select template
+- Render template with actual survey data
+- Insert generated HTML into BlockEditor
+- User can continue editing
+
+**Code Changes**:
+
+**New File**: `app/home/surveys/building-survey-reports/components/TemplateSelector.tsx`
+
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { templateStore } from '@/app/home/clients/Database';
+import { renderTemplate } from '@/app/home/surveys/templates/renderer';
+import { BuildingSurveyFormData } from '../BuildingSurveyReportSchema';
+
+interface TemplateSelectorProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onApply: (html: string) => void;
+  surveyData: BuildingSurveyFormData;
+}
+
+export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
+  isOpen,
+  onClose,
+  onApply,
+  surveyData,
+}) => {
+  const [isHydrated, templates] = templateStore.useList();
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  
+  const handleApply = () => {
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (!template) return;
+    
+    const html = renderTemplate(template.content, surveyData);
+    onApply(html);
+    
+    // Update usage stats
+    templateStore.update(selectedTemplate, (draft) => {
+      if (!draft.metadata) draft.metadata = {};
+      draft.metadata.usageCount = (draft.metadata.usageCount || 0) + 1;
+      draft.metadata.lastUsed = new Date().toISOString();
+    });
+    
+    onClose();
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Select Template</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {templates.map(template => (
+            <div
+              key={template.id}
+              className={`p-4 border rounded cursor-pointer ${
+                selectedTemplate === template.id ? 'border-primary' : ''
+              }`}
+              onClick={() => setSelectedTemplate(template.id)}
+            >
+              <h3 className="font-semibold">{template.name}</h3>
+              <p className="text-sm text-muted-foreground">{template.description}</p>
+              {template.metadata?.usageCount && (
+                <p className="text-xs mt-2">Used {template.metadata.usageCount} times</p>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleApply} disabled={!selectedTemplate}>Apply Template</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+```
+
+**Update**: Survey form pages (e.g., `app/home/surveys/building-survey-reports/[id]/page.tsx`)
+
+Add button to trigger template selector:
+```typescript
+const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
+
+const handleApplyTemplate = (html: string) => {
+  // Insert into current editor or replace content
+  // This depends on your editor implementation
+  setEditorContent(html);
+};
+
+// In JSX:
+<Button onClick={() => setIsTemplateSelectorOpen(true)}>
+  Use Template
+</Button>
+
+<TemplateSelector
+  isOpen={isTemplateSelectorOpen}
+  onClose={() => setIsTemplateSelectorOpen(false)}
+  onApply={handleApplyTemplate}
+  surveyData={surveyFormData}
+/>
+```
+
+**Key Files**:
+- New: `app/home/surveys/building-survey-reports/components/TemplateSelector.tsx`
+- Update: `app/home/surveys/building-survey-reports/[id]/page.tsx`
+- Reference: `app/home/surveys/building-survey-reports/BuildingSurveyReportSchema.ts`
+
+#### 7. Template Export/Import
+
+**Why**: Share templates between users, backup, migrate environments.
+
+**What**:
+- Export template as JSON file
+- Import template from JSON file
+- Validate on import
+- Handle ID conflicts
+
+**Code Changes**:
+
+**File**: `app/home/configuration/templates/page.tsx`
+
+```typescript
+const handleExport = async (template: Template) => {
+  const blob = new Blob([JSON.stringify(template, null, 2)], {
+    type: 'application/json',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `template-${template.name.toLowerCase().replace(/\s/g, '-')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+const handleImport = async (file: File) => {
+  const text = await file.text();
+  const template = JSON.parse(text) as Template;
+  
+  // Validate structure
+  const validation = validateTemplate(template.content);
+  if (!validation.isValid) {
+    alert(`Invalid template: ${validation.error}`);
+    return;
+  }
+  
+  // Create with new ID
+  await templateStore.add({
+    ...template,
+    id: uuidv4(),
+    createdBy: currentUser.id,
+    tenantId: currentTenant.id,
+  });
+};
+```
+
+---
+
+### Phase 4: Advanced Features (Future)
+
+#### 8. Template Versioning & History
+
+**Why**: Track changes, roll back errors, see what changed.
+
+**What**:
+- Store version history in separate table
+- "View History" modal showing versions
+- Compare versions side-by-side
+- Restore previous version
+- Show who made changes and when
+
+**Database Changes**:
+
+**File**: `app/home/clients/Dexie.ts`
+
+Add new table:
+```typescript
+export type TemplateVersion = {
+  id: string;
+  templateId: string;
+  version: number;
+  content: string;
+  createdBy: string;
+  createdAt: string;
+  changeDescription?: string;
+} & TableEntity;
+
+// In schema:
+templateVersions: 'id, templateId, version, [templateId+version]'
+```
+
+#### 9. Template Partials (Reusable Components)
+
+**Why**: DRY principle - define once, use everywhere.
+
+**What**:
+- Define reusable template sections
+- Register as Handlebars partials
+- Include in templates with `{{> partialName}}`
+- Partial library management
+
+**Example**:
+
+Define partial:
+```handlebars
+<!-- Partial: propertyHeader -->
+<h1>Building Survey Report</h1>
+<p><strong>Client:</strong> {{reportDetails.clientName}}</p>
+<p><strong>Property:</strong> {{formatAddress reportDetails.address}}</p>
+<p><strong>Report Date:</strong> {{formatDate reportDetails.reportDate "DD MMMM YYYY"}}</p>
+```
+
+Use in templates:
+```handlebars
+{{> propertyHeader}}
+
+<h2>Survey Details</h2>
+...
+```
+
+**Code Changes**:
+
+**File**: `app/home/surveys/templates/renderer.ts`
+
+```typescript
+export const registerPartial = (name: string, content: string) => {
+  Handlebars.registerPartial(name, content);
+};
+
+export const unregisterPartial = (name: string) => {
+  Handlebars.unregisterPartial(name);
+};
+
+// Load all partials on app init
+export const loadPartials = async () => {
+  const { db } = await import('@/app/home/clients/Dexie');
+  const partials = await db.templatePartials.toArray();
+  
+  partials.forEach(partial => {
+    Handlebars.registerPartial(partial.name, partial.content);
+  });
+};
+```
+
+#### 10. AI-Assisted Template Creation
+
+**Why**: Accelerate template creation, improve quality.
+
+**What**:
+- AI generates template from description
+- AI suggests improvements to templates
+- AI auto-completes sections based on context
+- AI identifies missing sections/data
+
+**Integration**:
+
+```typescript
+const generateTemplate = async (description: string, schema: any) => {
+  const response = await fetch('/api/ai/generate-template', {
+    method: 'POST',
+    body: JSON.stringify({ description, schema }),
+  });
+  
+  const { template } = await response.json();
+  return template;
+};
+
+// In UI:
+<Button onClick={async () => {
+  const template = await generateTemplate(
+    "Create a comprehensive Level 3 building survey report",
+    BuildingSurveyReportSchema
+  );
+  setContent(template);
+}}>
+  Generate with AI
+</Button>
+```
+
+---
+
+## Code Reference Quick Links
+
+### Core Files
+
+**Template Data Model**:
+```typescript
+// Template type definition
+app/home/clients/Dexie.ts (lines 445-458)
+
+// Template store (CRUD operations)
+app/home/clients/Database.ts (lines with templateStore)
+```
+
+**Template UI**:
+```typescript
+// List view
+app/home/configuration/templates/page.tsx (1-115)
+
+// Create/Edit form
+app/home/configuration/templates/form.tsx (1-308)
+
+// Edit page
+app/home/configuration/templates/[id]/page.tsx
+
+// New page
+app/home/configuration/templates/new/page.tsx
+```
+
+**Template Engine**:
+```typescript
+// Handlebars renderer & helpers
+app/home/surveys/templates/renderer.ts (1-362)
+
+// Mock data for testing
+app/home/surveys/mocks/mockSurveyData.ts (1-305)
+```
+
+**Data Schema**:
+```typescript
+// Survey data structure
+app/home/surveys/building-survey-reports/BuildingSurveyReportSchema.ts
+```
+
+**Editor Components**:
+```typescript
+// BlockEditor (rich text editor)
+app/home/editor/NewEditor.tsx
+
+// BlockMenuBar (toolbar)
+app/home/editor/BlockMenuBar.tsx
+```
+
+### Key Integration Points
+
+**Where to add "Use Template" button**:
+- `app/home/surveys/building-survey-reports/new/page.tsx` (create new survey)
+- `app/home/surveys/building-survey-reports/[id]/page.tsx` (edit survey)
+
+**Where to add default templates seeding**:
+- `app/home/configuration/templates/page.tsx` (on first load)
+- Or: `app/dependencies.tsx` (global initialization)
+
+**Where to add variable browser**:
+- `app/home/configuration/templates/form.tsx` (add as side panel)
+
+---
+
+## Recommended Priority Order
+
+Based on user value and implementation effort:
+
+1. ✅ **Phase 2a.1**: Variable Browser (high value, medium effort) - **COMPLETED**
+2. ⏳ **Phase 2a.2**: Default Templates (high value, low effort) - **NEXT**
+3. ⏳ **Phase 3.6**: Apply Template to Survey (highest value, medium effort)
+4. ⏳ **Phase 2a.3**: Template Duplication (medium value, low effort)
+5. ⏳ **Phase 2b.4**: Search & Filtering (medium value, low effort)
+6. ⏳ **Phase 2b.5**: More Helpers (medium value, low effort)
+7. ⏳ **Phase 3.7**: Export/Import (medium value, medium effort)
+8. ⏳ **Phase 4.8**: Versioning (low value, high effort)
+9. ⏳ **Phase 4.9**: Partials (low value, high effort)
+10. ⏳ **Phase 4.10**: AI Integration (high value, very high effort)
+
+**Next Sprint Focus**: Items 2-3 above would deliver maximum user value.
 
 ---
 
