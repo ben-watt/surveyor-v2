@@ -41,6 +41,7 @@ interface HeaderFooterEditorProps {
   value: string;
   onChange?: (html: string) => void;
   className?: string;
+  contentWidth?: number;
 }
 
 const DEFAULT_HEADER_HTML =
@@ -214,7 +215,7 @@ const HeaderFooterToolbar = ({
   editor: Editor;
   region: RunningRegion;
   onInsertImage: () => void;
-  onInsertTemplate?: () => void;
+  onInsertTemplate: () => void;
 }) => {
   const items: ToolbarEntry[] = [
     {
@@ -269,40 +270,36 @@ const HeaderFooterToolbar = ({
       isActive: () => editor.isActive({ textAlign: 'right' }),
     },
     'divider',
-    ...(region === 'header'
-      ? [
-          {
-            key: 'template',
-            icon: <Grid2x2Plus className="h-4 w-4" />,
-            title: 'Insert header grid',
-            action: () => onInsertTemplate?.(),
-          },
-          {
-            key: 'insert-table',
-            icon: <Grid2x2Plus className="h-4 w-4 transform rotate-45" />,
-            title: 'Insert table',
-            action: () =>
-              editor
-                .chain()
-                .focus()
-                .insertTable({ rows: 1, cols: 2, withHeaderRow: false })
-                .run(),
-            isActive: () => editor.isActive('table'),
-          },
-          {
-            key: 'remove-table',
-            icon: <Grid2x2X className="h-4 w-4" />,
-            title: 'Remove table',
-            action: () => {
-              if (editor.can().deleteTable()) {
-                editor.chain().focus().deleteTable().run();
-              }
-              return false;
-            },
-          },
-          'divider' as ToolbarEntry,
-        ]
-      : []),
+    {
+      key: 'template',
+      icon: <Grid2x2Plus className="h-4 w-4" />,
+      title: 'Insert layout',
+      action: onInsertTemplate,
+    },
+    {
+      key: 'insert-table',
+      icon: <Grid2x2Plus className="h-4 w-4 transform rotate-45" />,
+      title: 'Insert table',
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .insertTable({ rows: 1, cols: region === 'header' ? 2 : 1, withHeaderRow: false })
+          .run(),
+      isActive: () => editor.isActive('table'),
+    },
+    {
+      key: 'remove-table',
+      icon: <Grid2x2X className="h-4 w-4" />,
+      title: 'Remove table',
+      action: () => {
+        if (editor.can().deleteTable()) {
+          editor.chain().focus().deleteTable().run();
+        }
+        return false;
+      },
+    },
+    'divider' as ToolbarEntry,
     {
       key: 'insert-image',
       icon: <ImagePlus className="h-4 w-4" />,
@@ -335,6 +332,7 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
   value,
   onChange,
   className,
+  contentWidth,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastEmittedHtml = useRef<string>('');
@@ -438,16 +436,25 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
     [editor],
   );
 
-  const handleInsertHeaderLayout = useCallback(() => {
-    if (!editor || region !== 'header') return;
-    editor.chain().focus().setContent(DEFAULT_HEADER_HTML, false).run();
-    const normalised = normaliseHeaderHtml(DEFAULT_HEADER_HTML);
-    lastEmittedHtml.current = normalised;
-    onChange?.(normalised);
+  const handleInsertTemplate = useCallback(() => {
+    if (!editor) return;
+    if (region === 'header') {
+      editor.chain().focus().setContent(DEFAULT_HEADER_HTML, false).run();
+      const normalised = normaliseHeaderHtml(DEFAULT_HEADER_HTML);
+      lastEmittedHtml.current = normalised;
+      onChange?.(normalised);
+    } else {
+      editor.chain().focus().setContent(DEFAULT_FOOTER_HTML, false).run();
+      const normalised = normaliseFooterHtml(DEFAULT_FOOTER_HTML);
+      lastEmittedHtml.current = normalised;
+      onChange?.(normalised);
+    }
   }, [editor, onChange, region]);
 
+  const widthStyle = contentWidth ? { width: `${contentWidth}px` } : undefined;
+
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn('space-y-3', className)} style={widthStyle}>
       <div className="space-y-1">
         <h3 className="text-sm font-medium text-foreground">
           {region === 'header' ? 'Header content' : 'Footer content'}
@@ -463,11 +470,14 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
           editor={editor}
           region={region}
           onInsertImage={triggerImageSelect}
-          onInsertTemplate={region === 'header' ? handleInsertHeaderLayout : undefined}
+          onInsertTemplate={handleInsertTemplate}
         />
       )}
-      <div className="rounded border border-border bg-white/80">
-        <EditorContent editor={editor} className="max-h-[60vh] min-h-[180px] overflow-auto p-0" />
+      <div className="box-border rounded border border-border bg-white/80" style={widthStyle}>
+        <EditorContent
+          editor={editor}
+          className="max-h-[60vh] min-h-[180px] w-full overflow-auto p-0"
+        />
       </div>
       <input
         ref={fileInputRef}

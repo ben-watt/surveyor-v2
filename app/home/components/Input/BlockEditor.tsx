@@ -282,12 +282,20 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
     [margins.bottom, pageDimensionsPx.width],
   );
 
-  const inlineRegionPadding = useMemo(
+  const headerDisplayPadding = React.useMemo(
     () => ({
-      paddingLeft: `${margins.left * INCH_TO_PX}px`,
-      paddingRight: `${margins.right * INCH_TO_PX}px`,
+      paddingLeft: 0,
+      paddingRight: 0,
     }),
-    [margins.left, margins.right],
+    [],
+  );
+
+  const footerDisplayPadding = React.useMemo(
+    () => ({
+      paddingLeft: 0,
+      paddingRight: 0,
+    }),
+    [],
   );
 
   const handleHeaderChangeInternal = React.useCallback(
@@ -305,6 +313,8 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
     },
     [onFooterChange, setFooterHtml],
   );
+
+  const runningRegionWidth = pageDimensionsPx.width;
 
   return (
     <div className="flex justify-center px-6 py-6">
@@ -334,22 +344,30 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
                   {headerHtml ? (
                     <div
                       className="pointer-events-none line-clamp-3 max-h-full w-full text-left text-[0.7rem] leading-tight text-foreground/80"
-                      style={inlineRegionPadding}
+                      style={headerDisplayPadding}
                     >
-                      <div className="px-2" dangerouslySetInnerHTML={{ __html: headerHtml }} />
+                      <div dangerouslySetInnerHTML={{ __html: headerHtml }} />
                     </div>
                   ) : (
-                    <span className="pointer-events-none px-2" style={inlineRegionPadding}>
+                    <span className="pointer-events-none" style={headerDisplayPadding}>
                       Click to add header
                     </span>
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="center" className="w-[640px] space-y-4">
+              <PopoverContent
+                side="top"
+                align="start"
+                sideOffset={8}
+                alignOffset={0}
+                className="space-y-4 p-0"
+                style={{ width: `${runningRegionWidth}px`, maxWidth: `${runningRegionWidth}px` }}
+              >
                 <HeaderFooterEditor
                   region="header"
                   value={headerHtml}
                   onChange={handleHeaderChangeInternal}
+                  contentWidth={runningRegionWidth}
                 />
               </PopoverContent>
             </Popover>
@@ -370,22 +388,30 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
                   {footerHtml ? (
                     <div
                       className="pointer-events-none line-clamp-3 max-h-full w-full text-left text-[0.7rem] leading-tight text-foreground/80"
-                      style={inlineRegionPadding}
+                      style={footerDisplayPadding}
                     >
-                      <div className="px-2" dangerouslySetInnerHTML={{ __html: footerHtml }} />
+                      <div dangerouslySetInnerHTML={{ __html: footerHtml }} />
                     </div>
                   ) : (
-                    <span className="pointer-events-none px-2" style={inlineRegionPadding}>
+                    <span className="pointer-events-none" style={footerDisplayPadding}>
                       Click to add footer
                     </span>
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="bottom" align="center" className="w-[480px] space-y-4">
+              <PopoverContent
+                side="bottom"
+                align="start"
+                sideOffset={8}
+                alignOffset={0}
+                className="space-y-4 p-0"
+                style={{ width: `${runningRegionWidth}px`, maxWidth: `${runningRegionWidth}px` }}
+              >
                 <HeaderFooterEditor
                   region="footer"
                   value={footerHtml}
                   onChange={handleFooterChangeInternal}
+                  contentWidth={runningRegionWidth}
                 />
               </PopoverContent>
             </Popover>
