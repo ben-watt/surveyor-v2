@@ -28,7 +28,7 @@ export const Header = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="header-container">
       <img
-        className="headerImage absolute top-0 object-contain"
+        className="headerImage object-contain"
         src="/cwbc_header.jpg"
         alt="CWBC Header"
         width="550px"
