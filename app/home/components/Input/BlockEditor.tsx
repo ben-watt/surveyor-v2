@@ -32,8 +32,8 @@ import {
   type PageLayoutSnapshot,
   usePageLayout,
 } from './PageLayoutContext';
+import HeaderFooterEditor from './HeaderFooterEditor';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 interface NewEditorProps {
@@ -345,21 +345,12 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent
-                side="top"
-                align="center"
-                className="w-[520px] space-y-3"
-              >
-                <p className="text-xs font-medium text-muted-foreground">Header HTML</p>
-                <Textarea
+              <PopoverContent side="top" align="center" className="w-[640px] space-y-4">
+                <HeaderFooterEditor
+                  region="header"
                   value={headerHtml}
-                  onChange={(event) => handleHeaderChangeInternal(event.target.value)}
-                  className="min-h-[180px] font-mono text-xs"
-                  placeholder="Add header content (temporary HTML editor)"
+                  onChange={handleHeaderChangeInternal}
                 />
-                <p className="text-[0.7rem] text-muted-foreground">
-                  Header appears in the top margin and feeds paged.js running elements.
-                </p>
               </PopoverContent>
             </Popover>
 
@@ -390,21 +381,12 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent
-                side="bottom"
-                align="center"
-                className="w-[520px] space-y-3"
-              >
-                <p className="text-xs font-medium text-muted-foreground">Footer HTML</p>
-                <Textarea
+              <PopoverContent side="bottom" align="center" className="w-[480px] space-y-4">
+                <HeaderFooterEditor
+                  region="footer"
                   value={footerHtml}
-                  onChange={(event) => handleFooterChangeInternal(event.target.value)}
-                  className="min-h-[180px] font-mono text-xs"
-                  placeholder="Add footer content (temporary HTML editor)"
+                  onChange={handleFooterChangeInternal}
                 />
-                <p className="text-[0.7rem] text-muted-foreground">
-                  Footer appears in the bottom margin and feeds paged.js running elements.
-                </p>
               </PopoverContent>
             </Popover>
           </div>

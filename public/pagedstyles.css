@@ -39,6 +39,69 @@
   position: running(addressRunning);
 }
 
+[data-running-role='header'],
+[data-running-role='footer'],
+[data-running-role='address'],
+.header-container,
+.footer-container {
+  margin: 0;
+  padding: 0;
+}
+
+[data-running-role='header'] {
+  position: running(headerRunning);
+}
+
+[data-running-role='footer'] {
+  position: running(footerRunning);
+}
+
+[data-running-role='address'] {
+  position: running(addressRunning);
+}
+
+.header-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.header-table,
+.header-table tbody,
+.header-table tr,
+.header-table td {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.header-table__media {
+  width: 45%;
+  padding: 0 8px 0 0;
+  vertical-align: top;
+}
+
+.header-table__details {
+  text-align: right;
+  vertical-align: top;
+}
+
+.headerPrimary,
+.headerAddress {
+  margin: 0;
+  padding: 0;
+}
+
+.headerPrimary img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.footerPrimary {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* Override the default line-height and min-height which we put in tiptap to emulate new lines */
 .headerAddress p {
   line-height: normal;

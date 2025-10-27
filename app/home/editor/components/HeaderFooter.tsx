@@ -12,14 +12,16 @@ interface HeaderFooterHtmlProps {
 export const Footer = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="footer-container">
-      <img
-        className="footerImage object-contain"
-        src="/rics-purple-logo.jpg"
-        alt="RICS Logo"
-        width="100mm"
-        height="30mm"
-        style={{ maxWidth: '200px', height: 'auto' }}
-      />
+      <div className="footerPrimary" data-running-role="footer">
+        <img
+          className="footerImage object-contain"
+          src="/rics-purple-logo.jpg"
+          alt="RICS Logo"
+          width="100mm"
+          height="30mm"
+          style={{ maxWidth: '200px', height: 'auto' }}
+        />
+      </div>
     </div>
   );
 };
@@ -27,23 +29,41 @@ export const Footer = ({ editorData }: HeaderFooterHtmlProps) => {
 export const Header = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="header-container">
-      <img
-        className="headerImage object-contain"
-        src="/cwbc_header.jpg"
-        alt="CWBC Header"
-        width="550px"
-      />
-      <div className="headerAddress mt-2">
-        <p className="text-xs text-gray-600">
-          {editorData ? editorData.reportDetails.address.formatted : 'Unknown'}
-        </p>
-        <p>{editorData ? 'Ref: ' + editorData.reportDetails.reference : 'Unknown'}</p>
-        <p>
-          {editorData
-            ? formatDateWithSuffix(new Date(editorData.reportDetails.reportDate))
-            : 'Unknown'}
-        </p>
-      </div>
+      <table
+        className="header-table"
+        role="presentation"
+        cellPadding={0}
+        cellSpacing={0}
+        style={{ borderCollapse: 'collapse', width: '100%' }}
+      >
+        <tbody>
+          <tr>
+            <td className="header-table__media">
+              <div className="headerPrimary" data-running-role="header">
+                <img
+                  className="headerImage object-contain"
+                  src="/cwbc_header.jpg"
+                  alt="CWBC Header"
+                  width="550px"
+                />
+              </div>
+            </td>
+            <td className="header-table__details">
+              <div className="headerAddress" data-running-role="address">
+                <p className="text-xs text-gray-600">
+                  {editorData ? editorData.reportDetails.address.formatted : 'Unknown'}
+                </p>
+                <p>{editorData ? 'Ref: ' + editorData.reportDetails.reference : 'Unknown'}</p>
+                <p>
+                  {editorData
+                    ? formatDateWithSuffix(new Date(editorData.reportDetails.reportDate))
+                    : 'Unknown'}
+                </p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };
