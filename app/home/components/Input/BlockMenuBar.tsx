@@ -97,6 +97,8 @@ export default function MenuBar({
     showBreaks,
     pageDimensionsPx,
     pageDimensionsIn,
+    headerHtml,
+    footerHtml,
   } = layoutContext;
 
   const layoutSnapshot: PageLayoutSnapshot = {
@@ -107,6 +109,8 @@ export default function MenuBar({
     showBreaks,
     pageDimensionsPx,
     pageDimensionsIn,
+    headerHtml,
+    footerHtml,
   };
 
   const setImageAlignIfImageSelected = (align: 'left' | 'center' | 'right' | 'justify') => {

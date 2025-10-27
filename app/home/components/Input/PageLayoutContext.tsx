@@ -26,6 +26,8 @@ export type PageLayoutState = {
   margins: Margins;
   zoom: number;
   showBreaks: boolean;
+  headerHtml: string;
+  footerHtml: string;
 };
 
 export type PageLayoutSnapshot = PageLayoutState & {
@@ -39,6 +41,8 @@ type PageLayoutContextValue = PageLayoutSnapshot & {
   setMargins: (margins: Margins) => void;
   setZoom: (zoom: number) => void;
   setShowBreaks: (show: boolean) => void;
+  setHeaderHtml: (html: string) => void;
+  setFooterHtml: (html: string) => void;
 };
 
 type PageSizeDefinition = {
@@ -71,6 +75,8 @@ const DEFAULT_LAYOUT: PageLayoutState = {
   },
   zoom: 1,
   showBreaks: false,
+  headerHtml: '',
+  footerHtml: '',
 };
 
 const PageLayoutContext = createContext<PageLayoutContextValue | undefined>(undefined);
@@ -122,6 +128,14 @@ export const PageLayoutProvider: React.FC<PageLayoutProviderProps> = ({
     setLayout((prev) => ({ ...prev, showBreaks }));
   }, []);
 
+  const setHeaderHtml = useCallback((headerHtml: string) => {
+    setLayout((prev) => ({ ...prev, headerHtml }));
+  }, []);
+
+  const setFooterHtml = useCallback((footerHtml: string) => {
+    setLayout((prev) => ({ ...prev, footerHtml }));
+  }, []);
+
   const value = useMemo<PageLayoutContextValue>(() => {
     const { widthPx, heightPx, widthIn, heightIn } = computeDimensions(
       layout.pageSize,
@@ -137,8 +151,19 @@ export const PageLayoutProvider: React.FC<PageLayoutProviderProps> = ({
       setMargins,
       setZoom,
       setShowBreaks,
+      setHeaderHtml,
+      setFooterHtml,
     };
-  }, [layout, setMargins, setOrientation, setPageSize, setShowBreaks, setZoom]);
+  }, [
+    layout,
+    setFooterHtml,
+    setHeaderHtml,
+    setMargins,
+    setOrientation,
+    setPageSize,
+    setShowBreaks,
+    setZoom,
+  ]);
 
   return (
     <PageLayoutContext.Provider value={value}>{children}</PageLayoutContext.Provider>

@@ -32,6 +32,9 @@ import {
   type PageLayoutSnapshot,
   usePageLayout,
 } from './PageLayoutContext';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 interface NewEditorProps {
   editorId?: string;
@@ -44,6 +47,10 @@ interface NewEditorProps {
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
   onOpenVersionHistory?: () => void;
   enableHandlebarsHighlight?: boolean;
+  headerHtml?: string;
+  footerHtml?: string;
+  onHeaderChange?: (value: string) => void;
+  onFooterChange?: (value: string) => void;
 }
 
 export const NewEditor = forwardRef(
@@ -59,6 +66,10 @@ export const NewEditor = forwardRef(
       saveStatus,
       onOpenVersionHistory,
       enableHandlebarsHighlight = false,
+      headerHtml = '',
+      footerHtml = '',
+      onHeaderChange,
+      onFooterChange,
     }: NewEditorProps,
     ref,
   ) => {
@@ -160,7 +171,12 @@ export const NewEditor = forwardRef(
 
     useImperativeHandle(ref, () => editor, [editor]);
     return (
-      <PageLayoutProvider>
+      <PageLayoutProvider
+        initialState={{
+          headerHtml,
+          footerHtml,
+        }}
+      >
         <div className="border-grey-200 border bg-gray-100 print:hidden">
           <BlockMenuBar
             editor={editor}
@@ -175,6 +191,8 @@ export const NewEditor = forwardRef(
               editor={editor}
               editorIdentifier={editorIdentifier}
               enableHandlebarsHighlight={enableHandlebarsHighlight}
+              onHeaderChange={onHeaderChange}
+              onFooterChange={onFooterChange}
             />
           </TocContext.Provider>
         </div>
@@ -189,14 +207,28 @@ type EditorSurfaceProps = {
   editor: ReturnType<typeof useEditor>;
   editorIdentifier: string;
   enableHandlebarsHighlight: boolean;
+  onHeaderChange?: (value: string) => void;
+  onFooterChange?: (value: string) => void;
 };
 
 const EditorSurface: React.FC<EditorSurfaceProps> = ({
   editor,
   editorIdentifier,
   enableHandlebarsHighlight,
+  onHeaderChange,
+  onFooterChange,
 }) => {
-  const { pageDimensionsPx, margins, zoom } = usePageLayout();
+  const {
+    pageDimensionsPx,
+    margins,
+    zoom,
+    headerHtml,
+    footerHtml,
+    setHeaderHtml,
+    setFooterHtml,
+  } = usePageLayout();
+  const [headerOpen, setHeaderOpen] = React.useState(false);
+  const [footerOpen, setFooterOpen] = React.useState(false);
 
   const pageStyle = useMemo(() => {
     return {
@@ -230,6 +262,50 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
     };
   }, [margins.bottom, margins.left, margins.right, margins.top]);
 
+  const headerRegionStyle = useMemo(
+    () => ({
+      top: 0,
+      left: 0,
+      width: `${pageDimensionsPx.width}px`,
+      height: `${Math.max(margins.top * INCH_TO_PX, 32)}px`,
+    }),
+    [margins.top, pageDimensionsPx.width],
+  );
+
+  const footerRegionStyle = useMemo(
+    () => ({
+      bottom: 0,
+      left: 0,
+      width: `${pageDimensionsPx.width}px`,
+      height: `${Math.max(margins.bottom * INCH_TO_PX, 32)}px`,
+    }),
+    [margins.bottom, pageDimensionsPx.width],
+  );
+
+  const inlineRegionPadding = useMemo(
+    () => ({
+      paddingLeft: `${margins.left * INCH_TO_PX}px`,
+      paddingRight: `${margins.right * INCH_TO_PX}px`,
+    }),
+    [margins.left, margins.right],
+  );
+
+  const handleHeaderChangeInternal = React.useCallback(
+    (value: string) => {
+      setHeaderHtml(value);
+      onHeaderChange?.(value);
+    },
+    [onHeaderChange, setHeaderHtml],
+  );
+
+  const handleFooterChangeInternal = React.useCallback(
+    (value: string) => {
+      setFooterHtml(value);
+      onFooterChange?.(value);
+    },
+    [onFooterChange, setFooterHtml],
+  );
+
   return (
     <div className="flex justify-center px-6 py-6">
       <div className="relative" style={scaledWrapperStyle}>
@@ -237,11 +313,100 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
           className="relative h-full w-full bg-white shadow-sm"
           style={{ ...pageStyle, transform: `scale(${zoom})`, transformOrigin: 'top center' }}
         >
-          <div className="pointer-events-none absolute inset-0 print:hidden">
+          <div className="pointer-events-none absolute inset-0 z-10 print:hidden">
             <div
-              className="absolute border border-dashed border-gray-300/80"
+              className="pointer-events-none absolute border border-dashed border-gray-300/80"
               style={marginOverlayStyles}
             />
+            <Popover open={headerOpen} onOpenChange={setHeaderOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    'pointer-events-auto absolute flex w-full items-center justify-center border border-transparent bg-transparent text-xs text-muted-foreground transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    headerHtml
+                      ? 'bg-white/70 hover:border-primary/40 hover:bg-primary/5'
+                      : 'border-dashed border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10',
+                  )}
+                  style={headerRegionStyle}
+                  aria-label="Edit header content"
+                >
+                  {headerHtml ? (
+                    <div
+                      className="pointer-events-none line-clamp-3 max-h-full w-full text-left text-[0.7rem] leading-tight text-foreground/80"
+                      style={inlineRegionPadding}
+                    >
+                      <div className="px-2" dangerouslySetInnerHTML={{ __html: headerHtml }} />
+                    </div>
+                  ) : (
+                    <span className="pointer-events-none px-2" style={inlineRegionPadding}>
+                      Click to add header
+                    </span>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="center"
+                className="w-[520px] space-y-3"
+              >
+                <p className="text-xs font-medium text-muted-foreground">Header HTML</p>
+                <Textarea
+                  value={headerHtml}
+                  onChange={(event) => handleHeaderChangeInternal(event.target.value)}
+                  className="min-h-[180px] font-mono text-xs"
+                  placeholder="Add header content (temporary HTML editor)"
+                />
+                <p className="text-[0.7rem] text-muted-foreground">
+                  Header appears in the top margin and feeds paged.js running elements.
+                </p>
+              </PopoverContent>
+            </Popover>
+
+            <Popover open={footerOpen} onOpenChange={setFooterOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    'pointer-events-auto absolute flex w-full items-center justify-center border border-transparent bg-transparent text-xs text-muted-foreground transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    footerHtml
+                      ? 'bg-white/70 hover:border-primary/40 hover:bg-primary/5'
+                      : 'border-dashed border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10',
+                  )}
+                  style={footerRegionStyle}
+                  aria-label="Edit footer content"
+                >
+                  {footerHtml ? (
+                    <div
+                      className="pointer-events-none line-clamp-3 max-h-full w-full text-left text-[0.7rem] leading-tight text-foreground/80"
+                      style={inlineRegionPadding}
+                    >
+                      <div className="px-2" dangerouslySetInnerHTML={{ __html: footerHtml }} />
+                    </div>
+                  ) : (
+                    <span className="pointer-events-none px-2" style={inlineRegionPadding}>
+                      Click to add footer
+                    </span>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="bottom"
+                align="center"
+                className="w-[520px] space-y-3"
+              >
+                <p className="text-xs font-medium text-muted-foreground">Footer HTML</p>
+                <Textarea
+                  value={footerHtml}
+                  onChange={(event) => handleFooterChangeInternal(event.target.value)}
+                  className="min-h-[180px] font-mono text-xs"
+                  placeholder="Add footer content (temporary HTML editor)"
+                />
+                <p className="text-[0.7rem] text-muted-foreground">
+                  Footer appears in the bottom margin and feeds paged.js running elements.
+                </p>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="relative h-full w-full" style={editorPaddingStyles}>
             <EditorContent

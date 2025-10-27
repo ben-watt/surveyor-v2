@@ -38,8 +38,15 @@ export default function EditorClient() {
   const [isPreviewingVersion, setIsPreviewingVersion] = useState(false);
 
   // Always call useEditorState, but pass undefined for templateId if not available
-  const { isLoading, editorContent, previewContent, addTitleHeaderFooter, getDocName } =
-    useEditorState(id, templateId, { enabled: tenantReady });
+  const {
+    isLoading,
+    editorContent,
+    previewContent,
+    header,
+    footer,
+    addTitleHeaderFooter,
+    getDocName,
+  } = useEditorState(id, templateId, { enabled: tenantReady });
   const effectiveLoading = !templateId || isLoading;
 
   const editorRef = useRef<any>(null);
@@ -123,6 +130,8 @@ export default function EditorClient() {
               ref={editorRef}
               editorId={id}
               content={editorContent}
+              headerHtml={header}
+              footerHtml={footer}
               onCreate={updateHandler}
               onUpdate={updateHandler}
               onPrint={(layout) => {
