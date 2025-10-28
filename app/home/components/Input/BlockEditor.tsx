@@ -36,12 +36,19 @@ import HeaderFooterEditor from './HeaderFooterEditor';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
+type PrintRequestPayload = {
+  layout: PageLayoutSnapshot;
+  bodyHtml: string;
+  headerHtml: string;
+  footerHtml: string;
+};
+
 interface NewEditorProps {
   editorId?: string;
   content: Content;
   onUpdate?: (props: EditorEvents['update']) => void;
   onCreate?: (props: EditorEvents['create']) => void;
-  onPrint: (layout: PageLayoutSnapshot) => void;
+  onPrint: (payload: PrintRequestPayload) => void;
   onSave: (options?: { auto?: boolean }) => void;
   isSaving: boolean;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';

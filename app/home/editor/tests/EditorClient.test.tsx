@@ -66,8 +66,14 @@ describe('EditorClient tenant gating', () => {
       isLoading: false,
       editorContent: '<p>content</p>',
       previewContent: '<p>preview</p>',
+      header: '<div data-running-role="header"></div>',
+      footer: '<div data-running-role="footer"></div>',
+      titlePage: '',
       addTitleHeaderFooter: jest.fn(),
       getDocName: jest.fn(),
+      setPreviewContent: jest.fn(),
+      setHeader: jest.fn(),
+      setFooter: jest.fn(),
     });
     useDocumentSaveMock.mockReturnValue({
       save: jest.fn(),
@@ -100,4 +106,3 @@ describe('EditorClient tenant gating', () => {
     expect(screen.getByTestId('new-editor')).toBeInTheDocument();
   });
 });
-

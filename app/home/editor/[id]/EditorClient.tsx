@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NewEditor } from '@/app/home/components/Input/BlockEditor';
 import { PrintPreviewer } from '../components/PrintPreviewer';
 import { useEditorState } from '@/app/home/editor/hooks/useEditorState';
@@ -44,12 +44,47 @@ export default function EditorClient() {
     previewContent,
     header,
     footer,
+    titlePage,
     addTitleHeaderFooter,
     getDocName,
+    setPreviewContent,
+    setHeader,
+    setFooter,
   } = useEditorState(id, templateId, { enabled: tenantReady });
   const effectiveLoading = !templateId || isLoading;
 
   const editorRef = useRef<any>(null);
+
+  const recomputePreviewContent = useCallback(
+    (overrides?: { header?: string; footer?: string; body?: string }) => {
+      const bodyHtml =
+        overrides?.body ??
+        (typeof editorRef.current?.getHTML === 'function'
+          ? editorRef.current.getHTML()
+          : editorContent);
+      const headerHtml = overrides?.header ?? header;
+      const footerHtml = overrides?.footer ?? footer;
+      const combined = `${titlePage ?? ''}${headerHtml}${bodyHtml}${footerHtml}`;
+      setPreviewContent(combined);
+    },
+    [editorContent, footer, header, setPreviewContent, titlePage],
+  );
+
+  const handleHeaderChange = useCallback(
+    (value: string) => {
+      setHeader(value);
+      recomputePreviewContent({ header: value });
+    },
+    [recomputePreviewContent, setHeader],
+  );
+
+  const handleFooterChange = useCallback(
+    (value: string) => {
+      setFooter(value);
+      recomputePreviewContent({ footer: value });
+    },
+    [recomputePreviewContent, setFooter],
+  );
 
   const {
     save,
@@ -132,9 +167,18 @@ export default function EditorClient() {
               content={editorContent}
               headerHtml={header}
               footerHtml={footer}
+              onHeaderChange={handleHeaderChange}
+              onFooterChange={handleFooterChange}
               onCreate={updateHandler}
               onUpdate={updateHandler}
-              onPrint={(layout) => {
+              onPrint={({ layout, bodyHtml, headerHtml, footerHtml }) => {
+                setHeader(headerHtml);
+                setFooter(footerHtml);
+                recomputePreviewContent({
+                  body: bodyHtml,
+                  header: headerHtml,
+                  footer: footerHtml,
+                });
                 setPageLayout(layout);
                 setPreview(true);
               }}

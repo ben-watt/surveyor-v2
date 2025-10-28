@@ -157,7 +157,6 @@ export function useEditorState(
   const [header, setHeader] = React.useState<string>('');
   const [footer, setFooter] = React.useState<string>('');
   const [titlePage, setTitlePage] = React.useState<string>('');
-  const [addTitleHeaderFooter, setAddTitleHeaderFooter] = React.useState<any>(null);
   const [getDocName, setGetDocName] = React.useState<any>(() => async () => id);
   const enabled = options?.enabled ?? true;
 
@@ -186,24 +185,12 @@ export function useEditorState(
               setHeader(template.header);
               setFooter(template.footer);
               setTitlePage(template.titlePage);
-              setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
-                const currentEditorHtml = editor.getHTML();
-                setEditorContent(currentEditorHtml);
-                setPreviewContent(
-                  template.titlePage + template.header + currentEditorHtml + template.footer,
-                );
-              });
               setGetDocName(() => template.getDocName);
             } else {
               setPreviewContent(contentResult.val);
               setHeader('');
               setFooter('');
               setTitlePage('');
-              setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
-                const html = editor.getHTML();
-                setEditorContent(html);
-                setPreviewContent(html);
-              });
               setGetDocName(() => async () => id);
             }
             setIsLoading(false);
@@ -221,13 +208,6 @@ export function useEditorState(
           setHeader(template.header);
           setFooter(template.footer);
           setTitlePage(template.titlePage);
-          setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
-            const currentEditorHtml = editor.getHTML();
-            setEditorContent(currentEditorHtml);
-            setPreviewContent(
-              template.titlePage + template.header + currentEditorHtml + template.footer,
-            );
-          });
           setGetDocName(() => template.getDocName);
         }
       } else {
@@ -239,11 +219,6 @@ export function useEditorState(
           setHeader('');
           setFooter('');
           setTitlePage('');
-          setAddTitleHeaderFooter(() => ({ editor }: { editor: Editor }) => {
-            const html = editor.getHTML();
-            setEditorContent(html);
-            setPreviewContent(html);
-          });
           setGetDocName(() => async () => id);
         }
       }
@@ -254,6 +229,16 @@ export function useEditorState(
     };
   }, [id, templateId, enabled]);
 
+  const addTitleHeaderFooter = React.useCallback(
+    ({ editor }: { editor: Editor }) => {
+      const currentEditorHtml = editor.getHTML();
+      setEditorContent(currentEditorHtml);
+      const combined = `${titlePage ?? ''}${header}${currentEditorHtml}${footer}`;
+      setPreviewContent(combined);
+    },
+    [footer, header, titlePage],
+  );
+
   return {
     editorContent,
     previewContent,
@@ -262,6 +247,8 @@ export function useEditorState(
     titlePage,
     setPreviewContent,
     addTitleHeaderFooter,
+    setHeader,
+    setFooter,
     getDocName,
     isLoading,
   };

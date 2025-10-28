@@ -62,9 +62,16 @@ import {
   usePageLayout,
 } from './PageLayoutContext';
 
+type PrintPayload = {
+  layout: PageLayoutSnapshot;
+  bodyHtml: string;
+  headerHtml: string;
+  footerHtml: string;
+};
+
 interface MenuBarProps {
   editor: Editor | null;
-  onPrint: (layout: PageLayoutSnapshot) => void;
+  onPrint: (payload: PrintPayload) => void;
   onSave: () => void;
   isSaving: boolean;
   saveStatus: 'idle' | 'saving' | 'saved' | 'error' | 'autosaved';
@@ -343,8 +350,15 @@ export default function MenuBar({
     {
       icon: <Printer />,
       title: 'Print',
-      action: async () => {
-        onPrint(layoutSnapshot);
+      action: () => {
+        if (!editor) return;
+        const bodyHtml = editor.getHTML();
+        onPrint({
+          layout: layoutSnapshot,
+          bodyHtml,
+          headerHtml: layoutSnapshot.headerHtml,
+          footerHtml: layoutSnapshot.footerHtml,
+        });
       },
     },
   ];
