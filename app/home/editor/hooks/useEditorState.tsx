@@ -9,6 +9,41 @@ import { Footer, Header, TitlePage } from '../components/HeaderFooter';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Editor } from '@tiptap/react';
 import { documentStore } from '../../clients/DocumentStore';
+import {
+  DEFAULT_RUNNING_PAGE_HTML,
+  type MarginZone,
+} from '@/app/home/components/Input/PageLayoutContext';
+import { normalizeRunningHtmlForZone } from '@/app/home/components/Input/HeaderFooterEditor';
+
+const createDefaultRunningHtml = () => ({ ...DEFAULT_RUNNING_PAGE_HTML });
+const TOP_MARGIN_ZONES: MarginZone[] = [
+  'topLeftCorner',
+  'topLeft',
+  'topCenter',
+  'topRight',
+  'topRightCorner',
+];
+
+const BOTTOM_MARGIN_ZONES: MarginZone[] = [
+  'bottomLeftCorner',
+  'bottomLeft',
+  'bottomCenter',
+  'bottomRight',
+  'bottomRightCorner',
+];
+
+const LEFT_MARGIN_ZONES: MarginZone[] = ['leftTop', 'leftMiddle', 'leftBottom'];
+const RIGHT_MARGIN_ZONES: MarginZone[] = ['rightTop', 'rightMiddle', 'rightBottom'];
+
+const PREVIEW_ZONE_ORDER: MarginZone[] = [
+  ...TOP_MARGIN_ZONES,
+  ...LEFT_MARGIN_ZONES,
+  ...RIGHT_MARGIN_ZONES,
+  ...BOTTOM_MARGIN_ZONES,
+];
+
+const collectZoneHtml = (map: Record<MarginZone, string>, zones: MarginZone[]) =>
+  zones.map((zone) => map[zone] ?? '').join('');
 
 type TemplateId = 'building-survey';
 
@@ -115,17 +150,26 @@ async function getTemplateInitialContent(surveyId: string, templateId: TemplateI
       previewContent: '',
       header: '',
       footer: '',
+      runningHtml: createDefaultRunningHtml(),
       titlePage: '',
       addTitleHeaderFooter: undefined,
       getDocName: async () => surveyId,
       isLoading: false,
     };
   const editorData = document.content;
-  const header = renderToStaticMarkup(<Header editorData={editorData} />);
-  const footer = renderToStaticMarkup(<Footer editorData={editorData} />);
+  const headerRaw = renderToStaticMarkup(<Header editorData={editorData} />);
+  const footerRaw = renderToStaticMarkup(<Footer editorData={editorData} />);
   const titlePage = renderToStaticMarkup(<TitlePage editorData={editorData} />);
+  const header = normalizeRunningHtmlForZone('topCenter', headerRaw);
+  const footer = normalizeRunningHtmlForZone('bottomCenter', footerRaw);
   const html = await mapFormDataToHtml(editorData);
-  const previewContent = titlePage + header + html + footer;
+  const runningHtml: Record<MarginZone, string> = {
+    ...createDefaultRunningHtml(),
+    topCenter: header,
+    bottomCenter: footer,
+  };
+  const runningCombined = collectZoneHtml(runningHtml, PREVIEW_ZONE_ORDER);
+  const previewContent = `${titlePage}${runningCombined}${html}`;
   const addTitleHeaderFooter = ({ editor }: { editor: Editor }) => {
     const currentEditorHtml = editor.getHTML();
     // This is a helper, so state update should be handled in the hook
@@ -137,6 +181,7 @@ async function getTemplateInitialContent(surveyId: string, templateId: TemplateI
     previewContent,
     header,
     footer,
+    runningHtml,
     titlePage,
     addTitleHeaderFooter,
     getDocName,
@@ -156,6 +201,9 @@ export function useEditorState(
   const [isLoading, setIsLoading] = React.useState(true);
   const [header, setHeader] = React.useState<string>('');
   const [footer, setFooter] = React.useState<string>('');
+  const [runningHtml, setRunningHtml] = React.useState<Record<MarginZone, string>>(
+    createDefaultRunningHtml,
+  );
   const [titlePage, setTitlePage] = React.useState<string>('');
   const [getDocName, setGetDocName] = React.useState<any>(() => async () => id);
   const enabled = options?.enabled ?? true;
@@ -184,12 +232,14 @@ export function useEditorState(
               setPreviewContent(template.previewContent);
               setHeader(template.header);
               setFooter(template.footer);
+              setRunningHtml(template.runningHtml);
               setTitlePage(template.titlePage);
               setGetDocName(() => template.getDocName);
             } else {
               setPreviewContent(contentResult.val);
               setHeader('');
               setFooter('');
+              setRunningHtml(createDefaultRunningHtml());
               setTitlePage('');
               setGetDocName(() => async () => id);
             }
@@ -207,6 +257,7 @@ export function useEditorState(
           setIsLoading(template.isLoading);
           setHeader(template.header);
           setFooter(template.footer);
+          setRunningHtml(template.runningHtml);
           setTitlePage(template.titlePage);
           setGetDocName(() => template.getDocName);
         }
@@ -218,6 +269,7 @@ export function useEditorState(
           setIsLoading(false);
           setHeader('');
           setFooter('');
+          setRunningHtml(createDefaultRunningHtml());
           setTitlePage('');
           setGetDocName(() => async () => id);
         }
@@ -233,10 +285,34 @@ export function useEditorState(
     ({ editor }: { editor: Editor }) => {
       const currentEditorHtml = editor.getHTML();
       setEditorContent(currentEditorHtml);
-      const combined = `${titlePage ?? ''}${header}${currentEditorHtml}${footer}`;
+      const runningCombined = collectZoneHtml(runningHtml, PREVIEW_ZONE_ORDER);
+      const combined = `${titlePage ?? ''}${runningCombined}${currentEditorHtml}`;
       setPreviewContent(combined);
     },
-    [footer, header, titlePage],
+    [runningHtml, titlePage],
+  );
+
+  const setRunningZoneHtml = React.useCallback((zone: MarginZone, value: string) => {
+    setRunningHtml((prev) => ({ ...prev, [zone]: value }));
+    if (zone === 'topCenter') {
+      setHeader(value);
+    } else if (zone === 'bottomCenter') {
+      setFooter(value);
+    }
+  }, []);
+
+  const setHeaderHtml = React.useCallback(
+    (value: string) => {
+      setRunningZoneHtml('topCenter', value);
+    },
+    [setRunningZoneHtml],
+  );
+
+  const setFooterHtml = React.useCallback(
+    (value: string) => {
+      setRunningZoneHtml('bottomCenter', value);
+    },
+    [setRunningZoneHtml],
   );
 
   return {
@@ -244,11 +320,13 @@ export function useEditorState(
     previewContent,
     header,
     footer,
+    runningHtml,
     titlePage,
     setPreviewContent,
     addTitleHeaderFooter,
-    setHeader,
-    setFooter,
+    setHeader: setHeaderHtml,
+    setFooter: setFooterHtml,
+    setRunningHtml: setRunningZoneHtml,
     getDocName,
     isLoading,
   };

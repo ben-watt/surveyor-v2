@@ -30,9 +30,12 @@ import {
   INCH_TO_PX,
   PageLayoutProvider,
   type PageLayoutSnapshot,
+  type MarginZone,
+  type RunningHtmlMap,
+  DEFAULT_RUNNING_PAGE_HTML,
   usePageLayout,
 } from './PageLayoutContext';
-import HeaderFooterEditor from './HeaderFooterEditor';
+import HeaderFooterEditor, { MARGIN_ZONE_METADATA } from './HeaderFooterEditor';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +44,60 @@ type PrintRequestPayload = {
   bodyHtml: string;
   headerHtml: string;
   footerHtml: string;
+  runningHtml: Record<MarginZone, string>;
+};
+
+const TOP_MARGIN_ZONES: MarginZone[] = [
+  'topLeftCorner',
+  'topLeft',
+  'topCenter',
+  'topRight',
+  'topRightCorner',
+];
+
+const BOTTOM_MARGIN_ZONES: MarginZone[] = [
+  'bottomLeftCorner',
+  'bottomLeft',
+  'bottomCenter',
+  'bottomRight',
+  'bottomRightCorner',
+];
+
+const LEFT_MARGIN_ZONES: MarginZone[] = ['leftTop', 'leftMiddle', 'leftBottom'];
+const RIGHT_MARGIN_ZONES: MarginZone[] = ['rightTop', 'rightMiddle', 'rightBottom'];
+
+const getZoneChipLabel = (zone: MarginZone) => MARGIN_ZONE_METADATA[zone]?.label ?? zone;
+
+const getZonePopoverAlign = (zone: MarginZone): 'start' | 'center' | 'end' => {
+  if (zone.startsWith('top')) {
+    if (zone === 'topLeft' || zone === 'topLeftCorner') return 'start';
+    if (zone === 'topRight' || zone === 'topRightCorner') return 'end';
+    return 'center';
+  }
+  if (zone.startsWith('bottom')) {
+    if (zone === 'bottomLeft' || zone === 'bottomLeftCorner') return 'start';
+    if (zone === 'bottomRight' || zone === 'bottomRightCorner') return 'end';
+    return 'center';
+  }
+  return 'center';
+};
+
+const getZonePopoverSide = (zone: MarginZone): 'top' | 'right' | 'bottom' | 'left' => {
+  if (zone.startsWith('top')) return 'top';
+  if (zone.startsWith('bottom')) return 'bottom';
+  if (zone.startsWith('left')) return 'left';
+  if (zone.startsWith('right')) return 'right';
+  return 'top';
+};
+
+const extractPreviewHtml = (html: string) => {
+  if (!html) return '';
+  if (typeof window === 'undefined') return html;
+  const template = window.document.createElement('template');
+  template.innerHTML = html;
+  const element = template.content.firstElementChild as HTMLElement | null;
+  if (!element) return html;
+  return element.innerHTML || element.outerHTML || html;
 };
 
 interface NewEditorProps {
@@ -58,6 +115,8 @@ interface NewEditorProps {
   footerHtml?: string;
   onHeaderChange?: (value: string) => void;
   onFooterChange?: (value: string) => void;
+  runningHtml?: Partial<Record<MarginZone, string>>;
+  onRunningHtmlChange?: (zone: MarginZone, value: string) => void;
 }
 
 export const NewEditor = forwardRef(
@@ -77,6 +136,8 @@ export const NewEditor = forwardRef(
       footerHtml = '',
       onHeaderChange,
       onFooterChange,
+      runningHtml,
+      onRunningHtmlChange,
     }: NewEditorProps,
     ref,
   ) => {
@@ -166,6 +227,14 @@ export const NewEditor = forwardRef(
       ...(enableHandlebarsHighlight ? [HandlebarsHighlight, HandlebarsAutocomplete] : []),
     ];
 
+    const normalizedRunningHtml = useMemo<RunningHtmlMap | undefined>(
+      () =>
+        runningHtml
+          ? { ...DEFAULT_RUNNING_PAGE_HTML, ...runningHtml }
+          : undefined,
+      [runningHtml],
+    );
+
     const editor = useEditor(
       {
         extensions: extensions,
@@ -182,6 +251,7 @@ export const NewEditor = forwardRef(
         initialState={{
           headerHtml,
           footerHtml,
+          runningHtml: normalizedRunningHtml,
         }}
       >
         <div className="border-grey-200 border bg-gray-100 print:hidden">
@@ -200,6 +270,7 @@ export const NewEditor = forwardRef(
               enableHandlebarsHighlight={enableHandlebarsHighlight}
               onHeaderChange={onHeaderChange}
               onFooterChange={onFooterChange}
+              onRunningHtmlChange={onRunningHtmlChange}
             />
           </TocContext.Provider>
         </div>
@@ -216,6 +287,7 @@ type EditorSurfaceProps = {
   enableHandlebarsHighlight: boolean;
   onHeaderChange?: (value: string) => void;
   onFooterChange?: (value: string) => void;
+  onRunningHtmlChange?: (zone: MarginZone, value: string) => void;
 };
 
 const EditorSurface: React.FC<EditorSurfaceProps> = ({
@@ -224,18 +296,16 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
   enableHandlebarsHighlight,
   onHeaderChange,
   onFooterChange,
+  onRunningHtmlChange,
 }) => {
   const {
     pageDimensionsPx,
     margins,
     zoom,
-    headerHtml,
-    footerHtml,
-    setHeaderHtml,
-    setFooterHtml,
+    runningHtml,
+    setRunningHtml,
   } = usePageLayout();
-  const [headerOpen, setHeaderOpen] = React.useState(false);
-  const [footerOpen, setFooterOpen] = React.useState(false);
+  const [activeZone, setActiveZone] = React.useState<MarginZone | null>(null);
 
   const pageStyle = useMemo(() => {
     return {
@@ -269,59 +339,144 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
     };
   }, [margins.bottom, margins.left, margins.right, margins.top]);
 
-  const headerRegionStyle = useMemo(
+  const topRegionHeight = Math.max(margins.top * INCH_TO_PX, 48);
+  const bottomRegionHeight = Math.max(margins.bottom * INCH_TO_PX, 48);
+  const leftRegionWidth = Math.max(margins.left * INCH_TO_PX, 48);
+  const rightRegionWidth = Math.max(margins.right * INCH_TO_PX, 48);
+
+  const topRegionStyle = useMemo(
     () => ({
+      position: 'absolute' as const,
       top: 0,
       left: 0,
       width: `${pageDimensionsPx.width}px`,
-      height: `${Math.max(margins.top * INCH_TO_PX, 32)}px`,
+      height: `${topRegionHeight}px`,
     }),
-    [margins.top, pageDimensionsPx.width],
+    [pageDimensionsPx.width, topRegionHeight],
   );
 
-  const footerRegionStyle = useMemo(
+  const bottomRegionStyle = useMemo(
     () => ({
+      position: 'absolute' as const,
       bottom: 0,
       left: 0,
       width: `${pageDimensionsPx.width}px`,
-      height: `${Math.max(margins.bottom * INCH_TO_PX, 32)}px`,
+      height: `${bottomRegionHeight}px`,
     }),
-    [margins.bottom, pageDimensionsPx.width],
+    [bottomRegionHeight, pageDimensionsPx.width],
   );
 
-  const headerDisplayPadding = React.useMemo(
+  const leftRegionStyle = useMemo(
     () => ({
-      paddingLeft: 0,
-      paddingRight: 0,
+      position: 'absolute' as const,
+      top: `${topRegionHeight}px`,
+      bottom: `${bottomRegionHeight}px`,
+      left: 0,
+      width: `${leftRegionWidth}px`,
     }),
-    [],
+    [bottomRegionHeight, leftRegionWidth, topRegionHeight],
   );
 
-  const footerDisplayPadding = React.useMemo(
+  const rightRegionStyle = useMemo(
     () => ({
-      paddingLeft: 0,
-      paddingRight: 0,
+      position: 'absolute' as const,
+      top: `${topRegionHeight}px`,
+      bottom: `${bottomRegionHeight}px`,
+      right: 0,
+      width: `${rightRegionWidth}px`,
     }),
-    [],
+    [bottomRegionHeight, rightRegionWidth, topRegionHeight],
   );
 
-  const handleHeaderChangeInternal = React.useCallback(
-    (value: string) => {
-      setHeaderHtml(value);
-      onHeaderChange?.(value);
+  const topGridTemplateColumns = useMemo(
+    () => `${leftRegionWidth}px 1fr 1fr 1fr ${rightRegionWidth}px`,
+    [leftRegionWidth, rightRegionWidth],
+  );
+
+  const bottomGridTemplateColumns = topGridTemplateColumns;
+  const sideGridTemplateRows = 'repeat(3, minmax(64px, 1fr))';
+
+  const defaultPopoverWidth = useMemo(
+    () => Math.max(320, Math.min(pageDimensionsPx.width, 720)),
+    [pageDimensionsPx.width],
+  );
+
+  const sidePopoverWidth = useMemo(() => {
+    const available = Math.max(pageDimensionsPx.width - leftRegionWidth - rightRegionWidth, 240);
+    return Math.max(260, Math.min(360, available));
+  }, [leftRegionWidth, pageDimensionsPx.width, rightRegionWidth]);
+
+  const handleZoneChange = React.useCallback(
+    (zone: MarginZone, value: string) => {
+      setRunningHtml(zone, value);
+      if (zone === 'topCenter') {
+        onHeaderChange?.(value);
+        onRunningHtmlChange?.(zone, value);
+      } else if (zone === 'bottomCenter') {
+        onFooterChange?.(value);
+        onRunningHtmlChange?.(zone, value);
+      } else {
+        onRunningHtmlChange?.(zone, value);
+      }
     },
-    [onHeaderChange, setHeaderHtml],
+    [onFooterChange, onHeaderChange, onRunningHtmlChange, setRunningHtml],
   );
 
-  const handleFooterChangeInternal = React.useCallback(
-    (value: string) => {
-      setFooterHtml(value);
-      onFooterChange?.(value);
+  const renderZoneTrigger = React.useCallback(
+    (zone: MarginZone) => {
+      const zoneValue = runningHtml[zone] ?? '';
+      const previewHtml = extractPreviewHtml(zoneValue);
+      const strippedText = previewHtml
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .trim();
+      const hasContent = strippedText.length > 0;
+      const chipLabel = getZoneChipLabel(zone);
+      const placeholder = `Click to add ${chipLabel.toLowerCase()}`;
+
+      const popoverWidth =
+        zone.startsWith('left') || zone.startsWith('right') ? sidePopoverWidth : defaultPopoverWidth;
+
+      const buttonClass = cn(
+        'pointer-events-auto flex h-full w-full min-h-[48px] flex-col justify-start border border-transparent bg-white/70 text-left text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'text-foreground hover:border-primary/40 hover:bg-primary/5',
+        activeZone === zone && 'border-primary text-primary',
+      );
+
+      return (
+        <Popover
+          key={zone}
+          open={activeZone === zone}
+          onOpenChange={(open) => setActiveZone(open ? zone : null)}
+        >
+          <PopoverTrigger asChild>
+            <button type="button" className={buttonClass} aria-label={`Edit ${chipLabel} content`}>
+                <div
+                  className="pointer-events-none line-clamp-3 text-left text-[0.7rem] leading-tight text-foreground/80"
+                  dangerouslySetInnerHTML={{ __html: previewHtml }}
+                />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side={getZonePopoverSide(zone)}
+            align={getZonePopoverAlign(zone)}
+            sideOffset={8}
+            alignOffset={0}
+            className="space-y-4 p-0"
+            style={{ width: `${popoverWidth}px`, maxWidth: `${popoverWidth}px` }}
+          >
+            <HeaderFooterEditor
+              region={zone}
+              value={zoneValue}
+              onChange={(val) => handleZoneChange(zone, val)}
+              contentWidth={popoverWidth}
+            />
+          </PopoverContent>
+        </Popover>
+      );
     },
-    [onFooterChange, setFooterHtml],
+    [activeZone, defaultPopoverWidth, handleZoneChange, runningHtml, sidePopoverWidth],
   );
-
-  const runningRegionWidth = pageDimensionsPx.width;
 
   return (
     <div className="flex justify-center px-6 py-6">
@@ -335,93 +490,41 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
               className="pointer-events-none absolute border border-dashed border-gray-300/80"
               style={marginOverlayStyles}
             />
-            <Popover open={headerOpen} onOpenChange={setHeaderOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    'pointer-events-auto absolute flex w-full items-center justify-center border border-transparent bg-transparent text-xs text-muted-foreground transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    headerHtml
-                      ? 'bg-white/70 hover:border-primary/40 hover:bg-primary/5'
-                      : 'border-dashed border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10',
-                  )}
-                  style={headerRegionStyle}
-                  aria-label="Edit header content"
-                >
-                  {headerHtml ? (
-                    <div
-                      className="pointer-events-none line-clamp-3 max-h-full w-full text-left text-[0.7rem] leading-tight text-foreground/80"
-                      style={headerDisplayPadding}
-                    >
-                      <div dangerouslySetInnerHTML={{ __html: headerHtml }} />
-                    </div>
-                  ) : (
-                    <span className="pointer-events-none" style={headerDisplayPadding}>
-                      Click to add header
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="top"
-                align="start"
-                sideOffset={8}
-                alignOffset={0}
-                className="space-y-4 p-0"
-                style={{ width: `${runningRegionWidth}px`, maxWidth: `${runningRegionWidth}px` }}
+            <div style={topRegionStyle} className="pointer-events-none">
+              <div
+                className="pointer-events-auto grid h-full w-full"
+                style={{ gridTemplateColumns: topGridTemplateColumns }}
               >
-                <HeaderFooterEditor
-                  region="header"
-                  value={headerHtml}
-                  onChange={handleHeaderChangeInternal}
-                  contentWidth={runningRegionWidth}
-                />
-              </PopoverContent>
-            </Popover>
+                {TOP_MARGIN_ZONES.map(renderZoneTrigger)}
+              </div>
+            </div>
 
-            <Popover open={footerOpen} onOpenChange={setFooterOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    'pointer-events-auto absolute flex w-full items-center justify-center border border-transparent bg-transparent text-xs text-muted-foreground transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    footerHtml
-                      ? 'bg-white/70 hover:border-primary/40 hover:bg-primary/5'
-                      : 'border-dashed border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10',
-                  )}
-                  style={footerRegionStyle}
-                  aria-label="Edit footer content"
-                >
-                  {footerHtml ? (
-                    <div
-                      className="pointer-events-none line-clamp-3 max-h-full w-full text-left text-[0.7rem] leading-tight text-foreground/80"
-                      style={footerDisplayPadding}
-                    >
-                      <div dangerouslySetInnerHTML={{ __html: footerHtml }} />
-                    </div>
-                  ) : (
-                    <span className="pointer-events-none" style={footerDisplayPadding}>
-                      Click to add footer
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                side="bottom"
-                align="start"
-                sideOffset={8}
-                alignOffset={0}
-                className="space-y-4 p-0"
-                style={{ width: `${runningRegionWidth}px`, maxWidth: `${runningRegionWidth}px` }}
+            <div style={bottomRegionStyle} className="pointer-events-none">
+              <div
+                className="pointer-events-auto grid h-full w-full"
+                style={{ gridTemplateColumns: bottomGridTemplateColumns }}
               >
-                <HeaderFooterEditor
-                  region="footer"
-                  value={footerHtml}
-                  onChange={handleFooterChangeInternal}
-                  contentWidth={runningRegionWidth}
-                />
-              </PopoverContent>
-            </Popover>
+                {BOTTOM_MARGIN_ZONES.map(renderZoneTrigger)}
+              </div>
+            </div>
+
+            <div style={leftRegionStyle} className="pointer-events-none">
+              <div
+                className="pointer-events-auto grid h-full w-full"
+                style={{ gridTemplateRows: sideGridTemplateRows }}
+              >
+                {LEFT_MARGIN_ZONES.map(renderZoneTrigger)}
+              </div>
+            </div>
+
+            <div style={rightRegionStyle} className="pointer-events-none">
+              <div
+                className="pointer-events-auto grid h-full w-full"
+                style={{ gridTemplateRows: sideGridTemplateRows }}
+              >
+                {RIGHT_MARGIN_ZONES.map(renderZoneTrigger)}
+              </div>
+            </div>
           </div>
           <div className="relative h-full w-full" style={editorPaddingStyles}>
             <EditorContent

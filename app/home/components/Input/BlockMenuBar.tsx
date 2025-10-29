@@ -59,6 +59,7 @@ import {
   type Margins,
   type PageSizeId,
   type Orientation,
+  type MarginZone,
   usePageLayout,
 } from './PageLayoutContext';
 
@@ -67,6 +68,7 @@ type PrintPayload = {
   bodyHtml: string;
   headerHtml: string;
   footerHtml: string;
+  runningHtml: Record<MarginZone, string>;
 };
 
 interface MenuBarProps {
@@ -106,6 +108,7 @@ export default function MenuBar({
     pageDimensionsIn,
     headerHtml,
     footerHtml,
+    runningHtml,
   } = layoutContext;
 
   const layoutSnapshot: PageLayoutSnapshot = {
@@ -118,6 +121,7 @@ export default function MenuBar({
     pageDimensionsIn,
     headerHtml,
     footerHtml,
+    runningHtml,
   };
 
   const setImageAlignIfImageSelected = (align: 'left' | 'center' | 'right' | 'justify') => {
@@ -358,6 +362,7 @@ export default function MenuBar({
           bodyHtml,
           headerHtml: layoutSnapshot.headerHtml,
           footerHtml: layoutSnapshot.footerHtml,
+          runningHtml: layoutSnapshot.runningHtml,
         });
       },
     },

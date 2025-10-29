@@ -14,7 +14,36 @@ import { useVersionHistory, Version } from '@/app/home/editor/hooks/useVersionHi
 import { VersionPreview } from '../components/VersionPreview';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCurrentTenantId } from '@/app/home/utils/tenant-utils';
-import { type PageLayoutSnapshot } from '@/app/home/components/Input/PageLayoutContext';
+import { type MarginZone, type PageLayoutSnapshot } from '@/app/home/components/Input/PageLayoutContext';
+
+const TOP_MARGIN_ZONES: MarginZone[] = [
+  'topLeftCorner',
+  'topLeft',
+  'topCenter',
+  'topRight',
+  'topRightCorner',
+];
+
+const BOTTOM_MARGIN_ZONES: MarginZone[] = [
+  'bottomLeftCorner',
+  'bottomLeft',
+  'bottomCenter',
+  'bottomRight',
+  'bottomRightCorner',
+];
+
+const LEFT_MARGIN_ZONES: MarginZone[] = ['leftTop', 'leftMiddle', 'leftBottom'];
+const RIGHT_MARGIN_ZONES: MarginZone[] = ['rightTop', 'rightMiddle', 'rightBottom'];
+
+const PREVIEW_ZONE_ORDER: MarginZone[] = [
+  ...TOP_MARGIN_ZONES,
+  ...LEFT_MARGIN_ZONES,
+  ...RIGHT_MARGIN_ZONES,
+  ...BOTTOM_MARGIN_ZONES,
+];
+
+const collectZoneHtml = (map: Record<MarginZone, string>, zones: MarginZone[]) =>
+  zones.map((zone) => map[zone] ?? '').join('');
 
 export default function EditorClient() {
   const params = useParams<{ id: string }>();
@@ -44,36 +73,44 @@ export default function EditorClient() {
     previewContent,
     header,
     footer,
+    runningHtml,
     titlePage,
     addTitleHeaderFooter,
     getDocName,
     setPreviewContent,
     setHeader,
     setFooter,
+    setRunningHtml,
   } = useEditorState(id, templateId, { enabled: tenantReady });
   const effectiveLoading = !templateId || isLoading;
 
   const editorRef = useRef<any>(null);
 
   const recomputePreviewContent = useCallback(
-    (overrides?: { header?: string; footer?: string; body?: string }) => {
+    (overrides?: {
+      body?: string;
+      runningHtml?: Partial<Record<MarginZone, string>>;
+    }) => {
       const bodyHtml =
         overrides?.body ??
         (typeof editorRef.current?.getHTML === 'function'
           ? editorRef.current.getHTML()
           : editorContent);
-      const headerHtml = overrides?.header ?? header;
-      const footerHtml = overrides?.footer ?? footer;
-      const combined = `${titlePage ?? ''}${headerHtml}${bodyHtml}${footerHtml}`;
+      const mergedRunningHtml = {
+        ...runningHtml,
+        ...(overrides?.runningHtml ?? {}),
+      };
+      const runningFragments = collectZoneHtml(mergedRunningHtml, PREVIEW_ZONE_ORDER);
+      const combined = `${titlePage ?? ''}${runningFragments}${bodyHtml}`;
       setPreviewContent(combined);
     },
-    [editorContent, footer, header, setPreviewContent, titlePage],
+    [editorContent, runningHtml, setPreviewContent, titlePage],
   );
 
   const handleHeaderChange = useCallback(
     (value: string) => {
       setHeader(value);
-      recomputePreviewContent({ header: value });
+      recomputePreviewContent({ runningHtml: { topCenter: value } });
     },
     [recomputePreviewContent, setHeader],
   );
@@ -81,9 +118,17 @@ export default function EditorClient() {
   const handleFooterChange = useCallback(
     (value: string) => {
       setFooter(value);
-      recomputePreviewContent({ footer: value });
+      recomputePreviewContent({ runningHtml: { bottomCenter: value } });
     },
     [recomputePreviewContent, setFooter],
+  );
+
+  const handleRunningHtmlChange = useCallback(
+    (zone: MarginZone, value: string) => {
+      setRunningHtml(zone, value);
+      recomputePreviewContent({ runningHtml: { [zone]: value } });
+    },
+    [recomputePreviewContent, setRunningHtml],
   );
 
   const {
@@ -167,17 +212,19 @@ export default function EditorClient() {
               content={editorContent}
               headerHtml={header}
               footerHtml={footer}
+              runningHtml={runningHtml}
               onHeaderChange={handleHeaderChange}
               onFooterChange={handleFooterChange}
+              onRunningHtmlChange={handleRunningHtmlChange}
               onCreate={updateHandler}
               onUpdate={updateHandler}
-              onPrint={({ layout, bodyHtml, headerHtml, footerHtml }) => {
-                setHeader(headerHtml);
-                setFooter(footerHtml);
+              onPrint={({ layout, bodyHtml, headerHtml, footerHtml, runningHtml: zones }) => {
+                Object.entries(zones).forEach(([zone, value]) => {
+                  setRunningHtml(zone as MarginZone, value);
+                });
                 recomputePreviewContent({
                   body: bodyHtml,
-                  header: headerHtml,
-                  footer: footerHtml,
+                  runningHtml: zones,
                 });
                 setPageLayout(layout);
                 setPreview(true);

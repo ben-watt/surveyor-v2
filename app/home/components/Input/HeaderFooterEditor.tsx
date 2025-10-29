@@ -33,8 +33,9 @@ import {
   Grid2x2X,
   ImagePlus,
 } from 'lucide-react';
+import type { MarginZone } from './PageLayoutContext';
 
-type RunningRegion = 'header' | 'footer';
+type RunningRegion = MarginZone;
 
 interface HeaderFooterEditorProps {
   region: RunningRegion;
@@ -50,9 +51,172 @@ const DEFAULT_HEADER_HTML =
 const DEFAULT_FOOTER_HTML =
   '<div class="footer-container"><div class="footerPrimary" data-running-role="footer"><img class="footerImage" src="/rics-purple-logo.jpg" alt="Footer image" style="max-width:200px;height:auto;" /></div></div>';
 
+type ZoneMetadata = {
+  label: string;
+  description: string;
+  runningName: string;
+  dataRole: string;
+  defaultHtml: string;
+  allowHandlebars: boolean;
+  showTemplateButton?: boolean;
+};
+
+const ZONE_METADATA: Record<MarginZone, ZoneMetadata> = {
+  topLeftCorner: {
+    label: 'Top Left Corner',
+    description: 'Sits at the intersection of top and left margins. Ideal for corner flourishes.',
+    runningName: 'pageMarginTopLeftCorner',
+    dataRole: 'top-left-corner',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  topLeft: {
+    label: 'Top Left',
+    description: 'Runs along the top margin above the left column. Great for secondary logos.',
+    runningName: 'pageMarginTopLeft',
+    dataRole: 'top-left',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  topCenter: {
+    label: 'Top Center',
+    description:
+      'Primary header content rendered in the center of the top margin.',
+    runningName: 'pageMarginTopCenter',
+    dataRole: 'top-center',
+    defaultHtml: DEFAULT_HEADER_HTML,
+    allowHandlebars: true,
+    showTemplateButton: true,
+  },
+  topRight: {
+    label: 'Top Right',
+    description: 'Top margin content adjacent to the right column. Perfect for address blocks.',
+    runningName: 'pageMarginTopRight',
+    dataRole: 'top-right',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  topRightCorner: {
+    label: 'Top Right Corner',
+    description: 'Corner of the top and right margins for badges or decorative seals.',
+    runningName: 'pageMarginTopRightCorner',
+    dataRole: 'top-right-corner',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  leftTop: {
+    label: 'Left Top',
+    description: 'Top segment of the left margin. Useful for chapter titles or vertical notes.',
+    runningName: 'pageMarginLeftTop',
+    dataRole: 'left-top',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  leftMiddle: {
+    label: 'Left Middle',
+    description: 'Middle segment of the left margin for navigation or sidenotes.',
+    runningName: 'pageMarginLeftMiddle',
+    dataRole: 'left-middle',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  leftBottom: {
+    label: 'Left Bottom',
+    description: 'Bottom segment of the left margin for supplemental information.',
+    runningName: 'pageMarginLeftBottom',
+    dataRole: 'left-bottom',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  rightTop: {
+    label: 'Right Top',
+    description: 'Top segment of the right margin for metadata or contact details.',
+    runningName: 'pageMarginRightTop',
+    dataRole: 'right-top',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  rightMiddle: {
+    label: 'Right Middle',
+    description: 'Middle segment of the right margin for annotations or key facts.',
+    runningName: 'pageMarginRightMiddle',
+    dataRole: 'right-middle',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  rightBottom: {
+    label: 'Right Bottom',
+    description: 'Bottom segment of the right margin for supplementary notes.',
+    runningName: 'pageMarginRightBottom',
+    dataRole: 'right-bottom',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  bottomLeftCorner: {
+    label: 'Bottom Left Corner',
+    description: 'Intersection of bottom and left margins. Good for seals or signatures.',
+    runningName: 'pageMarginBottomLeftCorner',
+    dataRole: 'bottom-left-corner',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  bottomLeft: {
+    label: 'Bottom Left',
+    description: 'Bottom margin segment on the left. Useful for document names or links.',
+    runningName: 'pageMarginBottomLeft',
+    dataRole: 'bottom-left',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  bottomCenter: {
+    label: 'Bottom Center',
+    description: 'Primary footer slot. Ideal for legal disclaimers or logos.',
+    runningName: 'pageMarginBottomCenter',
+    dataRole: 'bottom-center',
+    defaultHtml: DEFAULT_FOOTER_HTML,
+    allowHandlebars: true,
+    showTemplateButton: true,
+  },
+  bottomRight: {
+    label: 'Bottom Right',
+    description: 'Bottom margin segment on the right. Combine with counters or page numbers.',
+    runningName: 'pageMarginBottomRight',
+    dataRole: 'bottom-right',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+  bottomRightCorner: {
+    label: 'Bottom Right Corner',
+    description: 'Corner of the bottom and right margins for seals or icons.',
+    runningName: 'pageMarginBottomRightCorner',
+    dataRole: 'bottom-right-corner',
+    defaultHtml: '',
+    allowHandlebars: true,
+  },
+};
+
 const canUseDOM = typeof window !== 'undefined' && typeof window.document !== 'undefined';
 
 const sanitizeHtml = (html: string) => (typeof html === 'string' ? html.trim() : '');
+
+const ensureRunningAttributes = (element: Element | null | undefined, meta: ZoneMetadata) => {
+  if (!element) return;
+  if (!(element instanceof Element)) return;
+  const target = element as HTMLElement;
+  target.setAttribute('data-running-role', meta.dataRole);
+  target.setAttribute('id', meta.runningName);
+  const existingStyle = target.getAttribute('style') || '';
+  const styleParts = existingStyle
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => !/^position:\s*running\(/i.test(part));
+  styleParts.push(`position: running(${meta.runningName})`);
+  target.setAttribute('style', styleParts.join('; '));
+};
+
+const buildZoneWrapper = (meta: ZoneMetadata, innerHtml: string) =>
+  `<div id="${meta.runningName}" data-running-role="${meta.dataRole}" style="position: running(${meta.runningName});">${innerHtml}</div>`;
 
 const normaliseHeaderHtml = (raw: string) => {
   if (!canUseDOM) {
@@ -132,6 +296,8 @@ const normaliseHeaderHtml = (raw: string) => {
     }
   }
 
+  ensureRunningAttributes(headerRegion ?? undefined, ZONE_METADATA.topCenter);
+
   // Ensure address running element
   let addressRegion =
     container.querySelector('[data-running-role="address"]') ??
@@ -140,6 +306,7 @@ const normaliseHeaderHtml = (raw: string) => {
   if (addressRegion) {
     addressRegion.classList.add('headerAddress');
     addressRegion.setAttribute('data-running-role', 'address');
+    ensureRunningAttributes(addressRegion ?? undefined, ZONE_METADATA.topRight);
   }
 
   return container.outerHTML;
@@ -188,11 +355,52 @@ const normaliseFooterHtml = (raw: string) => {
     }
   }
 
+  ensureRunningAttributes(footerRegion ?? undefined, ZONE_METADATA.bottomCenter);
+
   return container.outerHTML;
 };
 
-const normaliseRunningHtml = (region: RunningRegion, raw: string) =>
-  region === 'header' ? normaliseHeaderHtml(raw) : normaliseFooterHtml(raw);
+const ensureWrappedWithRunningElement = (zone: MarginZone, raw: string) => {
+  const meta = ZONE_METADATA[zone];
+  const fallback = sanitizeHtml(meta.defaultHtml) ?? '';
+
+  if (!canUseDOM) {
+    const content = sanitizeHtml(raw) || fallback || '';
+    if (
+      content.includes(`id="${meta.runningName}"`) &&
+      content.includes('position: running')
+    ) {
+      return content;
+    }
+    return buildZoneWrapper(meta, content);
+  }
+
+  const template = window.document.createElement('template');
+  const sanitized = sanitizeHtml(raw);
+  template.innerHTML = sanitized || fallback || '';
+
+  const candidate =
+    (template.content.querySelector(`#${meta.runningName}`) ??
+      template.content.querySelector(`[data-running-role="${meta.dataRole}"]`)) as
+      | HTMLElement
+      | null;
+
+  if (candidate) {
+    ensureRunningAttributes(candidate, meta);
+    return candidate.outerHTML;
+  }
+
+  const wrapper = window.document.createElement('div');
+  wrapper.innerHTML = sanitized || fallback || '';
+  ensureRunningAttributes(wrapper, meta);
+  return wrapper.outerHTML;
+};
+
+const normaliseRunningHtml = (region: RunningRegion, raw: string) => {
+  if (region === 'topCenter') return normaliseHeaderHtml(raw);
+  if (region === 'bottomCenter') return normaliseFooterHtml(raw);
+  return ensureWrappedWithRunningElement(region, raw);
+};
 
 const Divider = () => <span className="mx-1 h-5 w-px bg-border" />;
 
@@ -217,6 +425,7 @@ const HeaderFooterToolbar = ({
   onInsertImage: () => void;
   onInsertTemplate: () => void;
 }) => {
+  const meta = ZONE_METADATA[region];
   const items: ToolbarEntry[] = [
     {
       key: 'bold',
@@ -270,12 +479,18 @@ const HeaderFooterToolbar = ({
       isActive: () => editor.isActive({ textAlign: 'right' }),
     },
     'divider',
-    {
+  ];
+
+  if (meta.showTemplateButton) {
+    items.push({
       key: 'template',
       icon: <Grid2x2Plus className="h-4 w-4" />,
       title: 'Insert layout',
       action: onInsertTemplate,
-    },
+    });
+  }
+
+  items.push(
     {
       key: 'insert-table',
       icon: <Grid2x2Plus className="h-4 w-4 transform rotate-45" />,
@@ -284,7 +499,7 @@ const HeaderFooterToolbar = ({
         editor
           .chain()
           .focus()
-          .insertTable({ rows: 1, cols: region === 'header' ? 2 : 1, withHeaderRow: false })
+          .insertTable({ rows: 1, cols: region === 'topCenter' ? 2 : 1, withHeaderRow: false })
           .run(),
       isActive: () => editor.isActive('table'),
     },
@@ -299,14 +514,14 @@ const HeaderFooterToolbar = ({
         return false;
       },
     },
-    'divider' as ToolbarEntry,
+    'divider',
     {
       key: 'insert-image',
       icon: <ImagePlus className="h-4 w-4" />,
       title: 'Insert image',
       action: onInsertImage,
     },
-  ];
+  );
 
   return (
     <div className="flex flex-wrap items-center gap-1 rounded border border-border bg-white/95 px-2 py-1 shadow-sm">
@@ -336,6 +551,7 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastEmittedHtml = useRef<string>('');
+  const zoneMeta = ZONE_METADATA[region];
 
   const initialContent = useMemo(() => normaliseRunningHtml(region, value), [region, value]);
 
@@ -383,7 +599,7 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
             levels: [2, 3, 4],
           },
         }),
-        ...(region === 'header' ? [HandlebarsHighlight, HandlebarsAutocomplete] : []),
+        ...(zoneMeta.allowHandlebars ? [HandlebarsHighlight, HandlebarsAutocomplete] : []),
       ],
       content: initialContent,
       editorProps: {
@@ -438,18 +654,13 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
 
   const handleInsertTemplate = useCallback(() => {
     if (!editor) return;
-    if (region === 'header') {
-      editor.chain().focus().setContent(DEFAULT_HEADER_HTML, false).run();
-      const normalised = normaliseHeaderHtml(DEFAULT_HEADER_HTML);
-      lastEmittedHtml.current = normalised;
-      onChange?.(normalised);
-    } else {
-      editor.chain().focus().setContent(DEFAULT_FOOTER_HTML, false).run();
-      const normalised = normaliseFooterHtml(DEFAULT_FOOTER_HTML);
-      lastEmittedHtml.current = normalised;
-      onChange?.(normalised);
-    }
-  }, [editor, onChange, region]);
+    if (!zoneMeta.showTemplateButton) return;
+    const templateHtml = zoneMeta.defaultHtml || '';
+    const normalised = normaliseRunningHtml(region, templateHtml);
+    editor.chain().focus().setContent(normalised, false).run();
+    lastEmittedHtml.current = normalised;
+    onChange?.(normalised);
+  }, [editor, onChange, region, zoneMeta]);
 
   const widthStyle = contentWidth ? { width: `${contentWidth}px` } : undefined;
 
@@ -457,13 +668,9 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
     <div className={cn('space-y-3', className)} style={widthStyle}>
       <div className="space-y-1">
         <h3 className="text-sm font-medium text-foreground">
-          {region === 'header' ? 'Header content' : 'Footer content'}
+          {zoneMeta.label}
         </h3>
-        <p className="text-xs text-muted-foreground">
-          {region === 'header'
-            ? 'Use tables or flex layouts to position logos on the left and text on the right.'
-            : 'Add footer logos or text; content is rendered in the bottom margin of each page.'}
-        </p>
+        <p className="text-xs text-muted-foreground">{zoneMeta.description}</p>
       </div>
       {editor && (
         <HeaderFooterToolbar
@@ -490,4 +697,9 @@ const HeaderFooterEditor: React.FC<HeaderFooterEditorProps> = ({
   );
 };
 
+export {
+  ZONE_METADATA as MARGIN_ZONE_METADATA,
+  type ZoneMetadata,
+  normaliseRunningHtml as normalizeRunningHtmlForZone,
+};
 export default HeaderFooterEditor;

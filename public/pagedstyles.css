@@ -6,23 +6,70 @@
   @page {
     size: A4 landscape;
 
-    @bottom-center {
-      content: counter(page);
-      font-size: small;
+    @top-left-corner {
+      content: element(pageMarginTopLeftCorner);
     }
 
-    @top-left-corner {
-      content: element(headerRunning);
+    @top-left {
+      content: element(pageMarginTopLeft);
+    }
+
+    @top-center {
+      content: element(pageMarginTopCenter);
     }
 
     @top-right {
-      content: element(addressRunning);
+      content: element(pageMarginTopRight);
+      font-size: x-small;
+    }
+
+    @top-right-corner {
+      content: element(pageMarginTopRightCorner);
+    }
+
+    @left-top {
+      content: element(pageMarginLeftTop);
+    }
+
+    @left-middle {
+      content: element(pageMarginLeftMiddle);
+    }
+
+    @left-bottom {
+      content: element(pageMarginLeftBottom);
+    }
+
+    @right-top {
+      content: element(pageMarginRightTop);
+    }
+
+    @right-middle {
+      content: element(pageMarginRightMiddle);
+    }
+
+    @right-bottom {
+      content: element(pageMarginRightBottom);
+    }
+
+    @bottom-left-corner {
+      content: element(pageMarginBottomLeftCorner);
+    }
+
+    @bottom-left {
+      content: element(pageMarginBottomLeft);
+    }
+
+    @bottom-center {
+      content: element(pageMarginBottomCenter);
       font-size: x-small;
     }
 
     @bottom-right {
-      content: element(footerRunning);
-      width: 3cm;
+      content: element(pageMarginBottomRight);
+    }
+
+    @bottom-right-corner {
+      content: element(pageMarginBottomRightCorner);
     }
   }
 }
@@ -31,40 +78,85 @@
   page: title;
 }
 
-.pagedjs_margin .pagedjs_margin-top-left-corner .pagedjs_margin-content {
-  width: 920px;
-}
-
-[data-running-role='header'],
-[data-running-role='footer'],
-[data-running-role='address'],
-.header-container,
-.footer-container {
+[data-running-role] {
+  display: block;
   margin: 0;
   padding: 0;
 }
 
-[data-running-role='header'],
-[data-running-role='footer'],
-[data-running-role='address'] {
-  display: block;
+[data-running-role='top-left-corner'] {
+  position: running(pageMarginTopLeftCorner);
 }
 
-[data-running-role='header'] {
-  position: running(headerRunning);
+[data-running-role='top-left'] {
+  position: running(pageMarginTopLeft);
 }
 
-[data-running-role='footer'] {
-  position: running(footerRunning);
+[data-running-role='top-center'] {
+  position: running(pageMarginTopCenter);
 }
 
-[data-running-role='address'] {
-  position: running(addressRunning);
+[data-running-role='top-right'] {
+  position: running(pageMarginTopRight);
+}
+
+[data-running-role='top-right-corner'] {
+  position: running(pageMarginTopRightCorner);
+}
+
+[data-running-role='left-top'] {
+  position: running(pageMarginLeftTop);
+}
+
+[data-running-role='left-middle'] {
+  position: running(pageMarginLeftMiddle);
+}
+
+[data-running-role='left-bottom'] {
+  position: running(pageMarginLeftBottom);
+}
+
+[data-running-role='right-top'] {
+  position: running(pageMarginRightTop);
+}
+
+[data-running-role='right-middle'] {
+  position: running(pageMarginRightMiddle);
+}
+
+[data-running-role='right-bottom'] {
+  position: running(pageMarginRightBottom);
+}
+
+[data-running-role='bottom-left-corner'] {
+  position: running(pageMarginBottomLeftCorner);
+}
+
+[data-running-role='bottom-left'] {
+  position: running(pageMarginBottomLeft);
+}
+
+[data-running-role='bottom-center'] {
+  position: running(pageMarginBottomCenter);
+}
+
+[data-running-role='bottom-right'] {
+  position: running(pageMarginBottomRight);
+}
+
+[data-running-role='bottom-right-corner'] {
+  position: running(pageMarginBottomRightCorner);
 }
 
 .header-table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.header-container,
+.footer-container {
+  margin: 0;
+  padding: 0;
 }
 
 .header-table,
@@ -110,10 +202,21 @@
 }
 
 /* footer */
-.pagedjs_margin .pagedjs_margin-bottom-right .pagedjs_margin-content {
+.pagedjs_margin .pagedjs_margin-bottom-right .pagedjs_margin-content,
+.pagedjs_margin .pagedjs_margin-bottom-left .pagedjs_margin-content,
+.pagedjs_margin .pagedjs_margin-bottom-center .pagedjs_margin-content {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2mm;
+}
+
+.pagedjs_margin .pagedjs_margin-bottom-left .pagedjs_margin-content {
+  justify-content: flex-start;
+}
+
+.pagedjs_margin .pagedjs_margin-bottom-right .pagedjs_margin-content {
   justify-content: flex-end;
-  padding-right: 2mm;
 }
 
 [data-type='table-of-contents'] li p {
@@ -146,4 +249,15 @@ where you find the element we're targetting with the attribute data-toc-id-selec
   content: target-counter(attr(data-toc-id-selector), page);
   background-color: white;
   padding-left: 2mm;
+}
+[data-running-role='header'] {
+  position: running(pageMarginTopCenter);
+}
+
+[data-running-role='footer'] {
+  position: running(pageMarginBottomCenter);
+}
+
+[data-running-role='address'] {
+  position: running(pageMarginTopRight);
 }
