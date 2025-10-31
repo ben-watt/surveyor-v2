@@ -55,25 +55,83 @@ const canUseDOM = typeof window !== 'undefined' && typeof window.document !== 'u
 
 const sanitizeHtml = (html: string) => (typeof html === 'string' ? html.trim() : '');
 
+/**
+ * Merges new CSS style declarations into an element's existing style attribute.
+ * Removes conflicting properties by pattern matching (e.g., removes existing position: running() before adding new one).
+ *
+ * @param element - The DOM element whose style attribute will be updated
+ * @param newStyles - Object mapping CSS property names to values (e.g., { position: 'running(...)', width: '100%' })
+ * @param removePatterns - Optional array of regex patterns to remove from existing styles before merging
+ * @sideEffect Mutates the element's style attribute
+ */
+const mergeStyleAttribute = (
+  element: HTMLElement,
+  newStyles: Record<string, string>,
+  removePatterns: RegExp[] = [],
+) => {
+  const existingStyle = element.getAttribute('style') || '';
+  let styleParts = existingStyle
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  // Remove styles matching any of the removal patterns
+  styleParts = styleParts.filter((part) => !removePatterns.some((pattern) => pattern.test(part)));
+
+  // Add new styles, avoiding duplicates
+  Object.entries(newStyles).forEach(([property, value]) => {
+    const propertyPrefix = `${property}:`;
+    const existingIndex = styleParts.findIndex((part) => part.startsWith(propertyPrefix));
+    const newPart = `${property}:${value}`;
+
+    if (existingIndex >= 0) {
+      styleParts[existingIndex] = newPart;
+    } else {
+      styleParts.push(newPart);
+    }
+  });
+
+  element.setAttribute('style', styleParts.join('; '));
+};
+
+/**
+ * Ensures a DOM element has the correct attributes for paged.js running elements.
+ * Sets data-running-role, id, and position: running() style.
+ *
+ * @param element - The DOM element to update (mutated in place)
+ * @param meta - Zone metadata containing runningName and dataRole
+ * @sideEffect Mutates the element's attributes and style
+ */
 const ensureRunningAttributes = (element: Element | null | undefined, meta: ZoneMetadata) => {
   if (!element) return;
   if (!(element instanceof Element)) return;
   const target = element as HTMLElement;
   target.setAttribute('data-running-role', meta.dataRole);
   target.setAttribute('id', meta.runningName);
-  const existingStyle = target.getAttribute('style') || '';
-  const styleParts = existingStyle
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .filter((part) => !/^position:\s*running\(/i.test(part));
-  styleParts.push(`position: running(${meta.runningName})`);
-  target.setAttribute('style', styleParts.join('; '));
+  mergeStyleAttribute(target, { position: `running(${meta.runningName})` }, [
+    /^position:\s*running\(/i,
+  ]);
 };
 
+/**
+ * Builds an HTML wrapper for a margin zone with proper running element attributes.
+ *
+ * @param meta - Zone metadata containing runningName and dataRole
+ * @param innerHtml - HTML content to wrap
+ * @returns HTML string with wrapper div containing required attributes
+ */
 const buildZoneWrapper = (meta: ZoneMetadata, innerHtml: string) =>
   `<div id="${meta.runningName}" data-running-role="${meta.dataRole}" style="position: running(${meta.runningName});">${innerHtml}</div>`;
 
+/**
+ * Normalizes header HTML to ensure proper structure and zone-specific attributes.
+ * Creates .header-container wrapper if missing, normalizes table structure,
+ * and ensures header region uses top-center zone and address region uses top-right zone.
+ *
+ * @param raw - Raw HTML string (may contain incomplete structure)
+ * @returns Normalized HTML string with proper container, zone attributes, and running styles
+ * @sideEffect Creates temporary DOM elements during parsing (SSR-safe)
+ */
 const normaliseHeaderHtml = (raw: string) => {
   if (!canUseDOM) {
     const content = sanitizeHtml(raw) || DEFAULT_HEADER_HTML;
@@ -94,28 +152,20 @@ const normaliseHeaderHtml = (raw: string) => {
 
   // Ensure table helper class
   const table = container.querySelector('table');
-  if (table) {
+  if (table && table instanceof window.HTMLElement) {
     table.classList.add('header-table');
     table.setAttribute('role', 'presentation');
     table.setAttribute('cellpadding', '0');
     table.setAttribute('cellspacing', '0');
-    const existingStyle = table.getAttribute('style') || '';
-    const styleParts = existingStyle
-      .split(';')
-      .map((part) => part.trim())
-      .filter(Boolean);
-    if (!styleParts.some((part) => part.startsWith('border-collapse'))) {
-      styleParts.push('border-collapse:collapse');
-    }
-    if (!styleParts.some((part) => part.startsWith('width'))) {
-      styleParts.push('width:100%');
-    }
-    table.setAttribute('style', styleParts.join('; '));
+    mergeStyleAttribute(table, {
+      'border-collapse': 'collapse',
+      width: '100%',
+    });
   }
 
   // Ensure header running element
   let headerRegion =
-    container.querySelector('[data-running-role="header"]') ??
+    container.querySelector('[data-running-role="top-center"]') ??
     container.querySelector('.headerPrimary') ??
     container.querySelector('img');
 
@@ -153,7 +203,7 @@ const normaliseHeaderHtml = (raw: string) => {
 
   // Ensure address running element
   let addressRegion =
-    container.querySelector('[data-running-role="address"]') ??
+    container.querySelector('[data-running-role="top-right"]') ??
     container.querySelector('.headerAddress');
 
   if (addressRegion) {
@@ -164,6 +214,15 @@ const normaliseHeaderHtml = (raw: string) => {
   return container.outerHTML;
 };
 
+/**
+ * Normalizes footer HTML to ensure proper structure and zone-specific attributes.
+ * Creates .footer-container wrapper if missing and ensures footer region
+ * uses bottom-center zone with proper id and running style.
+ *
+ * @param raw - Raw HTML string (may contain incomplete structure)
+ * @returns Normalized HTML string with proper container, zone attributes, and running styles
+ * @sideEffect Creates temporary DOM elements during parsing (SSR-safe)
+ */
 const normaliseFooterHtml = (raw: string) => {
   if (!canUseDOM) {
     const content = sanitizeHtml(raw) || DEFAULT_FOOTER_HTML;
@@ -183,7 +242,7 @@ const normaliseFooterHtml = (raw: string) => {
   }
 
   let footerRegion =
-    container.querySelector('[data-running-role="footer"]') ??
+    container.querySelector('[data-running-role="bottom-center"]') ??
     container.querySelector('.footerPrimary');
 
   if (!footerRegion) {
@@ -210,6 +269,16 @@ const normaliseFooterHtml = (raw: string) => {
   return container.outerHTML;
 };
 
+/**
+ * Ensures HTML content for a margin zone is wrapped with proper running element attributes.
+ * Used for zones other than top-center and bottom-center (which have specialized normalizers).
+ * Searches for existing running element wrapper, or creates one if missing.
+ *
+ * @param zone - The margin zone identifier
+ * @param raw - Raw HTML string for the zone
+ * @returns Normalized HTML string with proper wrapper and running element attributes
+ * @sideEffect Creates temporary DOM elements during parsing (SSR-safe)
+ */
 const ensureWrappedWithRunningElement = (zone: MarginZone, raw: string) => {
   const meta = MARGIN_ZONE_METADATA[zone];
   const fallback = sanitizeHtml(meta.defaultHtml) ?? '';
@@ -246,6 +315,15 @@ const ensureWrappedWithRunningElement = (zone: MarginZone, raw: string) => {
   return wrapper.outerHTML;
 };
 
+/**
+ * Normalizes HTML for any margin zone region.
+ * Routes to specialized normalizers for top-center (header) and bottom-center (footer),
+ * or uses the generic wrapper function for other zones.
+ *
+ * @param region - The margin zone region to normalize
+ * @param raw - Raw HTML string for the region
+ * @returns Normalized HTML string with proper zone-specific attributes and running styles
+ */
 const normaliseRunningHtml = (region: RunningRegion, raw: string) => {
   if (region === 'topCenter') return normaliseHeaderHtml(raw);
   if (region === 'bottomCenter') return normaliseFooterHtml(raw);

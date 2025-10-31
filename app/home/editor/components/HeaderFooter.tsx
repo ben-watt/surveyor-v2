@@ -12,7 +12,7 @@ interface HeaderFooterHtmlProps {
 export const Footer = ({ editorData }: HeaderFooterHtmlProps) => {
   return (
     <div className="footer-container">
-      <div className="footerPrimary" data-running-role="footer">
+      <div className="footerPrimary" data-running-role="bottom-center">
         <img
           className="footerImage object-contain"
           src="/rics-purple-logo.jpg"
@@ -39,7 +39,7 @@ export const Header = ({ editorData }: HeaderFooterHtmlProps) => {
         <tbody>
           <tr>
             <td className="header-table__media">
-              <div className="headerPrimary" data-running-role="header">
+              <div className="headerPrimary" data-running-role="top-center">
                 <img
                   className="headerImage object-contain"
                   src="/cwbc_header.jpg"
@@ -49,7 +49,7 @@ export const Header = ({ editorData }: HeaderFooterHtmlProps) => {
               </div>
             </td>
             <td className="header-table__details">
-              <div className="headerAddress" data-running-role="address">
+              <div className="headerAddress" data-running-role="top-right">
                 <p className="text-xs text-gray-600">
                   {editorData ? editorData.reportDetails.address.formatted : 'Unknown'}
                 </p>
