@@ -6,6 +6,8 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
+import type { MarginZone } from './marginZones';
+import { distributeRunningHtml } from './marginZones';
 
 const DEFAULT_DPI = 96;
 
@@ -19,24 +21,6 @@ export type Margins = {
   bottom: number;
   left: number;
 };
-
-export type MarginZone =
-  | 'topLeftCorner'
-  | 'topLeft'
-  | 'topCenter'
-  | 'topRight'
-  | 'topRightCorner'
-  | 'leftTop'
-  | 'leftMiddle'
-  | 'leftBottom'
-  | 'rightTop'
-  | 'rightMiddle'
-  | 'rightBottom'
-  | 'bottomLeftCorner'
-  | 'bottomLeft'
-  | 'bottomCenter'
-  | 'bottomRight'
-  | 'bottomRightCorner';
 
 export type RunningHtmlMap = Record<MarginZone, string>;
 
@@ -147,38 +131,23 @@ const createInitialLayoutState = (initialState?: Partial<PageLayoutState>): Page
     ...(initialState?.runningHtml ?? {}),
   };
 
-  const legacyRunning = initialState?.runningHtml as Record<string, string> | undefined;
-
-  if (legacyRunning) {
-    const legacyMappings: Array<[keyof RunningHtmlMap, string[]]> = [
-      ['topCenter', ['headerTopCenter', 'headerRunning', 'pageHeader']],
-      ['bottomCenter', ['footerBottomCenter', 'footerRunning', 'pageFooter']],
-      ['topLeft', ['headerTopLeft']],
-      ['topRight', ['headerTopRight', 'addressRunning', 'pageAddress']],
-      ['bottomLeft', ['footerBottomLeft']],
-      ['bottomRight', ['footerBottomRight']],
-    ];
-
-    for (const [newKey, legacyKeys] of legacyMappings) {
-      if (!mergedRunningHtml[newKey]) {
-        for (const legacyKey of legacyKeys) {
-          const legacyValue = legacyRunning[legacyKey];
-          if (legacyValue) {
-            mergedRunningHtml[newKey] = legacyValue;
-            break;
-          }
-        }
-      }
-    }
+  if (initialState?.headerHtml) {
+    mergedRunningHtml.topCenter = initialState.headerHtml;
+  }
+  if (initialState?.footerHtml) {
+    mergedRunningHtml.bottomCenter = initialState.footerHtml;
   }
 
+  const distributedRunningHtml = distributeRunningHtml(mergedRunningHtml);
+
   const headerSeed =
-    initialState?.headerHtml ?? mergedRunningHtml.topCenter ?? DEFAULT_LAYOUT.headerHtml;
+    distributedRunningHtml.topCenter ?? initialState?.headerHtml ?? DEFAULT_LAYOUT.headerHtml;
   const footerSeed =
-    initialState?.footerHtml ?? mergedRunningHtml.bottomCenter ?? DEFAULT_LAYOUT.footerHtml;
+    distributedRunningHtml.bottomCenter ?? initialState?.footerHtml ?? DEFAULT_LAYOUT.footerHtml;
 
   const normalizedRunningHtml: RunningHtmlMap = {
-    ...mergedRunningHtml,
+    ...DEFAULT_RUNNING_HTML,
+    ...distributedRunningHtml,
     topCenter: headerSeed,
     bottomCenter: footerSeed,
   };
@@ -218,43 +187,41 @@ export const PageLayoutProvider: React.FC<PageLayoutProviderProps> = ({
     setLayout((prev) => ({ ...prev, showBreaks }));
   }, []);
 
-  const setHeaderHtml = useCallback((headerHtml: string) => {
-    setLayout((prev) => ({
-      ...prev,
-      headerHtml,
-      runningHtml: {
-        ...prev.runningHtml,
-        topCenter: headerHtml,
-      },
-    }));
-  }, []);
-
-  const setFooterHtml = useCallback((footerHtml: string) => {
-    setLayout((prev) => ({
-      ...prev,
-      footerHtml,
-      runningHtml: {
-        ...prev.runningHtml,
-        bottomCenter: footerHtml,
-      },
-    }));
-  }, []);
-
   const setRunningHtml = useCallback((zone: MarginZone, html: string) => {
     setLayout((prev) => {
-      const nextRunningHtml: RunningHtmlMap = {
+      const updatedMap: RunningHtmlMap = {
         ...prev.runningHtml,
         [zone]: html,
       };
 
+      const distributed = distributeRunningHtml(updatedMap);
+      const normalized: RunningHtmlMap = {
+        ...DEFAULT_RUNNING_HTML,
+        ...distributed,
+      };
+
       return {
         ...prev,
-        runningHtml: nextRunningHtml,
-        headerHtml: zone === 'topCenter' ? html : prev.headerHtml,
-        footerHtml: zone === 'bottomCenter' ? html : prev.footerHtml,
+        runningHtml: normalized,
+        headerHtml: normalized.topCenter,
+        footerHtml: normalized.bottomCenter,
       };
     });
   }, []);
+
+  const setHeaderHtml = useCallback(
+    (headerHtml: string) => {
+      setRunningHtml('topCenter', headerHtml);
+    },
+    [setRunningHtml],
+  );
+
+  const setFooterHtml = useCallback(
+    (footerHtml: string) => {
+      setRunningHtml('bottomCenter', footerHtml);
+    },
+    [setRunningHtml],
+  );
 
   const value = useMemo<PageLayoutContextValue>(() => {
     const { widthPx, heightPx, widthIn, heightIn } = computeDimensions(
@@ -309,3 +276,4 @@ export const INCH_TO_PX = DEFAULT_DPI;
 export const PAGE_SIZE_OPTIONS = PAGE_SIZES;
 export const DEFAULT_PAGE_LAYOUT = DEFAULT_LAYOUT;
 export const DEFAULT_RUNNING_PAGE_HTML = { ...DEFAULT_RUNNING_HTML };
+export type { MarginZone } from './marginZones';

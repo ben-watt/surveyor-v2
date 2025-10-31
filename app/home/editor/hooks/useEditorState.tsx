@@ -14,8 +14,18 @@ import {
   type MarginZone,
 } from '@/app/home/components/Input/PageLayoutContext';
 import { normalizeRunningHtmlForZone } from '@/app/home/components/Input/HeaderFooterEditor';
+import { distributeRunningHtml } from '@/app/home/components/Input/marginZones';
 
 const createDefaultRunningHtml = () => ({ ...DEFAULT_RUNNING_PAGE_HTML });
+const normalizeRunningHtmlMap = (map: Partial<Record<MarginZone, string>>) => {
+  const distributed = distributeRunningHtml(map);
+  return {
+    ...createDefaultRunningHtml(),
+    ...distributed,
+    topCenter: distributed.topCenter ?? map.topCenter ?? '',
+    bottomCenter: distributed.bottomCenter ?? map.bottomCenter ?? '',
+  };
+};
 const TOP_MARGIN_ZONES: MarginZone[] = [
   'topLeftCorner',
   'topLeft',
@@ -163,12 +173,12 @@ async function getTemplateInitialContent(surveyId: string, templateId: TemplateI
   const header = normalizeRunningHtmlForZone('topCenter', headerRaw);
   const footer = normalizeRunningHtmlForZone('bottomCenter', footerRaw);
   const html = await mapFormDataToHtml(editorData);
-  const runningHtml: Record<MarginZone, string> = {
-    ...createDefaultRunningHtml(),
+  const runningHtmlSeed: Partial<Record<MarginZone, string>> = {
     topCenter: header,
     bottomCenter: footer,
   };
-  const runningCombined = collectZoneHtml(runningHtml, PREVIEW_ZONE_ORDER);
+  const normalizedRunningHtml = normalizeRunningHtmlMap(runningHtmlSeed);
+  const runningCombined = collectZoneHtml(normalizedRunningHtml, PREVIEW_ZONE_ORDER);
   const previewContent = `${titlePage}${runningCombined}${html}`;
   const addTitleHeaderFooter = ({ editor }: { editor: Editor }) => {
     const currentEditorHtml = editor.getHTML();
@@ -181,7 +191,7 @@ async function getTemplateInitialContent(surveyId: string, templateId: TemplateI
     previewContent,
     header,
     footer,
-    runningHtml,
+    runningHtml: normalizedRunningHtml,
     titlePage,
     addTitleHeaderFooter,
     getDocName,
@@ -232,7 +242,7 @@ export function useEditorState(
               setPreviewContent(template.previewContent);
               setHeader(template.header);
               setFooter(template.footer);
-              setRunningHtml(template.runningHtml);
+              setRunningHtml(normalizeRunningHtmlMap(template.runningHtml));
               setTitlePage(template.titlePage);
               setGetDocName(() => template.getDocName);
             } else {
@@ -257,7 +267,7 @@ export function useEditorState(
           setIsLoading(template.isLoading);
           setHeader(template.header);
           setFooter(template.footer);
-          setRunningHtml(template.runningHtml);
+          setRunningHtml(normalizeRunningHtmlMap(template.runningHtml));
           setTitlePage(template.titlePage);
           setGetDocName(() => template.getDocName);
         }

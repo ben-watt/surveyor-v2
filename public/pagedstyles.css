@@ -148,59 +148,6 @@
   position: running(pageMarginBottomRightCorner);
 }
 
-.header-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.header-container,
-.footer-container {
-  margin: 0;
-  padding: 0;
-}
-
-.header-table,
-.header-table tbody,
-.header-table tr,
-.header-table td {
-  margin: 0;
-  border: 0;
-  padding: 0;
-}
-
-.header-table__media {
-  width: 45%;
-  vertical-align: top;
-}
-
-.header-table__details {
-  text-align: right;
-  vertical-align: top;
-}
-
-.headerPrimary,
-.headerAddress {
-  margin: 0;
-  padding: 0;
-}
-
-.headerPrimary img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-.footerPrimary {
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Override the default line-height and min-height which we put in tiptap to emulate new lines */
-.headerAddress p {
-  line-height: normal;
-  min-height: auto;
-}
-
 /* footer */
 .pagedjs_margin .pagedjs_margin-bottom-right .pagedjs_margin-content,
 .pagedjs_margin .pagedjs_margin-bottom-left .pagedjs_margin-content,
@@ -249,15 +196,4 @@ where you find the element we're targetting with the attribute data-toc-id-selec
   content: target-counter(attr(data-toc-id-selector), page);
   background-color: white;
   padding-left: 2mm;
-}
-[data-running-role='header'] {
-  position: running(pageMarginTopCenter);
-}
-
-[data-running-role='footer'] {
-  position: running(pageMarginBottomCenter);
-}
-
-[data-running-role='address'] {
-  position: running(pageMarginTopRight);
 }

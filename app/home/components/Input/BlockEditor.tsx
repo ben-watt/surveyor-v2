@@ -35,7 +35,8 @@ import {
   DEFAULT_RUNNING_PAGE_HTML,
   usePageLayout,
 } from './PageLayoutContext';
-import HeaderFooterEditor, { MARGIN_ZONE_METADATA } from './HeaderFooterEditor';
+import HeaderFooterEditor from './HeaderFooterEditor';
+import { MARGIN_ZONE_METADATA, distributeRunningHtml } from './marginZones';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
@@ -408,18 +409,35 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
 
   const handleZoneChange = React.useCallback(
     (zone: MarginZone, value: string) => {
-      setRunningHtml(zone, value);
+      const candidate: RunningHtmlMap = {
+        ...DEFAULT_RUNNING_PAGE_HTML,
+        ...runningHtml,
+        [zone]: value,
+      };
+      const distributed = distributeRunningHtml(candidate);
+      const normalized: RunningHtmlMap = {
+        ...DEFAULT_RUNNING_PAGE_HTML,
+        ...distributed,
+      };
+      const sanitizedValue = normalized[zone] ?? '';
+      setRunningHtml(zone, sanitizedValue);
       if (zone === 'topCenter') {
-        onHeaderChange?.(value);
-        onRunningHtmlChange?.(zone, value);
+        onHeaderChange?.(sanitizedValue);
+        onRunningHtmlChange?.(zone, sanitizedValue);
       } else if (zone === 'bottomCenter') {
-        onFooterChange?.(value);
-        onRunningHtmlChange?.(zone, value);
+        onFooterChange?.(sanitizedValue);
+        onRunningHtmlChange?.(zone, sanitizedValue);
       } else {
-        onRunningHtmlChange?.(zone, value);
+        onRunningHtmlChange?.(zone, sanitizedValue);
       }
     },
-    [onFooterChange, onHeaderChange, onRunningHtmlChange, setRunningHtml],
+    [
+      onFooterChange,
+      onHeaderChange,
+      onRunningHtmlChange,
+      runningHtml,
+      setRunningHtml,
+    ],
   );
 
   const renderZoneTrigger = React.useCallback(
