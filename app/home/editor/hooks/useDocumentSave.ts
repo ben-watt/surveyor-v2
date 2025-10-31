@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { documentStore } from '@/app/home/clients/DocumentStore';
 import toast from 'react-hot-toast';
+import type { DocumentContent } from '../utils/documentSerialization';
+import { serializeDocument } from '../utils/documentSerialization';
 
 /**
  * Custom hook to handle saving documents (create or update) with loading and error state.
  * @param id - Document ID
  * @param getDisplayName - Function to get the document display name
- * @param getMetadata - Function to get the document metadata (given content)
+ * @param getMetadata - Function to get the document metadata (given document content)
  * @returns { save, isSaving, saveStatus }
  */
 export function useDocumentSave({
@@ -16,22 +18,23 @@ export function useDocumentSave({
 }: {
   id: string;
   getDisplayName?: () => Promise<string> | string;
-  getMetadata?: (content: string) => any;
+  getMetadata?: (content: DocumentContent) => any;
 }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error' | 'autosaved'>(
     'idle',
   );
 
-  const save = async (content: string, { auto = false }: { auto?: boolean } = {}) => {
+  const save = async (content: DocumentContent, { auto = false }: { auto?: boolean } = {}) => {
     try {
       setIsSaving(true);
       setSaveStatus('saving');
       const existingDoc = await documentStore.get(id);
       const metadata = getMetadata ? getMetadata(content) : {};
       const templateId = metadata.templateId;
+      const serializedContent = serializeDocument(content);
       if (existingDoc.ok) {
-        const result = await documentStore.updateContent(id, content, templateId);
+        const result = await documentStore.updateContent(id, serializedContent, templateId);
         if (!result.ok) throw new Error(result.val.message);
       } else {
         const displayName = getDisplayName
@@ -42,7 +45,7 @@ export function useDocumentSave({
         const result = await documentStore.create({
           id,
           displayName,
-          content,
+          content: serializedContent,
           metadata,
         });
         if (!result.ok) throw new Error(result.val.message);

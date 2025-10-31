@@ -37,7 +37,9 @@ export const handler: Schema['updateDocumentWithVersioning']['functionHandler'] 
   const expectedCurrentVersion = latest.currentVersion ?? 0;
   const newVersion = expectedCurrentVersion + 1;
   const versionSk = `v${newVersion}`;
-  const s3Path = `documents/${latest.tenantId}/${latest.id}/${versionSk}.html`;
+  // Use .json extension if fileType is application/json, otherwise use .html
+  const fileExtension = latest.fileType === 'application/json' ? '.json' : '.html';
+  const s3Path = `documents/${latest.tenantId}/${latest.id}/${versionSk}${fileExtension}`;
 
   // 2. Upload content to S3
   try {

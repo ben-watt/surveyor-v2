@@ -49,12 +49,20 @@ function createDocumentStore() {
       const documentId = document.id ?? uuidv4();
       const pk = `${tenantId}#${documentId}`;
       const now = new Date().toISOString();
-      const path = `documents/${tenantId}/${documentId}`;
+      // Use .json extension if fileType is application/json, otherwise use .html
+      // For initial version, use v0 suffix for consistency with update handler
+      const fileExtension = document.metadata.fileType === 'application/json' ? '.json' : '.html';
+      const path = `documents/${tenantId}/${documentId}/v0${fileExtension}`;
       // Upload to S3
       // map to content type
       const fileType = document.metadata.fileType;
 
-      const contentType = fileType === 'markdown' ? 'text/markdown' : 'text/html';
+      const contentType =
+        fileType === 'application/json'
+          ? 'application/json'
+          : fileType === 'markdown'
+            ? 'text/markdown'
+            : 'text/html';
       const uploadResult = await uploadData({
         path,
         data: document.content,

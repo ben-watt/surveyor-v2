@@ -235,6 +235,44 @@
 - Decide whether to support hiding header/footer entirely per document; still gathering use cases before introducing toggles.
 - Cover page inline editing: **Documented as Outstanding Item #2** - See challenges and approaches above.
 
+### 3. HTML Sanitization for Security
+**Status:** Not implemented  
+**Priority:** Medium (before production)
+
+**Current State:**
+- TipTap provides sanitization during editing (removes `<script>` tags and dangerous elements)
+- HTML is stored as-is in JSON and rendered via `dangerouslySetInnerHTML` in `VersionPreview.tsx`
+- `PrintPreviewer.tsx` injects HTML via `innerHTML` without sanitization
+- The `sanitizeHtml()` function in `HeaderFooterEditor.tsx` only trims whitespace, providing no security protection
+- When content is loaded from storage and rendered outside TipTap, it bypasses TipTap's sanitization
+
+**Security Risk:**
+If stored JSON is modified (via API, direct S3/DynamoDB access, or other vulnerability), malicious HTML/JavaScript could be injected and executed when:
+- Version history is viewed (uses `dangerouslySetInnerHTML`)
+- Print preview is generated (uses `innerHTML` and paged.js rendering)
+- Content is rendered outside the TipTap editor context
+
+**Required Changes:**
+- **Add DOMPurify Library**: Install and configure DOMPurify for HTML sanitization
+- **Sanitize on Load**: Add sanitization when deserializing document content from JSON
+- **Sanitize on Render**: Sanitize HTML before rendering in:
+  - `VersionPreview.tsx` (before `dangerouslySetInnerHTML`)
+  - `PrintPreviewer.tsx` (before setting `innerHTML` and passing to paged.js)
+- **Configure Sanitization Rules**: Define allowed tags/attributes to match TipTap's schema (preserve formatting, images, handlebars, etc.)
+- **Consider CSP Headers**: Review Content Security Policy headers to provide additional defense-in-depth
+
+**Files to Modify:**
+- `app/home/editor/components/VersionPreview.tsx` - Sanitize content before rendering
+- `app/home/editor/components/PrintPreviewer.tsx` - Sanitize content before passing to paged.js
+- `app/home/editor/utils/documentSerialization.ts` - Add sanitization during deserialization
+- `package.json` - Add DOMPurify dependency
+
+**Testing Requirements:**
+- Verify malicious script tags are stripped from stored content
+- Ensure legitimate formatting (bold, italic, images, handlebars) is preserved after sanitization
+- Test that sanitization doesn't break print preview rendering
+- Verify version history displays correctly with sanitized content
+
 ## Success Criteria
 - Users can edit header/footer content inline without leaving the main editor view.
 - Preview + printed output via paged.js show updated header/footer exactly once per page with running-element margin boxes.

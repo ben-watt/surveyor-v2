@@ -14,7 +14,12 @@ import { useVersionHistory, Version } from '@/app/home/editor/hooks/useVersionHi
 import { VersionPreview } from '../components/VersionPreview';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useCurrentTenantId } from '@/app/home/utils/tenant-utils';
-import { type MarginZone, type PageLayoutSnapshot } from '@/app/home/components/Input/PageLayoutContext';
+import {
+  type MarginZone,
+  type PageLayoutSnapshot,
+} from '@/app/home/components/Input/PageLayoutContext';
+import type { DocumentContent } from '../utils/documentSerialization';
+import { deserializeDocument } from '../utils/documentSerialization';
 
 const TOP_MARGIN_ZONES: MarginZone[] = [
   'topLeftCorner',
@@ -138,10 +143,10 @@ export default function EditorClient() {
   } = useDocumentSave({
     id,
     getDisplayName: getDocName,
-    getMetadata: (content: string) => ({
-      fileName: `${id}.tiptap`,
-      fileType: 'text/html',
-      size: content.length,
+    getMetadata: (content: DocumentContent) => ({
+      fileName: `${id}.json`,
+      fileType: 'application/json',
+      size: JSON.stringify(content).length,
       lastModified: new Date().toISOString(),
       templateId,
     }),
@@ -165,7 +170,19 @@ export default function EditorClient() {
     const { documentStore } = await import('@/app/home/clients/DocumentStore');
     const result = await documentStore.getVersionContent(id, versionNum);
     if (result.ok) {
-      setVersionPreviewContent(result.val);
+      try {
+        const doc = deserializeDocument(result.val);
+        const runningFragments = collectZoneHtml(doc.runningHtml, PREVIEW_ZONE_ORDER);
+        const previewHtml = `${doc.titlePage ?? ''}${runningFragments}${doc.body}`;
+        setVersionPreviewContent(previewHtml);
+      } catch (error) {
+        // If deserialization fails, treat as legacy format or error
+        console.error('[EditorClient] Failed to deserialize version content:', error);
+        setVersionPreviewContent(
+          '<div class="text-red-500">Failed to parse version content</div>',
+        );
+        toast.error('Failed to parse version content');
+      }
     } else {
       setVersionPreviewContent('<div class="text-red-500">Failed to load version content</div>');
       toast.error('Failed to load version content');
@@ -229,7 +246,14 @@ export default function EditorClient() {
                 setPageLayout(layout);
                 setPreview(true);
               }}
-              onSave={(options) => save(editorContent, options)}
+              onSave={(options) => {
+                const documentContent: DocumentContent = {
+                  body: editorContent,
+                  runningHtml,
+                  titlePage: titlePage ?? undefined,
+                };
+                save(documentContent, options);
+              }}
               isSaving={documentSaveIsSaving}
               saveStatus={saveStatus}
               onOpenVersionHistory={() => setSidebarOpen(true)}

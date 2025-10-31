@@ -15,6 +15,7 @@ import {
 } from '@/app/home/components/Input/PageLayoutContext';
 import { normalizeRunningHtmlForZone } from '@/app/home/components/Input/HeaderFooterEditor';
 import { distributeRunningHtml } from '@/app/home/components/Input/marginZones';
+import { deserializeDocument } from '../utils/documentSerialization';
 
 const createDefaultRunningHtml = () => ({ ...DEFAULT_RUNNING_PAGE_HTML });
 const normalizeRunningHtmlMap = (map: Partial<Record<MarginZone, string>>) => {
@@ -232,28 +233,65 @@ export function useEditorState(
         const contentResult = await documentStore.getContent(id);
         if (contentResult.ok) {
           if (!cancelled) {
-            setEditorContent(contentResult.val);
-            // If the document has a templateId, use the template logic
-            if (result.val.templateId) {
-              const template = await getTemplateInitialContent(
-                id,
-                result.val.templateId as TemplateId,
-              );
-              setPreviewContent(template.previewContent);
-              setHeader(template.header);
-              setFooter(template.footer);
-              setRunningHtml(normalizeRunningHtmlMap(template.runningHtml));
-              setTitlePage(template.titlePage);
-              setGetDocName(() => template.getDocName);
-            } else {
-              setPreviewContent(contentResult.val);
-              setHeader('');
-              setFooter('');
-              setRunningHtml(createDefaultRunningHtml());
-              setTitlePage('');
-              setGetDocName(() => async () => id);
+            try {
+              const doc = deserializeDocument(contentResult.val);
+              // If the document has a templateId, use saved content but fallback to template if empty
+              if (result.val.templateId) {
+                const hasSavedContent =
+                  doc.runningHtml &&
+                  Object.values(doc.runningHtml).some((html) => html.trim() !== '');
+                if (hasSavedContent) {
+                  // Use saved content
+                  setEditorContent(doc.body);
+                  setRunningHtml(normalizeRunningHtmlMap(doc.runningHtml));
+                  setTitlePage(doc.titlePage ?? '');
+                  const runningCombined = collectZoneHtml(
+                    normalizeRunningHtmlMap(doc.runningHtml),
+                    PREVIEW_ZONE_ORDER,
+                  );
+                  setPreviewContent(`${doc.titlePage ?? ''}${runningCombined}${doc.body}`);
+                  setHeader(doc.runningHtml.topCenter ?? '');
+                  setFooter(doc.runningHtml.bottomCenter ?? '');
+                  // Still get doc name from template
+                  const template = await getTemplateInitialContent(
+                    id,
+                    result.val.templateId as TemplateId,
+                  );
+                  setGetDocName(() => template.getDocName);
+                } else {
+                  // Fallback to template generation
+                  const template = await getTemplateInitialContent(
+                    id,
+                    result.val.templateId as TemplateId,
+                  );
+                  setPreviewContent(template.previewContent);
+                  setHeader(template.header);
+                  setFooter(template.footer);
+                  setRunningHtml(normalizeRunningHtmlMap(template.runningHtml));
+                  setTitlePage(template.titlePage);
+                  setEditorContent(doc.body || template.editorContent);
+                  setGetDocName(() => template.getDocName);
+                }
+              } else {
+                // No templateId - use deserialized content
+                setEditorContent(doc.body);
+                setRunningHtml(normalizeRunningHtmlMap(doc.runningHtml));
+                setTitlePage(doc.titlePage ?? '');
+                const runningCombined = collectZoneHtml(
+                  normalizeRunningHtmlMap(doc.runningHtml),
+                  PREVIEW_ZONE_ORDER,
+                );
+                setPreviewContent(`${doc.titlePage ?? ''}${runningCombined}${doc.body}`);
+                setHeader(doc.runningHtml.topCenter ?? '');
+                setFooter(doc.runningHtml.bottomCenter ?? '');
+                setGetDocName(() => async () => id);
+              }
+              setIsLoading(false);
+            } catch (error) {
+              // If deserialization fails, treat as error
+              console.error('[useEditorState] Failed to deserialize document:', error);
+              setIsLoading(false);
             }
-            setIsLoading(false);
           }
           return;
         }
