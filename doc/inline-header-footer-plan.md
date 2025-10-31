@@ -116,11 +116,124 @@
 - **CSS / preview (`public/pagedstyles.css`, `PrintPreviewer.tsx`)**: margin rules reference the 16-zone grid (`pageMarginTopLeft`, `pageMarginLeftTop`, etc.). Ensure the preview payload concatenates each zone element before body markup so paged.js can extract them.
 - **Validation & DX**: add non-blocking overflow indicators in the new editors so users see when content exceeds nominal margin height, and extend the test suite (component + integration) to cover the multi-zone schema and paged.js rendering.
 
+## Outstanding Items
+
+### 1. Persist Margin Zone Content with Documents
+**Status:** Not implemented  
+**Priority:** High
+
+**Current State:**
+- Margin zone content (`runningHtml: Record<MarginZone, string>`) is stored in React state (`PageLayoutContext`) but is not persisted when documents are saved
+- Only the body HTML (`editorContent`) is currently saved via `useDocumentSave` in `EditorClient.tsx`
+- When documents are loaded, margin zones are regenerated from templates rather than restored from saved data
+
+**Required Changes:**
+- **Document Serialization Format**: Define a structured format for storing document data that includes:
+  - `body`: string (body HTML content)
+  - `runningHtml`: Record<MarginZone, string> (all margin zone content)
+  - Optionally: `layout` (page layout settings) and `titlePage` (cover page HTML)
+  
+- **Update Save Functionality** (`app/home/editor/[id]/EditorClient.tsx`):
+  - Modify `getMetadata` in `useDocumentSave` to serialize `runningHtml` alongside `editorContent`
+  - Update `onSave` handler to include `runningHtml` in the save payload
+  - Consider JSON format: `{ body: string, runningHtml: Record<MarginZone, string>, layout?: PageLayoutSnapshot, titlePage?: string }`
+  
+- **Update Load Functionality** (`app/home/editor/hooks/useEditorState.tsx`):
+  - Modify document loading to deserialize saved margin zone content
+  - Fall back to template-generated defaults if margin zones aren't present in saved data (backwards compatibility)
+  - Ensure loaded `runningHtml` is properly normalized and applied to context
+
+- **Document Store Considerations** (`app/home/clients/DocumentStore.ts`):
+  - Currently stores content as a single string in S3
+  - May need to update to store structured JSON if serialization format changes
+  - We can ignore existing documents as we don't have any
+
+**Files to Modify:**
+- `app/home/editor/[id]/EditorClient.tsx` - Update save logic to include `runningHtml`
+- `app/home/editor/hooks/useEditorState.tsx` - Update load logic to restore `runningHtml`
+- `app/home/editor/hooks/useDocumentSave.ts` - Consider if save signature needs to change
+- Potentially: `app/home/clients/DocumentStore.ts` - May need to handle structured vs string content
+
+**Testing Requirements:**
+- Verify margin zone edits persist after page refresh
+- Test backwards compatibility with documents saved before this feature
+- Ensure autosave includes margin zone changes
+- Verify version history includes margin zone content
+
+### 2. Inline Cover Page Editing
+**Status:** Not implemented  
+**Priority:** Medium
+
+**Current State:**
+- Cover page HTML is generated from React component (`app/home/editor/components/HeaderFooter.tsx` - `TitlePage`)
+- Cover page uses handlebars for dynamic content (report level, address, date, reference)
+- Cover page has a full-page background image (`/cwbc_cover_landscape.jpg`) that takes up the entire page
+- Cover page HTML is included in preview via `titlePage` state but is not editable
+- Cover page uses special `@page title` CSS rule in `pagedstyles.css` for page-specific styling (no margins)
+
+**Challenges:**
+1. **Full-Page Background Images**: The editor currently doesn't support full-page background images. The cover page uses an `<Image>` component that renders as a background spanning the entire page, with content absolutely positioned on top.
+   - Need to extend TipTap or add custom extension for page-level background images
+   - May require a special "cover page editor" mode that renders a full-page preview
+   - Background image positioning and sizing (cover/contain) needs to be configurable
+
+2. **Handlebar Support**: Cover page content uses handlebars extensively (e.g., `{{reportDetails.level}}`, `{{reportDetails.address}}`). Need to ensure:
+   - HandlebarsHighlight and HandlebarsAutocomplete extensions work in cover page editor
+   - Handlebar tokens are preserved during serialization/deserialization
+   - Preview correctly resolves handlebars (similar to header/footer)
+
+3. **Page-Specific CSS**: Cover page uses `page: title` CSS property which requires special handling in:
+   - Editor preview (need to simulate `@page title` rules)
+   - Print preview (paged.js needs to recognize the title page)
+
+4. **Absolute Positioning**: Cover page content is absolutely positioned over the background image. The editor needs to support:
+   - Absolute positioning of content elements
+   - Visual editing of absolutely positioned elements (drag/drop, resize)
+   - Maintaining layout when background image changes
+
+**Required Changes:**
+- **Cover Page Editor Component**: Create a specialized editor similar to `HeaderFooterEditor` but for cover pages
+  - Full-page preview mode showing background image
+  - Support for absolutely positioned content regions
+  - Handlebar editing support
+
+- **Background Image Extension**: Extend TipTap to support page-level background images
+  - Custom node type for cover page background
+  - Storage integration (S3 upload for custom backgrounds)
+  - Support for preset backgrounds and custom uploads
+
+- **Cover Page Normalization**: Similar to margin zones, create normalization for cover page HTML
+  - Preserve background image attributes
+  - Preserve absolute positioning styles
+  - Ensure handlebar tokens are maintained
+
+- **Preview Integration**: Update preview pipeline to:
+  - Apply `@page title` CSS rules to cover page
+  - Resolve handlebars in cover page content
+  - Render background image correctly in both editor preview and print preview
+
+**Files to Create/Modify:**
+- New: `app/home/components/Input/CoverPageEditor.tsx` - Specialized editor for cover pages
+- New: `app/home/components/TipTapExtensions/CoverPageBackground.ts` - TipTap extension for background images
+- Modify: `app/home/components/Input/BlockEditor.tsx` - Add cover page editor UI
+- Modify: `app/home/components/Input/PageLayoutContext.tsx` - Add `titlePageHtml` to context
+- Modify: `app/home/editor/hooks/useEditorState.tsx` - Handle cover page serialization/loading
+- Modify: `doc/inline-header-footer-plan.md` (item 1) - Include `titlePage` in document serialization format
+
+**Alternative Approaches:**
+- **Simplified Approach**: Start with just text editing on cover page, keep background image fixed/managed separately
+- **Template-Based**: Keep cover page as template-only, allow minor customization (text content only)
+- **Full WYSIWYG**: Complete cover page designer with background, layout, and all content editable
+
+**Dependencies:**
+- Item 1 (Persist Margin Zone Content) should be completed first to establish document serialization pattern
+- Background image upload/storage infrastructure must support full-page images
+
 ## Open Questions / Follow-Ups
 - Do we need multiple header/footer variants per page (odd/even)? **Not required** for the current scope; revisit if pagination rules expand.
 - Confirm whether business users need handlebar helpers in header/footer (initial assumption: yes; mirrors body editor). **Confirmed** - handlebars are required for address and similar metadata in the header.
 - Decide whether to support hiding header/footer entirely per document; still gathering use cases before introducing toggles.
-- Determine if/when the cover page should become inline-editable; the pipeline now keeps that door open without committing scope yet.
+- Cover page inline editing: **Documented as Outstanding Item #2** - See challenges and approaches above.
 
 ## Success Criteria
 - Users can edit header/footer content inline without leaving the main editor view.
