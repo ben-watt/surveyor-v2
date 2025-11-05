@@ -20,6 +20,7 @@ import {
 } from '@/app/home/components/Input/PageLayoutContext';
 import type { DocumentContent } from '../utils/documentSerialization';
 import { deserializeDocument } from '../utils/documentSerialization';
+import { transformPageCounters } from '../utils/pageCounterTransform';
 
 const TOP_MARGIN_ZONES: MarginZone[] = [
   'topLeftCorner',
@@ -48,7 +49,7 @@ const PREVIEW_ZONE_ORDER: MarginZone[] = [
 ];
 
 const collectZoneHtml = (map: Record<MarginZone, string>, zones: MarginZone[]) =>
-  zones.map((zone) => map[zone] ?? '').join('');
+  zones.map((zone) => transformPageCounters(map[zone] ?? '')).join('');
 
 export default function EditorClient() {
   const params = useParams<{ id: string }>();

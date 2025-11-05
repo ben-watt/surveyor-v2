@@ -15,7 +15,8 @@
       "Bash(npm run lint:*)",
       "Bash(rg:*)",
       "Bash(npm run build:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

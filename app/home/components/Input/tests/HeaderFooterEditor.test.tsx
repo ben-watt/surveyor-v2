@@ -125,7 +125,7 @@ describe('HeaderFooterEditor normalization', () => {
 
       expect(normalized).toContain('<table');
       expect(normalized).toContain('class="header-table"');
-      expect(normalized).toContain('border-collapse:collapse');
+      expect(normalized).toContain('border-collapse: collapse');
     });
 
     it('should handle empty or missing HTML gracefully', () => {

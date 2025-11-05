@@ -4,9 +4,10 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
 /**
  * HandlebarsHighlight Extension
- * 
+ *
  * Provides syntax highlighting for Handlebars template syntax:
  * - Regular variables: {{variable}} - cyan/blue
+ * - Page counters: {{pageNumber}}, {{totalPages}} - purple
  * - Loop constructs: {{#each}}, {{#if}}, {{#unless}} - orange
  * - Closing tags: {{/each}}, {{/if}} - gray
  * - Helper calls: {{{helper}}} - green
@@ -45,6 +46,7 @@ function findHandlebarsDecorations(doc: any): DecorationSet {
   const decorations: Decoration[] = [];
   
   // Regular expression patterns for different Handlebars syntax
+  // Order matters: more specific patterns first
   const patterns = [
     {
       // Loop opening tags: {{#each}}, {{#if}}, {{#unless}}, {{#with}}
@@ -65,6 +67,11 @@ function findHandlebarsDecorations(doc: any): DecorationSet {
       // Triple braces (unescaped): {{{helper}}}
       regex: /\{\{\{[^}]+\}\}\}/g,
       className: 'handlebars-unescaped',
+    },
+    {
+      // Page counters: {{pageNumber}}, {{totalPages}}
+      regex: /\{\{(pageNumber|totalPages)\}\}/g,
+      className: 'handlebars-page-counter',
     },
     {
       // Regular variables: {{variable}}, {{this.property}}, {{../parent}}

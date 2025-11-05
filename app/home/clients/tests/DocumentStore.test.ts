@@ -136,7 +136,7 @@ describe('DocumentStore', () => {
       }
 
       expect(uploadData).toHaveBeenCalledWith({
-        path: 'documents/test-tenant/test',
+        path: 'documents/test-tenant/test/v0.html',
         data: mockDocument.content,
         options: {
           contentType: 'text/markdown',

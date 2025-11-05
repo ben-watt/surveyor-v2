@@ -11,6 +11,7 @@ const SUGGESTION_TYPE_COLORS: Record<string, string> = {
   variable: 'bg-blue-100 text-blue-800',
   helper: 'bg-green-100 text-green-800',
   loop: 'bg-orange-100 text-orange-800',
+  'page-counter': 'bg-purple-100 text-purple-800',
 };
 
 export const VariableAutocomplete = forwardRef<

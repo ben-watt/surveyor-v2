@@ -82,7 +82,7 @@ const mergeStyleAttribute = (
   Object.entries(newStyles).forEach(([property, value]) => {
     const propertyPrefix = `${property}:`;
     const existingIndex = styleParts.findIndex((part) => part.startsWith(propertyPrefix));
-    const newPart = `${property}:${value}`;
+    const newPart = `${property}: ${value}`;
 
     if (existingIndex >= 0) {
       styleParts[existingIndex] = newPart;

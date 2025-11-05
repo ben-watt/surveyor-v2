@@ -118,7 +118,7 @@
 
 ## Next Steps (Priority Order)
 
-1. **Page Number Display** - Add page counters to show page numbers in footer
+1. ~~**Page Number Display**~~ - ✅ **IMPLEMENTED** - See Outstanding Item #5 below
 2. **Cover Page Template System** - Create editable cover page templates
 3. **Pagination Preview** - Show page breaks in editor
 4. **Margin Zone Alignment Defaults** - Auto-align center/left/right per zone
@@ -279,22 +279,44 @@
 - See Outstanding Item #2 for detailed cover page editing plan
 
 ### 5. Page Number Display
-**Status:** Not implemented
+**Status:** ✅ Implemented
 **Priority:** High
 
-**Current State:**
-- Page numbers not currently visible in editor or preview
-- Paged.js supports counters but not configured
+**Implementation Summary:**
+Page numbers are now available using handlebar-style syntax that transforms into paged.js CSS counters at preview time.
 
-**Required Changes:**
-- Implement page counter in paged.js CSS (`counter(page)` and `counter(pages)`)
-- Add page number token/helper for margin zones (e.g., `{{pageNumber}}` or CSS counter)
-- Configure in `pagedstyles.css` with appropriate margin box placement
-- Display page numbers in print preview
+**How It Works:**
 
-**Files to Modify:**
-- `public/pagedstyles.css` - Add page counter CSS
-- `app/home/components/Input/HeaderFooterEditor.tsx` - Support page number tokens
+1. **User Experience:**
+   - Users type `{{pageNumber}}` or `{{totalPages}}` in any margin zone editor
+   - Autocomplete suggests page counters when typing `{{`
+   - Syntax highlighted in purple (distinct from regular handlebars)
+   - Example usage: `Page {{pageNumber}} of {{totalPages}}`
+
+2. **Technical Flow:**
+   - Editor displays handlebar-style tokens (`{{pageNumber}}`)
+   - During preview generation, tokens transform to: `<span class="paged-counter" data-counter-type="page"></span>`
+   - CSS renders counters: `.paged-counter[data-counter-type="page"]::after { content: counter(page); }`
+   - Paged.js automatically populates `counter(page)` and `counter(pages)` during pagination
+
+3. **Available Counters:**
+   - `{{pageNumber}}` - Current page number (e.g., 3)
+   - `{{totalPages}}` - Total number of pages (e.g., 15)
+
+**Files Modified:**
+- ✅ `app/home/editor/utils/pageCounterTransform.ts` - Transformation logic with tests
+- ✅ `app/home/editor/utils/tests/pageCounterTransform.test.ts` - 25 unit tests
+- ✅ `app/home/components/TipTapExtensions/HandlebarsAutocomplete.ts` - Page counter suggestions
+- ✅ `app/home/components/TipTapExtensions/HandlebarsHighlight.ts` - Purple syntax highlighting
+- ✅ `app/home/configuration/templates/components/VariableAutocomplete.tsx` - Purple badge for page counters
+- ✅ `app/globals.css` - Purple highlighting style
+- ✅ `app/home/editor/[id]/EditorClient.tsx` - Integrated transformer into preview pipeline
+- ✅ `public/pagedstyles.css` - CSS counter rendering rules
+
+**Known Limitations:**
+- Page counters use CSS `counter(page)`, not data handlebars, because page numbers are runtime pagination values
+- General handlebar resolution (e.g., `{{reportDetails.address}}`) is not yet implemented for headers/footers (tracked separately in Outstanding Item #8)
+- Page number formatting is limited to what CSS counters support (no custom formats like Roman numerals yet)
 
 ### 6. Pagination Preview in Editor
 **Status:** Not implemented

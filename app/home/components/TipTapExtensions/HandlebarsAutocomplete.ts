@@ -15,9 +15,27 @@ export interface AutocompleteSuggestion {
   label: string;
   path?: string;
   content: string;
-  type: 'variable' | 'helper' | 'loop';
+  type: 'variable' | 'helper' | 'loop' | 'page-counter';
   description?: string;
 }
+
+/**
+ * Page counter suggestions for paged.js pagination
+ */
+const PAGE_COUNTER_SUGGESTIONS: AutocompleteSuggestion[] = [
+  {
+    label: 'Current Page Number',
+    content: 'pageNumber',
+    type: 'page-counter',
+    description: 'Displays the current page number (e.g., 3)',
+  },
+  {
+    label: 'Total Pages',
+    content: 'totalPages',
+    type: 'page-counter',
+    description: 'Displays total number of pages (e.g., 15)',
+  },
+];
 
 /**
  * Generate autocomplete suggestions with helper and loop recommendations
@@ -28,6 +46,18 @@ function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[
   }
 
   const suggestions: AutocompleteSuggestion[] = [];
+
+  // Add page counter suggestions first (if they match the query)
+  const lowerQuery = query.toLowerCase();
+  for (const pageCounter of PAGE_COUNTER_SUGGESTIONS) {
+    if (
+      pageCounter.content.toLowerCase().includes(lowerQuery) ||
+      pageCounter.label.toLowerCase().includes(lowerQuery) ||
+      'page'.includes(lowerQuery)
+    ) {
+      suggestions.push(pageCounter);
+    }
+  }
   
   // Find matching variables
   const matchedVars = fuzzySearchVariables(query, 5);

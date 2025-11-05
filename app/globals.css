@@ -510,6 +510,15 @@
   font-style: italic;
 }
 
+.tiptap .handlebars-page-counter {
+  color: #9333ea;
+  background-color: #faf5ff;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
 /* Handlebars Autocomplete Dropdown */
 .handlebars-autocomplete {
   background: white;

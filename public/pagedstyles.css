@@ -186,8 +186,8 @@
 }
 
 /*
-In the CSS, the target-counter property is used within ::before and ::after pseudo-elements, 
-using the content property. It can be translated as: find the counter named page that appears 
+In the CSS, the target-counter property is used within ::before and ::after pseudo-elements,
+using the content property. It can be translated as: find the counter named page that appears
 where you find the element we're targetting with the attribute data-toc-id-selector:
 */
 [data-type='table-of-contents'] li p::after {
@@ -196,4 +196,17 @@ where you find the element we're targetting with the attribute data-toc-id-selec
   content: target-counter(attr(data-toc-id-selector), page);
   background-color: white;
   padding-left: 2mm;
+}
+
+/* Page counter rendering for handlebar-style page numbers */
+.paged-counter[data-counter-type='page']::after {
+  content: counter(page);
+}
+
+.paged-counter[data-counter-type='pages']::after {
+  content: counter(pages);
+}
+
+.paged-counter {
+  display: inline;
 }
