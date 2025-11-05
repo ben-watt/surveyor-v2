@@ -119,11 +119,12 @@
 ## Next Steps (Priority Order)
 
 1. ~~**Page Number Display**~~ - ✅ **IMPLEMENTED** - See Outstanding Item #5 below
-2. **Cover Page Template System** - Create editable cover page templates
-3. **Pagination Preview** - Show page breaks in editor
-4. **Margin Zone Alignment Defaults** - Auto-align center/left/right per zone
-5. **Multi-Cell Image Spanning** - Images spanning header zones (may be paged.js limitation)
-6. **HTML Sanitization** - Add DOMPurify before production
+2. **Margin Zone Alignment Defaults** - Initialize editor text alignment to match paged.js rendering (See Outstanding Item #3)
+3. **Handlebar Autocomplete UX** - Show initial suggestions when typing `{{` (See Outstanding Item #8)
+4. **Cover Page Template System** - Create editable cover page templates
+5. **Pagination Preview** - Show page breaks in editor
+6. **Multi-Cell Image Spanning** - Images spanning header zones (may be paged.js limitation)
+7. **HTML Sanitization** - Add DOMPurify before production
 
 ---
 
@@ -251,18 +252,27 @@
 **Priority:** Medium
 
 **Current State:**
-- Margin zones currently don't default to paged.js standard alignment
-- Paged.js defaults: center alignment for top/bottom-center zones, left/right alignment for side zones
+- Margin zones currently don't default to paged.js standard alignment in the editor
+- **Observed:** Paged.js automatically applies alignment based on margin box position (center for `@top-center`/`@bottom-center`, right for `@top-right`, etc.)
+- **Issue:** Editor UI doesn't reflect these defaults, causing confusion when editor shows left-aligned text but preview renders it centered/right-aligned
+
+**Paged.js Rendering Behavior:**
+- `@top-center`, `@bottom-center`: Automatically center-aligned by paged.js
+- `@top-left`, `@bottom-left`: Automatically left-aligned by paged.js
+- `@top-right`, `@bottom-right`: Automatically right-aligned by paged.js
+- Side margin boxes (`@left-*`, `@right-*`): Aligned to their respective sides
 
 **Required Changes:**
-- Set default text alignment in margin zone editors to match paged.js conventions:
-  - `top-center`, `bottom-center`: center-aligned
-  - `top-left`, `bottom-left`: left-aligned
-  - `top-right`, `bottom-right`: right-aligned
-- Apply alignment via CSS or TipTap editor defaults
+- Set default text alignment in TipTap editors to match paged.js rendering:
+  - `top-center`, `bottom-center`: Initialize with `text-align: center`
+  - `top-left`, `bottom-left`: Initialize with `text-align: left`
+  - `top-right`, `bottom-right`: Initialize with `text-align: right`
+- Apply alignment via TipTap editor configuration or initial content styling
+- Ensure alignment persists when content is saved and loaded
 
 **Files to Modify:**
-- `app/home/components/Input/HeaderFooterEditor.tsx` - Add default alignment per zone
+- `app/home/components/Input/HeaderFooterEditor.tsx` - Add default alignment per zone in TipTap configuration
+- `app/home/components/Input/marginZones.ts` - Consider adding `defaultAlignment` to zone metadata
 
 ### 4. Cover Page Template System
 **Status:** Not implemented
@@ -354,7 +364,51 @@ Page numbers are now available using handlebar-style syntax that transforms into
 - This may be a paged.js limitation - margin boxes are typically independent
 - Recommended approach: Use wider margin zone (e.g., top-center) with internal grid layout
 
-### 8. HTML Sanitization for Security
+### 8. Handlebar Autocomplete Initial Empty State
+**Status:** Not implemented
+**Priority:** Low (UX improvement)
+
+**Current State:**
+- When user types `{{` in a margin zone, the autocomplete popup appears but is initially empty
+- Suggestions only appear after the user types at least one character after `{{`
+- This creates a poor UX where users don't know what variables are available
+
+**Observed Behavior:**
+- Type `{{` → Popup appears with "No variables found"
+- Type `{{p` → Shows page counter suggestions and other variables starting with 'p'
+- Expected: Typing `{{` should immediately show top suggestions (page counters, common variables)
+
+**Required Changes:**
+- Modify `generateAutocompleteSuggestions()` in `HandlebarsAutocomplete.ts` to return top suggestions when query is empty
+- Show page counters first, followed by most commonly used variables (e.g., `reportDetails.*`)
+- Limit initial suggestions to ~5-10 items to avoid overwhelming the user
+- Consider adding a "Type to search" hint at the bottom of the initial suggestions
+
+**Files to Modify:**
+- `app/home/components/TipTapExtensions/HandlebarsAutocomplete.ts` - Update `generateAutocompleteSuggestions()` to handle empty query
+- Potentially: `app/home/surveys/templates/schemaParser.ts` - Add `isFeatured` flag to prioritize common variables
+
+**Example Implementation:**
+```typescript
+function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[] {
+  const suggestions: AutocompleteSuggestion[] = [];
+
+  // Show featured suggestions when query is empty
+  if (!query) {
+    return [
+      ...PAGE_COUNTER_SUGGESTIONS,
+      // Add top 3-5 most common variables
+      { label: 'Client Name', content: 'reportDetails.clientName', type: 'variable', ... },
+      { label: 'Report Date', content: 'reportDetails.reportDate', type: 'variable', ... },
+      { label: 'Address', content: 'reportDetails.address.formatted', type: 'variable', ... },
+    ];
+  }
+
+  // ... existing fuzzy search logic
+}
+```
+
+### 9. HTML Sanitization for Security
 **Status:** Not implemented
 **Priority:** Medium (before production)
 
