@@ -116,10 +116,21 @@
 - **CSS / preview (`public/pagedstyles.css`, `PrintPreviewer.tsx`)**: margin rules reference the 16-zone grid (`pageMarginTopLeft`, `pageMarginLeftTop`, etc.). Ensure the preview payload concatenates each zone element before body markup so paged.js can extract them.
 - **Validation & DX**: add non-blocking overflow indicators in the new editors so users see when content exceeds nominal margin height, and extend the test suite (component + integration) to cover the multi-zone schema and paged.js rendering.
 
-## Outstanding Items
+## Next Steps (Priority Order)
+
+1. **Page Number Display** - Add page counters to show page numbers in footer
+2. **Cover Page Template System** - Create editable cover page templates
+3. **Pagination Preview** - Show page breaks in editor
+4. **Margin Zone Alignment Defaults** - Auto-align center/left/right per zone
+5. **Multi-Cell Image Spanning** - Images spanning header zones (may be paged.js limitation)
+6. **HTML Sanitization** - Add DOMPurify before production
+
+---
+
+## Outstanding Items (Detailed Specs)
 
 ### 1. Persist Margin Zone Content with Documents
-**Status:** Not implemented  
+**Status:** ✅ Implemented
 **Priority:** High
 
 **Current State:**
@@ -235,8 +246,94 @@
 - Decide whether to support hiding header/footer entirely per document; still gathering use cases before introducing toggles.
 - Cover page inline editing: **Documented as Outstanding Item #2** - See challenges and approaches above.
 
-### 3. HTML Sanitization for Security
-**Status:** Not implemented  
+### 3. Margin Zone Text Alignment Defaults
+**Status:** Not implemented
+**Priority:** Medium
+
+**Current State:**
+- Margin zones currently don't default to paged.js standard alignment
+- Paged.js defaults: center alignment for top/bottom-center zones, left/right alignment for side zones
+
+**Required Changes:**
+- Set default text alignment in margin zone editors to match paged.js conventions:
+  - `top-center`, `bottom-center`: center-aligned
+  - `top-left`, `bottom-left`: left-aligned
+  - `top-right`, `bottom-right`: right-aligned
+- Apply alignment via CSS or TipTap editor defaults
+
+**Files to Modify:**
+- `app/home/components/Input/HeaderFooterEditor.tsx` - Add default alignment per zone
+
+### 4. Cover Page Template System
+**Status:** Not implemented
+**Priority:** High
+
+**Current State:**
+- Cover page generated from React component with hardcoded layout
+- No template system for cover page customization
+
+**Required Changes:**
+- Create cover page template system similar to margin zones
+- Allow users to select from predefined cover templates or create custom
+- Support background images, logos, and dynamic content placement
+- See Outstanding Item #2 for detailed cover page editing plan
+
+### 5. Page Number Display
+**Status:** Not implemented
+**Priority:** High
+
+**Current State:**
+- Page numbers not currently visible in editor or preview
+- Paged.js supports counters but not configured
+
+**Required Changes:**
+- Implement page counter in paged.js CSS (`counter(page)` and `counter(pages)`)
+- Add page number token/helper for margin zones (e.g., `{{pageNumber}}` or CSS counter)
+- Configure in `pagedstyles.css` with appropriate margin box placement
+- Display page numbers in print preview
+
+**Files to Modify:**
+- `public/pagedstyles.css` - Add page counter CSS
+- `app/home/components/Input/HeaderFooterEditor.tsx` - Support page number tokens
+
+### 6. Pagination Preview in Editor
+**Status:** Not implemented
+**Priority:** Medium
+
+**Current State:**
+- Editor shows continuous content without page breaks
+- Users can't see where content will break across pages
+
+**Required Changes:**
+- Add visual page break indicators in editor
+- Show page boundaries based on current page layout settings
+- Optional: Add "Print Preview" mode that shows actual paged layout
+- Consider performance impact of real-time pagination
+
+**Files to Modify:**
+- `app/home/components/Input/BlockEditor.tsx` - Add page break visualization
+- Consider using paged.js in a preview-only mode within the editor
+
+### 7. Multi-Cell Image Spanning in Header
+**Status:** Not implemented
+**Priority:** Low
+
+**Current State:**
+- Images in header margin zones are constrained to single zone
+- No support for images spanning multiple margin boxes
+
+**Required Changes:**
+- Investigate paged.js support for spanning content across margin boxes
+- May require custom CSS or layout approach
+- Alternative: Use single header zone with multi-column layout
+- Consider if this is a paged.js limitation or implementation gap
+
+**Notes:**
+- This may be a paged.js limitation - margin boxes are typically independent
+- Recommended approach: Use wider margin zone (e.g., top-center) with internal grid layout
+
+### 8. HTML Sanitization for Security
+**Status:** Not implemented
 **Priority:** Medium (before production)
 
 **Current State:**

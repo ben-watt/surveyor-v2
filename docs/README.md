@@ -2,6 +2,8 @@
 
 This directory contains organized documentation for the Surveyor v2 application, grouped by theme for easy navigation.
 
+**📊 [Feature Status Dashboard](./FEATURE_STATUS.md)** - Track implementation status of all features
+
 ## Documentation Structure
 
 ### 📝 [Editor](./editor/)
@@ -49,5 +51,6 @@ High-level architectural plans including CRDT integration, entity consolidation,
 When adding new documentation:
 1. Place it in the appropriate theme folder
 2. Update the relevant folder's README.md
-3. If it doesn't fit an existing theme, consider creating a new folder or placing it in a relevant existing folder
+3. Update [FEATURE_STATUS.md](./FEATURE_STATUS.md) to track implementation status
+4. If it doesn't fit an existing theme, consider creating a new folder or placing it in a relevant existing folder
 
