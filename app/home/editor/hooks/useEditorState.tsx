@@ -53,6 +53,11 @@ const PREVIEW_ZONE_ORDER: MarginZone[] = [
   ...BOTTOM_MARGIN_ZONES,
 ];
 
+/**
+ * Collects HTML from margin zones (simple version without handlebar resolution)
+ * Used internally in useEditorState for initial content loading
+ * For preview content with handlebar resolution, use the version in EditorClient.tsx
+ */
 const collectZoneHtml = (map: Record<MarginZone, string>, zones: MarginZone[]) =>
   zones.map((zone) => map[zone] ?? '').join('');
 
@@ -217,6 +222,9 @@ export function useEditorState(
   );
   const [titlePage, setTitlePage] = React.useState<string>('');
   const [getDocName, setGetDocName] = React.useState<any>(() => async () => id);
+  const [editorData, setEditorData] = React.useState<BuildingSurveyFormData | undefined>(
+    undefined,
+  );
   const enabled = options?.enabled ?? true;
 
   React.useEffect(() => {
@@ -227,6 +235,18 @@ export function useEditorState(
     let cancelled = false;
     async function load() {
       setIsLoading(true);
+      
+      // Load editorData from survey store (needed for handlebar resolution)
+      try {
+        const surveyDoc = await surveyStore.get(id);
+        if (surveyDoc && !cancelled) {
+          setEditorData(surveyDoc.content);
+        }
+      } catch (error) {
+        console.warn('[useEditorState] Failed to load survey data for handlebar resolution:', error);
+        // Continue without editorData - handlebars won't resolve but won't crash
+      }
+      
       // Try to load existing document
       const result = await documentStore.get(id);
       if (result && result.ok) {
@@ -370,6 +390,7 @@ export function useEditorState(
     footer,
     runningHtml,
     titlePage,
+    editorData,
     setPreviewContent,
     addTitleHeaderFooter,
     setHeader: setHeaderHtml,

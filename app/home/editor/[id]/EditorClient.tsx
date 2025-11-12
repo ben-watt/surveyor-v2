@@ -21,6 +21,8 @@ import {
 import type { DocumentContent } from '../utils/documentSerialization';
 import { deserializeDocument } from '../utils/documentSerialization';
 import { transformPageCounters } from '../utils/pageCounterTransform';
+import { resolveHandlebars } from '../utils/resolveHandlebars';
+import type { BuildingSurveyFormData } from '@/app/home/surveys/building-survey-reports/BuildingSurveyReportSchema';
 
 const TOP_MARGIN_ZONES: MarginZone[] = [
   'topLeftCorner',
@@ -48,8 +50,26 @@ const PREVIEW_ZONE_ORDER: MarginZone[] = [
   ...BOTTOM_MARGIN_ZONES,
 ];
 
-const collectZoneHtml = (map: Record<MarginZone, string>, zones: MarginZone[]) =>
-  zones.map((zone) => transformPageCounters(map[zone] ?? '')).join('');
+/**
+ * Collects HTML from margin zones, resolving handlebars and transforming page counters
+ * @param map - Record of margin zone HTML content
+ * @param zones - Array of zones to collect in order
+ * @param editorData - Form data for resolving handlebars (optional)
+ * @returns Concatenated HTML with handlebars resolved and page counters transformed
+ */
+const collectZoneHtml = (
+  map: Record<MarginZone, string>,
+  zones: MarginZone[],
+  editorData?: BuildingSurveyFormData,
+) =>
+  zones
+    .map((zone) => {
+      const html = map[zone] ?? '';
+      // Resolve handlebars first, then transform page counters
+      // resolveHandlebars already handles page counter transformation internally
+      return resolveHandlebars(html, editorData);
+    })
+    .join('');
 
 export default function EditorClient() {
   const params = useParams<{ id: string }>();
@@ -81,6 +101,7 @@ export default function EditorClient() {
     footer,
     runningHtml,
     titlePage,
+    editorData,
     addTitleHeaderFooter,
     getDocName,
     setPreviewContent,
@@ -106,11 +127,12 @@ export default function EditorClient() {
         ...runningHtml,
         ...(overrides?.runningHtml ?? {}),
       };
-      const runningFragments = collectZoneHtml(mergedRunningHtml, PREVIEW_ZONE_ORDER);
+      // Resolve handlebars in running HTML using editorData
+      const runningFragments = collectZoneHtml(mergedRunningHtml, PREVIEW_ZONE_ORDER, editorData);
       const combined = `${titlePage ?? ''}${runningFragments}${bodyHtml}`;
       setPreviewContent(combined);
     },
-    [editorContent, runningHtml, setPreviewContent, titlePage],
+    [editorContent, runningHtml, editorData, setPreviewContent, titlePage],
   );
 
   const handleHeaderChange = useCallback(
@@ -173,7 +195,8 @@ export default function EditorClient() {
     if (result.ok) {
       try {
         const doc = deserializeDocument(result.val);
-        const runningFragments = collectZoneHtml(doc.runningHtml, PREVIEW_ZONE_ORDER);
+        // Resolve handlebars in version preview using current editorData
+        const runningFragments = collectZoneHtml(doc.runningHtml, PREVIEW_ZONE_ORDER, editorData);
         const previewHtml = `${doc.titlePage ?? ''}${runningFragments}${doc.body}`;
         setVersionPreviewContent(previewHtml);
       } catch (error) {
