@@ -39,15 +39,26 @@ const PAGE_COUNTER_SUGGESTIONS: AutocompleteSuggestion[] = [
 
 /**
  * Most commonly used reportDetails variables for initial suggestions
+ * Using Set for O(1) lookup performance
  */
-const COMMON_REPORT_DETAILS_PATHS = [
+const COMMON_REPORT_DETAILS_PATHS = new Set([
   'reportDetails.clientName',
   'reportDetails.address.formatted',
   'reportDetails.reportDate',
   'reportDetails.reference',
   'reportDetails.level',
   'reportDetails.inspectionDate',
-];
+]);
+
+/**
+ * Configuration constants for suggestion limits
+ */
+const MAX_FEATURED_REPORT_DETAILS_VARS = 6;
+const MAX_FEATURED_OTHER_VARS = 2;
+const MAX_FEATURED_TOTAL = 8;
+const MAX_FILTERED_VARS = 5;
+const MAX_TOP_VARS = 10;
+const POPUP_MAX_WIDTH = '400px';
 
 /**
  * Check if a page counter matches the query
@@ -103,7 +114,7 @@ function generateVariableSuggestions(variables: SchemaVariable[]): AutocompleteS
       suggestions.push({
         label: `Loop through ${variable.label}`,
         path: variable.path,
-        content: `#each ${variable.path}}\n  \n{{/each}}`,
+        content: `{{#each ${variable.path}}}\n  \n{{/each}}`,
         type: 'loop',
         description: 'Iterate over array',
       });
@@ -117,18 +128,18 @@ function generateVariableSuggestions(variables: SchemaVariable[]): AutocompleteS
  * Get featured variables for empty query (prioritizes reportDetails.*)
  */
 function getFeaturedVariables(): SchemaVariable[] {
-  const topVars = fuzzySearchVariables('', 10);
+  const topVars = fuzzySearchVariables('', MAX_TOP_VARS);
   const reportDetailsVars = topVars.filter(v => 
-    COMMON_REPORT_DETAILS_PATHS.includes(v.path)
+    COMMON_REPORT_DETAILS_PATHS.has(v.path)
   );
   const otherVars = topVars.filter(v => 
-    !COMMON_REPORT_DETAILS_PATHS.includes(v.path)
+    !COMMON_REPORT_DETAILS_PATHS.has(v.path)
   );
 
-  // Add reportDetails variables first (up to 6), then others (up to 2)
-  const reportDetailsToAdd = reportDetailsVars.slice(0, 6);
-  const otherToAdd = otherVars.slice(0, 2);
-  return [...reportDetailsToAdd, ...otherToAdd].slice(0, 8);
+  // Add reportDetails variables first, then others
+  const reportDetailsToAdd = reportDetailsVars.slice(0, MAX_FEATURED_REPORT_DETAILS_VARS);
+  const otherToAdd = otherVars.slice(0, MAX_FEATURED_OTHER_VARS);
+  return [...reportDetailsToAdd, ...otherToAdd].slice(0, MAX_FEATURED_TOTAL);
 }
 
 /**
@@ -150,8 +161,6 @@ function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[
   }
 
   // Handle non-empty query: filter and match
-  const lowerQuery = query.toLowerCase();
-
   // Add page counter suggestions first (if they match the query)
   for (const pageCounter of PAGE_COUNTER_SUGGESTIONS) {
     if (matchesPageCounter(pageCounter, query)) {
@@ -160,7 +169,7 @@ function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[
   }
   
   // Find matching variables and generate suggestions
-  const matchedVars = fuzzySearchVariables(query, 5);
+  const matchedVars = fuzzySearchVariables(query, MAX_FILTERED_VARS);
   suggestions.push(...generateVariableSuggestions(matchedVars));
 
   return suggestions;
@@ -255,7 +264,7 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
               interactive: true,
               trigger: 'manual',
               placement: 'bottom-start',
-              maxWidth: '400px',
+              maxWidth: POPUP_MAX_WIDTH,
             });
           };
 

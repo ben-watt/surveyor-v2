@@ -256,9 +256,9 @@ describe('HandlebarsAutocomplete Extension', () => {
 
       // Check that common reportDetails variables are present
       const paths = variables.map((s: AutocompleteSuggestion) => s.path);
-      const hasClientName = paths.some((p) => p === 'reportDetails.clientName');
-      const hasReportDate = paths.some((p) => p === 'reportDetails.reportDate');
-      const hasAddress = paths.some((p) => p?.startsWith('reportDetails.address'));
+      const hasClientName = paths.some((p: string) => p === 'reportDetails.clientName');
+      const hasReportDate = paths.some((p: string) => p === 'reportDetails.reportDate');
+      const hasAddress = paths.some((p: string) => p?.startsWith('reportDetails.address'));
 
       // At least one common variable should be present
       expect(hasClientName || hasReportDate || hasAddress).toBe(true);

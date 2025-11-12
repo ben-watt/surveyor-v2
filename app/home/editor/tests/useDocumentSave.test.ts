@@ -2,6 +2,8 @@ import '@testing-library/jest-dom';
 import { renderHook, act } from '@testing-library/react';
 import { Err, Ok } from 'ts-results';
 import { useDocumentSave } from '../hooks/useDocumentSave';
+import { DocumentContent } from '../utils/documentSerialization';
+import { DEFAULT_RUNNING_PAGE_HTML } from '../../components/Input/PageLayoutContext';
 
 const getMock = jest.fn();
 const createMock = jest.fn();
@@ -43,6 +45,11 @@ describe('useDocumentSave missing tenant handling', () => {
       }),
     );
 
+  const documentContent: DocumentContent = {
+    body: '<p>content</p>',
+    runningHtml: DEFAULT_RUNNING_PAGE_HTML,
+  };
+
   it('surfaces tenant error toast during auto save', async () => {
     getMock.mockResolvedValue(Err(new Error('Not found')));
     createMock.mockResolvedValue(Err(new Error('No tenant ID found')));
@@ -50,7 +57,7 @@ describe('useDocumentSave missing tenant handling', () => {
     const { result } = renderSaveHook();
 
     await act(async () => {
-      await result.current.save('<p>content</p>', { auto: true });
+      await result.current.save(documentContent, { auto: true });
     });
 
     expect(toastErrorMock).toHaveBeenCalledWith('Select a tenant to save documents');
@@ -64,7 +71,7 @@ describe('useDocumentSave missing tenant handling', () => {
     const { result } = renderSaveHook();
 
     await act(async () => {
-      await result.current.save('<p>content</p>', { auto: true });
+      await result.current.save(documentContent, { auto: true });
     });
 
     expect(toastErrorMock).not.toHaveBeenCalled();
@@ -77,7 +84,7 @@ describe('useDocumentSave missing tenant handling', () => {
     const { result } = renderSaveHook();
 
     await act(async () => {
-      await result.current.save('<p>content</p>');
+      await result.current.save(documentContent);
     });
 
     expect(toastErrorMock).toHaveBeenCalledWith('Failed to save document');
