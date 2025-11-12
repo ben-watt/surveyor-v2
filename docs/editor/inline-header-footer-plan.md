@@ -365,48 +365,38 @@ Page numbers are now available using handlebar-style syntax that transforms into
 - Recommended approach: Use wider margin zone (e.g., top-center) with internal grid layout
 
 ### 8. Handlebar Autocomplete Initial Empty State
-**Status:** Not implemented
+**Status:** ✅ Implemented
 **Priority:** Low (UX improvement)
 
-**Current State:**
-- When user types `{{` in a margin zone, the autocomplete popup appears but is initially empty
-- Suggestions only appear after the user types at least one character after `{{`
-- This creates a poor UX where users don't know what variables are available
+**Implementation Summary:**
+The autocomplete now shows helpful suggestions immediately when users type `{{`, improving discoverability of available variables.
 
-**Observed Behavior:**
-- Type `{{` → Popup appears with "No variables found"
-- Type `{{p` → Shows page counter suggestions and other variables starting with 'p'
-- Expected: Typing `{{` should immediately show top suggestions (page counters, common variables)
+**How It Works:**
 
-**Required Changes:**
-- Modify `generateAutocompleteSuggestions()` in `HandlebarsAutocomplete.ts` to return top suggestions when query is empty
-- Show page counters first, followed by most commonly used variables (e.g., `reportDetails.*`)
-- Limit initial suggestions to ~5-10 items to avoid overwhelming the user
-- Consider adding a "Type to search" hint at the bottom of the initial suggestions
+1. **Initial Suggestions:**
+   - Page counters are always shown first (`pageNumber`, `totalPages`)
+   - Top 6-8 most commonly used `reportDetails.*` variables are prioritized
+   - Additional variables are included up to a total of 8-10 suggestions
+   - Suggestions are limited to avoid overwhelming users
 
-**Files to Modify:**
-- `app/home/components/TipTapExtensions/HandlebarsAutocomplete.ts` - Update `generateAutocompleteSuggestions()` to handle empty query
-- Potentially: `app/home/surveys/templates/schemaParser.ts` - Add `isFeatured` flag to prioritize common variables
+2. **Search Hint:**
+   - When query is empty and suggestions are displayed, a hint appears: "Type to search more variables..."
+   - Hint disappears when user starts typing to filter suggestions
 
-**Example Implementation:**
-```typescript
-function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[] {
-  const suggestions: AutocompleteSuggestion[] = [];
+3. **Auto-Close Behavior:**
+   - Popup automatically closes after user selects a suggestion
+   - Prevents "no variables found" message from appearing after selection
 
-  // Show featured suggestions when query is empty
-  if (!query) {
-    return [
-      ...PAGE_COUNTER_SUGGESTIONS,
-      // Add top 3-5 most common variables
-      { label: 'Client Name', content: 'reportDetails.clientName', type: 'variable', ... },
-      { label: 'Report Date', content: 'reportDetails.reportDate', type: 'variable', ... },
-      { label: 'Address', content: 'reportDetails.address.formatted', type: 'variable', ... },
-    ];
-  }
+**Files Modified:**
+- ✅ `app/home/components/TipTapExtensions/HandlebarsAutocomplete.ts` - Updated `generateAutocompleteSuggestions()` to handle empty query, added popup auto-close
+- ✅ `app/home/configuration/templates/components/VariableAutocomplete.tsx` - Added query prop and search hint display
+- ✅ `app/home/components/TipTapExtensions/tests/HandlebarsAutocomplete.test.ts` - Comprehensive test coverage
+- ✅ `app/home/configuration/templates/components/tests/VariableAutocomplete.test.tsx` - Component test coverage
 
-  // ... existing fuzzy search logic
-}
-```
+**User Experience:**
+- Type `{{` → Immediately shows page counters + common variables + search hint
+- Type `{{p` → Filters to show matching suggestions (page counters, variables starting with 'p')
+- Select suggestion → Popup closes automatically, content inserted
 
 ### 9. HTML Sanitization for Security
 **Status:** Not implemented

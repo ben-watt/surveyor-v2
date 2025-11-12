@@ -50,69 +50,39 @@ const COMMON_REPORT_DETAILS_PATHS = [
 ];
 
 /**
- * Generate autocomplete suggestions with helper and loop recommendations
+ * Check if a page counter matches the query
  */
-function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[] {
+function matchesPageCounter(pageCounter: AutocompleteSuggestion, query: string): boolean {
+  const lowerQuery = query.toLowerCase();
+  return (
+    pageCounter.content.toLowerCase().includes(lowerQuery) ||
+    pageCounter.label.toLowerCase().includes(lowerQuery) ||
+    'page'.includes(lowerQuery)
+  );
+}
+
+/**
+ * Convert a SchemaVariable to an AutocompleteSuggestion
+ */
+function variableToSuggestion(variable: SchemaVariable): AutocompleteSuggestion {
+  return {
+    label: variable.label,
+    path: variable.path,
+    content: variable.path,
+    type: 'variable',
+    description: variable.description,
+  };
+}
+
+/**
+ * Generate suggestions from variables (base + helpers + loops)
+ */
+function generateVariableSuggestions(variables: SchemaVariable[]): AutocompleteSuggestion[] {
   const suggestions: AutocompleteSuggestion[] = [];
 
-  // Handle empty query: show featured suggestions
-  if (!query) {
-    // Always show page counters first
-    suggestions.push(...PAGE_COUNTER_SUGGESTIONS);
-
-    // Get top variables and prioritize reportDetails.* paths
-    const topVars = fuzzySearchVariables('', 10);
-    const reportDetailsVars = topVars.filter(v => 
-      COMMON_REPORT_DETAILS_PATHS.includes(v.path)
-    );
-    const otherVars = topVars.filter(v => 
-      !COMMON_REPORT_DETAILS_PATHS.includes(v.path)
-    );
-
-    // Add reportDetails variables first (up to 6), then others (up to 2)
-    const reportDetailsToAdd = reportDetailsVars.slice(0, 6);
-    const otherToAdd = otherVars.slice(0, 2);
-    const allVarsToAdd = [...reportDetailsToAdd, ...otherToAdd].slice(0, 8);
-
-    for (const variable of allVarsToAdd) {
-      suggestions.push({
-        label: variable.label,
-        path: variable.path,
-        content: variable.path,
-        type: 'variable',
-        description: variable.description,
-      });
-    }
-
-    return suggestions;
-  }
-
-  // Handle non-empty query: filter and match
-  const lowerQuery = query.toLowerCase();
-
-  // Add page counter suggestions first (if they match the query)
-  for (const pageCounter of PAGE_COUNTER_SUGGESTIONS) {
-    if (
-      pageCounter.content.toLowerCase().includes(lowerQuery) ||
-      pageCounter.label.toLowerCase().includes(lowerQuery) ||
-      'page'.includes(lowerQuery)
-    ) {
-      suggestions.push(pageCounter);
-    }
-  }
-  
-  // Find matching variables
-  const matchedVars = fuzzySearchVariables(query, 5);
-  
-  for (const variable of matchedVars) {
+  for (const variable of variables) {
     // Add the base variable
-    suggestions.push({
-      label: variable.label,
-      path: variable.path,
-      content: variable.path,
-      type: 'variable',
-      description: variable.description,
-    });
+    suggestions.push(variableToSuggestion(variable));
 
     // Add helper suggestions based on type
     if (variable.helperHints && variable.helperHints.length > 0) {
@@ -144,58 +114,83 @@ function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[
 }
 
 /**
+ * Get featured variables for empty query (prioritizes reportDetails.*)
+ */
+function getFeaturedVariables(): SchemaVariable[] {
+  const topVars = fuzzySearchVariables('', 10);
+  const reportDetailsVars = topVars.filter(v => 
+    COMMON_REPORT_DETAILS_PATHS.includes(v.path)
+  );
+  const otherVars = topVars.filter(v => 
+    !COMMON_REPORT_DETAILS_PATHS.includes(v.path)
+  );
+
+  // Add reportDetails variables first (up to 6), then others (up to 2)
+  const reportDetailsToAdd = reportDetailsVars.slice(0, 6);
+  const otherToAdd = otherVars.slice(0, 2);
+  return [...reportDetailsToAdd, ...otherToAdd].slice(0, 8);
+}
+
+/**
+ * Generate autocomplete suggestions with helper and loop recommendations
+ */
+function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[] {
+  const suggestions: AutocompleteSuggestion[] = [];
+
+  // Handle empty query: show featured suggestions
+  if (!query) {
+    // Always show page counters first
+    suggestions.push(...PAGE_COUNTER_SUGGESTIONS);
+
+    // Add featured variables
+    const featuredVars = getFeaturedVariables();
+    suggestions.push(...generateVariableSuggestions(featuredVars));
+
+    return suggestions;
+  }
+
+  // Handle non-empty query: filter and match
+  const lowerQuery = query.toLowerCase();
+
+  // Add page counter suggestions first (if they match the query)
+  for (const pageCounter of PAGE_COUNTER_SUGGESTIONS) {
+    if (matchesPageCounter(pageCounter, query)) {
+      suggestions.push(pageCounter);
+    }
+  }
+  
+  // Find matching variables and generate suggestions
+  const matchedVars = fuzzySearchVariables(query, 5);
+  suggestions.push(...generateVariableSuggestions(matchedVars));
+
+  return suggestions;
+}
+
+/**
+ * Default helper content for most helpers (same for all types)
+ */
+const DEFAULT_HELPER_CONTENT = (path: string): Record<VariableType, string> => ({
+  date: `${path}}`,
+  string: `${path}}`,
+  number: `${path}}`,
+  boolean: `${path}}`,
+  array: `${path}}`,
+  object: `${path}}`,
+  image: `${path}}`,
+});
+
+/**
  * Generate helper content based on helper type and variable type
  */
 function getHelperContent(path: string, helper: string, type: VariableType): string {
-  const helpers: Record<string, Record<VariableType, string>> = {
-    formatDate: {
-      date: `${path} "DD/MM/YYYY"}}`,
-      string: `${path}}`,
-      number: `${path}}`,
-      boolean: `${path}}`,
-      array: `${path}}`,
-      object: `${path}}`,
-      image: `${path}}`,
-    },
-    formatCurrency: {
-      date: `${path}}`,
-      string: `${path}}`,
-      number: `${path}}`,
-      boolean: `${path}}`,
-      array: `${path}}`,
-      object: `${path}}`,
-      image: `${path}}`,
-    },
-    uppercase: {
-      date: `${path}}`,
-      string: `${path}}`,
-      number: `${path}}`,
-      boolean: `${path}}`,
-      array: `${path}}`,
-      object: `${path}}`,
-      image: `${path}}`,
-    },
-    lowercase: {
-      date: `${path}}`,
-      string: `${path}}`,
-      number: `${path}}`,
-      boolean: `${path}}`,
-      array: `${path}}`,
-      object: `${path}}`,
-      image: `${path}}`,
-    },
-    levelLabel: {
-      date: `${path}}`,
-      string: `${path}}`,
-      number: `${path}}`,
-      boolean: `${path}}`,
-      array: `${path}}`,
-      object: `${path}}`,
-      image: `${path}}`,
-    },
-  };
+  // Special case: formatDate has custom format for date type
+  if (helper === 'formatDate' && type === 'date') {
+    return `${path} "DD/MM/YYYY"}}`;
+  }
 
-  return helpers[helper]?.[type] || `${path}}`;
+  // All other helpers use the default content
+  const defaultContent = DEFAULT_HELPER_CONTENT(path);
+  return defaultContent[type] || `${path}}`;
 }
 
 export interface HandlebarsAutocompleteOptions {
@@ -248,8 +243,35 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
         },
 
         render: () => {
-          let component: ReactRenderer;
-          let popup: TippyInstance[];
+          let component: ReactRenderer | null = null;
+          let popup: TippyInstance[] | null = null;
+
+          const createPopup = (clientRect: () => DOMRect, componentElement: HTMLElement) => {
+            return tippy('body', {
+              getReferenceClientRect: clientRect,
+              appendTo: () => document.body,
+              content: componentElement,
+              showOnCreate: true,
+              interactive: true,
+              trigger: 'manual',
+              placement: 'bottom-start',
+              maxWidth: '400px',
+            });
+          };
+
+          const closePopup = () => {
+            if (popup && popup[0]) {
+              popup[0].hide();
+            }
+          };
+
+          const destroyPopup = () => {
+            if (popup && popup[0]) {
+              popup[0].destroy();
+            }
+            popup = null;
+            popupRef = null;
+          };
 
           return {
             onStart: (props: any) => {
@@ -261,32 +283,25 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
                 editor: props.editor,
               });
 
-              if (!props.clientRect) {
+              if (!props.clientRect || !component) {
                 return;
               }
 
-              popup = tippy('body', {
-                getReferenceClientRect: props.clientRect as () => DOMRect,
-                appendTo: () => document.body,
-                content: component.element,
-                showOnCreate: true,
-                interactive: true,
-                trigger: 'manual',
-                placement: 'bottom-start',
-                maxWidth: '400px',
-              });
-
-              // Store popup reference in shared closure
+              popup = createPopup(props.clientRect, component.element as HTMLElement);
               popupRef = popup;
             },
 
-            onUpdate(props: any) {
+            onUpdate: (props: any) => {
+              if (!component) {
+                return;
+              }
+
               component.updateProps({
                 ...props,
                 query: currentQuery,
               });
 
-              if (!props.clientRect) {
+              if (!props.clientRect || !popup) {
                 return;
               }
 
@@ -295,23 +310,27 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
               });
             },
 
-            onKeyDown(props) {
+            onKeyDown: (props: any) => {
               if (props.event.key === 'Escape') {
-                popup[0].hide();
+                closePopup();
                 return true;
               }
 
               // Check if component.ref exists and has onKeyDown method
-              const ref = component?.ref as { onKeyDown?: (event: KeyboardEvent) => boolean };
+              if (!component) {
+                return false;
+              }
+
+              const ref = component.ref as { onKeyDown?: (event: KeyboardEvent) => boolean };
               return ref?.onKeyDown?.(props.event) || false;
             },
 
-            onExit() {
-              if (popup && popup[0]) {
-                popup[0].destroy();
+            onExit: () => {
+              destroyPopup();
+              if (component) {
+                component.destroy();
+                component = null;
               }
-              component.destroy();
-              popupRef = null;
             },
           };
         },
