@@ -10,7 +10,7 @@
 - **Template defaults**: Current templates generate header/footer HTML via React components (`app/home/editor/components/HeaderFooter.tsx`) combining static imagery and dynamic survey metadata. Inline editors need to seed from this markup so existing documents stay intact.
 - **Layout context**: Page layout (size, margins, zoom) lives in `PageLayoutContext`; header/footer strings must flow through the same context to keep editor, autosave, and print preview synchronized.
 - **Print preview**: `PrintPreviewer.tsx` injects layout-specific CSS before running paged.js. Any new header/footer HTML must be included in the content payload it receives (section 5 of the broader plan).
-- **Handlebar helpers**: Header content must continue supporting handlebars for dynamic fields like the address block rendered in the top-right margin box.
+- **Handlebar helpers**: Header content must continue supporting handlebars for dynamic fields like the address block rendered in the top-right margin box. **✅ Implemented** - Handlebars in headers/footers are now resolved in preview (see Outstanding Item #9).
 - **Cover page**: Title/cover markup shares the same data flow; keeping it compatible now reduces work if/when we introduce inline cover editing.
 
 ## Current Implementation Snapshot
@@ -103,7 +103,7 @@
    - Extend `BlockEditor.test.tsx` (per existing plan) to assert body/header/footer autosave integration and print payload composition.
    - Create an integration test for `PrintPreviewer` (future step) ensuring header/footer HTML appears in the paged.js container with expected selectors.
    - Key behaviours to exercise:
-     - Handlebar token insertion/editing in the header (e.g., address helper) persists after serialization and appears resolved in preview.
+     - Handlebar token insertion/editing in the header (e.g., address helper) persists after serialization and appears resolved in preview. **✅ Implemented** - See Outstanding Item #9.
      - Header/footer image uploads retain `data-s3-path` attributes and render within paged.js output.
      - Page layout changes update header/footer editor width constraints and reflect in preview dimensions.
      - Keyboard focus order progresses Header -> Body -> Footer to satisfy accessibility expectations.
@@ -243,7 +243,7 @@
 
 ## Open Questions / Follow-Ups
 - Do we need multiple header/footer variants per page (odd/even)? **Not required** for the current scope; revisit if pagination rules expand.
-- Confirm whether business users need handlebar helpers in header/footer (initial assumption: yes; mirrors body editor). **Confirmed** - handlebars are required for address and similar metadata in the header.
+- Confirm whether business users need handlebar helpers in header/footer (initial assumption: yes; mirrors body editor). **Confirmed** - handlebars are required for address and similar metadata in the header. **✅ Implemented** - Handlebars in headers/footers are now resolved in preview (see Outstanding Item #9).
 - Decide whether to support hiding header/footer entirely per document; still gathering use cases before introducing toggles.
 - Cover page inline editing: **Documented as Outstanding Item #2** - See challenges and approaches above.
 
@@ -325,8 +325,9 @@ Page numbers are now available using handlebar-style syntax that transforms into
 
 **Known Limitations:**
 - Page counters use CSS `counter(page)`, not data handlebars, because page numbers are runtime pagination values
-- General handlebar resolution (e.g., `{{reportDetails.address}}`) is not yet implemented for headers/footers (tracked separately in Outstanding Item #8)
 - Page number formatting is limited to what CSS counters support (no custom formats like Roman numerals yet)
+
+**Note:** General handlebar resolution (e.g., `{{reportDetails.level}}`, `{{reportDetails.address}}`) is now implemented - see Outstanding Item #10 below.
 
 ### 6. Pagination Preview in Editor
 **Status:** Not implemented
@@ -398,7 +399,53 @@ The autocomplete now shows helpful suggestions immediately when users type `{{`,
 - Type `{{p` → Filters to show matching suggestions (page counters, variables starting with 'p')
 - Select suggestion → Popup closes automatically, content inserted
 
-### 9. HTML Sanitization for Security
+### 9. Handlebar Resolution in Headers/Footers
+**Status:** ✅ Implemented
+**Priority:** High
+
+**Implementation Summary:**
+Handlebar variables in headers and footers (e.g., `{{reportDetails.level}}`, `{{reportDetails.reference}}`) are now resolved to their actual values in the print preview, matching the behavior of handlebars in the body content.
+
+**How It Works:**
+
+1. **Resolution Pipeline:**
+   - When preview content is generated, `collectZoneHtml` processes each margin zone's HTML
+   - `resolveHandlebars` utility function resolves handlebar variables using form data (`editorData`)
+   - Page counters (`{{pageNumber}}`, `{{totalPages}}`) are protected and transformed separately to CSS counters
+   - All other handlebars are resolved using the same `renderTemplate` function used for body templates
+
+2. **Data Flow:**
+   - `useEditorState` hook loads `editorData` from survey store
+   - `editorData` is exposed to `EditorClient` component
+   - `recomputePreviewContent` passes `editorData` to `collectZoneHtml`
+   - Each zone's HTML is resolved before being concatenated into preview content
+
+3. **Page Counter Handling:**
+   - Page counters are temporarily replaced with placeholders during handlebar resolution
+   - After resolution, placeholders are restored and transformed to CSS counter elements
+   - This ensures page counters work correctly while other handlebars are resolved
+
+**Files Modified:**
+- ✅ `app/home/editor/utils/resolveHandlebars.ts` - **NEW** - Handlebar resolution utility with page counter protection
+- ✅ `app/home/editor/hooks/useEditorState.tsx` - Added `editorData` state and exposed in return value
+- ✅ `app/home/editor/[id]/EditorClient.tsx` - Updated `collectZoneHtml` to accept and use `editorData` for resolution
+- ✅ `app/home/editor/utils/tests/resolveHandlebars.test.ts` - **NEW** - Comprehensive test coverage (14 tests)
+
+**User Experience:**
+- User types `{{reportDetails.level}}` in header → Preview shows "3" (or "2")
+- User types `{{reportDetails.reference}}` in footer → Preview shows actual reference number
+- User types `{{reportDetails.address.formatted}}` → Preview shows formatted address
+- Page counters (`{{pageNumber}}`, `{{totalPages}}`) continue to work as CSS counters
+- Works in all margin zones (top-center, top-right, bottom-center, etc.)
+- Works in version preview as well
+
+**Edge Cases Handled:**
+- Missing `editorData`: Returns HTML as-is (no crash)
+- Invalid handlebar syntax: Logs warning, returns original HTML
+- Empty HTML: Returns empty string
+- Complex HTML structures: Preserves HTML while resolving handlebars
+
+### 10. HTML Sanitization for Security
 **Status:** Not implemented
 **Priority:** Medium (before production)
 
