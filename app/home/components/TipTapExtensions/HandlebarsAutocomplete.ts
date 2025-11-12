@@ -38,17 +38,59 @@ const PAGE_COUNTER_SUGGESTIONS: AutocompleteSuggestion[] = [
 ];
 
 /**
+ * Most commonly used reportDetails variables for initial suggestions
+ */
+const COMMON_REPORT_DETAILS_PATHS = [
+  'reportDetails.clientName',
+  'reportDetails.address.formatted',
+  'reportDetails.reportDate',
+  'reportDetails.reference',
+  'reportDetails.level',
+  'reportDetails.inspectionDate',
+];
+
+/**
  * Generate autocomplete suggestions with helper and loop recommendations
  */
 function generateAutocompleteSuggestions(query: string): AutocompleteSuggestion[] {
-  if (!query) {
-    return [];
-  }
-
   const suggestions: AutocompleteSuggestion[] = [];
 
-  // Add page counter suggestions first (if they match the query)
+  // Handle empty query: show featured suggestions
+  if (!query) {
+    // Always show page counters first
+    suggestions.push(...PAGE_COUNTER_SUGGESTIONS);
+
+    // Get top variables and prioritize reportDetails.* paths
+    const topVars = fuzzySearchVariables('', 10);
+    const reportDetailsVars = topVars.filter(v => 
+      COMMON_REPORT_DETAILS_PATHS.includes(v.path)
+    );
+    const otherVars = topVars.filter(v => 
+      !COMMON_REPORT_DETAILS_PATHS.includes(v.path)
+    );
+
+    // Add reportDetails variables first (up to 6), then others (up to 2)
+    const reportDetailsToAdd = reportDetailsVars.slice(0, 6);
+    const otherToAdd = otherVars.slice(0, 2);
+    const allVarsToAdd = [...reportDetailsToAdd, ...otherToAdd].slice(0, 8);
+
+    for (const variable of allVarsToAdd) {
+      suggestions.push({
+        label: variable.label,
+        path: variable.path,
+        content: variable.path,
+        type: 'variable',
+        description: variable.description,
+      });
+    }
+
+    return suggestions;
+  }
+
+  // Handle non-empty query: filter and match
   const lowerQuery = query.toLowerCase();
+
+  // Add page counter suggestions first (if they match the query)
   for (const pageCounter of PAGE_COUNTER_SUGGESTIONS) {
     if (
       pageCounter.content.toLowerCase().includes(lowerQuery) ||
@@ -164,6 +206,10 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
   name: 'handlebarsAutocomplete',
 
   addOptions() {
+    // Shared closure variables
+    let currentQuery = '';
+    let popupRef: TippyInstance[] | null = null;
+
     return {
       suggestion: {
         char: '{{',
@@ -180,6 +226,11 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
             .deleteRange(range)
             .insertContent(content)
             .run();
+
+          // Close the popup after selection
+          if (popupRef && popupRef[0]) {
+            popupRef[0].hide();
+          }
         },
 
         allow: ({ state, range }) => {
@@ -191,6 +242,8 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
         },
 
         items: ({ query }) => {
+          // Store query in shared closure
+          currentQuery = query || '';
           return generateAutocompleteSuggestions(query);
         },
 
@@ -199,9 +252,12 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
           let popup: TippyInstance[];
 
           return {
-            onStart: props => {
+            onStart: (props: any) => {
               component = new ReactRenderer(VariableAutocomplete, {
-                props,
+                props: {
+                  ...props,
+                  query: currentQuery,
+                },
                 editor: props.editor,
               });
 
@@ -219,10 +275,16 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
                 placement: 'bottom-start',
                 maxWidth: '400px',
               });
+
+              // Store popup reference in shared closure
+              popupRef = popup;
             },
 
-            onUpdate(props) {
-              component.updateProps(props);
+            onUpdate(props: any) {
+              component.updateProps({
+                ...props,
+                query: currentQuery,
+              });
 
               if (!props.clientRect) {
                 return;
@@ -245,8 +307,11 @@ export const HandlebarsAutocomplete = Extension.create<HandlebarsAutocompleteOpt
             },
 
             onExit() {
-              popup[0].destroy();
+              if (popup && popup[0]) {
+                popup[0].destroy();
+              }
               component.destroy();
+              popupRef = null;
             },
           };
         },

@@ -5,6 +5,7 @@ import type { AutocompleteSuggestion } from '@/app/home/components/TipTapExtensi
 interface VariableAutocompleteProps {
   items: AutocompleteSuggestion[];
   command: (item: AutocompleteSuggestion) => void;
+  query?: string;
 }
 
 const SUGGESTION_TYPE_COLORS: Record<string, string> = {
@@ -72,6 +73,8 @@ export const VariableAutocomplete = forwardRef<
     );
   }
 
+  const isEmptyQuery = !props.query || props.query.trim() === '';
+
   return (
     <div className="handlebars-autocomplete">
       {props.items.map((item, index) => (
@@ -87,6 +90,11 @@ export const VariableAutocomplete = forwardRef<
           </Badge>
         </button>
       ))}
+      {isEmptyQuery && props.items.length > 0 && (
+        <div className="px-3 py-2 text-xs text-muted-foreground border-t border-border">
+          Type to search more variables...
+        </div>
+      )}
     </div>
   );
 });
