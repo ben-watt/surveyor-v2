@@ -39,6 +39,7 @@ import HeaderFooterEditor from './HeaderFooterEditor';
 import { MARGIN_ZONE_METADATA, distributeRunningHtml } from './marginZones';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { TableBubbleMenu } from './TableBubbleMenu';
 
 type PrintRequestPayload = {
   layout: PageLayoutSnapshot;
@@ -551,6 +552,7 @@ const EditorSurface: React.FC<EditorSurfaceProps> = ({
               spellCheck={!enableHandlebarsHighlight}
               className="min-h-full"
             />
+            {editor && <TableBubbleMenu editor={editor} />}
           </div>
         </div>
       </div>

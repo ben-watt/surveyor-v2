@@ -25,11 +25,6 @@ import {
   AlignRight,
   AlignJustify,
   Grid2x2Plus,
-  Grid2x2X,
-  BetweenHorizontalStart,
-  BetweenVerticalStart,
-  TableCellsMergeIcon,
-  TableCellsSplitIcon,
   ImagePlus,
   Save,
   History,
@@ -368,48 +363,6 @@ export default function MenuBar({
     },
   ];
 
-  const tableContextMenu = {
-    isActive: () => editor.isActive('table'),
-    items: [
-      {
-        icon: <BetweenHorizontalStart />,
-        title: 'Add Row After',
-        action: () => editor.chain().focus().addRowAfter().run(),
-      },
-      {
-        icon: <BetweenVerticalStart />,
-        title: 'Add Column After',
-        action: () => editor.chain().focus().addColumnAfter().run(),
-      },
-      {
-        icon: <TableCellsSplitIcon />,
-        title: 'Split Cell',
-        action: () => editor.chain().focus().splitCell().run(),
-      },
-      {
-        icon: <TableCellsMergeIcon />,
-        title: 'Merge Cells',
-        action: () => editor.chain().focus().mergeCells().run(),
-      },
-      {
-        icon: <Grid2x2X className="text-red-700" />,
-        title: 'Delete Table',
-        action: () => editor.chain().focus().deleteTable().run(),
-        isActive: () => false,
-      },
-      {
-        icon: <BetweenHorizontalStart className="text-red-700" />,
-        title: 'Delete Row',
-        action: () => editor.chain().focus().deleteRow().run(),
-      },
-      {
-        icon: <BetweenVerticalStart className="text-red-700" />,
-        title: 'Delete Column',
-        action: () => editor.chain().focus().deleteColumn().run(),
-      },
-    ],
-  };
-
   return (
     <div className="editor__header sticky top-0 z-[100] border-b border-l bg-white p-2">
       <div className="flex-shrink-1 no-scrollbar flex items-center justify-between">
@@ -427,15 +380,6 @@ export default function MenuBar({
           {saveStatus === 'error' && <span className="text-red-500">Save failed</span>}
         </div>
       </div>
-      {tableContextMenu.isActive() && (
-        <div className="justify-left flex">
-          {tableContextMenu.items.map((item, index) => (
-            <div key={index} className="m-[1px] flex">
-              <MenuItem {...(item as MenuItemProps)} />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
