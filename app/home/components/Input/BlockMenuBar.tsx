@@ -62,6 +62,8 @@ import {
   type MarginZone,
   usePageLayout,
 } from './PageLayoutContext';
+import { TableSizeSelector } from './TableSizeSelector';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@radix-ui/react-tooltip';
 
 type PrintPayload = {
   layout: PageLayoutSnapshot;
@@ -250,10 +252,8 @@ export default function MenuBar({
       isActive: () => editor.isActive('orderedList'),
     },
     {
-      icon: <Grid2x2Plus />,
-      title: 'Add Table',
-      action: () => editor.chain().focus().insertTable({ rows: 2, cols: 2 }).run(),
-      isActive: () => false,
+      type: 'table-selector',
+      render: () => <MenuTableSelector editor={editor} />,
     },
     {
       icon: <ImagePlus />,
@@ -696,6 +696,45 @@ const MenuLineHeight = ({ editor }: MenuLineHeightProps) => {
         </div>
       )}
     </div>
+  );
+};
+
+interface MenuTableSelectorProps {
+  editor: Editor;
+}
+
+const MenuTableSelector = ({ editor }: MenuTableSelectorProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleSelect = (rows: number, cols: number) => {
+    setOpen(false);
+  };
+
+  return (
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn('rounded-sm p-2 hover:bg-gray-200', open && 'bg-gray-200')}
+            >
+              <Grid2x2Plus />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            sideOffset={8}
+            className="w-auto rounded-md border bg-popover p-0 text-popover-foreground shadow-md"
+          >
+            <TableSizeSelector editor={editor} onSelect={handleSelect} />
+          </PopoverContent>
+        </Popover>
+      </TooltipTrigger>
+      <TooltipContent>
+        <div className="rounded bg-black p-1 text-xs text-white">Add Table</div>
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
