@@ -95,6 +95,66 @@ describe('resolveHandlebars', () => {
       expect(result).toContain('paged-counter');
       expect(result).toContain('data-counter-type="page"');
     });
+
+    it('should handle page counter adjacent to handlebar variable in same HTML element', () => {
+      // This is the specific error case: placeholder adjacent to handlebar syntax
+      const html = '<p>{{totalPages}} {{reportDetails.level}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('data-counter-type="pages"');
+      expect(result).toContain('3'); // resolved level
+      expect(result).not.toContain('{{totalPages}}');
+      expect(result).not.toContain('{{reportDetails.level}}');
+    });
+
+    it('should handle page counter and handlebar in same paragraph with text between', () => {
+      const html = '<p>Page {{pageNumber}} of {{totalPages}} - Ref: {{reportDetails.reference}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('data-counter-type="page"');
+      expect(result).toContain('data-counter-type="pages"');
+      expect(result).toContain('Ref: REF-123');
+      expect(result).not.toContain('{{pageNumber}}');
+      expect(result).not.toContain('{{totalPages}}');
+      expect(result).not.toContain('{{reportDetails.reference}}');
+    });
+
+    it('should handle multiple page counters and handlebars in complex HTML', () => {
+      const html = `
+        <div>
+          <p>Level {{reportDetails.level}} - Page {{pageNumber}} of {{totalPages}}</p>
+          <p>Ref: {{reportDetails.reference}}</p>
+        </div>
+      `;
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('Level 3');
+      expect(result).toContain('Ref: REF-123');
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('data-counter-type="page"');
+      expect(result).toContain('data-counter-type="pages"');
+      expect(result).not.toContain('{{pageNumber}}');
+      expect(result).not.toContain('{{totalPages}}');
+    });
+
+    it('should handle page counter at start of element followed by handlebar', () => {
+      const html = '<p>{{pageNumber}} {{reportDetails.clientName}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('data-counter-type="page"');
+      expect(result).toContain('Test Client');
+      expect(result).not.toContain('{{pageNumber}}');
+      expect(result).not.toContain('{{reportDetails.clientName}}');
+    });
+
+    it('should handle handlebar at start followed by page counter', () => {
+      const html = '<p>{{reportDetails.level}} - Page {{pageNumber}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('3');
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('data-counter-type="page"');
+      expect(result).not.toContain('{{reportDetails.level}}');
+      expect(result).not.toContain('{{pageNumber}}');
+    });
   });
 
   describe('Edge Cases', () => {
@@ -158,6 +218,180 @@ describe('resolveHandlebars', () => {
       expect(result).toContain('<div>');
       expect(result).toContain('<p>');
       expect(result).toContain('3');
+    });
+
+    it('should handle page counters and handlebars in nested HTML structures', () => {
+      const html = `
+        <div id="pageMarginTopCenter" data-running-role="top-center">
+          <p>Level {{reportDetails.level}} - Page {{pageNumber}} of {{totalPages}}</p>
+          <p>Ref: {{reportDetails.reference}}</p>
+        </div>
+      `;
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('Level 3');
+      expect(result).toContain('Ref: REF-123');
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('data-counter-type="page"');
+      expect(result).toContain('data-counter-type="pages"');
+      expect(result).toContain('id="pageMarginTopCenter"');
+      expect(result).not.toContain('{{pageNumber}}');
+      expect(result).not.toContain('{{totalPages}}');
+    });
+
+    it('should handle table structures with page counters and handlebars', () => {
+      const html = `
+        <table>
+          <tr>
+            <td>Page {{pageNumber}}</td>
+            <td>{{reportDetails.clientName}}</td>
+          </tr>
+          <tr>
+            <td>Total: {{totalPages}}</td>
+            <td>{{reportDetails.reference}}</td>
+          </tr>
+        </table>
+      `;
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('Test Client');
+      expect(result).toContain('REF-123');
+      expect(result).toContain('<table>');
+      expect(result).toContain('<tr>');
+      expect(result).toContain('<td>');
+    });
+  });
+
+  describe('HTML Comment Placeholder Edge Cases', () => {
+    it('should not confuse HTML comment placeholders with actual HTML comments', () => {
+      const html = '<p><!-- This is a real comment --> {{reportDetails.level}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('3');
+      expect(result).toContain('<!-- This is a real comment -->');
+    });
+
+    it('should handle HTML that already contains comments', () => {
+      const html = `
+        <div>
+          <!-- Header section -->
+          <p>Page {{pageNumber}} - {{reportDetails.level}}</p>
+          <!-- Footer section -->
+        </div>
+      `;
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('3');
+      expect(result).toContain('<!-- Header section -->');
+      expect(result).toContain('<!-- Footer section -->');
+    });
+  });
+
+  describe('HTML with Inline Styles and Attributes', () => {
+    it('should resolve handlebars in text content even when HTML has inline styles', () => {
+      // This tests the specific error case: handlebars after inline styles
+      const html = '<div style="line-height: 1.15"><p>{{reportDetails.level}}</p></div>';
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('3');
+      expect(result).toContain('style="line-height: 1.15"');
+      expect(result).not.toContain('{{reportDetails.level}}');
+    });
+
+    it('should handle wrapper divs with running element attributes and inline styles', () => {
+      const html = `
+        <div id="pageMarginTopCenter" data-running-role="top-center" style="position: running(pageMarginTopCenter); line-height: 1.15">
+          <p>{{reportDetails.level}} - {{reportDetails.reference}}</p>
+        </div>
+      `;
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('3');
+      expect(result).toContain('REF-123');
+      expect(result).toContain('id="pageMarginTopCenter"');
+      expect(result).toContain('style="position: running(pageMarginTopCenter); line-height: 1.15"');
+      expect(result).not.toContain('{{reportDetails.level}}');
+      expect(result).not.toContain('{{reportDetails.reference}}');
+    });
+
+    it('should handle complex nested HTML with styles and handlebars', () => {
+      const html = `
+        <div style="line-height: 1.15">
+          <div class="header-container">
+            <p style="margin: 0">Level {{reportDetails.level}}</p>
+            <p style="margin: 0">Ref: {{reportDetails.reference}}</p>
+          </div>
+        </div>
+      `;
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('Level 3');
+      expect(result).toContain('Ref: REF-123');
+      expect(result).toContain('style="line-height: 1.15"');
+      expect(result).toContain('style="margin: 0"');
+    });
+
+    it('should handle page counters with inline styles in wrapper elements', () => {
+      const html = `
+        <div style="position: running(pageMarginBottomCenter); line-height: 1.15">
+          <p>Page {{pageNumber}} of {{totalPages}} - {{reportDetails.level}}</p>
+        </div>
+      `;
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('paged-counter');
+      expect(result).toContain('data-counter-type="page"');
+      expect(result).toContain('data-counter-type="pages"');
+      expect(result).toContain('3');
+      expect(result).toContain('style="position: running(pageMarginBottomCenter); line-height: 1.15"');
+    });
+  });
+
+  describe('Incomplete Handlebar Syntax', () => {
+    it('should skip resolution when user is typing {{ (incomplete syntax)', () => {
+      // This is the specific error case: user types {{ and resolution is called
+      const html = '<p>{{</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      // Should return original HTML without crashing
+      expect(result).toBe(html);
+    });
+
+    it('should skip resolution for incomplete handlebar with text', () => {
+      const html = '<p>{{reportDetails</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      // Should return original HTML without crashing
+      expect(result).toBe(html);
+    });
+
+    it('should skip resolution for multiple incomplete handlebars', () => {
+      const html = '<p>{{reportDetails.level}} {{</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      // Should return original HTML - incomplete syntax prevents resolution
+      expect(result).toBe(html);
+    });
+
+    it('should resolve complete handlebars even when there was incomplete syntax earlier', () => {
+      // If user completes the handlebar, it should resolve
+      const html = '<p>{{reportDetails.level}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      expect(result).toContain('3');
+      expect(result).not.toContain('{{reportDetails.level}}');
+    });
+
+    it('should handle mixed complete and incomplete handlebars', () => {
+      // If there's one complete and one incomplete, skip all to be safe
+      const html = '<p>{{reportDetails.level}} {{</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      // Should return original HTML without crashing
+      expect(result).toBe(html);
+    });
+
+    it('should handle malformed handlebars with extra closing braces', () => {
+      const html = '<p>}} {{reportDetails.level}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      // Should return original HTML without crashing
+      expect(result).toBe(html);
+    });
+
+    it('should handle nested incomplete handlebars', () => {
+      const html = '<p>{{{{reportDetails.level}}</p>';
+      const result = resolveHandlebars(html, mockEditorData);
+      // Should return original HTML without crashing
+      expect(result).toBe(html);
     });
   });
 });
