@@ -255,7 +255,7 @@ export const NewEditor = forwardRef(
           runningHtml: normalizedRunningHtml,
         }}
       >
-        <div className="border-grey-200 border bg-gray-100 print:hidden">
+        <div className="bg-gray-100 print:hidden">
           <BlockMenuBar
             editor={editor}
             onPrint={onPrint}
