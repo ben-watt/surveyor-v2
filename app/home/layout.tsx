@@ -114,7 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   )}
                 >
                   <Suspense fallback={<div>Loading...</div>}>
-                    <div className="p-2 md:mx-10">{children}</div>
+                    <div>{children}</div>
                   </Suspense>
                 </ErrorBoundary>
               </div>
