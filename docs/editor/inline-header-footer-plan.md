@@ -120,7 +120,7 @@
 
 1. ~~**Page Number Display**~~ - ✅ **IMPLEMENTED** - See Outstanding Item #5 below
 2. **Margin Zone Alignment Defaults** - Initialize editor text alignment to match paged.js rendering (See Outstanding Item #3)
-3. **Handlebar Autocomplete UX** - Show initial suggestions when typing `{{` (See Outstanding Item #8)
+3. ~~**Handlebar Autocomplete UX**~~ - ✅ **IMPLEMENTED** - Show initial suggestions when typing `{{` (See Outstanding Item #8)
 4. **Cover Page Template System** - Create editable cover page templates
 5. **Pagination Preview** - Show page breaks in editor
 6. **Multi-Cell Image Spanning** - Images spanning header zones (may be paged.js limitation)
@@ -327,7 +327,7 @@ Page numbers are now available using handlebar-style syntax that transforms into
 - Page counters use CSS `counter(page)`, not data handlebars, because page numbers are runtime pagination values
 - Page number formatting is limited to what CSS counters support (no custom formats like Roman numerals yet)
 
-**Note:** General handlebar resolution (e.g., `{{reportDetails.level}}`, `{{reportDetails.address}}`) is now implemented - see Outstanding Item #10 below.
+**Note:** General handlebar resolution (e.g., `{{reportDetails.level}}`, `{{reportDetails.address}}`) is now implemented - see Outstanding Item #9 below.
 
 ### 6. Pagination Preview in Editor
 **Status:** Not implemented
@@ -426,10 +426,18 @@ Handlebar variables in headers and footers (e.g., `{{reportDetails.level}}`, `{{
    - This ensures page counters work correctly while other handlebars are resolved
 
 **Files Modified:**
-- ✅ `app/home/editor/utils/resolveHandlebars.ts` - **NEW** - Handlebar resolution utility with page counter protection
+- ✅ `app/home/editor/utils/resolveHandlebars.ts` - **NEW** - Handlebar resolution utility with:
+  - DOM-based text node resolution (avoids parse errors with inline styles)
+  - Incomplete handlebar syntax detection (skips resolution when user is typing `{{`)
+  - Page counter protection using HTML comment placeholders
 - ✅ `app/home/editor/hooks/useEditorState.tsx` - Added `editorData` state and exposed in return value
 - ✅ `app/home/editor/[id]/EditorClient.tsx` - Updated `collectZoneHtml` to accept and use `editorData` for resolution
-- ✅ `app/home/editor/utils/tests/resolveHandlebars.test.ts` - **NEW** - Comprehensive test coverage (14 tests)
+- ✅ `app/home/editor/utils/tests/resolveHandlebars.test.ts` - **NEW** - Comprehensive test coverage (34 tests covering):
+  - Basic variable resolution
+  - Page counter handling
+  - HTML with inline styles and attributes
+  - Incomplete handlebar syntax (typing `{{`)
+  - Complex nested HTML structures
 
 **User Experience:**
 - User types `{{reportDetails.level}}` in header → Preview shows "3" (or "2")
@@ -438,12 +446,17 @@ Handlebar variables in headers and footers (e.g., `{{reportDetails.level}}`, `{{
 - Page counters (`{{pageNumber}}`, `{{totalPages}}`) continue to work as CSS counters
 - Works in all margin zones (top-center, top-right, bottom-center, etc.)
 - Works in version preview as well
+- **No parse errors when typing**: User can type `{{` without errors - resolution is skipped until handlebar is complete
+- **Works with styled HTML**: Handlebars resolve correctly even when HTML contains inline styles in wrapper divs
 
 **Edge Cases Handled:**
 - Missing `editorData`: Returns HTML as-is (no crash)
 - Invalid handlebar syntax: Logs warning, returns original HTML
 - Empty HTML: Returns empty string
 - Complex HTML structures: Preserves HTML while resolving handlebars
+- **Incomplete handlebar syntax**: When user types `{{` (incomplete), resolution is skipped to prevent parse errors
+- **HTML with inline styles**: Handlebars in text nodes are resolved even when HTML contains inline styles in wrapper elements
+- **DOM-based resolution**: Only resolves handlebars in text nodes, not in HTML attributes, preventing parse errors
 
 ### 10. HTML Sanitization for Security
 **Status:** Not implemented
