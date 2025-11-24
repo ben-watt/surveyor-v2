@@ -30,9 +30,11 @@ type UserAttributes = { [key: string]: string | undefined };
 
 let preferredTenantCache: PreferredTenantCache = null;
 let tenantsCache: TenantsCache = null;
+let currentTenantCache: PreferredTenantCache = null;
 const CACHE_DURATION = 30 * 1000; // 30 seconds for freshness check
 let preferredTenantInFlight: Promise<string | null> | null = null;
 let tenantsInFlight: Promise<Tenant[]> | null = null;
+let currentTenantInFlight: Promise<string | null> | null = null;
 
 function isCacheValid(cache: PreferredTenantCache | TenantsCache): boolean {
   return !!cache && Date.now() - cache.timestamp < CACHE_DURATION;
@@ -116,14 +118,15 @@ async function fetchAndCachePreferredTenant(): Promise<string | null> {
 }
 
 /**
- * Get the current tenant ID from user attributes
- * For new users without a preferred tenant, initializes personal tenant
+ * Internal function to fetch and cache the current tenant ID
  */
-export async function getCurrentTenantId(): Promise<string | null> {
+async function fetchAndCacheCurrentTenant(): Promise<string | null> {
   try {
     const preferredTenant = await getPreferredTenant();
 
     if (preferredTenant) {
+      currentTenantCache = { value: preferredTenant, timestamp: Date.now() };
+      console.debug('[getCurrentTenantId] Cached current tenant:', preferredTenant);
       return preferredTenant;
     }
 
@@ -135,14 +138,42 @@ export async function getCurrentTenantId(): Promise<string | null> {
       // Set personal tenant as default for new users
       await setPreferredTenant('personal');
       console.debug('[getCurrentTenantId] Personal tenant initialized for new user');
+      currentTenantCache = { value: user.userId, timestamp: Date.now() };
       return user.userId;
     }
 
+    currentTenantCache = { value: null, timestamp: Date.now() };
     return null;
   } catch (error) {
     console.error('Error getting current tenant ID:', error);
     return null;
+  } finally {
+    currentTenantInFlight = null;
   }
+}
+
+/**
+ * Get the current tenant ID from user attributes
+ * For new users without a preferred tenant, initializes personal tenant
+ * Uses promise deduplication to prevent redundant async calls
+ */
+export async function getCurrentTenantId(): Promise<string | null> {
+  // Return cached value if valid
+  if (isCacheValid(currentTenantCache)) {
+    console.debug('[getCurrentTenantId] Returning cached value:', currentTenantCache!.value);
+    return currentTenantCache!.value;
+  }
+
+  // If there's an in-flight request, return that promise
+  if (currentTenantInFlight) {
+    console.debug('[getCurrentTenantId] Returning in-flight promise');
+    return currentTenantInFlight;
+  }
+
+  // Start new fetch
+  console.debug('[getCurrentTenantId] Fetching fresh tenant ID');
+  currentTenantInFlight = fetchAndCacheCurrentTenant();
+  return currentTenantInFlight;
 }
 
 /**
@@ -376,8 +407,10 @@ export async function setPreferredTenant(tenantName: string): Promise<void> {
     // Clear the cache when setting new preferred tenant
     preferredTenantCache = null;
     preferredTenantInFlight = null;
+    currentTenantCache = null;
+    currentTenantInFlight = null;
     console.debug(
-      '[setPreferredTenant] Cleared preferred tenant cache after setting to:',
+      '[setPreferredTenant] Cleared tenant caches after setting to:',
       tenantName,
     );
   } catch (error) {
@@ -395,6 +428,8 @@ export function clearTenantCaches(): void {
   preferredTenantInFlight = null;
   tenantsCache = null;
   tenantsInFlight = null;
+  currentTenantCache = null;
+  currentTenantInFlight = null;
   console.debug('[clearTenantCaches] All tenant caches cleared');
 }
 

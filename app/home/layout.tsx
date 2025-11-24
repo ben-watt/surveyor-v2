@@ -9,14 +9,7 @@ import { TooltipProvider } from '@radix-ui/react-tooltip';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import {
-  surveyStore,
-  componentStore,
-  elementStore,
-  phraseStore,
-  sectionStore,
-  imageMetadataStore,
-} from './clients/Database';
+import { syncCoordinator } from './clients/SyncCoordinator';
 import { enhancedImageStore } from './clients/enhancedImageMetadataStore';
 import { OnlineStatus } from './components/OnlineStatus';
 import { SyncStatus } from './components/SyncStatus';
@@ -24,52 +17,19 @@ import { TenantProvider } from './utils/TenantContext';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Setup online/offline handlers
-    const handleOnline = () => {
-      // Trigger immediate sync when coming online - use forceSync to bypass debouncing
-      surveyStore.forceSync();
-      componentStore.forceSync();
-      elementStore.forceSync();
-      phraseStore.forceSync();
-      sectionStore.forceSync();
-      imageMetadataStore.forceSync();
-
-      // Resume any pending/failed image uploads
-      enhancedImageStore.syncPendingUploads();
-      enhancedImageStore.retryFailedUploads();
-    };
-
-    // Trigger initial sync on app load if online
+    // Trigger initial sync on app load after a short delay to ensure auth is ready
     const triggerInitialSync = async () => {
       if (navigator.onLine) {
-        console.log('[Layout] Triggering initial sync on app load');
-        await Promise.all([
-          surveyStore.forceSync(),
-          componentStore.forceSync(),
-          elementStore.forceSync(),
-          phraseStore.forceSync(),
-          sectionStore.forceSync(),
-          imageMetadataStore.forceSync(),
-        ]);
-
-        // Also kick off image upload recovery and housekeeping
-        await enhancedImageStore.syncPendingUploads();
-        await enhancedImageStore.retryFailedUploads();
+        console.log('[Layout] Triggering initial sync via SyncCoordinator');
+        await syncCoordinator.syncAll();
+        await syncCoordinator.syncImageUploads();
       }
     };
 
-    // Start initial sync after a short delay to ensure auth is ready
     const initialSyncTimeout = setTimeout(triggerInitialSync, 1000);
 
-    // Start periodic sync for main stores (5 minutes interval)
-    const cleanupFunctions = [
-      surveyStore.startPeriodicSync(300000),
-      componentStore.startPeriodicSync(300000),
-      elementStore.startPeriodicSync(300000),
-      phraseStore.startPeriodicSync(300000),
-      sectionStore.startPeriodicSync(300000),
-      imageMetadataStore.startPeriodicSync(300000),
-    ];
+    // Initialize SyncCoordinator with periodic sync (5 minutes) and network handlers
+    const cleanupSync = syncCoordinator.initialize(300000);
 
     // Periodic thumbnail cleanup (once a day)
     const cleanupThumbsInterval = setInterval(
@@ -79,13 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       24 * 60 * 60 * 1000,
     );
 
-    window.addEventListener('online', handleOnline);
-
     return () => {
       clearTimeout(initialSyncTimeout);
-      window.removeEventListener('online', handleOnline);
-      // Clean up periodic sync intervals
-      cleanupFunctions.forEach((cleanup) => cleanup());
+      cleanupSync();
       clearInterval(cleanupThumbsInterval);
     };
   }, []);

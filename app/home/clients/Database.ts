@@ -17,19 +17,21 @@ import { Ok, Err, Result } from 'ts-results';
 import { withTenantId, getCurrentTenantId } from '@/app/home/utils/tenant-utils';
 import { getErrorMessage } from '../utils/handleError';
 
-// Helper function to fetch all paginated results
+// Helper function to fetch all paginated results with optional filter
 async function fetchAllPages<T>(
   listFn: (params?: {
     nextToken?: string | null;
     limit?: number;
+    filter?: any;
   }) => Promise<{ data: T[]; nextToken?: string | null; errors?: any[] }>,
+  filter?: any,
 ): Promise<{ data: T[]; errors?: any[] }> {
   const allItems: T[] = [];
   let nextToken: string | null = null;
   let errors: any[] = [];
 
   do {
-    const response = await listFn({ nextToken, limit: 1000 }); // Use higher limit
+    const response = await listFn({ nextToken, limit: 1000, filter }); // Use higher limit
 
     if (response.errors) {
       errors.push(...response.errors);
@@ -89,8 +91,13 @@ type CreateSurvey = Schema['Surveys']['createType'];
 // Create a wrapper for the survey store
 const createSurveyStore = () => {
   const store = CreateDexieHooks<DexieSurvey, CreateSurvey, UpdateSurvey>(db, 'surveys', {
-    list: async (): Promise<Result<DexieSurvey[], Error>> => {
-      const response = await fetchAllPages((params) => client.models.Surveys.list(params));
+    list: async (options?: { since?: string }): Promise<Result<DexieSurvey[], Error>> => {
+      // Build filter for delta sync
+      const filter = options?.since ? { updatedAt: { gt: options.since } } : undefined;
+      const response = await fetchAllPages(
+        (params) => client.models.Surveys.list(params),
+        filter
+      );
       if (response.errors) {
         return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
@@ -192,8 +199,12 @@ export const componentStore = CreateDexieHooks<Component, CreateComponent, Updat
   db,
   'components',
   {
-    list: async (): Promise<Result<Component[], Error>> => {
-      const response = await fetchAllPages((params) => client.models.Components.list(params));
+    list: async (options?: { since?: string }): Promise<Result<Component[], Error>> => {
+      const filter = options?.since ? { updatedAt: { gt: options.since } } : undefined;
+      const response = await fetchAllPages(
+        (params) => client.models.Components.list(params),
+        filter
+      );
       if (response.errors) {
         return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
@@ -250,8 +261,12 @@ export const elementStore = CreateDexieHooks<BuildingSurveyElement, CreateElemen
   db,
   'elements',
   {
-    list: async (): Promise<Result<BuildingSurveyElement[], Error>> => {
-      const response = await fetchAllPages((params) => client.models.Elements.list(params));
+    list: async (options?: { since?: string }): Promise<Result<BuildingSurveyElement[], Error>> => {
+      const filter = options?.since ? { updatedAt: { gt: options.since } } : undefined;
+      const response = await fetchAllPages(
+        (params) => client.models.Elements.list(params),
+        filter
+      );
       if (response.errors) {
         return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
@@ -306,8 +321,12 @@ export const sectionStore = CreateDexieHooks<Section, CreateSection, UpdateSecti
   db,
   'sections',
   {
-    list: async (): Promise<Result<Section[], Error>> => {
-      const response = await fetchAllPages((params) => client.models.Sections.list(params));
+    list: async (options?: { since?: string }): Promise<Result<Section[], Error>> => {
+      const filter = options?.since ? { updatedAt: { gt: options.since } } : undefined;
+      const response = await fetchAllPages(
+        (params) => client.models.Sections.list(params),
+        filter
+      );
       if (response.errors) {
         return Err(new Error(response.errors.map((e) => e.message).join(', ')));
       }
@@ -365,8 +384,12 @@ export type UpdatePhrase = Partial<Phrase> & { id: string };
 export type CreatePhrase = Schema['Phrases']['createType'];
 
 export const phraseStore = CreateDexieHooks<Phrase, CreatePhrase, UpdatePhrase>(db, 'phrases', {
-  list: async (): Promise<Result<Phrase[], Error>> => {
-    const response = await fetchAllPages((params) => client.models.Phrases.list(params));
+  list: async (options?: { since?: string }): Promise<Result<Phrase[], Error>> => {
+    const filter = options?.since ? { updatedAt: { gt: options.since } } : undefined;
+    const response = await fetchAllPages(
+      (params) => client.models.Phrases.list(params),
+      filter
+    );
     if (response.errors) {
       return Err(new Error(response.errors.map((e) => e.message).join(', ')));
     }
@@ -501,8 +524,12 @@ export const imageMetadataStore = CreateDexieHooks<
   CreateImageMetadata,
   UpdateImageMetadata
 >(db, 'imageMetadata', {
-  list: async (): Promise<Result<ImageMetadata[], Error>> => {
-    const response = await fetchAllPages((params) => client.models.ImageMetadata.list(params));
+  list: async (options?: { since?: string }): Promise<Result<ImageMetadata[], Error>> => {
+    const filter = options?.since ? { updatedAt: { gt: options.since } } : undefined;
+    const response = await fetchAllPages(
+      (params) => client.models.ImageMetadata.list(params),
+      filter
+    );
     if (response.errors) {
       return Err(new Error(response.errors.map((e) => e.message).join(', ')));
     }

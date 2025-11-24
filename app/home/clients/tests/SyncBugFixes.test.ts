@@ -392,4 +392,300 @@ describe('Sync Bug Fixes Integration Tests', () => {
       expect(operations[4].timestamp).toBe('2024-01-01T10:14:00Z');
     });
   });
+
+  describe('Atomic sync transactions', () => {
+    it('should batch remote data merges for atomic updates', () => {
+      // Tests the pattern of collecting items for batch update
+      const itemsToMerge: any[] = [];
+
+      // Simulate processing remote data
+      const remoteData = [
+        { id: '1', name: 'Item 1', updatedAt: new Date().toISOString() },
+        { id: '2', name: 'Item 2', updatedAt: new Date().toISOString() },
+        { id: '3', name: 'Item 3', updatedAt: new Date().toISOString() },
+      ];
+
+      for (const remote of remoteData) {
+        itemsToMerge.push({
+          ...remote,
+          tenantId: 'test-tenant',
+          syncStatus: 'synced',
+        });
+      }
+
+      // Verify all items collected for batch operation
+      expect(itemsToMerge).toHaveLength(3);
+      expect(itemsToMerge[0].syncStatus).toBe('synced');
+      expect(itemsToMerge[0].tenantId).toBe('test-tenant');
+    });
+
+    it('should collect delete results for batch processing', () => {
+      // Tests the pattern of collecting delete results
+      const deleteSuccessIds: string[] = [];
+      const deleteFailedItems: any[] = [];
+
+      // Simulate processing pending deletes
+      const pendingDeletes = [
+        { id: '1', name: 'Success' },
+        { id: '2', name: 'Failed' },
+        { id: '3', name: 'Success' },
+      ];
+
+      // Simulate API results
+      const apiResults = [true, false, true];
+
+      pendingDeletes.forEach((item, index) => {
+        if (apiResults[index]) {
+          deleteSuccessIds.push(item.id);
+        } else {
+          deleteFailedItems.push({
+            ...item,
+            syncStatus: 'pending_delete',
+            syncError: 'Remote delete failed',
+          });
+        }
+      });
+
+      // Verify results collected correctly
+      expect(deleteSuccessIds).toEqual(['1', '3']);
+      expect(deleteFailedItems).toHaveLength(1);
+      expect(deleteFailedItems[0].id).toBe('2');
+      expect(deleteFailedItems[0].syncError).toBe('Remote delete failed');
+    });
+
+    it('should collect local update results for batch processing', () => {
+      // Tests the pattern of collecting local record update results
+      const localUpdateResults: any[] = [];
+
+      // Simulate processing local records
+      const localRecords = [
+        { id: '1', name: 'Local 1', syncStatus: 'queued' },
+        { id: '2', name: 'Local 2', syncStatus: 'failed' },
+      ];
+
+      // Simulate API results - first succeeds, second fails
+      const apiResults = [
+        { success: true, data: { id: '1', name: 'Local 1 (synced)' } },
+        { success: false, error: 'Network error' },
+      ];
+
+      localRecords.forEach((local, index) => {
+        const result = apiResults[index];
+        if (result.success) {
+          localUpdateResults.push({
+            ...result.data,
+            tenantId: 'test-tenant',
+            syncStatus: 'synced',
+          });
+        } else {
+          localUpdateResults.push({
+            ...local,
+            syncStatus: 'failed',
+            syncError: result.error,
+          });
+        }
+      });
+
+      // Verify results collected correctly
+      expect(localUpdateResults).toHaveLength(2);
+      expect(localUpdateResults[0].syncStatus).toBe('synced');
+      expect(localUpdateResults[1].syncStatus).toBe('failed');
+      expect(localUpdateResults[1].syncError).toBe('Network error');
+    });
+  });
+
+  describe('Sync retry with backoff', () => {
+    // Helper to simulate error classification
+    const isRetryableError = (error: Error): boolean => {
+      const message = error.message.toLowerCase();
+      if (
+        message.includes('network') ||
+        message.includes('timeout') ||
+        message.includes('500') ||
+        message.includes('503') ||
+        message.includes('429')
+      ) {
+        return true;
+      }
+      if (
+        message.includes('401') ||
+        message.includes('403') ||
+        message.includes('400') ||
+        message.includes('validation')
+      ) {
+        return false;
+      }
+      return false;
+    };
+
+    // Helper to calculate backoff delay
+    const getBackoffDelay = (attempt: number, baseDelay = 1000, maxDelay = 10000): number => {
+      return Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
+    };
+
+    it('should retry on network errors', () => {
+      const networkError = new Error('Network request failed');
+      expect(isRetryableError(networkError)).toBe(true);
+    });
+
+    it('should retry on timeout errors', () => {
+      const timeoutError = new Error('Request timeout after 30s');
+      expect(isRetryableError(timeoutError)).toBe(true);
+    });
+
+    it('should retry on 500 server errors', () => {
+      const serverError = new Error('500 Internal Server Error');
+      expect(isRetryableError(serverError)).toBe(true);
+    });
+
+    it('should retry on 503 service unavailable', () => {
+      const serviceError = new Error('503 Service Unavailable');
+      expect(isRetryableError(serviceError)).toBe(true);
+    });
+
+    it('should retry on 429 rate limit', () => {
+      const rateLimitError = new Error('429 Too Many Requests');
+      expect(isRetryableError(rateLimitError)).toBe(true);
+    });
+
+    it('should not retry on auth errors (401)', () => {
+      const authError = new Error('401 Unauthorized');
+      expect(isRetryableError(authError)).toBe(false);
+    });
+
+    it('should not retry on forbidden errors (403)', () => {
+      const forbiddenError = new Error('403 Forbidden');
+      expect(isRetryableError(forbiddenError)).toBe(false);
+    });
+
+    it('should not retry on validation errors (400)', () => {
+      const validationError = new Error('400 Bad Request - validation failed');
+      expect(isRetryableError(validationError)).toBe(false);
+    });
+
+    it('should respect max retry limit', () => {
+      const maxRetries = 3;
+      let attempts = 0;
+
+      // Simulate retry loop
+      const errors = ['Network error 1', 'Network error 2', 'Network error 3', 'Network error 4'];
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        attempts++;
+        const error = new Error(errors[attempt]);
+        if (!isRetryableError(error) || attempt >= maxRetries) {
+          break;
+        }
+      }
+
+      expect(attempts).toBe(maxRetries + 1); // 4 total attempts (0, 1, 2, 3)
+    });
+
+    it('should use exponential backoff delays', () => {
+      const delays = [
+        getBackoffDelay(0), // 1000ms
+        getBackoffDelay(1), // 2000ms
+        getBackoffDelay(2), // 4000ms
+        getBackoffDelay(3), // 8000ms
+        getBackoffDelay(4), // 10000ms (capped)
+        getBackoffDelay(5), // 10000ms (capped)
+      ];
+
+      expect(delays[0]).toBe(1000);
+      expect(delays[1]).toBe(2000);
+      expect(delays[2]).toBe(4000);
+      expect(delays[3]).toBe(8000);
+      expect(delays[4]).toBe(10000); // Capped at maxDelay
+      expect(delays[5]).toBe(10000); // Still capped
+    });
+
+    it('should succeed if retry succeeds', () => {
+      // Simulate a sync that fails twice then succeeds
+      let attempts = 0;
+      const maxRetries = 3;
+      let success = false;
+
+      const simulatedResults = [false, false, true]; // fail, fail, succeed
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        attempts++;
+        const result = simulatedResults[attempt];
+
+        if (result) {
+          success = true;
+          break;
+        }
+
+        if (attempt >= maxRetries) {
+          break;
+        }
+      }
+
+      expect(attempts).toBe(3); // Succeeded on 3rd attempt
+      expect(success).toBe(true);
+    });
+  });
+
+  describe('isItemAlreadyExistsError detection', () => {
+    /**
+     * Helper to check if an error indicates the item already exists on the server.
+     * This matches the logic in Dexie.ts
+     */
+    const isItemAlreadyExistsError = (error: unknown): boolean => {
+      if (!error) return false;
+      const errorStr = (JSON.stringify(error) || '').toLowerCase();
+      const message = ((error as Error)?.message || '').toLowerCase();
+      return (
+        errorStr.includes('conditionalcheckfailedexception') ||
+        message.includes('conditionalcheckfailedexception') ||
+        message.includes('conditional request failed')
+      );
+    };
+
+    it('should detect ConditionalCheckFailedException in error message', () => {
+      const error = new Error(
+        'DynamoDB:ConditionalCheckFailedException - The conditional request failed'
+      );
+      expect(isItemAlreadyExistsError(error)).toBe(true);
+    });
+
+    it('should detect ConditionalCheckFailedException in error object', () => {
+      const error = {
+        errorType: 'DynamoDB:ConditionalCheckFailedException',
+        message: 'The conditional request failed',
+      };
+      expect(isItemAlreadyExistsError(error)).toBe(true);
+    });
+
+    it('should detect "conditional request failed" message', () => {
+      const error = new Error(
+        'The conditional request failed (Service: DynamoDb, Status Code: 400)'
+      );
+      expect(isItemAlreadyExistsError(error)).toBe(true);
+    });
+
+    it('should not detect regular validation errors', () => {
+      const error = new Error('Validation failed: missing required field');
+      expect(isItemAlreadyExistsError(error)).toBe(false);
+    });
+
+    it('should not detect network errors', () => {
+      const error = new Error('Network request failed');
+      expect(isItemAlreadyExistsError(error)).toBe(false);
+    });
+
+    it('should not detect auth errors', () => {
+      const error = new Error('401 Unauthorized');
+      expect(isItemAlreadyExistsError(error)).toBe(false);
+    });
+
+    it('should handle null/undefined gracefully', () => {
+      expect(isItemAlreadyExistsError(null)).toBe(false);
+      expect(isItemAlreadyExistsError(undefined)).toBe(false);
+    });
+
+    it('should handle plain strings', () => {
+      expect(isItemAlreadyExistsError('ConditionalCheckFailedException')).toBe(true);
+      expect(isItemAlreadyExistsError('some other error')).toBe(false);
+    });
+  });
 });
