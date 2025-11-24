@@ -1,3 +1,14 @@
+---
+title: "Minimal Yjs Integration Plan"
+status: planned
+category: architecture
+created: 2025-09-15
+updated: 2025-11-24
+tags: [yjs, crdt, collaboration, text-editing]
+related: [./crdt-integration-plan.md]
+priority: low
+---
+
 # Minimal Yjs Integration Plan - Text Fields Only
 
 ## Overview

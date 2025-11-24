@@ -1,3 +1,14 @@
+---
+title: "Capacitor Native Camera Migration"
+status: planned
+category: images-media
+created: 2025-10-01
+updated: 2025-11-24
+tags: [capacitor, native, camera, mobile]
+related: [./camera-integration-plan.md]
+priority: low
+---
+
 # Capacitor Native Camera Migration Plan
 
 ## Executive Summary

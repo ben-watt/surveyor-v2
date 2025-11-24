@@ -1,3 +1,14 @@
+---
+title: "Single Table Entity Design V5"
+status: planned
+category: architecture
+created: 2025-09-01
+updated: 2025-11-24
+tags: [dynamodb, single-table, functional, typescript]
+related: [./single-table-design-migration.md, ./entity-consolidation-plan.md]
+priority: low
+---
+
 # Single Table Entity Design V5 - Functional Architecture
 
 ## Overview

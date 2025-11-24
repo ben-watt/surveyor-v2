@@ -1,3 +1,13 @@
+---
+title: "Autosave Implementation"
+status: implemented
+category: autosave
+created: 2025-08-01
+updated: 2025-11-24
+tags: [autosave, react-hook-form, debounce]
+related: [../images-media/autosave-image-upload-plan.md]
+---
+
 # Autosave Implementation
 
 This document describes the autosave functionality implemented in the Surveyor v2 application.

@@ -1,3 +1,13 @@
+---
+title: "Phase 1 Checklist (Archived)"
+status: archived
+category: reports
+created: 2025-09-01
+updated: 2025-11-24
+tags: [refactoring, reports, archived]
+related: [./building-survey-report-refactoring.md]
+---
+
 # Phase 1 Implementation Checklist
 
 > **⚠️ ARCHIVED DOCUMENT**  

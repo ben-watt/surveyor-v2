@@ -1,3 +1,13 @@
+---
+title: "Template Builder"
+status: implemented
+category: templates
+created: 2024-10-26
+updated: 2025-11-24
+tags: [templates, handlebars, tiptap, block-editor]
+related: [../reports/survey-report-templates-proposal.md, ./TEMPLATE_BUILDER_README.md]
+---
+
 # Survey Report Template Builder - Complete Documentation
 
 **Version**: 1.0

@@ -1,3 +1,14 @@
+---
+title: "Export Photos as ZIP"
+status: planned
+category: images-media
+created: 2025-10-15
+updated: 2025-11-24
+tags: [export, archiver, photos]
+related: [./image-upload-architecture.md]
+priority: low
+---
+
 # Export Photos as ZIP — Plan
 
 This plan prioritizes fixing the photos page to display human-friendly Section and Element names, then adds an export-to-ZIP feature. It includes implementation details, tradeoffs, and alternatives.

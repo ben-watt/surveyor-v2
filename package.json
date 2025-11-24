@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "docs:index": "npx tsx scripts/generate-docs-index.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "build:capacitor": "next build",

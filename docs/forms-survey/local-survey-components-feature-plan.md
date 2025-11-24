@@ -1,3 +1,14 @@
+---
+title: "Local Survey-Scoped Components"
+status: planned
+category: forms-survey
+created: 2025-10-01
+updated: 2025-11-24
+tags: [components, survey-scope, forms]
+related: []
+priority: medium
+---
+
 # Local Survey-Scoped Components — Technical Design (Final)
 
 ## Overview

@@ -1,3 +1,13 @@
+---
+title: "Dynamic ComboBox"
+status: implemented
+category: forms-survey
+created: 2025-09-01
+updated: 2025-11-24
+tags: [mobile, responsive, combobox, drawer]
+related: []
+---
+
 # Dynamic ComboBox Feature
 
 ## Overview

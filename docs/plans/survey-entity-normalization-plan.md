@@ -1,3 +1,14 @@
+---
+title: "Survey Entity Normalization Plan"
+status: planned
+category: architecture
+created: 2025-08-15
+updated: 2025-11-24
+tags: [dynamodb, normalization, data-model]
+related: [./single-table-design-migration.md]
+priority: low
+---
+
 # Survey Entity Normalization Plan
 
 ## Overview

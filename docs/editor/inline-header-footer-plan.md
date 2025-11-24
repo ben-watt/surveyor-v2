@@ -1,3 +1,14 @@
+---
+title: "Inline Header & Footer Editing"
+status: partial
+category: editor
+created: 2025-10-01
+updated: 2025-11-24
+tags: [tiptap, print, headers, footers, paged-js]
+related: [./survey-document-editor-plan.md, ./paged-preview-improvements.md]
+priority: high
+---
+
 # Inline Header & Footer Editing Plan
 
 ## Overview & Goals

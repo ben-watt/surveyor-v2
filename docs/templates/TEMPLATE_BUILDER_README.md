@@ -1,3 +1,13 @@
+---
+title: "Template Builder Quick Start"
+status: implemented
+category: templates
+created: 2024-10-26
+updated: 2025-11-24
+tags: [templates, quick-start]
+related: [./template-builder-complete.md]
+---
+
 # Template Builder - README
 
 ## 📚 Documentation Location

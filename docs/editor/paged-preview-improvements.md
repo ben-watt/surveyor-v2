@@ -1,3 +1,13 @@
+---
+title: "Paged Preview Improvements"
+status: implemented
+category: editor
+created: 2025-10-01
+updated: 2025-11-24
+tags: [paged-js, print, preview]
+related: [./survey-document-editor-plan.md, ./inline-header-footer-plan.md]
+---
+
 # Survey Document Editor – Paged.js Audit
 
 ## Findings

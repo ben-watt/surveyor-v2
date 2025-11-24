@@ -1,3 +1,14 @@
+---
+title: "Building Survey Report Refactoring"
+status: partial
+category: reports
+created: 2025-10-01
+updated: 2025-11-24
+tags: [refactoring, modular-architecture, reports]
+related: [./survey-report-templates-proposal.md, ../templates/template-builder-complete.md]
+priority: medium
+---
+
 # Building Survey Report Refactoring - Progress & Roadmap
 
 **Document Status:** 🟢 Active  

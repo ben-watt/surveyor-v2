@@ -1,3 +1,13 @@
+---
+title: "Element Reordering Fix"
+status: implemented
+category: configuration
+created: 2025-10-01
+updated: 2025-11-24
+tags: [dnd-kit, bug-fix, reordering]
+related: [./drag-and-drop-configuration-feature-plan.md]
+---
+
 # Element Reordering Fix
 
 ## Problem

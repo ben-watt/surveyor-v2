@@ -1,3 +1,14 @@
+---
+title: "Entity Consolidation Plan"
+status: planned
+category: architecture
+created: 2025-08-01
+updated: 2025-11-24
+tags: [dynamodb, schema, entities, flexibility]
+related: [./single-table-design-migration.md, ./single-table-entity-design-v5-practical.md]
+priority: low
+---
+
 # Entity Consolidation & Dynamic Entity System Plan
 
 ## Overview

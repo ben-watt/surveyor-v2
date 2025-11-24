@@ -1,3 +1,14 @@
+---
+title: "Generate Report Flow"
+status: planned
+category: architecture
+created: 2025-10-01
+updated: 2025-11-24
+tags: [reports, ui, document-generation]
+related: [../reports/building-survey-report-refactoring.md]
+priority: medium
+---
+
 ## Generate & Re‑Generate Report Flow
 
 This document proposes a minimal, discoverable flow to generate and regenerate Building Survey reports from the survey UI, with safe defaults around versioning.

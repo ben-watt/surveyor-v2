@@ -1,3 +1,13 @@
+---
+title: "Image Reordering (Drag-and-Drop)"
+status: implemented
+category: editor
+created: 2025-10-01
+updated: 2025-11-24
+tags: [dnd-kit, images, drag-drop]
+related: [../images-media/image-upload-architecture.md]
+---
+
 # Image Reordering (Drag-and-Drop) — Design Plan
 
 ## Overview

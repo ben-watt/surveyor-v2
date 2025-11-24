@@ -1,3 +1,13 @@
+---
+title: "Building Survey Report Refactoring Plan (Archived)"
+status: archived
+category: reports
+created: 2025-09-01
+updated: 2025-11-24
+tags: [refactoring, reports, archived]
+related: [./building-survey-report-refactoring.md]
+---
+
 # Building Survey Report Refactoring Plan
 
 > **⚠️ ARCHIVED DOCUMENT**  

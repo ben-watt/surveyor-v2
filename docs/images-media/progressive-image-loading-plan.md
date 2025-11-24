@@ -1,3 +1,14 @@
+---
+title: "Progressive Image Loading"
+status: planned
+category: images-media
+created: 2025-10-01
+updated: 2025-11-24
+tags: [performance, blur-up, thumbnails]
+related: [./image-upload-architecture.md]
+priority: low
+---
+
 # Progressive Image Loading — Plan & TODOs
 
 ## Goals

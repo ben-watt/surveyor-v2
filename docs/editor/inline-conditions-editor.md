@@ -1,9 +1,11 @@
 ---
-title: Inline Conditions Editor – Developer Guide
-description: How inline condition editing works (TipTap InlineSelect), the data model, integration points, APIs, validation, and tests.
-owner: Product + Eng
-status: In progress
-last_updated: 2025-10-15
+title: "Inline Conditions Editor"
+status: implemented
+category: editor
+created: 2025-10-15
+updated: 2025-11-24
+tags: [tiptap, conditions, inline-select]
+related: [../configuration/condition-completion-feedback.md]
 ---
 
 <!-- Renamed from conditions-editing-feature-plan.md -->

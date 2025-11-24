@@ -1,3 +1,13 @@
+---
+title: "Line Spacing Controls"
+status: implemented
+category: editor
+created: 2025-10-23
+updated: 2025-11-24
+tags: [tiptap, formatting, typography]
+related: [./survey-document-editor-plan.md]
+---
+
 # Line Spacing Feature - Implementation Summary
 
 ## Overview

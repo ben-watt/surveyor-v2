@@ -1,3 +1,14 @@
+---
+title: "Single-Table Design Migration"
+status: planned
+category: architecture
+created: 2025-08-01
+updated: 2025-11-24
+tags: [dynamodb, single-table, migration, aws]
+related: [./single-table-entity-design-v5-practical.md, ./entity-consolidation-plan.md]
+priority: low
+---
+
 # Single-Table Design Migration Plan
 
 ## Executive Summary

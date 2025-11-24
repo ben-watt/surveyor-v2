@@ -1,3 +1,13 @@
+---
+title: "Drag-and-Drop Configuration"
+status: implemented
+category: configuration
+created: 2025-09-15
+updated: 2025-11-24
+tags: [dnd-kit, reordering, tree-view]
+related: [./hierarchical-configuration-feature-plan.md, ./element-reordering-fix.md]
+---
+
 # Drag and Drop Configuration Feature Plan
 
 ## Overview

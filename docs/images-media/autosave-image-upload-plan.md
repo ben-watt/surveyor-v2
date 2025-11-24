@@ -1,3 +1,14 @@
+---
+title: "Autosave for Image Upload Forms"
+status: partial
+category: images-media
+created: 2025-10-01
+updated: 2025-11-24
+tags: [autosave, images, react-hook-form]
+related: [./image-upload-architecture.md, ../autosave/autosave-implementation.md]
+priority: high
+---
+
 # Autosave Implementation Plan for Forms with Image Uploads
 
 ## Overview

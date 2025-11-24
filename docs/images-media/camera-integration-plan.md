@@ -1,3 +1,13 @@
+---
+title: "Camera Integration (PWA)"
+status: implemented
+category: images-media
+created: 2025-08-15
+updated: 2025-11-24
+tags: [webrtc, pwa, camera, media]
+related: [./image-upload-architecture.md, ./capacitor-native-camera-migration.md]
+---
+
 # Camera Integration Plan
 
 ## Overview

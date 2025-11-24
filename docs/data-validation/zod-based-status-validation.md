@@ -1,3 +1,13 @@
+---
+title: "Zod-Based Status Validation"
+status: implemented
+category: data-validation
+created: 2025-01-01
+updated: 2025-11-24
+tags: [zod, validation, type-safety]
+related: [./zod-validation-migration-plan.md]
+---
+
 # Zod-Based Status and Validation System ✅ IMPLEMENTED
 
 ## Overview

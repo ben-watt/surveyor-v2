@@ -1,3 +1,13 @@
+---
+title: "Survey Document Editor"
+status: implemented
+category: editor
+created: 2024-10-01
+updated: 2025-11-24
+tags: [tiptap, wysiwyg, print, document-versioning]
+related: [./inline-header-footer-plan.md, ./paged-preview-improvements.md]
+---
+
 # Survey Document Editor — Feature Plan
 
 This document describes the feature that turns a saved survey into an editable, WYSIWYG document and lets surveyors export the output through the browser’s print dialog (PDF or physical printer). The editor currently powers the Building Survey report experience.

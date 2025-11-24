@@ -1,3 +1,13 @@
+---
+title: "Condition Completion Feedback"
+status: implemented
+category: configuration
+created: 2025-10-01
+updated: 2025-11-24
+tags: [validation, badges, conditions]
+related: [../editor/inline-conditions-editor.md]
+---
+
 ## Property Condition: Element-level completeness badges (dev notes)
 
 ### Summary

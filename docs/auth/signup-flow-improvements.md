@@ -1,3 +1,14 @@
+---
+title: "Signup Flow Improvements"
+status: planned
+category: auth
+created: 2025-10-01
+updated: 2025-11-24
+tags: [cognito, authentication, onboarding]
+related: []
+priority: high
+---
+
 # Sign-up Flow Improvements
 
 ## Current Issues Identified

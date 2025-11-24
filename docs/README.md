@@ -2,7 +2,47 @@
 
 This directory contains organized documentation for the Surveyor v2 application, grouped by theme for easy navigation.
 
-**📊 [Feature Status Dashboard](./FEATURE_STATUS.md)** - Track implementation status of all features
+**📊 [Feature Status Dashboard](./FEATURE_STATUS.md)** - Track implementation status of all features (auto-generated)
+
+---
+
+## Frontmatter Schema
+
+All documentation files use YAML frontmatter for LLM searchability and automated status tracking:
+
+```yaml
+---
+title: "Feature Name"
+status: implemented | partial | planned | archived
+category: editor | configuration | images-media | reports | templates | forms-survey | data-validation | autosave | auth | architecture
+created: 2025-01-15
+updated: 2025-11-24
+tags: [tiptap, offline, autosave]
+related: [./other-doc.md, ../category/doc.md]
+priority: high | medium | low  # for planned/partial only
+---
+```
+
+### Status Values
+
+| Status | Description |
+|--------|-------------|
+| `implemented` | Feature is fully implemented and production-ready |
+| `partial` | Feature is partially implemented or in progress |
+| `planned` | Feature is documented but not yet started |
+| `archived` | Feature plan is obsolete or superseded |
+
+### Searching Documentation
+
+**For LLM agents**: Filter docs by frontmatter fields:
+- By status: Find all `status: partial` docs to see work in progress
+- By category: Filter `category: editor` for editor-related features
+- By tags: Search for specific technologies like `tags: [tiptap]`
+- By priority: Find high-priority planned work with `priority: high`
+
+**For humans**: Use the [Feature Status Dashboard](./FEATURE_STATUS.md) for a quick overview, or browse by category below.
+
+---
 
 ## Documentation Structure
 
@@ -49,8 +89,19 @@ High-level architectural plans including CRDT integration, entity consolidation,
 ## Contributing
 
 When adding new documentation:
-1. Place it in the appropriate theme folder
-2. Update the relevant folder's README.md
-3. Update [FEATURE_STATUS.md](./FEATURE_STATUS.md) to track implementation status
-4. If it doesn't fit an existing theme, consider creating a new folder or placing it in a relevant existing folder
+
+1. **Add frontmatter** - Include the YAML frontmatter block at the top of your file with all required fields (title, status, category, created, updated, tags)
+2. **Place in appropriate folder** - Put the file in the matching category folder
+3. **Update folder README** - Add a link in the relevant folder's README.md
+4. **Regenerate dashboard** - Run `npm run docs:index` to update FEATURE_STATUS.md
+
+### Regenerating the Feature Status Dashboard
+
+The dashboard is auto-generated from frontmatter. To update it:
+
+```bash
+npm run docs:index
+```
+
+This scans all `.md` files in `docs/`, parses their frontmatter, and regenerates `FEATURE_STATUS.md`.
 

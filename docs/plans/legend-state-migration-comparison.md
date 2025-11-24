@@ -1,3 +1,14 @@
+---
+title: "Legend-State Migration Comparison"
+status: planned
+category: architecture
+created: 2025-09-01
+updated: 2025-11-24
+tags: [legend-state, state-management, offline-first, dexie]
+related: [./crdt-integration-plan.md]
+priority: low
+---
+
 # Legend-State Migration Plan: Proof of Concept First
 
 ## Executive Summary

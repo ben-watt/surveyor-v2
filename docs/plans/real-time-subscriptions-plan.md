@@ -1,3 +1,14 @@
+---
+title: "Real-time Subscriptions Plan"
+status: planned
+category: architecture
+created: 2025-09-01
+updated: 2025-11-24
+tags: [amplify, subscriptions, realtime, websocket]
+related: [./crdt-integration-plan.md]
+priority: low
+---
+
 # Real-time Subscriptions Implementation Plan
 
 ## Overview

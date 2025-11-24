@@ -1,3 +1,14 @@
+---
+title: "CRDT Integration Plan"
+status: planned
+category: architecture
+created: 2025-09-01
+updated: 2025-11-24
+tags: [crdt, collaboration, sync]
+related: [./minimal-yjs-integration-plan.md, ./legend-state-migration-comparison.md]
+priority: low
+---
+
 # CRDT Integration Plan for Surveyor V2
 
 ## Executive Summary

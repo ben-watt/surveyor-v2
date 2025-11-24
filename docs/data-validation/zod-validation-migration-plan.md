@@ -1,3 +1,14 @@
+---
+title: "Zod Validation Migration Plan"
+status: partial
+category: data-validation
+created: 2025-01-01
+updated: 2025-11-24
+tags: [zod, migration, validation]
+related: [./zod-based-status-validation.md]
+priority: medium
+---
+
 # Zod Validation Migration Plan
 
 ## Overview

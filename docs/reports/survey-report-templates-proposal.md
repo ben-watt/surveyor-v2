@@ -1,3 +1,13 @@
+---
+title: "Survey Report Templates Proposal"
+status: implemented
+category: reports
+created: 2025-09-01
+updated: 2025-11-24
+tags: [templates, reports, architecture]
+related: [./building-survey-report-refactoring.md, ../templates/template-builder-complete.md]
+---
+
 # Survey Report Templates – Feature Proposal
 
 ## Overview

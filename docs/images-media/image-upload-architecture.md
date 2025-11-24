@@ -1,3 +1,13 @@
+---
+title: "Image Upload Architecture"
+status: implemented
+category: images-media
+created: 2025-08-01
+updated: 2025-11-24
+tags: [s3, indexeddb, offline-first, thumbnails]
+related: [./camera-integration-plan.md, ./autosave-image-upload-plan.md]
+---
+
 # Image Upload System
 
 ## Overview

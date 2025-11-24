@@ -1,3 +1,13 @@
+---
+title: "Hierarchical Configuration View"
+status: implemented
+category: configuration
+created: 2025-09-01
+updated: 2025-11-24
+tags: [tree-view, sections, elements, components]
+related: [./drag-and-drop-configuration-feature-plan.md, ./condition-completion-feedback.md]
+---
+
 # Hierarchical Configuration View Feature Plan
 
 ## Overview
