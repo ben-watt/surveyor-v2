@@ -20,8 +20,8 @@ This document tracks the implementation status of all features documented in the
 
 - **Total Features**: 38
 - **Implemented**: 17 (45%)
-- **Partial**: 5 (13%)
-- **Planned**: 14 (37%)
+- **Partial**: 6 (16%)
+- **Planned**: 13 (34%)
 - **Archived**: 2 (5%)
 
 ---
@@ -100,7 +100,7 @@ This document tracks the implementation status of all features documented in the
 
 | Feature | Status | Documentation | Priority | Tags |
 |---------|--------|---------------|----------|------|
-| Signup Flow Improvements | 📋 Planned | [signup-flow-improvements.md](./auth/signup-flow-improvements.md) | high | cognito, authentication, onboarding |
+| Signup Flow Improvements | 🚧 Partial | [signup-flow-improvements.md](./auth/signup-flow-improvements.md) | high | cognito, authentication, onboarding |
 
 ### 📐 Architectural Plans
 
@@ -122,7 +122,7 @@ This document tracks the implementation status of all features documented in the
 
 ### High Priority
 
-1. **Signup Flow Improvements** (📋 planned)
+1. **Signup Flow Improvements** (🚧 partial)
    - [signup-flow-improvements.md](./auth/signup-flow-improvements.md)
 1. **Inline Header & Footer Editing** (🚧 partial)
    - [inline-header-footer-plan.md](./editor/inline-header-footer-plan.md)

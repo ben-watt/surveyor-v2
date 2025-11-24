@@ -1,6 +1,6 @@
 ---
 title: "Signup Flow Improvements"
-status: planned
+status: partial
 category: auth
 created: 2025-10-01
 updated: 2025-11-24
